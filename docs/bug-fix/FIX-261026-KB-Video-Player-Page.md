@@ -44,7 +44,7 @@ YouTube 같은 영상 *페이지* URL은 종전대로 302.
 
 - 단위: `kb-video` 2개 스위트 15건 통과, `turbo typecheck --filter=@sharptalk/api` 통과.
 - 로컬 Chrome: 실제 S3 URL로 렌더한 페이지 — Video 21(2860×1534, 18.1초)·Video 41(82MB, 27.8초) `readyState=3`, 오류 없음, 다운로드 전환 없음.
-- 스테이징: §6 배포 후 같은 링크 `kb-videos/2641`을 Chrome으로 실측.
+- 스테이징(배포 후, 헤드리스 Chrome 156): 사용자 보고 링크 `kb-videos/2641` → 200 `text/html`, `<video>` readyState=3·2860×1534·18.1초, 다운로드 전환 없음. **영상 문서 63편(EN) 전수 재생 OK(readyState≥1·오류 0)** — VI 63건은 같은 블록. 잘못된 서명 404 유지.
 
 ## 5. 재발 방지
 
@@ -56,7 +56,7 @@ YouTube 같은 영상 *페이지* URL은 종전대로 302.
 
 | 항목 | 상태 |
 |---|---|
-| PR | (기록 예정) |
+| PR | #743 squash-merge → main `f1e6e1aa` (CI 통과) |
 | 마이그레이션 | 없음 |
-| 스테이징 | (기록 예정) |
+| 스테이징 | ✅ 2026-10-26 15:24 KST `git pull` + `deploy-staging.sh` — api healthy·`successfully started`, 위 §4 실측 통과 |
 | 프로덕션 | 영상 문서 0건 — 동작 영향 없음, 다음 프로덕션 배포에 동승 |
