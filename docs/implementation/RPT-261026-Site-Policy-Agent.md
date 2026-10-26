@@ -47,7 +47,7 @@
 |---|---|---|
 | 스테이징 `shoptalk.amoeba.site` | ✅ 2026-10-26 19:27 KST, `f60850ff`(`git pull --ff-only` + `deploy-staging.sh`) | API 부팅 로그 `successfully started` 1회, RestartCount 0, StartedAt 10:27:57Z · `POST /knowledge/ingest/site/discover`·`/ingest/site` **401**(=배포됨) · health 200 · dist에 `site/policy-discover.util.js`, web 번들 `KnowledgePage-*.js`에 `ownerConfirm` 포함 |
 | 마이그레이션 | 해당 없음 | SQL·엔티티 변경 없음 |
-| 프로덕션 | ⏳ 미배포 | `production` 브랜치 반영 대기 |
+| 프로덕션 `sharptalk.amoeba.site` | ✅ 2026-10-26 19:36 KST, `production` 8280d7ef..e4be67f9 (ff) + `deploy-self-hosted.sh` | 마이그레이션 게이트 OK, `successfully started` 1회, RestartCount 0(StartedAt 10:36:01Z), 최근 5분 ERROR 0 · 새 라우트 2종 **401**(내부 :8081·공개 모두) · health 200 · dist `site/` 모듈, 번들 `KnowledgePage-*.js`에 `ownerConfirm` |
 
 > 배포 직후 공개 URL 확인에서 health까지 404가 나왔는데, 컨테이너가 다시 만들어지던 순간이었습니다. 약 20초 뒤 200/401로 정상 확인했습니다. 배포 직후 확인은 서버 내부(`localhost:8080`)와 StartedAt을 함께 보면 오판을 피할 수 있습니다.
 
