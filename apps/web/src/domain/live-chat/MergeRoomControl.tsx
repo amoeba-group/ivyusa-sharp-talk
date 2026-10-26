@@ -66,12 +66,14 @@ export function MergeRoomControl({
         <button
           type="button"
           onClick={() => setDialog('room')}
-          className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700 hover:border-primary-300"
+          // Same size as the other buttons on the highlighted header line
+          // (PLN-261027); the primary tint marks "already merged".
+          className="inline-flex items-center gap-2 rounded-lg border border-primary-300 bg-white px-3 py-1.5 text-sm font-medium text-primary-700 transition-colors hover:bg-primary-100"
           title={t('merge.manage')}
         >
-          <Combine className="h-3.5 w-3.5" />
+          <Combine className="h-4 w-4" />
           {t('merge.badge', { count: room.sessions.length })}
-          <ChevronDown className="h-3 w-3" />
+          <ChevronDown className="h-3.5 w-3.5" />
         </button>
       ) : (
         <Button size="sm" variant="secondary" onClick={() => setDialog('merge')}>

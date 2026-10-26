@@ -1019,18 +1019,22 @@ export function LiveChatPage() {
                   {convo?.consultCategory && (
                     <Badge tone="primary">{t('consultCategoryBadge', { name: categoryName(convo.consultCategory) })}</Badge>
                   )}
-                  {selected && (
-                    <CompanyThreadButton conversationId={selected} company={convo?.company} onOpen={setSelected} />
-                  )}
-                  {/* Same-customer merged room (PLN-261023). */}
-                  {selected && (
-                    <MergeRoomControl conversationId={selected} room={convo?.mergedRoom} onOpenConversation={setSelected} />
-                  )}
+                  {convo?.company && <Badge tone="info">{t('company.badge')}</Badge>}
                   {convo?.assignedTo && (
                     <Badge tone="primary">
                       {t('agentControls.assignedTo')}: {convo.assignedTo}
                     </Badge>
                   )}
+                </div>
+                {/* Earlier conversations | merged room on their own highlighted
+                    line (PLN-261027). Each control decides whether it shows, so
+                    the line only appears once one of them rendered a button;
+                    the divider hides when it ends up first or last. */}
+                <div className="hidden flex-wrap items-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-3 py-1.5 has-[>button]:flex">
+                  <CompanyThreadButton conversationId={selected} company={convo?.company} onOpen={setSelected} />
+                  <span aria-hidden className="h-4 w-px bg-primary-200 first:hidden last:hidden" />
+                  {/* Same-customer merged room (PLN-261023). */}
+                  <MergeRoomControl conversationId={selected} room={convo?.mergedRoom} onOpenConversation={setSelected} />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button

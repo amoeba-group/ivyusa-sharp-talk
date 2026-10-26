@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronRight, History } from 'lucide-react';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
@@ -9,7 +10,7 @@ import { useMergeCandidates, useMergedRoomActions } from './live-chat.hooks';
 import { liveChatService } from './live-chat.service';
 
 /**
- * "Business" badge + the company's other conversations (PLN-261022 stage 2,
+ * The company's other conversations (PLN-261022 stage 2,
  * wireframe 3.4). A partner hotel's staff change and sessions end; the agent
  * still sees what this hotel asked before. Picking one opens it here.
  *
@@ -68,11 +69,11 @@ export function CompanyThreadButton({
 
   return (
     <>
-      <Badge tone="info">{t('company.badge')}</Badge>
       {company.otherConversations > 0 && (
-        <button type="button" className="text-xs text-primary-600 hover:underline" onClick={() => setOpen(true)}>
-          {t('company.earlier', { count: company.otherConversations })} ▸
-        </button>
+        <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+          <History className="h-4 w-4" /> {t('company.earlier', { count: company.otherConversations })}
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Button>
       )}
       <Modal
         open={open}
