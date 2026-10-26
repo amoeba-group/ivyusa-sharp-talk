@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { knowledgeService } from './knowledge.service';
-import type { CatalogSyncJob, DocumentListParams } from './knowledge.service';
+import type { ApproveArticle, CatalogSyncJob, DocumentListParams } from './knowledge.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
@@ -665,6 +665,26 @@ export function useIngestVideo() {
   });
 }
 
+/**
+ * Website policy agent (PLN-261026). Discovery is synchronous and costs no AI;
+ * toasts live in the modal, which localizes the E5110–E5113 codes.
+ */
+export function useDiscoverSite() {
+  return useMutation({
+    mutationFn: (siteUrl: string) => knowledgeService.discoverSite(siteUrl),
+  });
+}
+
+export function useIngestSite() {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (v: { urls: string[]; docGroup: string; ownerConfirmed: boolean }) =>
+      knowledgeService.ingestSite(v.urls, v.docGroup, v.ownerConfirmed),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'ingest-status'] }),
+  });
+}
+
 /** Poll while the modal is open and a run is live; idle otherwise. */
 export function useIngestStatus(enabled: boolean) {
   const tenantKey = useTenantKey();
@@ -681,8 +701,7 @@ export function useApproveIngest() {
   const qc = useQueryClient();
   const tenantKey = useTenantKey();
   return useMutation({
-    mutationFn: (articles: Array<{ title: string; category: string; content: string }>) =>
-      knowledgeService.approveIngest(articles),
+    mutationFn: (articles: ApproveArticle[]) => knowledgeService.approveIngest(articles),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'documents'] });
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'categories'] });

@@ -243,6 +243,45 @@ export interface IngestDraft {
   content: string;
   /** A parse-failure fallback draft — the whole chunk, review carefully. */
   fallback: boolean;
+  /** Website ingest: the page this draft was written from (PLN-261026). */
+  sourceUrl?: string;
+  /** Website ingest: the board already has this title in the group (D3). */
+  duplicateOnBoard?: boolean;
+}
+
+/** One selected page of a website ingest and how reading it went. */
+export interface IngestPage {
+  url: string;
+  title: string;
+  status: 'pending' | 'done' | 'thin' | 'robots' | 'failed';
+  drafts: number;
+  detail: string | null;
+  /** Disallowed by robots.txt, read on the operator's ownership confirmation (D8). */
+  robotsOverridden?: boolean;
+}
+
+export type PolicyKind = 'refund' | 'shipping' | 'privacy' | 'terms' | 'payment' | 'faq' | 'other';
+
+export interface SiteCandidate {
+  url: string;
+  title: string;
+  kind: PolicyKind;
+  source: 'link' | 'sitemap' | 'known';
+  robotsBlocked: boolean;
+  fileLink: boolean;
+}
+
+export interface SiteDiscovery {
+  site: string;
+  platform: string | null;
+  candidates: SiteCandidate[];
+}
+
+export interface ApproveArticle {
+  title: string;
+  category: string;
+  content: string;
+  source_url?: string;
 }
 
 export interface IngestJob {
@@ -255,6 +294,8 @@ export interface IngestJob {
   sourceKind: string;
   docGroup: string;
   truncated: boolean;
+  /** Website ingest only — one row per selected page. */
+  pages?: IngestPage[];
   drafts: IngestDraft[];
   /** An Exxxx code (localizable) or free text. */
   error: string | null;
@@ -452,8 +493,16 @@ export const knowledgeService = {
   ingestVideo: (videoUrl: string, docGroup: string) =>
     apiPost<IngestJob>('/knowledge/ingest/video', { video_url: videoUrl, doc_group: docGroup }),
   ingestStatus: () => apiGet<IngestJob | null>('/knowledge/ingest/status'),
-  approveIngest: (articles: Array<{ title: string; category: string; content: string }>) =>
+  approveIngest: (articles: ApproveArticle[]) =>
     apiPost<IngestApproveResult>('/knowledge/ingest/approve', { articles }),
+  discoverSite: (siteUrl: string) =>
+    apiPost<SiteDiscovery>('/knowledge/ingest/site/discover', { site_url: siteUrl }),
+  ingestSite: (urls: string[], docGroup: string, ownerConfirmed: boolean) =>
+    apiPost<IngestJob>('/knowledge/ingest/site', {
+      urls,
+      doc_group: docGroup,
+      owner_confirmed: ownerConfirmed,
+    }),
   bulkImport: (file: File, docGroup: string) => {
     const form = new FormData();
     form.append('file', file);

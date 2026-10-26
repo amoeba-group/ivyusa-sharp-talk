@@ -249,6 +249,11 @@ the RN app, Web Push/VAPID for the PWA, routed per device row's provider),
 `agent/*` (console), `analytics/*`, `knowledge/*`, `ai-engines`/`ai-settings`,
 `moderation/rules`, `tenants/*` (+`tenants/me/shopify`), `users`/`job-labels` (+temp-password),
 `campaigns`, `cjm/events`, `audit`, `integrations/status`, `health`.
+**Website policy agent** (PLN-261026): `knowledge/ingest/site/discover` (policy-page candidates
+from home links · sitemap · Shopify/Cafe24 known paths; robots.txt obeyed unless the operator confirms site ownership — `owner_confirmed`, audited) and
+`knowledge/ingest/site` (202, ≤10 pages → drafts on the shared ingest job, approved onto the
+board with `site-policy` tag + page link); outbound fetch re-checks SSRF on every redirect hop;
+E5110–E5113.
 **Shopify**: `auth/shopify/install`+`/callback` (OAuth), `shopify/proxy/identity` (App Proxy,
 signature-verified), `webhooks/shopify/*` (native orders/fulfillments, HMAC),
 `privacy/*` (DSAR export/delete, CCPA opt-out, retention purge) + GDPR compliance webhooks

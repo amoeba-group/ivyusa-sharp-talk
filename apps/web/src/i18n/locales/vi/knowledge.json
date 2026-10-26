@@ -465,5 +465,57 @@
     "counts": "Chờ duyệt {{pending}} · đã chấp nhận {{promoted}}"
   },
   "videoRef": "Video",
-  "videoRefHint": "Hiển thị là “Xem video” dưới các câu trả lời trích dẫn tài liệu này. Liên kết https:// hoặc notion:<block id> cho video tải lên Notion."
+  "videoRefHint": "Hiển thị là “Xem video” dưới các câu trả lời trích dẫn tài liệu này. Liên kết https:// hoặc notion:<block id> cho video tải lên Notion.",
+  "site": {
+    "title": "Phân tích chính sách website",
+    "hint": "Nhập địa chỉ cửa hàng hoặc dịch vụ để tìm các trang đổi trả, hoàn tiền, vận chuyển, bảo mật và điều khoản rồi tạo bản nháp trên bảng. Mọi nội dung đều được duyệt trước khi đăng.",
+    "urlLabel": "Địa chỉ website",
+    "analyze": "Phân tích website",
+    "runningLine": "Đang phân tích {{site}} — {{done}}/{{total}} trang",
+    "readyLine": "Đã phân tích {{site}} — {{count}} bản nháp chờ duyệt",
+    "viewProgress": "Xem tiến độ",
+    "review": "Duyệt",
+    "discovering": "Đang xem qua {{site}}…",
+    "found": "{{site}} · {{count}} trang chính sách tìm được",
+    "none": "Không tìm thấy trang chính sách. Hãy thêm URL bên dưới.",
+    "kind": {
+      "refund": "Đổi trả & hoàn tiền",
+      "shipping": "Vận chuyển",
+      "privacy": "Bảo mật",
+      "terms": "Điều khoản",
+      "payment": "Thanh toán",
+      "faq": "FAQ",
+      "other": "Chính sách"
+    },
+    "robotsBlocked": "Bị robots.txt chặn — có thể đọc khi xác nhận đây là website của bạn",
+    "fileLink": "Tệp tài liệu — hãy dùng AI import (tệp)",
+    "addUrl": "Thêm URL",
+    "addUrlPlaceholder": "https://shop.example.com/pages/…",
+    "add": "Thêm",
+    "maxPages": "Mỗi lần chỉ phân tích tối đa {{max}} trang.",
+    "start": "Phân tích {{count}} trang đã chọn",
+    "started": "Đã bắt đầu phân tích {{count}} trang",
+    "progress": "Trang đã phân tích",
+    "noJob": "Không có phân tích nào đang chạy.",
+    "pageStatus": {
+      "pending": "Đang chờ",
+      "done": "{{count}} bản nháp",
+      "thin": "Thiếu nội dung",
+      "robots": "robots.txt",
+      "failed": "Không mở được"
+    },
+    "thinHint": "Trang này có vẻ được hiển thị trong trình duyệt. Hãy sao chép nội dung chính sách vào tệp và dùng AI import.",
+    "truncated": "Trang dài chỉ được phân tích 48.000 ký tự đầu tiên.",
+    "duplicate": "Đã có tiêu đề giống trên bảng",
+    "publish": "Đăng {{count}} lên bảng",
+    "error": {
+      "E5110": "Hãy nhập địa chỉ website công khai https://.",
+      "E5111": "Không mở được website. Kiểm tra địa chỉ hoặc thử lại sau.",
+      "E5112": "Tất cả các trang phải thuộc cùng một website.",
+      "E5113": "Không tìm thấy nội dung chính sách đọc được trên các trang đã chọn."
+    },
+    "ownerConfirm": "Website này là của chúng tôi — chúng tôi vận hành",
+    "ownerConfirmHint": "Khi xác nhận, bạn có thể chọn và đọc {{count}} trang bị robots.txt chặn (Shopify mặc định chặn /policies/). Xác nhận được ghi vào nhật ký kiểm tra.",
+    "robotsOverridden": "Bị robots.txt chặn — đã đọc theo xác nhận của người vận hành"
+  }
 }

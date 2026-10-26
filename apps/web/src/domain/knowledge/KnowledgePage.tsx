@@ -19,6 +19,7 @@ import { cn } from '@/lib/cn';
 import { toast } from '@/store/toast-store';
 import { KnowledgeQaPanel } from './KnowledgeQaPanel';
 import { AiIngestModal } from './AiIngestModal';
+import { SitePolicyCard } from './SitePolicyAgent';
 import {
   AddDocumentHelp,
   CatalogSyncHelp,
@@ -727,6 +728,8 @@ export function KnowledgePage() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
         <div className="space-y-6">
+        {/* PLN-261026: website policy agent — unnumbered quick start above step 1. */}
+        <SitePolicyCard />
         <Card
           id={KNOWLEDGE_SECTION.SOURCES}
           title={<span className="flex items-center gap-2"><StepNo n={1} />{t('sources')}</span>}

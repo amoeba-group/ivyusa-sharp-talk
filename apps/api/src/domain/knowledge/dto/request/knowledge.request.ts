@@ -1,5 +1,7 @@
 import { BULK_IMPORT_GROUPS, DOC_GROUP } from '../../entity/kb-document.entity';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsIn,
@@ -138,7 +140,28 @@ export class IngestVideoRequest {
  * service (trim/length/non-empty) — the array shape is all the DTO pins down.
  */
 export class ApproveIngestRequest {
-  @IsArray() articles: Array<{ title: string; category: string; content: string }>;
+  /** `source_url` (website ingest) must be one of the job's pages — checked in the service. */
+  @IsArray() articles: Array<{ title: string; category: string; content: string; source_url?: string }>;
+}
+
+/** PLN-261026: the website whose policy pages to look for. Scheme optional — https is assumed. */
+export class DiscoverSiteRequest {
+  @IsString() @MaxLength(512) site_url: string;
+}
+
+/** PLN-261026: the pages the operator picked from discovery (or added by hand). */
+export class IngestSiteRequest {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @MaxLength(1024, { each: true })
+  urls: string[];
+
+  @IsOptional() @IsIn(Object.values(DOC_GROUP)) doc_group?: string;
+
+  /** D8: the operator confirms the site is theirs — robots.txt is then not applied. */
+  @IsOptional() @IsBoolean() owner_confirmed?: boolean;
 }
 
 export class UpdateDocumentRequest {

@@ -465,5 +465,57 @@
     "counts": "待审核 {{pending}} · 已采纳 {{promoted}}"
   },
   "videoRef": "视频",
-  "videoRefHint": "在引用此文档的回答下显示为“观看视频”。填写 https:// 链接，或上传到 Notion 的视频填写 notion:<区块 ID>。"
+  "videoRefHint": "在引用此文档的回答下显示为“观看视频”。填写 https:// 链接，或上传到 Notion 的视频填写 notion:<区块 ID>。",
+  "site": {
+    "title": "网站政策分析",
+    "hint": "输入店铺或服务的网址，查找其退货、退款、配送、隐私和条款页面，并生成看板草稿。发布前均需审核。",
+    "urlLabel": "网站地址",
+    "analyze": "分析网站",
+    "runningLine": "正在分析 {{site}} — {{done}}/{{total}} 页",
+    "readyLine": "{{site}} 分析完成 — {{count}} 篇草稿待审核",
+    "viewProgress": "查看进度",
+    "review": "审核",
+    "discovering": "正在浏览 {{site}}…",
+    "found": "{{site}} · 找到 {{count}} 个政策页面候选",
+    "none": "未找到政策页面。请在下方添加网址。",
+    "kind": {
+      "refund": "退货与退款",
+      "shipping": "配送",
+      "privacy": "隐私",
+      "terms": "条款",
+      "payment": "支付",
+      "faq": "FAQ",
+      "other": "政策"
+    },
+    "robotsBlocked": "被 robots.txt 禁止 — 确认为自有网站后可读取",
+    "fileLink": "文档文件 — 请使用 AI 导入（文件）",
+    "addUrl": "添加网址",
+    "addUrlPlaceholder": "https://shop.example.com/pages/…",
+    "add": "添加",
+    "maxPages": "一次最多可分析 {{max}} 个页面。",
+    "start": "分析所选 {{count}} 个",
+    "started": "已开始分析 {{count}} 个页面",
+    "progress": "已分析页面",
+    "noJob": "当前没有进行中的分析。",
+    "pageStatus": {
+      "pending": "等待中",
+      "done": "{{count}} 篇草稿",
+      "thin": "无正文",
+      "robots": "robots.txt",
+      "failed": "无法打开"
+    },
+    "thinHint": "该页面似乎在浏览器中渲染。请将政策内容复制到文件中并使用 AI 导入。",
+    "truncated": "较长的页面仅分析了前 48,000 个字符。",
+    "duplicate": "看板上已有相同标题",
+    "publish": "发布 {{count}} 篇到看板",
+    "error": {
+      "E5110": "请输入公开的 https:// 网站地址。",
+      "E5111": "无法打开该网站。请检查地址或稍后重试。",
+      "E5112": "所有页面必须属于同一网站。",
+      "E5113": "所选页面中未找到可读取的政策正文。"
+    },
+    "ownerConfirm": "此网站由我们运营",
+    "ownerConfirmHint": "确认后可选择并读取被 robots.txt 禁止的 {{count}} 个页面（Shopify 默认禁止 /policies/）。确认操作会记录在审计日志中。",
+    "robotsOverridden": "被 robots.txt 禁止 — 已根据运营者确认读取"
+  }
 }

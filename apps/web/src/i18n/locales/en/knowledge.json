@@ -465,5 +465,57 @@
     "counts": "Waiting for review {{pending}} · adopted {{promoted}}"
   },
   "videoRef": "Video",
-  "videoRefHint": "Shown as “Watch video” under answers that cite this document. An https:// link, or notion:<block id> for a video uploaded to Notion."
+  "videoRefHint": "Shown as “Watch video” under answers that cite this document. An https:// link, or notion:<block id> for a video uploaded to Notion.",
+  "site": {
+    "title": "Website policy analysis",
+    "hint": "Enter your store or service address to find its returns, refund, shipping, privacy and terms pages and turn them into board drafts. You review everything before it is published.",
+    "urlLabel": "Website address",
+    "analyze": "Analyze site",
+    "runningLine": "Analyzing {{site}} — {{done}}/{{total}} pages",
+    "readyLine": "{{site}} analyzed — {{count}} drafts waiting for review",
+    "viewProgress": "View progress",
+    "review": "Review",
+    "discovering": "Looking around {{site}}…",
+    "found": "{{site}} · {{count}} policy page candidates",
+    "none": "No policy pages were found. Add URLs below.",
+    "kind": {
+      "refund": "Returns & refunds",
+      "shipping": "Shipping",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "payment": "Payment",
+      "faq": "FAQ",
+      "other": "Policy"
+    },
+    "robotsBlocked": "Blocked by robots.txt — readable once you confirm the site is yours",
+    "fileLink": "Document file — use AI import (file)",
+    "addUrl": "Add a URL",
+    "addUrlPlaceholder": "https://shop.example.com/pages/…",
+    "add": "Add",
+    "maxPages": "Up to {{max}} pages can be analyzed at once.",
+    "start": "Analyze {{count}} selected",
+    "started": "Started analyzing {{count}} pages",
+    "progress": "Pages analyzed",
+    "noJob": "No analysis is running.",
+    "pageStatus": {
+      "pending": "Waiting",
+      "done": "{{count}} drafts",
+      "thin": "No body text",
+      "robots": "robots.txt",
+      "failed": "Unreachable"
+    },
+    "thinHint": "This page seems to be drawn in the browser. Copy the policy text into a file and use AI import.",
+    "truncated": "Long pages were analyzed up to their first 48,000 characters.",
+    "duplicate": "Same title already on the board",
+    "publish": "Publish {{count}} to the board",
+    "error": {
+      "E5110": "Enter a public https:// website address.",
+      "E5111": "Could not open the website. Check the address or try again later.",
+      "E5112": "All pages must belong to the same website.",
+      "E5113": "No readable policy text was found on the selected pages."
+    },
+    "ownerConfirm": "This website is ours — we operate it",
+    "ownerConfirmHint": "Confirming lets you select and read {{count}} pages that robots.txt blocks (Shopify blocks /policies/ by default). The confirmation is recorded in the audit log.",
+    "robotsOverridden": "Blocked by robots.txt — read on the operator's confirmation"
+  }
 }

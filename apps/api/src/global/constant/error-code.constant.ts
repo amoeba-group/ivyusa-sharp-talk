@@ -309,6 +309,24 @@ export const ERROR_CODE = {
   /** Not one of this tenant's categories (also a foreign tenant's id or code). */
   ROUTING_CATEGORY_NOT_FOUND: { code: 'E5109', message: 'Category not found' },
 
+  // E5110-E5113 — website policy agent (PLN-261026-Site-Policy-Agent).
+  /** Not https, malformed, or resolves to a private/loopback/metadata address. */
+  SITE_URL_REJECTED: {
+    code: 'E5110',
+    message: 'The address must be a public https:// website',
+  },
+  /** Timeout, 4xx/5xx, or the response is not an HTML page. */
+  SITE_UNREACHABLE: { code: 'E5111', message: 'Could not open the website' },
+  SITE_URL_FOREIGN: {
+    code: 'E5112',
+    message: 'All pages must belong to the same website',
+  },
+  /** Every selected page was blocked, unreachable, or rendered only in the browser. */
+  SITE_NO_CONTENT: {
+    code: 'E5113',
+    message: 'No readable policy text was found on the selected pages',
+  },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

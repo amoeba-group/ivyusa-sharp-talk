@@ -186,6 +186,12 @@ export class BoardService {
     return doc;
   }
 
+  /** Titles already on the board in one group — the website-ingest duplicate badge (PLN-261026 D3). */
+  async titlesInGroup(tenantId: number, docGroup: string): Promise<Set<string>> {
+    const rows = await this.docRepo.find({ where: { tenantId, docGroup }, select: { id: true, title: true } });
+    return new Set(rows.map((r) => r.title));
+  }
+
   async create(tenantId: number, body: BoardDocumentInput, actor: BoardActor): Promise<BoardDocument> {
     const board = await this.ensureDefault(tenantId);
     this.validate(body);

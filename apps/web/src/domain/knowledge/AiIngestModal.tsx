@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
-import { Badge } from '@/components/Badge';
 import { FormRow, Input, Select } from '@/components/Field';
 import { Progress } from '@/components/Progress';
 import { toast } from '@/store/toast-store';
@@ -13,15 +12,10 @@ import {
   useIngestStatus,
   useIngestVideo,
 } from './knowledge.hooks';
-import type { IngestDraft } from './knowledge.service';
+import { IngestDraftReview, ReviewDraft, toApproveArticles, toReviewDrafts } from './IngestDraftReview';
 
 /** Codes the ingest pipeline can fail with — localized here (PLN-260829 P3-9). */
 const INGEST_ERROR_CODES = ['E5066', 'E5067', 'E5068', 'E5069', 'E5070'];
-
-interface ReviewDraft extends IngestDraft {
-  selected: boolean;
-  expanded: boolean;
-}
 
 /**
  * AI import (PLN-260829 3차): file or YouTube URL → draft articles → operator
@@ -65,7 +59,7 @@ export function AiIngestModal({
   // Drafts become local, editable state exactly once per ready job.
   useEffect(() => {
     if (job?.status === 'ready' && drafts === null) {
-      setDrafts(job.drafts.map((d) => ({ ...d, selected: true, expanded: false })));
+      setDrafts(toReviewDrafts(job.drafts));
     }
   }, [job, drafts]);
 
@@ -85,9 +79,8 @@ export function AiIngestModal({
   };
 
   const save = () => {
-    const picked = (drafts ?? []).filter((d) => d.selected);
     approve.mutate(
-      picked.map((d) => ({ title: d.title, category: d.category, content: d.content })),
+      toApproveArticles(drafts ?? []),
       {
         onSuccess: (r) => {
           // B2 P4-6: approval publishes onto the board — adoption is a
@@ -233,50 +226,7 @@ export function AiIngestModal({
               {t('ingestReviewHint', { source: job.sourceLabel })}
             </p>
             {job.truncated && <p className="text-xs text-warning">{t('ingestTruncated')}</p>}
-            <ul className="max-h-96 space-y-2 overflow-y-auto">
-              {drafts.map((d, i) => (
-                <li key={i} className="rounded-md border border-gray-200 p-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={d.selected}
-                      aria-label={t('ingestSelectDraft')}
-                      onChange={(e) => patchDraft(i, { selected: e.target.checked })}
-                    />
-                    <Input
-                      value={d.title}
-                      onChange={(e) => patchDraft(i, { title: e.target.value })}
-                      className="flex-1"
-                    />
-                    {d.fallback && <Badge tone="warning">{t('ingestFallback')}</Badge>}
-                  </div>
-                  <div className="mt-1 flex items-center gap-2 pl-6">
-                    <span className="text-xs text-gray-500">{t('category')}</span>
-                    <Input
-                      value={d.category}
-                      onChange={(e) => patchDraft(i, { category: e.target.value })}
-                      className="w-48"
-                    />
-                    <button
-                      type="button"
-                      className="text-xs text-primary-600 hover:underline"
-                      onClick={() => patchDraft(i, { expanded: !d.expanded })}
-                    >
-                      {d.expanded ? t('ingestHideContent') : t('ingestShowContent')}
-                    </button>
-                    <span className="ml-auto text-xs tabular-nums text-gray-400">
-                      {d.content.length.toLocaleString()}
-                    </span>
-                  </div>
-                  {d.expanded && (
-                    <pre className="mt-2 max-h-48 overflow-y-auto whitespace-pre-wrap rounded bg-gray-50 p-2 text-xs">
-                      {d.content}
-                    </pre>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {!drafts.length && <p className="text-sm text-gray-500">{t('ingestNoDrafts')}</p>}
+            <IngestDraftReview drafts={drafts} onPatch={patchDraft} />
           </>
         )}
       </div>

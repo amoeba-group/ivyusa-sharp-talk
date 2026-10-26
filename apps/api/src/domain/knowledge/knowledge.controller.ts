@@ -44,6 +44,8 @@ import {
   BulkImportRequest,
   IngestFileRequest,
   IngestVideoRequest,
+  DiscoverSiteRequest,
+  IngestSiteRequest,
   CreateCategoryRequest,
   CreateDocumentRequest,
   CreateSourceRequest,
@@ -508,6 +510,31 @@ export class KnowledgeController {
   async ingestVideo(@CurrentUser() user: Principal, @Body() body: IngestVideoRequest) {
     const actor = this.tenantUser(user);
     return this.ingest.startVideo(actor.tenantId, body.video_url, body.doc_group ?? DOC_GROUP.COUNSEL);
+  }
+
+  // ---- Website policy agent (PLN-261026) ----
+
+  @Post('ingest/site/discover')
+  @HttpCode(HttpStatus.OK)
+  @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
+  @ApiOperation({ summary: 'Find the policy pages (returns, shipping, privacy, terms…) of a website' })
+  async discoverSite(@CurrentUser() user: Principal, @Body() body: DiscoverSiteRequest) {
+    this.tenantUser(user);
+    return this.ingest.discoverSite(body.site_url);
+  }
+
+  @Post('ingest/site')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
+  @ApiOperation({ summary: 'Analyze selected website policy pages into draft board articles (async)' })
+  async ingestSite(@CurrentUser() user: Principal, @Body() body: IngestSiteRequest) {
+    const actor = this.tenantUser(user);
+    return this.ingest.startSite(
+      actor.tenantId,
+      body.urls,
+      body.doc_group ?? DOC_GROUP.COUNSEL,
+      body.owner_confirmed === true,
+    );
   }
 
   @Get('ingest/status')

@@ -465,5 +465,57 @@
     "counts": "검토 대기 {{pending}}건 · 채택 {{promoted}}건"
   },
   "videoRef": "영상",
-  "videoRefHint": "이 문서를 인용한 답변 아래에 ‘영상 보기’로 표시됩니다. https:// 링크 또는 노션에 올린 영상은 notion:<블록 id>."
+  "videoRefHint": "이 문서를 인용한 답변 아래에 ‘영상 보기’로 표시됩니다. https:// 링크 또는 노션에 올린 영상은 notion:<블록 id>.",
+  "site": {
+    "title": "웹사이트 정책 분석",
+    "hint": "쇼핑몰·서비스 주소를 넣으면 반품·환불·배송·개인정보·약관 페이지를 찾아 보드 문서 초안으로 만듭니다. 게시 전에 반드시 검수합니다.",
+    "urlLabel": "웹사이트 주소",
+    "analyze": "사이트 분석",
+    "runningLine": "{{site}} 분석 중 — {{done}}/{{total}} 페이지",
+    "readyLine": "{{site}} 분석 완료 — 검수 대기 초안 {{count}}건",
+    "viewProgress": "진행 보기",
+    "review": "검수하기",
+    "discovering": "{{site}} 사이트를 살펴보는 중…",
+    "found": "{{site}} · 정책 페이지 후보 {{count}}개",
+    "none": "정책 페이지를 찾지 못했습니다. 아래에 URL을 직접 추가하세요.",
+    "kind": {
+      "refund": "반품·환불",
+      "shipping": "배송",
+      "privacy": "개인정보",
+      "terms": "약관",
+      "payment": "결제",
+      "faq": "FAQ",
+      "other": "정책"
+    },
+    "robotsBlocked": "robots.txt 차단 — 우리 사이트 확인 시 읽기 가능",
+    "fileLink": "문서 파일 — AI 임포트(파일)를 사용하세요",
+    "addUrl": "URL 직접 추가",
+    "addUrlPlaceholder": "https://shop.example.com/pages/…",
+    "add": "추가",
+    "maxPages": "한 번에 최대 {{max}}개 페이지까지 분석할 수 있습니다.",
+    "start": "선택한 {{count}}개 분석",
+    "started": "{{count}}개 페이지 분석을 시작했습니다",
+    "progress": "페이지 분석",
+    "noJob": "진행 중인 분석이 없습니다.",
+    "pageStatus": {
+      "pending": "대기",
+      "done": "초안 {{count}}",
+      "thin": "본문 부족",
+      "robots": "robots.txt 차단",
+      "failed": "열 수 없음"
+    },
+    "thinHint": "본문이 브라우저에서 그려지는 페이지로 보입니다. 정책 내용을 복사해 파일로 AI 임포트하세요.",
+    "truncated": "긴 페이지는 앞부분 48,000자까지만 분석했습니다.",
+    "duplicate": "보드에 같은 제목 있음",
+    "publish": "보드에 {{count}}건 게시",
+    "error": {
+      "E5110": "공개된 https:// 웹사이트 주소를 입력하세요.",
+      "E5111": "웹사이트를 열 수 없습니다. 주소를 확인하거나 잠시 후 다시 시도하세요.",
+      "E5112": "모든 페이지는 같은 웹사이트여야 합니다.",
+      "E5113": "선택한 페이지에서 읽을 수 있는 정책 본문을 찾지 못했습니다."
+    },
+    "ownerConfirm": "이 웹사이트는 우리가 운영하는 사이트입니다",
+    "ownerConfirmHint": "확인하면 robots.txt가 막아 둔 페이지 {{count}}개도 선택해 읽을 수 있습니다(예: Shopify 기본 설정은 /policies/를 막습니다). 확인 기록은 감사 로그에 남습니다.",
+    "robotsOverridden": "robots.txt 차단 페이지 — 운영자 확인으로 읽음"
+  }
 }

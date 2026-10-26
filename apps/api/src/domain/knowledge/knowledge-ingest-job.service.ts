@@ -24,6 +24,32 @@ export interface IngestDraft {
   content: string;
   /** True when this draft is a parse-failure fallback (whole chunk, P3-4). */
   fallback: boolean;
+  /** Website ingest: the page this draft was written from (attached on approve). */
+  sourceUrl?: string;
+  /** Website ingest: the board already has a document with this title in the group (D3). */
+  duplicateOnBoard?: boolean;
+}
+
+export const INGEST_PAGE_STATUS = {
+  PENDING: 'pending',
+  DONE: 'done',
+  /** Fetched, but no readable body — rendered in the browser or a menu page. */
+  THIN: 'thin',
+  ROBOTS: 'robots',
+  FAILED: 'failed',
+} as const;
+export type IngestPageStatus = (typeof INGEST_PAGE_STATUS)[keyof typeof INGEST_PAGE_STATUS];
+
+/** Per-page progress of a website ingest (PLN-261026 3-3). */
+export interface IngestPage {
+  url: string;
+  title: string;
+  status: IngestPageStatus;
+  drafts: number;
+  /** Short reason for thin/robots/failed (HTTP 403, timeout, …). */
+  detail: string | null;
+  /** robots.txt disallows the page; it was read on the operator's ownership confirmation. */
+  robotsOverridden?: boolean;
 }
 
 export interface IngestJob {
@@ -35,20 +61,31 @@ export interface IngestJob {
   analyzeTotal: number;
   /** What is being ingested — filename or video title. */
   sourceLabel: string;
-  /** file_upload | youtube */
+  /** file_upload | youtube | website */
   sourceKind: string;
   docGroup: string;
   /** kb_files row id backing the upload; null for a video. */
   fileId: number | null;
   /** Where the knowledge came from (video URL; file download path later). */
   sourceUrl: string | null;
+  /** Website ingest: the operator confirmed the site is theirs (robots.txt not applied). */
+  ownerConfirmed?: boolean;
   truncated: boolean;
+  /** Website ingest only — one row per selected page. */
+  pages: IngestPage[];
   drafts: IngestDraft[];
   error: string | null;
   /** Result of the approve step, once consumed. */
   result: Record<string, unknown> | null;
   startedAt: string;
   finishedAt: string | null;
+}
+
+export interface IngestReporter {
+  analyzing: (done: number, total: number) => void;
+  extracted: (truncated: boolean, sourceLabel?: string) => void;
+  /** Upsert one page's progress row (website ingest). */
+  page: (p: IngestPage) => void;
 }
 
 /** A finished job stays readable this long so a reload still shows the outcome. */
@@ -103,11 +140,9 @@ export class KnowledgeIngestJobService {
       docGroup: string;
       fileId: number | null;
       sourceUrl: string | null;
+      ownerConfirmed?: boolean;
     },
-    work: (report: {
-      analyzing: (done: number, total: number) => void;
-      extracted: (truncated: boolean, sourceLabel?: string) => void;
-    }) => Promise<IngestDraft[]>,
+    work: (report: IngestReporter) => Promise<IngestDraft[]>,
   ): IngestJob {
     if (this.get(tenantId)?.status === INGEST_STATUS.RUNNING) {
       throw new BusinessException(ERROR_CODE.INGEST_JOB_RUNNING, HttpStatus.CONFLICT);
@@ -120,6 +155,7 @@ export class KnowledgeIngestJobService {
       analyzed: 0,
       analyzeTotal: 0,
       truncated: false,
+      pages: [],
       drafts: [],
       error: null,
       result: null,
@@ -129,7 +165,12 @@ export class KnowledgeIngestJobService {
     };
     this.jobs.set(tenantId, job);
 
-    const report = {
+    const report: IngestReporter = {
+      page: (p: IngestPage) => {
+        const i = job.pages.findIndex((x) => x.url === p.url);
+        if (i >= 0) job.pages[i] = p;
+        else job.pages.push(p);
+      },
       extracted: (truncated: boolean, sourceLabel?: string) => {
         job.truncated = truncated;
         // A video learns its real title only after the page is fetched.

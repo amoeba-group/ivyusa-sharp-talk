@@ -465,5 +465,57 @@
     "counts": "Pendientes de revisión {{pending}} · adoptados {{promoted}}"
   },
   "videoRef": "Video",
-  "videoRefHint": "Se muestra como «Ver video» bajo las respuestas que citan este documento. Un enlace https:// o notion:<id de bloque> para un video subido a Notion."
+  "videoRefHint": "Se muestra como «Ver video» bajo las respuestas que citan este documento. Un enlace https:// o notion:<id de bloque> para un video subido a Notion.",
+  "site": {
+    "title": "Análisis de políticas del sitio web",
+    "hint": "Introduce la dirección de tu tienda o servicio para encontrar sus páginas de devoluciones, reembolsos, envíos, privacidad y términos y convertirlas en borradores del tablero. Todo se revisa antes de publicarse.",
+    "urlLabel": "Dirección del sitio web",
+    "analyze": "Analizar sitio",
+    "runningLine": "Analizando {{site}} — {{done}}/{{total}} páginas",
+    "readyLine": "{{site}} analizado — {{count}} borradores pendientes de revisión",
+    "viewProgress": "Ver progreso",
+    "review": "Revisar",
+    "discovering": "Explorando {{site}}…",
+    "found": "{{site}} · {{count}} páginas de políticas candidatas",
+    "none": "No se encontraron páginas de políticas. Añade URLs abajo.",
+    "kind": {
+      "refund": "Devoluciones y reembolsos",
+      "shipping": "Envíos",
+      "privacy": "Privacidad",
+      "terms": "Términos",
+      "payment": "Pagos",
+      "faq": "FAQ",
+      "other": "Política"
+    },
+    "robotsBlocked": "Bloqueado por robots.txt — se puede leer si confirmas que el sitio es tuyo",
+    "fileLink": "Archivo de documento — usa la importación con IA (archivo)",
+    "addUrl": "Añadir URL",
+    "addUrlPlaceholder": "https://shop.example.com/pages/…",
+    "add": "Añadir",
+    "maxPages": "Se pueden analizar hasta {{max}} páginas a la vez.",
+    "start": "Analizar {{count}} seleccionadas",
+    "started": "Se inició el análisis de {{count}} páginas",
+    "progress": "Páginas analizadas",
+    "noJob": "No hay ningún análisis en curso.",
+    "pageStatus": {
+      "pending": "En espera",
+      "done": "{{count}} borradores",
+      "thin": "Sin texto",
+      "robots": "robots.txt",
+      "failed": "Inaccesible"
+    },
+    "thinHint": "Esta página parece generarse en el navegador. Copia el texto de la política en un archivo y usa la importación con IA.",
+    "truncated": "Las páginas largas se analizaron hasta sus primeros 48.000 caracteres.",
+    "duplicate": "Ya hay un título igual en el tablero",
+    "publish": "Publicar {{count}} en el tablero",
+    "error": {
+      "E5110": "Introduce una dirección web pública https://.",
+      "E5111": "No se pudo abrir el sitio web. Revisa la dirección o inténtalo más tarde.",
+      "E5112": "Todas las páginas deben pertenecer al mismo sitio web.",
+      "E5113": "No se encontró texto de políticas legible en las páginas seleccionadas."
+    },
+    "ownerConfirm": "Este sitio web es nuestro — lo operamos nosotros",
+    "ownerConfirmHint": "Al confirmarlo podrás seleccionar y leer {{count}} páginas bloqueadas por robots.txt (Shopify bloquea /policies/ por defecto). La confirmación queda en el registro de auditoría.",
+    "robotsOverridden": "Bloqueado por robots.txt — leído con la confirmación del operador"
+  }
 }

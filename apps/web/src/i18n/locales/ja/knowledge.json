@@ -465,5 +465,57 @@
     "counts": "レビュー待ち {{pending}} · 採用 {{promoted}}"
   },
   "videoRef": "動画",
-  "videoRefHint": "この文書を引用した回答の下に「動画を見る」として表示されます。https:// のリンク、またはNotionにアップロードした動画は notion:<ブロックID>。"
+  "videoRefHint": "この文書を引用した回答の下に「動画を見る」として表示されます。https:// のリンク、またはNotionにアップロードした動画は notion:<ブロックID>。",
+  "site": {
+    "title": "ウェブサイトのポリシー分析",
+    "hint": "ショップやサービスのアドレスを入力すると、返品・返金・配送・プライバシー・利用規約のページを探してボードの下書きにします。公開前に必ずレビューします。",
+    "urlLabel": "ウェブサイトのアドレス",
+    "analyze": "サイトを分析",
+    "runningLine": "{{site}} を分析中 — {{done}}/{{total}} ページ",
+    "readyLine": "{{site}} の分析完了 — レビュー待ちの下書き {{count}} 件",
+    "viewProgress": "進捗を見る",
+    "review": "レビュー",
+    "discovering": "{{site}} を確認しています…",
+    "found": "{{site}} · ポリシーページ候補 {{count}} 件",
+    "none": "ポリシーページが見つかりませんでした。下でURLを追加してください。",
+    "kind": {
+      "refund": "返品・返金",
+      "shipping": "配送",
+      "privacy": "プライバシー",
+      "terms": "利用規約",
+      "payment": "支払い",
+      "faq": "FAQ",
+      "other": "ポリシー"
+    },
+    "robotsBlocked": "robots.txt によりブロック — 自社サイトと確認すれば読み取れます",
+    "fileLink": "文書ファイル — AIインポート(ファイル)を使用してください",
+    "addUrl": "URLを追加",
+    "addUrlPlaceholder": "https://shop.example.com/pages/…",
+    "add": "追加",
+    "maxPages": "一度に分析できるのは最大 {{max}} ページです。",
+    "start": "選択した {{count}} 件を分析",
+    "started": "{{count}} ページの分析を開始しました",
+    "progress": "分析したページ",
+    "noJob": "実行中の分析はありません。",
+    "pageStatus": {
+      "pending": "待機中",
+      "done": "下書き {{count}}",
+      "thin": "本文なし",
+      "robots": "robots.txt",
+      "failed": "開けません"
+    },
+    "thinHint": "このページはブラウザで描画されているようです。ポリシー本文をファイルにコピーしてAIインポートしてください。",
+    "truncated": "長いページは先頭 48,000 文字までを分析しました。",
+    "duplicate": "ボードに同じタイトルがあります",
+    "publish": "ボードに {{count}} 件公開",
+    "error": {
+      "E5110": "公開されている https:// のウェブサイトアドレスを入力してください。",
+      "E5111": "ウェブサイトを開けませんでした。アドレスを確認するか、しばらくしてから再試行してください。",
+      "E5112": "すべてのページは同じウェブサイトのものである必要があります。",
+      "E5113": "選択したページから読み取れるポリシー本文が見つかりませんでした。"
+    },
+    "ownerConfirm": "このウェブサイトは当社が運営しています",
+    "ownerConfirmHint": "確認すると robots.txt がブロックしている {{count}} ページも選択して読み取れます(Shopify は既定で /policies/ をブロックします)。確認は監査ログに記録されます。",
+    "robotsOverridden": "robots.txt でブロック — 運営者の確認により読み取り"
+  }
 }
