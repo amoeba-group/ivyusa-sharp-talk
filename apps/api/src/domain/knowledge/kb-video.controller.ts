@@ -3,10 +3,12 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Public } from '../../global/decorator/public.decorator';
 import { KbVideoService } from './kb-video.service';
+import { isVideoFileUrl, renderVideoPage } from './kb-video-page';
 
 /**
  * Public "watch video" link (PLN-261006-KB-Video-Links). Opened in a new tab
- * from a chat answer, so it answers with a redirect or a short readable page —
+ * from a chat answer, so it answers with a player page (a video file — FIX-261026),
+ * a redirect (a video page such as YouTube) or a short readable error page —
  * never the JSON envelope. The signature in the URL is the authorisation.
  */
 @ApiTags('Knowledge')
@@ -16,7 +18,7 @@ export class KbVideoController {
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Redirect to a playable URL for the video a KB document explains' })
+  @ApiOperation({ summary: 'Play (or redirect to) the video a KB document explains' })
   async play(
     @Param('id', ParseIntPipe) id: number,
     @Query('t') t: string,
@@ -27,7 +29,8 @@ export class KbVideoController {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Referrer-Policy', 'no-referrer');
     if (r.ok) {
-      res.redirect(302, r.url);
+      if (isVideoFileUrl(r.url)) res.status(200).type('html').send(renderVideoPage(r.url));
+      else res.redirect(302, r.url);
       return;
     }
     // `broken` (the source no longer has the video) is permanent → 404.
