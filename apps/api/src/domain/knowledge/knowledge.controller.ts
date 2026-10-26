@@ -28,6 +28,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { KnowledgeService } from './knowledge.service';
 import { KnowledgeIngestService } from './knowledge-ingest.service';
+import { HISTORY_MAX, IngestHistoryService } from './ingest-history.service';
 import { GdriveCredentialService } from './gdrive-credential.service';
 import { NotionCredentialService } from './notion-credential.service';
 import { UsageTypeService } from './usage-type.service';
@@ -93,6 +94,7 @@ export class KnowledgeController {
     private readonly ingest: KnowledgeIngestService,
     private readonly bulkExport: BulkExportService,
     private readonly boardReview: BoardReviewService,
+    private readonly ingestHistory: IngestHistoryService,
   ) {}
 
   // ---- Knowledge-gap proposals (P5, 결정 9: human approval only) ----
@@ -500,6 +502,8 @@ export class KnowledgeController {
       actor.tenantId,
       { ...file, originalname: decodeUploadName(file.originalname) },
       body.doc_group ?? DOC_GROUP.COUNSEL,
+      // JWT userId arrives as a string; history groups actors by number.
+      Number(actor.userId),
     );
   }
 
@@ -509,7 +513,13 @@ export class KnowledgeController {
   @ApiOperation({ summary: 'Analyze a YouTube transcript into draft articles (async, R5 P1)' })
   async ingestVideo(@CurrentUser() user: Principal, @Body() body: IngestVideoRequest) {
     const actor = this.tenantUser(user);
-    return this.ingest.startVideo(actor.tenantId, body.video_url, body.doc_group ?? DOC_GROUP.COUNSEL);
+    return this.ingest.startVideo(
+      actor.tenantId,
+      body.video_url,
+      body.doc_group ?? DOC_GROUP.COUNSEL,
+      // JWT userId arrives as a string; history groups actors by number.
+      Number(actor.userId),
+    );
   }
 
   // ---- Website policy agent (PLN-261026) ----
@@ -534,7 +544,33 @@ export class KnowledgeController {
       body.urls,
       body.doc_group ?? DOC_GROUP.COUNSEL,
       body.owner_confirmed === true,
+      Number(actor.userId),
     );
+  }
+
+  // ---- Ingest run history (PLN-261026-Site-Ingest-History) ----
+
+  @Get('ingest/history')
+  @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
+  @ApiOperation({ summary: 'Recent ingest runs (started / finished / failed / published), newest first' })
+  async listIngestRuns(
+    @CurrentUser() user: Principal,
+    @Query('kind') kind?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const n = Number(limit);
+    return this.ingestHistory.list(
+      this.tenantUser(user).tenantId,
+      kind || undefined,
+      Number.isFinite(n) && n > 0 ? Math.min(n, HISTORY_MAX) : 10,
+    );
+  }
+
+  @Get('ingest/history/:jobId')
+  @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
+  @ApiOperation({ summary: 'One ingest run: timeline, per-page outcome, published board documents' })
+  async getIngestRun(@CurrentUser() user: Principal, @Param('jobId') jobId: string) {
+    return this.ingestHistory.detail(this.tenantUser(user).tenantId, jobId);
   }
 
   @Get('ingest/status')

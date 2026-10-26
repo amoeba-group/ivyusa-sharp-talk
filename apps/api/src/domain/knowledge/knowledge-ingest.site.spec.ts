@@ -144,7 +144,8 @@ describe('KnowledgeIngestService — website', () => {
       [{ title: 'Return window', category: 'Returns', content: '10 days', source_url: 'https://ivyusa.com/policies/refund-policy' }],
       7,
     );
-    expect(h.audited[0].meta).toMatchObject({
+    const publish = h.audited.find((a) => a.action === 'knowledge.site_ingested')!;
+    expect(publish.meta).toMatchObject({
       ownerConfirmed: true,
       pages: [{ url: 'https://ivyusa.com/policies/refund-policy', status: 'done', robotsOverridden: true }],
     });
@@ -205,7 +206,9 @@ describe('KnowledgeIngestService — website', () => {
     expect(h.attachments.addLink).toHaveBeenCalledTimes(1);
     expect((h.attachments.addLink as jest.Mock).mock.calls[0].slice(1, 3)).toEqual([1, 'https://ivyusa.com/pages/returns-refunds']);
     expect(result).toMatchObject({ saved: 2, sourceKind: 'website', attachedOriginals: 1 });
-    expect(h.audited[0].action).toBe('knowledge.site_ingested');
-    expect(h.audited[0].meta.pages).toEqual([{ url: 'https://ivyusa.com/pages/returns-refunds', status: 'done' }]);
+    const publish = h.audited.find((a) => a.action === 'knowledge.site_ingested')!;
+    expect(publish.meta.pages).toEqual([{ url: 'https://ivyusa.com/pages/returns-refunds', status: 'done' }]);
+    // The publish row names its run, so history can join it to start/finish.
+    expect(publish.meta.jobId).toBe(h.jobs.get(1)!.id);
   });
 });

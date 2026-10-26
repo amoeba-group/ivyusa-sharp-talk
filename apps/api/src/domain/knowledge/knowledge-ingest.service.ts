@@ -18,10 +18,12 @@ import { fetchYoutubeTranscript } from './youtube-transcript.util';
 import {
   INGEST_PAGE_STATUS,
   IngestDraft,
+  IngestEventType,
   IngestJob,
   IngestPage,
   KnowledgeIngestJobService,
 } from './knowledge-ingest-job.service';
+import { INGEST_AUDIT } from './ingest-history.service';
 import { safeFetch, SiteFetchError, SiteFetcher } from './site/safe-fetch.util';
 import { boilerplateLines, extractPageText } from './site/html-text.util';
 import { discoverPolicyPages, normalizeUrl, PolicyCandidate, sameSite } from './site/policy-discover.util';
@@ -92,6 +94,7 @@ export class KnowledgeIngestService {
     tenantId: number,
     file: { originalname: string; mimetype: string; size: number; buffer: Buffer },
     docGroup: string,
+    actorUserId: number | null = null,
   ): Promise<IngestJob> {
     // Extension gate up front so an unsupported file fails the REQUEST, not the
     // job the operator would have to poll to see fail.
@@ -108,17 +111,19 @@ export class KnowledgeIngestService {
         docGroup,
         fileId: Number(stored.id),
         sourceUrl: null,
+        startedBy: actorUserId,
       },
       async (report) => {
         const extracted = await extractText(file.originalname, file.buffer);
         report.extracted(extracted.truncated);
         return this.analyze(tenantId, docGroup, file.originalname, extracted.text, report);
       },
+      this.recordEvent,
     );
   }
 
   /** Video path (R5 P1): public YouTube captions → the same analysis. */
-  startVideo(tenantId: number, url: string, docGroup: string): IngestJob {
+  startVideo(tenantId: number, url: string, docGroup: string, actorUserId: number | null = null): IngestJob {
     return this.jobs.start(
       tenantId,
       {
@@ -127,12 +132,14 @@ export class KnowledgeIngestService {
         docGroup,
         fileId: null,
         sourceUrl: url,
+        startedBy: actorUserId,
       },
       async (report) => {
         const transcript = await fetchYoutubeTranscript(url);
         report.extracted(false, `${transcript.title} [${transcript.track}]`);
         return this.analyze(tenantId, docGroup, transcript.title, transcript.text, report);
       },
+      this.recordEvent,
     );
   }
 
@@ -166,7 +173,13 @@ export class KnowledgeIngestService {
    * is theirs, this is the owner fetching their own pages on demand, and
    * robots.txt is not applied. Without the confirmation it still is.
    */
-  startSite(tenantId: number, rawUrls: string[], docGroup: string, ownerConfirmed = false): IngestJob {
+  startSite(
+    tenantId: number,
+    rawUrls: string[],
+    docGroup: string,
+    ownerConfirmed = false,
+    actorUserId: number | null = null,
+  ): IngestJob {
     const urls = [...new Set(rawUrls.map((u) => normalizeUrl(this.siteUrl(u))))];
     if (!urls.length || urls.length > MAX_SITE_PAGES) {
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
@@ -186,6 +199,8 @@ export class KnowledgeIngestService {
         fileId: null,
         sourceUrl: origin,
         ownerConfirmed,
+        startedBy: actorUserId,
+        requestedUrls: urls,
       },
       async (report) => {
         const pages: IngestPage[] = urls.map((url) => ({
@@ -259,8 +274,40 @@ export class KnowledgeIngestService {
         const onBoard = await this.board.titlesInGroup(tenantId, docGroup);
         return drafts.slice(0, MAX_DRAFTS).map((d) => ({ ...d, duplicateOnBoard: onBoard.has(d.title) }));
       },
+      this.recordEvent,
     );
   }
+
+  /**
+   * Run history (PLN-261026-Site-Ingest-History D1): each lifecycle event is an
+   * audit row keyed by jobId — the in-memory job vanishes an hour after it
+   * ends (or on any restart), the audit row does not. Pages are summarized,
+   * draft bodies are not stored (they are not knowledge until approved).
+   */
+  private readonly recordEvent = (type: IngestEventType, tenantId: number, job: IngestJob): Promise<void> => {
+    const base = {
+      jobId: job.id,
+      sourceKind: job.sourceKind,
+      sourceLabel: job.sourceLabel,
+      sourceUrl: job.sourceUrl,
+      docGroup: job.docGroup,
+    };
+    const pages = job.pages.map((p) => ({
+      url: p.url,
+      title: p.title,
+      status: p.status,
+      drafts: p.drafts,
+      detail: p.detail,
+      ...(p.robotsOverridden ? { robotsOverridden: true } : {}),
+    }));
+    const meta =
+      type === 'started'
+        ? { ...base, ownerConfirmed: job.ownerConfirmed ?? false, pageUrls: job.requestedUrls ?? [] }
+        : type === 'finished'
+          ? { ...base, drafted: job.drafts.length, truncated: job.truncated, pages }
+          : { ...base, error: job.error, pages };
+    return this.revisions.recordAudit(tenantId, 0, INGEST_AUDIT[type], job.startedBy ?? null, meta);
+  };
 
   /** Operator input → absolute https URL. A bare "shop.com" means https://shop.com. */
   private siteUrl(raw: string): string {
@@ -366,6 +413,7 @@ export class KnowledgeIngestService {
       : await this.attachOriginal(tenantId, job, boardDocumentIds, actorUserId);
 
     const result = {
+      jobId: job.id,
       sourceLabel: job.sourceLabel,
       sourceKind: job.sourceKind,
       docGroup: job.docGroup,

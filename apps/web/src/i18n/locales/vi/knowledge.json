@@ -471,8 +471,6 @@
     "hint": "Nhập địa chỉ cửa hàng hoặc dịch vụ để tìm các trang đổi trả, hoàn tiền, vận chuyển, bảo mật và điều khoản rồi tạo bản nháp trên bảng. Mọi nội dung đều được duyệt trước khi đăng.",
     "urlLabel": "Địa chỉ website",
     "analyze": "Phân tích website",
-    "runningLine": "Đang phân tích {{site}} — {{done}}/{{total}} trang",
-    "readyLine": "Đã phân tích {{site}} — {{count}} bản nháp chờ duyệt",
     "viewProgress": "Xem tiến độ",
     "review": "Duyệt",
     "discovering": "Đang xem qua {{site}}…",
@@ -517,5 +515,43 @@
     "ownerConfirm": "Website này là của chúng tôi — chúng tôi vận hành",
     "ownerConfirmHint": "Khi xác nhận, bạn có thể chọn và đọc {{count}} trang bị robots.txt chặn (Shopify mặc định chặn /policies/). Xác nhận được ghi vào nhật ký kiểm tra.",
     "robotsOverridden": "Bị robots.txt chặn — đã đọc theo xác nhận của người vận hành"
+  },
+  "siteHistory": {
+    "title": "Phân tích gần đây",
+    "viewAll": "Xem tất cả",
+    "empty": "Chưa có lần phân tích nào.",
+    "loadError": "Không tải được lịch sử phân tích.",
+    "allTitle": "Lịch sử phân tích ({{count}} gần nhất)",
+    "legacyNote": "Các lần chạy trước ngày 26/10 chỉ còn bản ghi đăng, nên không hiển thị thời gian bắt đầu và kết thúc.",
+    "detail": "Chi tiết",
+    "detailTitle": "Chi tiết phân tích — {{site}}",
+    "ownerConfirmed": "Đã xác nhận website của chúng tôi ✓",
+    "pages": "Trang",
+    "boardDocs": "Tài liệu đã đăng lên bảng",
+    "pagesCount": "{{count}} trang",
+    "finishedNote": "{{drafted}} bản nháp · {{ok}}/{{total}} trang thành công",
+    "publishedNote": "Đã đăng {{saved}}",
+    "status": {
+      "running": "Đang chạy",
+      "review": "Chờ duyệt",
+      "published": "Đã đăng",
+      "expired": "Chưa đăng",
+      "failed": "Thất bại",
+      "interrupted": "Bị gián đoạn"
+    },
+    "line": {
+      "running": "Xong {{ok}}/{{total}} trang",
+      "review": "{{count}} bản nháp · duyệt trước {{until}}",
+      "published": "Đã đăng {{saved}} ({{drafted}} bản nháp)",
+      "publishedLegacy": "Đã đăng {{saved}} (trước khi có lịch sử)",
+      "expired": "{{count}} bản nháp · hết thời gian duyệt",
+      "interrupted": "Bị gián đoạn do khởi động lại máy chủ"
+    },
+    "event": {
+      "started": "Bắt đầu",
+      "finished": "Phân tích xong",
+      "failed": "Thất bại",
+      "published": "Đã đăng"
+    }
   }
 }

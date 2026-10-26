@@ -277,6 +277,44 @@ export interface SiteDiscovery {
   candidates: SiteCandidate[];
 }
 
+/** One ingest run as the history shows it (PLN-261026-Site-Ingest-History). */
+export type IngestRunStatus = 'running' | 'review' | 'published' | 'expired' | 'failed' | 'interrupted';
+
+export interface IngestRunSummary {
+  /** null for a publish recorded before history existed. */
+  jobId: string | null;
+  status: IngestRunStatus;
+  sourceKind: string | null;
+  sourceLabel: string | null;
+  docGroup: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  publishedAt: string | null;
+  startedBy: string | null;
+  publishedBy: string | null;
+  pagesTotal: number;
+  pagesOk: number;
+  drafted: number | null;
+  saved: number | null;
+  error: string | null;
+  expiresAt: string | null;
+  ownerConfirmed: boolean;
+  legacy: boolean;
+}
+
+export interface IngestRunDetail extends IngestRunSummary {
+  pages: Array<{
+    url: string;
+    title: string | null;
+    status: string;
+    drafts: number;
+    detail: string | null;
+    robotsOverridden?: boolean;
+  }>;
+  boardDocumentIds: string[];
+  events: Array<{ type: 'started' | 'finished' | 'failed' | 'published'; at: string; by: string | null }>;
+}
+
 export interface ApproveArticle {
   title: string;
   category: string;
@@ -495,6 +533,12 @@ export const knowledgeService = {
   ingestStatus: () => apiGet<IngestJob | null>('/knowledge/ingest/status'),
   approveIngest: (articles: ApproveArticle[]) =>
     apiPost<IngestApproveResult>('/knowledge/ingest/approve', { articles }),
+  ingestHistory: (kind: string | undefined, limit: number) =>
+    apiGet<IngestRunSummary[]>(
+      `/knowledge/ingest/history?limit=${limit}${kind ? `&kind=${encodeURIComponent(kind)}` : ''}`,
+    ),
+  ingestRun: (jobId: string) =>
+    apiGet<IngestRunDetail>(`/knowledge/ingest/history/${encodeURIComponent(jobId)}`),
   discoverSite: (siteUrl: string) =>
     apiPost<SiteDiscovery>('/knowledge/ingest/site/discover', { site_url: siteUrl }),
   ingestSite: (urls: string[], docGroup: string, ownerConfirmed: boolean) =>

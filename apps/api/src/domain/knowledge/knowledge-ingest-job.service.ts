@@ -70,6 +70,10 @@ export interface IngestJob {
   sourceUrl: string | null;
   /** Website ingest: the operator confirmed the site is theirs (robots.txt not applied). */
   ownerConfirmed?: boolean;
+  /** Who started the run (PLN-261026-Site-Ingest-History) — null for system/legacy callers. */
+  startedBy?: number | null;
+  /** Website ingest: the pages the operator asked for (recorded at start). */
+  requestedUrls?: string[];
   truncated: boolean;
   /** Website ingest only — one row per selected page. */
   pages: IngestPage[];
@@ -86,6 +90,18 @@ export interface IngestReporter {
   extracted: (truncated: boolean, sourceLabel?: string) => void;
   /** Upsert one page's progress row (website ingest). */
   page: (p: IngestPage) => void;
+}
+
+/**
+ * Lifecycle events of a run (PLN-261026-Site-Ingest-History). The queue stays
+ * free of persistence: the ingest service turns these into audit rows.
+ */
+export type IngestEventType = 'started' | 'finished' | 'failed';
+export type IngestEventListener = (type: IngestEventType, tenantId: number, job: IngestJob) => unknown;
+
+/** When a finished run's drafts drop out of memory (null while running). */
+export function ingestExpiresAt(job: Pick<IngestJob, 'finishedAt'>): string | null {
+  return job.finishedAt ? new Date(new Date(job.finishedAt).getTime() + RESULT_TTL_MS).toISOString() : null;
 }
 
 /** A finished job stays readable this long so a reload still shows the outcome. */
@@ -141,8 +157,11 @@ export class KnowledgeIngestJobService {
       fileId: number | null;
       sourceUrl: string | null;
       ownerConfirmed?: boolean;
+      startedBy?: number | null;
+      requestedUrls?: string[];
     },
     work: (report: IngestReporter) => Promise<IngestDraft[]>,
+    onEvent?: IngestEventListener,
   ): IngestJob {
     if (this.get(tenantId)?.status === INGEST_STATUS.RUNNING) {
       throw new BusinessException(ERROR_CODE.INGEST_JOB_RUNNING, HttpStatus.CONFLICT);
@@ -164,6 +183,20 @@ export class KnowledgeIngestJobService {
       ...meta,
     };
     this.jobs.set(tenantId, job);
+
+    // History must never cost the run: a listener that throws or rejects is
+    // logged and ignored.
+    const emit = (type: IngestEventType) => {
+      if (!onEvent) return;
+      try {
+        void Promise.resolve(onEvent(type, tenantId, job)).catch((e: Error) =>
+          this.logger.warn(`ingest event ${type} not recorded (tenant ${tenantId}): ${e.message}`),
+        );
+      } catch (e) {
+        this.logger.warn(`ingest event ${type} not recorded (tenant ${tenantId}): ${(e as Error).message}`);
+      }
+    };
+    emit('started');
 
     const report: IngestReporter = {
       page: (p: IngestPage) => {
@@ -199,6 +232,7 @@ export class KnowledgeIngestJobService {
       .finally(() => {
         job.phase = INGEST_PHASE.DONE;
         job.finishedAt = new Date().toISOString();
+        emit(job.status === INGEST_STATUS.FAILED ? 'failed' : 'finished');
       });
 
     return job;

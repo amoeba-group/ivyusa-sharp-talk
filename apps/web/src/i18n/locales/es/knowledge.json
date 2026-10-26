@@ -471,8 +471,6 @@
     "hint": "Introduce la dirección de tu tienda o servicio para encontrar sus páginas de devoluciones, reembolsos, envíos, privacidad y términos y convertirlas en borradores del tablero. Todo se revisa antes de publicarse.",
     "urlLabel": "Dirección del sitio web",
     "analyze": "Analizar sitio",
-    "runningLine": "Analizando {{site}} — {{done}}/{{total}} páginas",
-    "readyLine": "{{site}} analizado — {{count}} borradores pendientes de revisión",
     "viewProgress": "Ver progreso",
     "review": "Revisar",
     "discovering": "Explorando {{site}}…",
@@ -517,5 +515,43 @@
     "ownerConfirm": "Este sitio web es nuestro — lo operamos nosotros",
     "ownerConfirmHint": "Al confirmarlo podrás seleccionar y leer {{count}} páginas bloqueadas por robots.txt (Shopify bloquea /policies/ por defecto). La confirmación queda en el registro de auditoría.",
     "robotsOverridden": "Bloqueado por robots.txt — leído con la confirmación del operador"
+  },
+  "siteHistory": {
+    "title": "Análisis recientes",
+    "viewAll": "Ver todo",
+    "empty": "Aún no hay análisis.",
+    "loadError": "No se pudo cargar el historial de análisis.",
+    "allTitle": "Historial de análisis (últimos {{count}})",
+    "legacyNote": "Las ejecuciones anteriores al 26 de octubre solo conservan su registro de publicación, por eso no muestran hora de inicio ni de fin.",
+    "detail": "Detalles",
+    "detailTitle": "Detalles del análisis — {{site}}",
+    "ownerConfirmed": "Propiedad del sitio confirmada ✓",
+    "pages": "Páginas",
+    "boardDocs": "Documentos publicados en el tablero",
+    "pagesCount": "{{count}} páginas",
+    "finishedNote": "{{drafted}} borradores · {{ok}}/{{total}} páginas correctas",
+    "publishedNote": "{{saved}} publicados",
+    "status": {
+      "running": "En curso",
+      "review": "Pendiente de revisión",
+      "published": "Publicado",
+      "expired": "No publicado",
+      "failed": "Fallido",
+      "interrupted": "Interrumpido"
+    },
+    "line": {
+      "running": "{{ok}}/{{total}} páginas completadas",
+      "review": "{{count}} borradores · revisar antes de las {{until}}",
+      "published": "{{saved}} publicados ({{drafted}} borradores)",
+      "publishedLegacy": "{{saved}} publicados (antes del historial)",
+      "expired": "{{count}} borradores · venció el plazo de revisión",
+      "interrupted": "Interrumpido por un reinicio del servidor"
+    },
+    "event": {
+      "started": "Inicio",
+      "finished": "Analizado",
+      "failed": "Fallido",
+      "published": "Publicado"
+    }
   }
 }

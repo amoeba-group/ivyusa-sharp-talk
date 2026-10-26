@@ -471,8 +471,6 @@
     "hint": "输入店铺或服务的网址，查找其退货、退款、配送、隐私和条款页面，并生成看板草稿。发布前均需审核。",
     "urlLabel": "网站地址",
     "analyze": "分析网站",
-    "runningLine": "正在分析 {{site}} — {{done}}/{{total}} 页",
-    "readyLine": "{{site}} 分析完成 — {{count}} 篇草稿待审核",
     "viewProgress": "查看进度",
     "review": "审核",
     "discovering": "正在浏览 {{site}}…",
@@ -517,5 +515,43 @@
     "ownerConfirm": "此网站由我们运营",
     "ownerConfirmHint": "确认后可选择并读取被 robots.txt 禁止的 {{count}} 个页面（Shopify 默认禁止 /policies/）。确认操作会记录在审计日志中。",
     "robotsOverridden": "被 robots.txt 禁止 — 已根据运营者确认读取"
+  },
+  "siteHistory": {
+    "title": "最近的分析",
+    "viewAll": "查看全部",
+    "empty": "暂无分析记录。",
+    "loadError": "无法加载分析记录。",
+    "allTitle": "分析记录（最近 {{count}} 条）",
+    "legacyNote": "10月26日之前的运行只保留了发布记录，因此不显示开始和完成时间。",
+    "detail": "详情",
+    "detailTitle": "分析详情 — {{site}}",
+    "ownerConfirmed": "已确认为自有网站 ✓",
+    "pages": "页面",
+    "boardDocs": "已发布的看板文档",
+    "pagesCount": "{{count}} 个页面",
+    "finishedNote": "草稿 {{drafted}} 篇 · {{ok}}/{{total}} 个页面成功",
+    "publishedNote": "已发布 {{saved}} 篇",
+    "status": {
+      "running": "进行中",
+      "review": "待审核",
+      "published": "已发布",
+      "expired": "未发布",
+      "failed": "失败",
+      "interrupted": "已中断"
+    },
+    "line": {
+      "running": "已完成 {{ok}}/{{total}} 页",
+      "review": "草稿 {{count}} 篇 · 请在 {{until}} 前审核",
+      "published": "已发布 {{saved}} 篇（草稿 {{drafted}} 篇）",
+      "publishedLegacy": "已发布 {{saved}} 篇（记录功能上线前）",
+      "expired": "草稿 {{count}} 篇 · 审核期限已过",
+      "interrupted": "因服务器重启而中断"
+    },
+    "event": {
+      "started": "开始",
+      "finished": "分析完成",
+      "failed": "失败",
+      "published": "发布到看板"
+    }
   }
 }

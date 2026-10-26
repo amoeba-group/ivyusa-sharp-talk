@@ -471,8 +471,6 @@
     "hint": "쇼핑몰·서비스 주소를 넣으면 반품·환불·배송·개인정보·약관 페이지를 찾아 보드 문서 초안으로 만듭니다. 게시 전에 반드시 검수합니다.",
     "urlLabel": "웹사이트 주소",
     "analyze": "사이트 분석",
-    "runningLine": "{{site}} 분석 중 — {{done}}/{{total}} 페이지",
-    "readyLine": "{{site}} 분석 완료 — 검수 대기 초안 {{count}}건",
     "viewProgress": "진행 보기",
     "review": "검수하기",
     "discovering": "{{site}} 사이트를 살펴보는 중…",
@@ -517,5 +515,43 @@
     "ownerConfirm": "이 웹사이트는 우리가 운영하는 사이트입니다",
     "ownerConfirmHint": "확인하면 robots.txt가 막아 둔 페이지 {{count}}개도 선택해 읽을 수 있습니다(예: Shopify 기본 설정은 /policies/를 막습니다). 확인 기록은 감사 로그에 남습니다.",
     "robotsOverridden": "robots.txt 차단 페이지 — 운영자 확인으로 읽음"
+  },
+  "siteHistory": {
+    "title": "최근 분석",
+    "viewAll": "전체 보기",
+    "empty": "아직 분석 기록이 없습니다.",
+    "loadError": "분석 기록을 불러오지 못했습니다.",
+    "allTitle": "분석 기록 (최근 {{count}}건)",
+    "legacyNote": "10월 26일 이전 실행은 게시 기록만 남아 있어 시작·완료 시각이 표시되지 않습니다.",
+    "detail": "상세",
+    "detailTitle": "분석 상세 — {{site}}",
+    "ownerConfirmed": "우리 사이트 확인 ✓",
+    "pages": "페이지",
+    "boardDocs": "게시된 보드 문서",
+    "pagesCount": "페이지 {{count}}개",
+    "finishedNote": "초안 {{drafted}} · 페이지 {{ok}}/{{total}} 성공",
+    "publishedNote": "{{saved}}건 게시",
+    "status": {
+      "running": "진행 중",
+      "review": "검수 대기",
+      "published": "게시 완료",
+      "expired": "미게시",
+      "failed": "실패",
+      "interrupted": "중단"
+    },
+    "line": {
+      "running": "{{ok}}/{{total}} 페이지 완료",
+      "review": "초안 {{count}} · {{until}}까지 검수",
+      "published": "{{saved}}건 게시 (초안 {{drafted}})",
+      "publishedLegacy": "{{saved}}건 게시 (이력 기능 이전)",
+      "expired": "초안 {{count}} · 검수 시간 만료",
+      "interrupted": "서버 재시작으로 중단"
+    },
+    "event": {
+      "started": "시작",
+      "finished": "분석 완료",
+      "failed": "실패",
+      "published": "보드 게시"
+    }
   }
 }

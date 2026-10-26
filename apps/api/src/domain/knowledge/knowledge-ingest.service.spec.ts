@@ -31,8 +31,9 @@ describe('KnowledgeIngestService', () => {
     };
     const revisions = {
       record: jest.fn(async () => null),
-      recordAudit: jest.fn(async (_t: number, _d: number, _a: string, _u: unknown, meta: Record<string, unknown>) => {
-        audited.push(meta);
+      recordAudit: jest.fn(async (_t: number, _d: number, action: string, _u: unknown, meta: Record<string, unknown>) => {
+        // Run-lifecycle rows (ingest_started/finished/failed) have their own spec.
+        if (!action.startsWith('knowledge.ingest_')) audited.push(meta);
       }),
     };
     const board = {

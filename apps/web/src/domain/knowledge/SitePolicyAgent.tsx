@@ -17,6 +17,7 @@ import {
   useIngestStatus,
 } from './knowledge.hooks';
 import type { IngestJob, IngestPage, SiteCandidate, SiteDiscovery } from './knowledge.service';
+import { IngestHistoryList } from './IngestHistory';
 import { IngestDraftReview, ReviewDraft, toApproveArticles, toReviewDrafts } from './IngestDraftReview';
 
 /** Mirrors the API's MAX_SITE_PAGES — the request is refused past it. */
@@ -59,8 +60,6 @@ function SitePolicyCardBody() {
   const value = url ?? storefront.data?.storefrontUrl ?? '';
 
   const websiteRunning = isWebsiteJob(job) && job.status === 'running';
-  const websiteReady = isWebsiteJob(job) && job.status === 'ready';
-  const pagesDone = (job?.pages ?? []).filter((p) => p.status !== 'pending').length;
 
   return (
     <>
@@ -84,22 +83,8 @@ function SitePolicyCardBody() {
             {t('site.analyze')}
           </Button>
         </form>
-        {(websiteRunning || websiteReady) && (
-          <div className="mt-3 flex items-center gap-3 text-xs text-gray-600">
-            <span>
-              {websiteRunning
-                ? t('site.runningLine', { site: job.sourceLabel, done: pagesDone, total: job.pages?.length ?? 0 })
-                : t('site.readyLine', { site: job.sourceLabel, count: job.drafts.length })}
-            </span>
-            <button
-              type="button"
-              className="text-primary-600 hover:underline"
-              onClick={() => setModal({ open: true, url: '' })}
-            >
-              {websiteRunning ? t('site.viewProgress') : t('site.review')}
-            </button>
-          </div>
-        )}
+        {/* PLN-261026-Site-Ingest-History: every run, including the live one. */}
+        <IngestHistoryList onResume={() => setModal({ open: true, url: '' })} />
       </Card>
       <SitePolicyModal
         open={modal.open}

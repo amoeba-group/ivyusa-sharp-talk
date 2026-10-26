@@ -471,8 +471,6 @@
     "hint": "ショップやサービスのアドレスを入力すると、返品・返金・配送・プライバシー・利用規約のページを探してボードの下書きにします。公開前に必ずレビューします。",
     "urlLabel": "ウェブサイトのアドレス",
     "analyze": "サイトを分析",
-    "runningLine": "{{site}} を分析中 — {{done}}/{{total}} ページ",
-    "readyLine": "{{site}} の分析完了 — レビュー待ちの下書き {{count}} 件",
     "viewProgress": "進捗を見る",
     "review": "レビュー",
     "discovering": "{{site}} を確認しています…",
@@ -517,5 +515,43 @@
     "ownerConfirm": "このウェブサイトは当社が運営しています",
     "ownerConfirmHint": "確認すると robots.txt がブロックしている {{count}} ページも選択して読み取れます(Shopify は既定で /policies/ をブロックします)。確認は監査ログに記録されます。",
     "robotsOverridden": "robots.txt でブロック — 運営者の確認により読み取り"
+  },
+  "siteHistory": {
+    "title": "最近の分析",
+    "viewAll": "すべて表示",
+    "empty": "まだ分析の記録はありません。",
+    "loadError": "分析履歴を読み込めませんでした。",
+    "allTitle": "分析履歴(最新 {{count}} 件)",
+    "legacyNote": "10月26日以前の実行は公開記録のみ残っているため、開始・完了時刻は表示されません。",
+    "detail": "詳細",
+    "detailTitle": "分析の詳細 — {{site}}",
+    "ownerConfirmed": "自社サイト確認済み ✓",
+    "pages": "ページ",
+    "boardDocs": "公開したボード文書",
+    "pagesCount": "{{count}} ページ",
+    "finishedNote": "下書き {{drafted}} · {{ok}}/{{total}} ページ成功",
+    "publishedNote": "{{saved}} 件公開",
+    "status": {
+      "running": "実行中",
+      "review": "レビュー待ち",
+      "published": "公開済み",
+      "expired": "未公開",
+      "failed": "失敗",
+      "interrupted": "中断"
+    },
+    "line": {
+      "running": "{{ok}}/{{total}} ページ完了",
+      "review": "下書き {{count}} · {{until}} までにレビュー",
+      "published": "{{saved}} 件公開(下書き {{drafted}})",
+      "publishedLegacy": "{{saved}} 件公開(履歴機能以前)",
+      "expired": "下書き {{count}} · レビュー期限切れ",
+      "interrupted": "サーバー再起動により中断"
+    },
+    "event": {
+      "started": "開始",
+      "finished": "分析完了",
+      "failed": "失敗",
+      "published": "ボード公開"
+    }
   }
 }

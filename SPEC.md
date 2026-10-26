@@ -253,7 +253,8 @@ the RN app, Web Push/VAPID for the PWA, routed per device row's provider),
 from home links · sitemap · Shopify/Cafe24 known paths; robots.txt obeyed unless the operator confirms site ownership — `owner_confirmed`, audited) and
 `knowledge/ingest/site` (202, ≤10 pages → drafts on the shared ingest job, approved onto the
 board with `site-policy` tag + page link); outbound fetch re-checks SSRF on every redirect hop;
-E5110–E5113.
+E5110–E5113. Run history `knowledge/ingest/history` (+`/:jobId`) is rebuilt from audit rows
+`knowledge.ingest_started|finished|failed` + the publish row, grouped by jobId (no table; PLN-261026-Site-Ingest-History).
 **Shopify**: `auth/shopify/install`+`/callback` (OAuth), `shopify/proxy/identity` (App Proxy,
 signature-verified), `webhooks/shopify/*` (native orders/fulfillments, HMAC),
 `privacy/*` (DSAR export/delete, CCPA opt-out, retention purge) + GDPR compliance webhooks

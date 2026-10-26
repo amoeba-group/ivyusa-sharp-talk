@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { knowledgeService } from './knowledge.service';
-import type { ApproveArticle, CatalogSyncJob, DocumentListParams } from './knowledge.service';
+import type { ApproveArticle, CatalogSyncJob, DocumentListParams, IngestRunSummary } from './knowledge.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
@@ -681,7 +681,36 @@ export function useIngestSite() {
   return useMutation({
     mutationFn: (v: { urls: string[]; docGroup: string; ownerConfirmed: boolean }) =>
       knowledgeService.ingestSite(v.urls, v.docGroup, v.ownerConfirmed),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'ingest-status'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'ingest-status'] });
+      qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'ingest-history'] });
+    },
+  });
+}
+
+/**
+ * Ingest run history (PLN-261026-Site-Ingest-History). Polls only while a run
+ * in the list is live, so the row moves from "running" to its outcome without
+ * a reload.
+ */
+export function useIngestHistory(kind: string | undefined, limit: number, enabled = true) {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['knowledge', tenantKey, 'ingest-history', kind ?? 'all', limit],
+    queryFn: () => knowledgeService.ingestHistory(kind, limit),
+    enabled,
+    refetchInterval: (query) =>
+      (query.state.data as IngestRunSummary[] | undefined)?.some((r) => r.status === 'running') ? 3000 : false,
+  });
+}
+
+export function useIngestRun(jobId: string | null) {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['knowledge', tenantKey, 'ingest-history', 'run', jobId],
+    queryFn: () => knowledgeService.ingestRun(jobId!),
+    enabled: !!jobId,
+    refetchInterval: (query) => (query.state.data?.status === 'running' ? 3000 : false),
   });
 }
 
@@ -706,6 +735,7 @@ export function useApproveIngest() {
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'documents'] });
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'categories'] });
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'ingest-status'] });
+      qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'ingest-history'] });
     },
   });
 }

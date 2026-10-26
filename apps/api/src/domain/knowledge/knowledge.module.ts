@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KnowledgeSource } from './entity/knowledge-source.entity';
 import { AuditLog } from '../audit/entity/audit-log.entity';
+import { User } from '../user/entity/user.entity';
 import { KbDocument } from './entity/kb-document.entity';
 import { KbFile } from './entity/kb-file.entity';
 import { KbConflict } from './entity/kb-conflict.entity';
@@ -20,6 +21,7 @@ import { BoardDocument } from '../board/entity/board-document.entity';
 import { GoldenQuestion } from '../ai-coach/entity/golden-question.entity';
 import { BoardModule } from '../board/board.module';
 import { KnowledgeIngestJobService } from './knowledge-ingest-job.service';
+import { IngestHistoryService } from './ingest-history.service';
 import { CatalogSyncService } from './catalog-sync.service';
 import { CatalogSyncJobService } from './catalog-sync-job.service';
 import { AnswerProposalService } from './answer-proposal.service';
@@ -55,6 +57,8 @@ import { ModerationModule } from '../moderation/moderation.module';
     TypeOrmModule.forFeature([
       KnowledgeSource,
       AuditLog,
+      // Read-only: names of who ran an ingest (PLN-261026-Site-Ingest-History).
+      User,
       KbDocument,
       KbFile,
       KbConflict,
@@ -100,6 +104,7 @@ import { ModerationModule } from '../moderation/moderation.module';
     BulkExportService,
     KnowledgeIngestService,
     KnowledgeIngestJobService,
+    IngestHistoryService,
     CatalogSyncService,
     CatalogSyncJobService,
     AnswerProposalService,

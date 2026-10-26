@@ -471,8 +471,6 @@
     "hint": "Enter your store or service address to find its returns, refund, shipping, privacy and terms pages and turn them into board drafts. You review everything before it is published.",
     "urlLabel": "Website address",
     "analyze": "Analyze site",
-    "runningLine": "Analyzing {{site}} — {{done}}/{{total}} pages",
-    "readyLine": "{{site}} analyzed — {{count}} drafts waiting for review",
     "viewProgress": "View progress",
     "review": "Review",
     "discovering": "Looking around {{site}}…",
@@ -517,5 +515,43 @@
     "ownerConfirm": "This website is ours — we operate it",
     "ownerConfirmHint": "Confirming lets you select and read {{count}} pages that robots.txt blocks (Shopify blocks /policies/ by default). The confirmation is recorded in the audit log.",
     "robotsOverridden": "Blocked by robots.txt — read on the operator's confirmation"
+  },
+  "siteHistory": {
+    "title": "Recent analyses",
+    "viewAll": "View all",
+    "empty": "No analyses yet.",
+    "loadError": "Could not load the analysis history.",
+    "allTitle": "Analysis history (last {{count}})",
+    "legacyNote": "Runs before Oct 26 only have their publish record, so start and finish times are not shown.",
+    "detail": "Details",
+    "detailTitle": "Analysis details — {{site}}",
+    "ownerConfirmed": "Site ownership confirmed ✓",
+    "pages": "Pages",
+    "boardDocs": "Published board documents",
+    "pagesCount": "{{count}} pages",
+    "finishedNote": "{{drafted}} drafts · {{ok}}/{{total}} pages succeeded",
+    "publishedNote": "{{saved}} published",
+    "status": {
+      "running": "Running",
+      "review": "Awaiting review",
+      "published": "Published",
+      "expired": "Not published",
+      "failed": "Failed",
+      "interrupted": "Interrupted"
+    },
+    "line": {
+      "running": "{{ok}}/{{total}} pages done",
+      "review": "{{count}} drafts · review by {{until}}",
+      "published": "{{saved}} published ({{drafted}} drafts)",
+      "publishedLegacy": "{{saved}} published (before history)",
+      "expired": "{{count}} drafts · review window expired",
+      "interrupted": "Interrupted by a server restart"
+    },
+    "event": {
+      "started": "Started",
+      "finished": "Analyzed",
+      "failed": "Failed",
+      "published": "Published"
+    }
   }
 }
