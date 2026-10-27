@@ -37,7 +37,7 @@
 | 환경 | 마이그레이션 | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | ✅ 10/27 10:54 KST 선적용(백업 `~/backup-pre-261026-20261027-105403.sql`) | ✅ `e9d00ce9` → `3b3c8e33` → `90a5b5aa` | 매번 `successfully started`, 컨테이너 재생성, 신규 라우트 401 |
-| 프로덕션 | ⬜ | ⬜ | — |
+| 프로덕션 | ✅ 10/27 11:46 KST 선적용(백업 `~/backups/sharptalk-production/20261027-chatclose`, db+uploads) | ✅ `production` ff `a6623717..31ffa9f4` → `check-migrations` OK → `deploy-self-hosted.sh` | api/web/widget 재생성(healthy), `successfully started` 1회, ERROR 0, health 200, `/callback-requests`·`/tenants/chat-close-policy` 401. 테넌트 ivyusa뿐·정책 없음 → 동작 변화 0 |
 
 스테이징 go2joy 설정: 종료 정책 3분/3분, 지연 안내 3분(재알림 1분), 콜백 이메일·전화 켬. 변경 전 ai-config는 로컬 스크래치에 보관.
 
