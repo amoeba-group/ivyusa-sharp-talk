@@ -39,7 +39,7 @@ export class CustomerController {
   async list(@CurrentUser() user: Principal, @Query() query: ListCustomersQuery) {
     const tenantId = this.tenantId(user);
     const { page, size } = normalizePage(query.page, query.size);
-    const { items, total, stats } = await this.customerService.list(
+    const { items, total, stats, activity, companies } = await this.customerService.list(
       tenantId,
       page,
       size,
@@ -47,7 +47,7 @@ export class CustomerController {
       query.customer_type,
     );
     return new Paginated(
-      CustomerMapper.toCustomerList(items, stats),
+      CustomerMapper.toCustomerList(items, stats, activity, companies),
       buildPagination(page, size, total),
     );
   }
@@ -58,9 +58,15 @@ export class CustomerController {
   async search(@CurrentUser() user: Principal, @Body() body: SearchCustomersRequest) {
     const tenantId = this.tenantId(user);
     const { page, size } = normalizePage(body.page, body.size);
-    const { items, total, stats } = await this.customerService.list(tenantId, page, size, body.email, body.customer_type);
+    const { items, total, stats, activity, companies } = await this.customerService.list(
+      tenantId,
+      page,
+      size,
+      body.email,
+      body.customer_type,
+    );
     return new Paginated(
-      CustomerMapper.toCustomerList(items, stats),
+      CustomerMapper.toCustomerList(items, stats, activity, companies),
       buildPagination(page, size, total),
     );
   }
@@ -72,6 +78,13 @@ export class CustomerController {
     const tenantId = this.tenantId(user);
     const customer = await this.customerService.findById(tenantId, id);
     return CustomerMapper.toCustomer(customer);
+  }
+
+  @Get(':id/detail')
+  @RequireCapability(CAPABILITY.CUSTOMER_MANAGE)
+  @ApiOperation({ summary: 'Personal customer detail: first contact, inflow, companies, conversations (masked)' })
+  async detail(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return CustomerMapper.toCustomerDetail(await this.customerService.detail(this.tenantId(user), id));
   }
 
   /**
@@ -94,17 +107,19 @@ export class CustomerController {
 
   @Patch(':id')
   @RequireCapability(CAPABILITY.CUSTOMER_MANAGE)
-  @ApiOperation({ summary: 'Update a customer (name/tier)' })
+  @ApiOperation({ summary: 'Update a customer (name/tier/phone/email/memo; audited by field name)' })
   async update(
     @CurrentUser() user: Principal,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateCustomerRequest,
   ) {
     const tenantId = this.tenantId(user);
-    const customer = await this.customerService.update(tenantId, id, {
-      name: body.name,
-      tier: body.tier,
-    });
+    const customer = await this.customerService.update(
+      tenantId,
+      id,
+      { name: body.name, tier: body.tier, phone: body.phone, email: body.email, memo: body.memo },
+      this.actorId(user),
+    );
     // Echo back only what was writable. The old response returned the whole
     // record, so a tier change also handed over the email and phone.
     return CustomerMapper.toCustomerSummary(customer);

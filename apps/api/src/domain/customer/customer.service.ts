@@ -10,6 +10,38 @@ import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { ErasureSuppressionService } from '../privacy/erasure-suppression.service';
 import { AuditService } from '../audit/audit.service';
 import { maskPii } from '../../global/util/pii.util';
+import { Conversation } from '../chat/entity/conversation.entity';
+import { Session } from '../session/entity/session.entity';
+import { Company } from '../company/entity/company.entity';
+import { CompanyContact } from '../company/entity/company-contact.entity';
+
+/** First contact and volume per person (PLN-261027 D10) — computed, never stored. */
+export interface CustomerActivity {
+  conversations: number;
+  firstConversationAt: Date | null;
+  firstSessionAt: Date | null;
+  firstSeenAt: Date | null;
+}
+
+export interface CustomerDetail {
+  customer: Customer;
+  activity: CustomerActivity;
+  firstChannel: string | null;
+  firstLandingPath: string | null;
+  companies: Array<{ id: string; name: string | null }>;
+  conversations: Array<{
+    id: string;
+    sessionId: string;
+    status: string;
+    channel: string;
+    createdAt: Date;
+    endedAt: Date | null;
+  }>;
+}
+
+const DETAIL_CONVERSATIONS = 50;
+/** Admin sandbox threads are not the customer's visits. */
+const NOT_PREVIEW = "(s.channel IS NULL OR s.channel <> 'preview')";
 
 /** Customer detail shown in the agent console context panel (FR-045). */
 export interface CustomerContext {
@@ -40,6 +72,11 @@ export class CustomerService {
     @InjectRepository(OrderCache) private readonly orderRepo: Repository<OrderCache>,
     private readonly suppression: ErasureSuppressionService,
     private readonly audit: AuditService,
+    // Detail screen sources (PLN-261027 S4) — last, so positional test doubles keep their slots.
+    @InjectRepository(Conversation) private readonly convRepo: Repository<Conversation>,
+    @InjectRepository(Session) private readonly sessionRepo: Repository<Session>,
+    @InjectRepository(CompanyContact) private readonly contactRepo: Repository<CompanyContact>,
+    @InjectRepository(Company) private readonly companyRepo: Repository<Company>,
   ) {}
 
   async list(
@@ -48,7 +85,13 @@ export class CustomerService {
     size: number,
     email?: string,
     customerType?: string,
-  ): Promise<{ items: Customer[]; total: number; stats: Map<string, CustomerOrderStats> }> {
+  ): Promise<{
+    items: Customer[];
+    total: number;
+    stats: Map<string, CustomerOrderStats>;
+    activity: Map<string, CustomerActivity>;
+    companies: Map<string, Array<{ id: string; name: string | null }>>;
+  }> {
     const where: FindOptionsWhere<Customer> = { tenantId };
     // Business contacts vs consumers (PLN-261022 stage 2).
     if (customerType) where.customerType = customerType;
@@ -61,11 +104,13 @@ export class CustomerService {
       skip: (page - 1) * size,
       take: size,
     });
-    const stats = await this.orderStats(
-      tenantId,
-      items.map((c) => c.id),
-    );
-    return { items, total, stats };
+    const ids = items.map((c) => c.id);
+    const [stats, activity, companies] = await Promise.all([
+      this.orderStats(tenantId, ids),
+      this.activity(tenantId, ids),
+      this.companyNamesOf(tenantId, ids),
+    ]);
+    return { items, total, stats, activity, companies };
   }
 
   /** Aggregate order count + total spent per customer from orders_cache. */
@@ -280,12 +325,173 @@ export class CustomerService {
   async update(
     tenantId: number,
     id: number,
-    changes: { name?: string; tier?: string },
+    changes: { name?: string; tier?: string; phone?: string; email?: string; memo?: string },
+    actorUserId?: number,
   ): Promise<Customer> {
     const customer = await this.findById(tenantId, id);
-    if (changes.name !== undefined) customer.name = changes.name;
-    if (changes.tier !== undefined) customer.tier = changes.tier;
-    return this.customerRepo.save(customer);
+    // '' clears a field; trimmed so a stray space does not count as a value.
+    const text = (v: string) => v.trim() || null;
+    const changed: string[] = [];
+    const set = <K extends 'name' | 'phone' | 'email' | 'memo'>(key: K, value: string | undefined) => {
+      if (value === undefined) return;
+      const next = text(value);
+      if (next !== customer[key]) {
+        customer[key] = next as Customer[K];
+        changed.push(key);
+      }
+    };
+    set('name', changes.name);
+    set('phone', changes.phone);
+    set('email', changes.email);
+    set('memo', changes.memo);
+    if (changes.tier !== undefined && changes.tier !== customer.tier) {
+      customer.tier = changes.tier;
+      changed.push('tier');
+    }
+    const saved = await this.customerRepo.save(customer);
+    if (changed.length && actorUserId != null) {
+      // Field names only — the values are the person's data (audit metadata is never raw PII).
+      await this.audit.write({
+        tenantId,
+        actorType: 'user',
+        actorId: actorUserId,
+        action: 'customer.updated',
+        target: `customer:${id}`,
+        metadata: { fields: changed },
+      });
+    }
+    return saved;
+  }
+
+  /**
+   * Conversations and first contact per person (PLN-261027 D10). A person's
+   * conversations are those filed under them directly (a claimed sign-in) or
+   * through their session; first contact is the earlier of the first session
+   * and the first conversation.
+   */
+  async activity(tenantId: number, ids: number[]): Promise<Map<string, CustomerActivity>> {
+    const out = new Map<string, CustomerActivity>();
+    const unique = [...new Set(ids.map(Number))];
+    if (!unique.length) return out;
+    const [convRows, sessionRows] = await Promise.all([
+      this.convRepo
+        .createQueryBuilder('c')
+        .leftJoin(Session, 's', 's.id = c.session_id')
+        .select('COALESCE(s.customer_id, c.customer_id)', 'cid')
+        .addSelect('COUNT(DISTINCT c.id)', 'n')
+        .addSelect('MIN(c.created_at)', 'first')
+        .where('c.tenant_id = :tenantId', { tenantId })
+        .andWhere('(c.customer_id IN (:...ids) OR s.customer_id IN (:...ids))', { ids: unique })
+        .andWhere(NOT_PREVIEW)
+        .groupBy('cid')
+        .getRawMany<{ cid: string | number | null; n: string; first: Date | string | null }>(),
+      this.sessionRepo
+        .createQueryBuilder('s')
+        .select('s.customer_id', 'cid')
+        .addSelect('MIN(COALESCE(s.first_opened_at, s.created_at))', 'first')
+        .where('s.tenant_id = :tenantId', { tenantId })
+        .andWhere('s.customer_id IN (:...ids)', { ids: unique })
+        .andWhere(NOT_PREVIEW)
+        .groupBy('s.customer_id')
+        .getRawMany<{ cid: string | number; first: Date | string | null }>(),
+    ]);
+    const date = (v: Date | string | null) => (v == null ? null : new Date(v));
+    const entry = (cid: string) => {
+      let e = out.get(cid);
+      if (!e) {
+        e = { conversations: 0, firstConversationAt: null, firstSessionAt: null, firstSeenAt: null };
+        out.set(cid, e);
+      }
+      return e;
+    };
+    for (const r of convRows) {
+      if (r.cid == null) continue;
+      const e = entry(String(r.cid));
+      e.conversations = Number(r.n) || 0;
+      e.firstConversationAt = date(r.first);
+    }
+    for (const r of sessionRows) entry(String(r.cid)).firstSessionAt = date(r.first);
+    for (const e of out.values()) {
+      const times = [e.firstSessionAt, e.firstConversationAt].filter((d): d is Date => !!d);
+      e.firstSeenAt = times.length ? new Date(Math.min(...times.map((d) => d.getTime()))) : null;
+    }
+    return out;
+  }
+
+  /** Customer id → the company they are a contact of (first link). */
+  async companyNamesOf(tenantId: number, ids: number[]): Promise<Map<string, Array<{ id: string; name: string | null }>>> {
+    const out = new Map<string, Array<{ id: string; name: string | null }>>();
+    if (!ids.length) return out;
+    const links = await this.contactRepo.find({ where: { tenantId, customerId: In(ids) }, order: { id: 'ASC' } });
+    if (!links.length) return out;
+    const companies = await this.companyRepo.find({
+      where: { tenantId, id: In([...new Set(links.map((l) => l.companyId))]) },
+      select: { id: true, name: true },
+    });
+    const nameOf = new Map(companies.map((c) => [String(c.id), c.name]));
+    for (const l of links) {
+      const list = out.get(String(l.customerId)) ?? [];
+      list.push({ id: String(l.companyId), name: nameOf.get(String(l.companyId)) ?? null });
+      out.set(String(l.customerId), list);
+    }
+    return out;
+  }
+
+  /** One person's detail screen (PLN-261027 D9): first contact, inflow, companies, conversations. */
+  async detail(tenantId: number, id: number): Promise<CustomerDetail> {
+    const customer = await this.findById(tenantId, id);
+    const mine = (qb: ReturnType<Repository<Conversation>['createQueryBuilder']>) =>
+      qb
+        .leftJoin(Session, 's', 's.id = c.session_id')
+        .where('c.tenant_id = :tenantId', { tenantId })
+        .andWhere('(c.customer_id = :id OR s.customer_id = :id)', { id })
+        .andWhere(NOT_PREVIEW);
+    const [activity, firstSession, firstConv, recent, companies] = await Promise.all([
+      this.activity(tenantId, [id]),
+      this.sessionRepo
+        .createQueryBuilder('s')
+        .where('s.tenant_id = :tenantId', { tenantId })
+        .andWhere('s.customer_id = :id', { id })
+        .andWhere(NOT_PREVIEW)
+        .orderBy('s.id', 'ASC')
+        .getOne(),
+      mine(this.convRepo.createQueryBuilder('c'))
+        .addSelect('s.channel', 's_channel')
+        .orderBy('c.id', 'ASC')
+        .limit(1)
+        .getRawAndEntities(),
+      mine(this.convRepo.createQueryBuilder('c'))
+        .addSelect('s.channel', 's_channel')
+        .orderBy('c.id', 'DESC')
+        .limit(DETAIL_CONVERSATIONS)
+        .getRawAndEntities(),
+      this.companyNamesOf(tenantId, [id]),
+    ]);
+    // A messenger session's own channel (kakao, zalo, …) is more specific than the
+    // conversation's default 'widget'.
+    const channelOf = (c: Conversation, raw: Record<string, unknown> | undefined) =>
+      (raw?.s_channel as string | null | undefined) || c.channel || 'widget';
+    const first = firstConv.entities[0];
+    return {
+      customer,
+      activity: activity.get(String(id)) ?? {
+        conversations: 0,
+        firstConversationAt: null,
+        firstSessionAt: null,
+        firstSeenAt: null,
+      },
+      firstChannel: first ? channelOf(first, firstConv.raw[0]) : null,
+      firstLandingPath: firstSession?.landingPath ?? null,
+      companies: companies.get(String(id)) ?? [],
+      conversations: recent.entities.map((c, i) => ({
+        id: String(c.id),
+        sessionId: String(c.sessionId),
+        status: c.status,
+        channel: channelOf(c, recent.raw[i]),
+        createdAt: c.createdAt,
+        endedAt: c.endedAt,
+      })),
+    };
   }
 
   /**

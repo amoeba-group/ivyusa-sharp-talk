@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEmail, IsIn, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator';
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
 export class ListCustomersQuery {
@@ -50,9 +50,27 @@ export class SearchCustomersRequest {
 export class UpdateCustomerRequest {
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   name?: string;
 
   @IsOptional()
   @IsString()
   tier?: string;
+
+  /** Basic contact details are editable on the detail screen (PLN-261027 D11); '' clears. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  phone?: string;
+
+  @IsOptional()
+  @ValidateIf((o: UpdateCustomerRequest) => !!o.email)
+  @IsEmail()
+  @MaxLength(320)
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  memo?: string;
 }

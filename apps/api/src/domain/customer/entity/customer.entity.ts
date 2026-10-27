@@ -87,6 +87,15 @@ export class Customer {
   phone: string | null;
 
   /**
+   * Operator note on the person (PLN-261027 D11), ≤2,000 characters. Free text
+   * can hold anything about someone, so it is encrypted like the contact
+   * columns and cleared on erasure. 8,192 bytes fits 2,000 four-byte
+   * characters plus the IV and tag.
+   */
+  @Column({ type: 'varbinary', length: 8192, nullable: true, transformer: piiTransformer })
+  memo: string | null;
+
+  /**
    * b2c (default — every pre-existing row) | b2b_contact (PLN-261022 stage 2):
    * set by a signed identify that names a company (`hotel_id`); never reverted
    * by a later identify without one.

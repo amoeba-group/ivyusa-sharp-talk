@@ -19,4 +19,30 @@ export interface CustomerResponse {
   currency: string | null;
   createdAt: Date;
   updatedAt: Date;
+  /** First contact = earliest session or conversation of this person (PLN-261027 D10). */
+  firstSeenAt?: Date | null;
+  conversationCount?: number;
+  /** Company this person is a contact of (business contacts). */
+  companyName?: string | null;
+}
+
+/** One person's detail screen (PLN-261027 D9). Contact details masked unless revealed. */
+export interface CustomerDetailResponse {
+  customer: CustomerResponse;
+  memo: string | null;
+  firstSeenAt: Date | null;
+  firstConversationAt: Date | null;
+  /** Channel of the first conversation (widget, kakao, …). */
+  firstChannel: string | null;
+  /** Page the first session opened on (scheme + host + path; no query string). */
+  firstLandingPath: string | null;
+  companies: Array<{ id: string; name: string | null }>;
+  conversations: Array<{
+    id: string;
+    sessionId: string;
+    status: string;
+    channel: string;
+    createdAt: Date;
+    endedAt: Date | null;
+  }>;
 }

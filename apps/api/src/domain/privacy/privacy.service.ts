@@ -340,6 +340,8 @@ export class PrivacyService {
             email: customer.email,
             name: customer.name,
             phone: customer.phone,
+            // Operator notes about the person are their data too (PLN-261027 D11).
+            memo: customer.memo,
             tier: customer.tier,
             shopifyCustomerId: customer.shopifyCustomerId,
             createdAt: customer.createdAt,
@@ -650,6 +652,7 @@ export class PrivacyService {
     customer.email = null;
     customer.name = REDACTED;
     customer.phone = null;
+    customer.memo = null;
     customer.shopifyCustomerId = null;
     customer.tier = 'guest';
     await this.customerRepo.save(customer);

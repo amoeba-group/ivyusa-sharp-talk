@@ -13,6 +13,7 @@ import { useCustomers, useUpdateTier } from './customers.hooks';
 import type { Customer } from './customers.service';
 import { cn } from '@/lib/cn';
 import { CompaniesPanel } from './CompaniesPanel';
+import { CustomerDetailModal } from './CustomerDetailModal';
 
 const PAGE_SIZE = 20;
 const TIERS = ['guest', 'subscriber', 'regular'] as const;
@@ -39,11 +40,14 @@ function fmtDate(value?: string): string {
 export function CustomersPage() {
   const { t } = useTranslation('customers');
   const { t: tc } = useTranslation('common');
-  // All / business customers (companies) / booking customers (PLN-261022 stage 2).
-  // ?tab=b2b&company=ID opens a business customer directly (live-chat hotel card, PLN-261023).
+  // Business customers (companies) | personal customers (PLN-261027 D8). The
+  // personal tab lists every person, a company's contacts included; old links
+  // to ?tab=all|b2c land there. ?tab=b2b&company=ID opens a company directly
+  // (live-chat hotel card, PLN-261023).
   const [params] = useSearchParams();
   const linkedCompany = params.get('tab') === 'b2b' ? params.get('company') : null;
-  const [tab, setTab] = useState<'all' | 'b2b' | 'b2c'>(linkedCompany ? 'b2b' : 'all');
+  const [tab, setTab] = useState<'b2b' | 'b2c'>(params.get('tab') === 'b2b' ? 'b2b' : 'b2c');
+  const [detailId, setDetailId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -62,7 +66,7 @@ export function CustomersPage() {
     page,
     pageSize: PAGE_SIZE,
     email: debouncedSearch || undefined,
-    customerType: tab === 'b2c' ? 'b2c' : undefined,
+    customerType: undefined,
   });
   const updateTier = useUpdateTier();
 
@@ -80,7 +84,15 @@ export function CustomersPage() {
   const columns: Column<Customer>[] = [
     // In the clear since 2026-10-23: the list is where an operator finds a
     // customer. Masking applies inside conversations and to AI-bound text.
-    { key: 'name', header: t('name'), render: (c) => c.name ?? '—' },
+    {
+      key: 'name',
+      header: t('name'),
+      render: (c) => (
+        <button type="button" className="text-left font-medium text-primary-700 hover:underline" onClick={() => setDetailId(c.id)}>
+          {c.name ?? `#${c.id}`} ›
+        </button>
+      ),
+    },
     {
       key: 'email',
       header: t('email'),
@@ -92,6 +104,9 @@ export function CustomersPage() {
       render: (c) =>
         c.customerType === 'b2b_contact' ? <Badge tone="info">{t('typeB2b')}</Badge> : <Badge tone="gray">{t('typeB2c')}</Badge>,
     },
+    { key: 'company', header: t('detail.company'), render: (c) => c.companyName ?? '—' },
+    { key: 'firstSeen', header: t('detail.firstSeen'), render: (c) => fmtDate(c.firstSeenAt ?? undefined) },
+    { key: 'conversations', header: t('conversationCount'), render: (c) => c.conversationCount ?? 0 },
     {
       key: 'tier',
       header: t('tier'),
@@ -99,7 +114,6 @@ export function CustomersPage() {
     },
     { key: 'orders', header: t('orders'), render: (c) => c.orders ?? 0 },
     { key: 'totalSpent', header: t('totalSpent'), render: (c) => fmtMoney(c.totalSpent, c.currency) },
-    { key: 'createdAt', header: t('created'), render: (c) => fmtDate(c.createdAt) },
     {
       key: 'actions',
       header: '',
@@ -126,7 +140,7 @@ export function CustomersPage() {
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
       <div className="mb-4 flex gap-2" role="tablist">
-        {(['all', 'b2b', 'b2c'] as const).map((key) => (
+        {(['b2b', 'b2c'] as const).map((key) => (
           <button
             key={key}
             type="button"
@@ -178,6 +192,8 @@ export function CustomersPage() {
       />
       </>
       )}
+
+      <CustomerDetailModal id={detailId} onClose={() => setDetailId(null)} />
 
       <Modal
         open={!!editing}

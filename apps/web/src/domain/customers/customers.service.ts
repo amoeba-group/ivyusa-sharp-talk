@@ -15,6 +15,36 @@ export interface Customer {
   totalSpent?: number;
   currency?: string | null;
   createdAt?: string;
+  /** List rows (PLN-261027 S4): first contact, conversation count, company. */
+  firstSeenAt?: string | null;
+  conversationCount?: number;
+  companyName?: string | null;
+}
+
+/** A personal customer's detail screen (PLN-261027 D9). */
+export interface CustomerDetail {
+  customer: Customer;
+  memo: string | null;
+  firstSeenAt: string | null;
+  firstConversationAt: string | null;
+  firstChannel: string | null;
+  firstLandingPath: string | null;
+  companies: Array<{ id: string; name: string | null }>;
+  conversations: Array<{
+    id: string;
+    sessionId: string;
+    status: string;
+    channel: string;
+    createdAt: string;
+    endedAt: string | null;
+  }>;
+}
+
+export interface CustomerUpdate {
+  name?: string;
+  phone?: string;
+  email?: string;
+  memo?: string;
 }
 
 export interface CustomerListParams {
@@ -204,6 +234,8 @@ export const customersService = {
     apiPatch<CompanyDetail>(`/companies/${id}/profile`, body),
   /** Unmasked contact details for one customer. Audited server-side. */
   reveal: (id: number) => apiGet<Customer>(`/customers/${id}/reveal`),
+  detail: (id: number) => apiGet<CustomerDetail>(`/customers/${id}/detail`),
+  update: (id: number, body: CustomerUpdate) => apiPatch<Customer>(`/customers/${id}`, body),
   updateTier: (id: number, tier: string) => apiPatch<Customer>(`/customers/${id}`, { tier }),
 };
 

@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { customersService } from './customers.service';
-import type { CompanyListParams, CompanyProfileUpdate, CustomerListParams } from './customers.service';
+import type { CompanyListParams, CompanyProfileUpdate, CustomerListParams, CustomerUpdate } from './customers.service';
 import i18n from 'i18next';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
@@ -98,3 +98,26 @@ export const useUpdateCompanyProfile = () =>
     ({ id, body }: { id: string; body: CompanyProfileUpdate }) => customersService.updateCompanyProfile(id, body),
     'profileSaved',
   );
+
+/** One person's detail (PLN-261027 S4). */
+export const useCustomerDetail = (id: number | null) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['customers', tenantKey, 'detail', id],
+    queryFn: () => customersService.detail(id as number),
+    enabled: id != null,
+  });
+};
+
+export function useUpdateCustomer() {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: CustomerUpdate }) => customersService.update(id, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customers', tenantKey] });
+      toast.success(i18n.t('detail.saved', { ns: 'customers' }));
+    },
+    onError: (e: Error) => toast.error(e.message || i18n.t('detail.saveFailed', { ns: 'customers' })),
+  });
+}

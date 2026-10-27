@@ -1,5 +1,6 @@
 import { Customer } from './entity/customer.entity';
-import { CustomerResponse } from './dto/response/customer.response';
+import { CustomerDetailResponse, CustomerResponse } from './dto/response/customer.response';
+import type { CustomerActivity, CustomerDetail } from './customer.service';
 import { maskEmail, maskPhone } from '../../global/util/pii-display.util';
 
 /** Aggregated order stats per customer (from orders_cache). */
@@ -56,6 +57,8 @@ export class CustomerMapper {
   static toCustomerList(
     customers: Customer[],
     statsById?: Map<string, CustomerOrderStats>,
+    activityById?: Map<string, CustomerActivity>,
+    companiesById?: Map<string, Array<{ id: string; name: string | null }>>,
   ): CustomerResponse[] {
     // Keyed by String(id): bigint ids arrive as strings from the driver, so
     // normalize on both sides to avoid a number-vs-string Map miss.
@@ -65,8 +68,30 @@ export class CustomerMapper {
     return customers.map((c) => {
       const row = this.toCustomer(c, statsById?.get(String(c.id)), { reveal: true });
       delete row.phone;
+      const activity = activityById?.get(String(c.id));
+      row.firstSeenAt = activity?.firstSeenAt ?? null;
+      row.conversationCount = activity?.conversations ?? 0;
+      row.companyName = companiesById?.get(String(c.id))?.[0]?.name ?? null;
       return row;
     });
+  }
+
+  /**
+   * The detail screen (PLN-261027 D9). Contact details stay masked — the
+   * screen's [보기] goes through the audited reveal route; the memo is shown
+   * in the clear to whoever may manage customers, like the name.
+   */
+  static toCustomerDetail(d: CustomerDetail): CustomerDetailResponse {
+    return {
+      customer: this.toCustomer(d.customer),
+      memo: d.customer.memo ?? null,
+      firstSeenAt: d.activity.firstSeenAt,
+      firstConversationAt: d.activity.firstConversationAt,
+      firstChannel: d.firstChannel,
+      firstLandingPath: d.firstLandingPath,
+      companies: d.companies,
+      conversations: d.conversations,
+    };
   }
 
   /** Write responses echo back only what the caller was allowed to change. */
