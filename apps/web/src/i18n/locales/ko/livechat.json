@@ -646,6 +646,39 @@
       "low_confidence": "AI 답변 신뢰도 낮음",
       "moderation_blocked": "답변 차단",
       "other": "기타"
-    }
+    },
+    "callbackRequested": "콜백 요청 ({{channel}})",
+    "callbackDone": "콜백 완료 · {{name}} ({{duration}})",
+    "callbackCanceled": "콜백 취소 · {{name}}",
+    "feedback": "고객 피드백 ★{{rating}}",
+    "resolved": "해결됨",
+    "unresolved": "미해결",
+    "roomCreated": "통합 대화방 생성 ({{sessions}})",
+    "roomAdded": "세션 통합 추가 ({{sessions}})",
+    "roomJoined": "새 세션 자동 추가 ({{sessions}})",
+    "roomRemoved": "세션 빼기 ({{sessions}})",
+    "roomAutoOn": "이후 새 세션 자동 추가 켬",
+    "roomAutoOff": "새 세션 자동 추가 끔",
+    "roomDissolved": "통합 해제",
+    "durMin": "{{n}}분",
+    "durHour": "{{h}}시간 {{m}}분",
+    "viewAll": "전체 히스토리 보기",
+    "earlierHidden": "이전 {{count}}건은 전체 히스토리에서 볼 수 있습니다",
+    "modalTitle": "전체 히스토리",
+    "modalTitleRoom": "전체 히스토리 · 통합 대화방 (대화 {{count}})",
+    "empty": "해당하는 기록이 없습니다",
+    "filter": {
+      "all": "전체",
+      "handling": "담당",
+      "callback": "콜백",
+      "feedback": "피드백",
+      "room": "세션 통합"
+    },
+    "actor": "작업: {{name}}"
+  },
+  "threadEvent": {
+    "callback": "콜백 요청",
+    "feedback": "고객 피드백",
+    "stars": "별점 {{n}}점"
   }
 }

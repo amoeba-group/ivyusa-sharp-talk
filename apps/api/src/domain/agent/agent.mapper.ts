@@ -1,4 +1,5 @@
 import type { MergeCandidateView, MergedRoomView } from '../merged-room/merged-room.service';
+import { HANDLER_EVENT_GROUP } from './conversation-handlers.service';
 import type { HandlerEvent, HandlerSummary } from './conversation-handlers.service';
 import type { AnswerRating } from './entity/answer-rating.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
@@ -318,18 +319,31 @@ export function toMergeCandidatesResponse(r: { sessionId: number; room: MergedRo
   };
 }
 
-/** Who handled a conversation, in order (PLN-261027 S2). */
-export function toConversationHandlersResponse(view: { events: HandlerEvent[]; handlers: HandlerSummary[] }) {
+/** Who handled a conversation, in order (PLN-261027 S2; callbacks, feedback, room — Thread-Events). */
+export function toConversationHandlersResponse(view: {
+  events: HandlerEvent[];
+  handlers: HandlerSummary[];
+  roomId?: number | null;
+  conversationIds?: number[];
+}) {
   return {
     events: view.events.map((e) => ({
       at: e.at.toISOString(),
       kind: e.kind,
+      group: HANDLER_EVENT_GROUP[e.kind],
+      conversationId: e.conversationId != null ? String(e.conversationId) : null,
       agentId: e.agentId != null ? String(e.agentId) : null,
       agentName: e.agentName,
       fromName: e.fromName,
       byName: e.byName,
       assignType: e.assignType,
       reason: e.reason,
+      durationMs: e.durationMs,
+      rating: e.rating,
+      resolved: e.resolved,
+      comment: e.comment,
+      conversationIds: e.conversationIds?.map(String) ?? null,
+      on: e.on,
     })),
     handlers: view.handlers.map((h) => ({
       agentId: String(h.agentId),
@@ -338,5 +352,8 @@ export function toConversationHandlersResponse(view: { events: HandlerEvent[]; h
       lastAt: h.lastAt.toISOString(),
       current: h.current,
     })),
+    ...(view.conversationIds
+      ? { roomId: view.roomId != null ? String(view.roomId) : null, conversationIds: view.conversationIds.map(String) }
+      : {}),
   };
 }

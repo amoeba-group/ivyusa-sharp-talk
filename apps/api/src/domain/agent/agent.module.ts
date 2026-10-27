@@ -45,10 +45,16 @@ import { IssueModule } from '../issue/issue.module';
 import { AttachmentModule } from '../attachment/attachment.module';
 import { MergedRoomModule } from '../merged-room/merged-room.module';
 import { ConversationHandlersService } from './conversation-handlers.service';
+import { CallbackRequest } from '../callback/entity/callback-request.entity';
+import { MergedRoomSession } from '../merged-room/entity/merged-room-session.entity';
+import { AuditLog } from '../audit/entity/audit-log.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      CallbackRequest,
+      MergedRoomSession,
+      AuditLog,
       Agent,
       AgentProfile,
       Assignment,

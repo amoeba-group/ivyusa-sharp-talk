@@ -200,6 +200,9 @@ export interface PendingDraft {
 
 export interface ConversationDetail {
   conversationId?: number;
+  /** PLN-261027 Thread-Events: callbacks + feedback of the conversation(s) in the transcript. */
+  callbacks?: ThreadCallback[];
+  feedback?: ThreadFeedback[];
   sessionId?: string;
   alias?: string | null;
   autoReplyMode?: string;
@@ -387,16 +390,66 @@ export interface AiAgentOption {
 
 export interface HandlerEvent {
   at: string;
-  kind: 'started' | 'handoff_request' | 'assigned' | 'transferred' | 'returned_to_ai' | 'ended';
+  kind:
+    | 'started'
+    | 'handoff_request'
+    | 'assigned'
+    | 'transferred'
+    | 'returned_to_ai'
+    | 'ended'
+    | 'callback_requested'
+    | 'callback_done'
+    | 'callback_canceled'
+    | 'feedback'
+    | 'room_created'
+    | 'room_sessions_added'
+    | 'room_session_joined'
+    | 'room_session_removed'
+    | 'room_auto_join'
+    | 'room_dissolved';
+  /** handling | callback | feedback | room — the history modal's filter. */
+  group: 'handling' | 'callback' | 'feedback' | 'room';
+  conversationId: string | null;
   agentId: string | null;
   agentName: string | null;
   fromName: string | null;
   byName: string | null;
   assignType: string | null;
   reason: string | null;
+  durationMs: number | null;
+  rating: number | null;
+  resolved: boolean | null;
+  comment: string | null;
+  conversationIds: string[] | null;
+  on: boolean | null;
+}
+
+/** A callback request shown inside the thread (PLN-261027 Thread-Events D2). */
+export interface ThreadCallback {
+  id: string;
+  conversationId: string;
+  channel: string;
+  contactMasked: string;
+  status: string;
+  handledByName: string | null;
+  handledAt: string | null;
+  createdAt: string;
+}
+
+/** The customer's satisfaction answer, shown inside the thread. */
+export interface ThreadFeedback {
+  conversationId: string;
+  rating: number;
+  resolved: boolean | null;
+  reason: string | null;
+  comment: string | null;
+  ratedAt: string;
 }
 
 export interface ConversationHandlers {
+  /** Full-history call only: the merged room and its conversations. */
+  roomId?: string | null;
+  conversationIds?: string[];
   events: HandlerEvent[];
   handlers: Array<{ agentId: string; name: string | null; firstAt: string; lastAt: string; current: boolean }>;
 }
@@ -515,6 +568,9 @@ export const liveChatService = {
   // Who handled this conversation, in order (PLN-261027 S2).
   handlers: (conversationId: string) =>
     apiGet<ConversationHandlers>(`/agent/conversations/${conversationId}/handlers`),
+  // The merged room's whole history, for the modal (PLN-261027 Thread-Events D5).
+  history: (conversationId: string) =>
+    apiGet<ConversationHandlers>(`/agent/conversations/${conversationId}/history`),
   // Same-customer merged room (PLN-261023-LiveChat-Merge-Same-Customer-Sessions).
   mergeCandidates: (conversationId: string) =>
     apiGet<MergeCandidates>(`/agent/conversations/${conversationId}/merge-candidates`),

@@ -646,6 +646,39 @@
       "low_confidence": "AI không chắc chắn",
       "moderation_blocked": "câu trả lời bị chặn",
       "other": "khác"
-    }
+    },
+    "callbackRequested": "Yêu cầu gọi lại ({{channel}})",
+    "callbackDone": "Đã gọi lại · {{name}} ({{duration}})",
+    "callbackCanceled": "Hủy gọi lại · {{name}}",
+    "feedback": "Phản hồi của khách ★{{rating}}",
+    "resolved": "Đã giải quyết",
+    "unresolved": "Chưa giải quyết",
+    "roomCreated": "Tạo phòng gộp ({{sessions}})",
+    "roomAdded": "Gộp thêm phiên ({{sessions}})",
+    "roomJoined": "Tự động thêm phiên mới ({{sessions}})",
+    "roomRemoved": "Bỏ phiên ({{sessions}})",
+    "roomAutoOn": "Bật tự động thêm phiên mới",
+    "roomAutoOff": "Tắt tự động thêm phiên mới",
+    "roomDissolved": "Hủy gộp",
+    "durMin": "{{n}} phút",
+    "durHour": "{{h}} giờ {{m}} phút",
+    "viewAll": "Xem toàn bộ lịch sử",
+    "earlierHidden": "{{count}} mục trước đó có trong toàn bộ lịch sử",
+    "modalTitle": "Toàn bộ lịch sử",
+    "modalTitleRoom": "Toàn bộ lịch sử · phòng gộp ({{count}} hội thoại)",
+    "empty": "Không có mục nào",
+    "filter": {
+      "all": "Tất cả",
+      "handling": "Xử lý",
+      "callback": "Gọi lại",
+      "feedback": "Phản hồi",
+      "room": "Gộp phiên"
+    },
+    "actor": "bởi {{name}}"
+  },
+  "threadEvent": {
+    "callback": "Yêu cầu gọi lại",
+    "feedback": "Phản hồi của khách",
+    "stars": "{{n}} sao"
   }
 }

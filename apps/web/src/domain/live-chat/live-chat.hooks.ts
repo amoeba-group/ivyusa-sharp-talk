@@ -351,6 +351,17 @@ export const useConversationHandlers = (conversationId: string | null, version: 
   });
 };
 
+/** Full history for the modal — fetched when it opens, never polled. */
+export const useConversationHistory = (conversationId: string | null, open: boolean) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'history', conversationId],
+    queryFn: () => liveChatService.history(conversationId as string),
+    enabled: !!conversationId && open,
+    staleTime: 0,
+  });
+};
+
 export const useMergeCandidates = (conversationId: string | null) => {
   const tenantKey = useTenantKey();
   return useQuery({

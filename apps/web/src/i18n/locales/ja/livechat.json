@@ -646,6 +646,39 @@
       "low_confidence": "AIの信頼度が低い",
       "moderation_blocked": "回答ブロック",
       "other": "その他"
-    }
+    },
+    "callbackRequested": "コールバック要請（{{channel}}）",
+    "callbackDone": "コールバック完了 · {{name}}（{{duration}}）",
+    "callbackCanceled": "コールバック取消 · {{name}}",
+    "feedback": "顧客フィードバック ★{{rating}}",
+    "resolved": "解決",
+    "unresolved": "未解決",
+    "roomCreated": "統合会話ルーム作成（{{sessions}}）",
+    "roomAdded": "セッション統合追加（{{sessions}}）",
+    "roomJoined": "新しいセッションを自動追加（{{sessions}}）",
+    "roomRemoved": "セッションを除外（{{sessions}}）",
+    "roomAutoOn": "新しいセッションの自動追加をオン",
+    "roomAutoOff": "新しいセッションの自動追加をオフ",
+    "roomDissolved": "統合解除",
+    "durMin": "{{n}}分",
+    "durHour": "{{h}}時間{{m}}分",
+    "viewAll": "全履歴を見る",
+    "earlierHidden": "以前の{{count}}件は全履歴で確認できます",
+    "modalTitle": "全履歴",
+    "modalTitleRoom": "全履歴 · 統合会話ルーム（会話 {{count}}）",
+    "empty": "該当する記録はありません",
+    "filter": {
+      "all": "すべて",
+      "handling": "対応",
+      "callback": "コールバック",
+      "feedback": "フィードバック",
+      "room": "セッション統合"
+    },
+    "actor": "操作: {{name}}"
+  },
+  "threadEvent": {
+    "callback": "コールバック要請",
+    "feedback": "顧客フィードバック",
+    "stars": "{{n}}つ星"
   }
 }

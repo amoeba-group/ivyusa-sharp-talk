@@ -63,6 +63,7 @@ import {
 import { useUsers } from '@/domain/users/users.hooks';
 import { makeCan } from '@/lib/rbac';
 import { BriefingCard } from './BriefingCard';
+import { ThreadEventCard, threadEventsOf } from './ThreadEventCard';
 import { HandlerHistoryCard } from './HandlerHistoryCard';
 import { JourneyPanel } from '../journey/JourneyPanel';
 import { JourneyCard } from '../journey/JourneyCard';
@@ -371,6 +372,16 @@ export function LiveChatPage() {
   const messages = [...older, ...(convo?.messages ?? [])];
   const roomConversationById = new Map((convo?.mergedRoom?.conversations ?? []).map((c) => [c.id, c]));
   const hasOlder = older.length ? olderHasMore : !!convo?.hasMore;
+  // Callbacks + feedback inside the thread at their time (PLN-261027 Thread-Events D2).
+  // While older pages are unloaded, events before the first loaded message wait for them.
+  const threadEvents = threadEventsOf(convo?.callbacks, convo?.feedback).filter(
+    (e) => !hasOlder || !messages[0]?.createdAt || Date.parse(e.at) >= Date.parse(messages[0].createdAt),
+  );
+  const eventsBetween = (from: string | undefined, to: string | undefined) =>
+    threadEvents.filter((e) => {
+      const at = Date.parse(e.at);
+      return (from == null || at > Date.parse(from)) && (to == null || at <= Date.parse(to));
+    });
 
   const loadOlder = async () => {
     const oldest = messages[0]?.id;
@@ -442,7 +453,8 @@ export function LiveChatPage() {
     setNewBelow(false);
   }, [selected]);
   const tail = convo?.messages?.[convo.messages.length - 1];
-  const tailId = tail?.id ?? null;
+  // New callbacks / feedback at the end move the tail too (Thread-Events D2).
+  const tailId = tail?.id ? `${tail.id}:${threadEvents.length}` : null;
   useLayoutEffect(() => {
     if (!selected || !tailId) return;
     const first = openedRef.current !== selected;
@@ -1239,6 +1251,9 @@ export function LiveChatPage() {
                       : undefined;
                   return (
                     <div key={m.id} id={`msg-${m.id}`}>
+                      {eventsBetween(messages[i - 1]?.createdAt, m.createdAt).map((e) => (
+                        <ThreadEventCard key={e.key} event={e} />
+                      ))}
                       {roomConv && (
                         <div className="my-3 flex items-center gap-2" data-testid="merged-divider">
                           <span className="h-px flex-1 bg-primary-100" />
@@ -1284,11 +1299,13 @@ export function LiveChatPage() {
                             (findHits.active === m.id ? 'ring-2 ring-amber-400' : 'ring-1 ring-amber-200'),
                           m.senderType === 'agent'
                             ? 'bg-primary-500 text-white'
-                            : m.senderType === 'ai'
-                              ? 'border border-emerald-200 bg-emerald-50 text-gray-800'
+                            : // PLN-261027 Thread-Events D1: customer white/outlined (left),
+                              // automated answer a stronger green, automated notice amber.
+                              m.senderType === 'ai'
+                              ? 'border border-emerald-300 bg-emerald-100 text-gray-800'
                               : m.senderType === 'system'
-                                ? 'border border-dashed border-gray-300 bg-gray-50 text-gray-600'
-                                : 'bg-gray-100 text-gray-700',
+                                ? 'border border-dashed border-amber-300 bg-amber-50 text-amber-900'
+                                : 'border border-gray-200 bg-white text-gray-800 shadow-sm',
                         )}
                       >
                         {m.senderType === 'ai' && (
@@ -1301,7 +1318,7 @@ export function LiveChatPage() {
                           </span>
                         )}
                         {m.senderType === 'system' && (
-                          <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-gray-500">
+                          <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-amber-700">
                             <Megaphone className="h-3 w-3" /> {t('bubble.systemNotice')}
                           </span>
                         )}
@@ -1461,6 +1478,9 @@ export function LiveChatPage() {
                     </div>
                   );
                 })}
+                {eventsBetween(messages[messages.length - 1]?.createdAt, undefined).map((e) => (
+                  <ThreadEventCard key={e.key} event={e} />
+                ))}
                 {convo && messages.length === 0 && !convoLoading && (
                   <p className="text-center text-sm text-gray-400">{t('noMessages')}</p>
                 )}

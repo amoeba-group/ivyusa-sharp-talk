@@ -646,6 +646,39 @@
       "low_confidence": "baja confianza de la IA",
       "moderation_blocked": "respuesta bloqueada",
       "other": "otro"
-    }
+    },
+    "callbackRequested": "Devolución de llamada solicitada ({{channel}})",
+    "callbackDone": "Llamada realizada · {{name}} ({{duration}})",
+    "callbackCanceled": "Llamada cancelada · {{name}}",
+    "feedback": "Opinión del cliente ★{{rating}}",
+    "resolved": "Resuelto",
+    "unresolved": "No resuelto",
+    "roomCreated": "Sala unificada creada ({{sessions}})",
+    "roomAdded": "Sesiones añadidas ({{sessions}})",
+    "roomJoined": "Nueva sesión añadida automáticamente ({{sessions}})",
+    "roomRemoved": "Sesión retirada ({{sessions}})",
+    "roomAutoOn": "Añadir nuevas sesiones automáticamente: activado",
+    "roomAutoOff": "Añadir nuevas sesiones automáticamente: desactivado",
+    "roomDissolved": "Unificación deshecha",
+    "durMin": "{{n}} min",
+    "durHour": "{{h}} h {{m}} min",
+    "viewAll": "Ver historial completo",
+    "earlierHidden": "{{count}} entradas anteriores están en el historial completo",
+    "modalTitle": "Historial completo",
+    "modalTitleRoom": "Historial completo · sala unificada ({{count}} conversaciones)",
+    "empty": "No hay registros",
+    "filter": {
+      "all": "Todo",
+      "handling": "Atención",
+      "callback": "Llamadas",
+      "feedback": "Opiniones",
+      "room": "Sesiones unificadas"
+    },
+    "actor": "por {{name}}"
+  },
+  "threadEvent": {
+    "callback": "Solicitud de llamada",
+    "feedback": "Opinión del cliente",
+    "stars": "{{n}} estrellas"
   }
 }

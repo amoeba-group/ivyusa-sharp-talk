@@ -213,6 +213,13 @@ export class AgentConsoleController {
     return toConversationHandlersResponse(await this.handlers.history(id, tenantOf(user)));
   }
 
+  @Get('conversations/:id/history')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Full handling history of the merged room (or the conversation): handling, callbacks, feedback, room events' })
+  async conversationHistory(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return toConversationHandlersResponse(await this.handlers.roomHistory(id, tenantOf(user)));
+  }
+
   // ---- merged room over the same customer's sessions (PLN-261023) ----
 
   @Get('conversations/:id/merge-candidates')
@@ -775,7 +782,13 @@ export class AgentConsoleController {
       tenantId,
     );
     const draft = await this.agentService.pendingDraft(id, tenantId);
+    // Callbacks + the customer's feedback inside the thread (PLN-261027 Thread-Events D2/D3).
+    const threadEvents = await this.handlers.threadEvents(
+      tenantId,
+      roomConversations ? roomConversations.map((c) => Number(c.id)) : [id],
+    );
     return {
+      ...threadEvents,
       conversationId: id,
       // Approval mode: the agent sends this, so it travels with the transcript.
       pendingDraft: draft

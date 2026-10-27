@@ -646,6 +646,39 @@
       "low_confidence": "low AI confidence",
       "moderation_blocked": "answer blocked",
       "other": "other"
-    }
+    },
+    "callbackRequested": "Callback requested ({{channel}})",
+    "callbackDone": "Callback done · {{name}} ({{duration}})",
+    "callbackCanceled": "Callback canceled · {{name}}",
+    "feedback": "Customer feedback ★{{rating}}",
+    "resolved": "Resolved",
+    "unresolved": "Not resolved",
+    "roomCreated": "Merged room created ({{sessions}})",
+    "roomAdded": "Sessions merged in ({{sessions}})",
+    "roomJoined": "New session auto-added ({{sessions}})",
+    "roomRemoved": "Session taken out ({{sessions}})",
+    "roomAutoOn": "Auto-add new sessions turned on",
+    "roomAutoOff": "Auto-add new sessions turned off",
+    "roomDissolved": "Merge dissolved",
+    "durMin": "{{n}} min",
+    "durHour": "{{h}} h {{m}} min",
+    "viewAll": "View full history",
+    "earlierHidden": "{{count}} earlier entries are in the full history",
+    "modalTitle": "Full history",
+    "modalTitleRoom": "Full history · merged room ({{count}} conversations)",
+    "empty": "Nothing here",
+    "filter": {
+      "all": "All",
+      "handling": "Handling",
+      "callback": "Callbacks",
+      "feedback": "Feedback",
+      "room": "Merged sessions"
+    },
+    "actor": "by {{name}}"
+  },
+  "threadEvent": {
+    "callback": "Callback request",
+    "feedback": "Customer feedback",
+    "stars": "{{n}} stars"
   }
 }

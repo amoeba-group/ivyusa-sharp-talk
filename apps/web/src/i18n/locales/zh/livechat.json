@@ -646,6 +646,39 @@
       "low_confidence": "AI 置信度低",
       "moderation_blocked": "回答被拦截",
       "other": "其他"
-    }
+    },
+    "callbackRequested": "回电请求（{{channel}}）",
+    "callbackDone": "已回电 · {{name}}（{{duration}}）",
+    "callbackCanceled": "已取消回电 · {{name}}",
+    "feedback": "客户反馈 ★{{rating}}",
+    "resolved": "已解决",
+    "unresolved": "未解决",
+    "roomCreated": "创建合并会话室（{{sessions}}）",
+    "roomAdded": "合并加入会话（{{sessions}}）",
+    "roomJoined": "自动加入新会话（{{sessions}}）",
+    "roomRemoved": "移出会话（{{sessions}}）",
+    "roomAutoOn": "开启自动加入新会话",
+    "roomAutoOff": "关闭自动加入新会话",
+    "roomDissolved": "解除合并",
+    "durMin": "{{n}} 分钟",
+    "durHour": "{{h}} 小时 {{m}} 分钟",
+    "viewAll": "查看完整记录",
+    "earlierHidden": "更早的 {{count}} 条可在完整记录中查看",
+    "modalTitle": "完整记录",
+    "modalTitleRoom": "完整记录 · 合并会话室（{{count}} 个会话）",
+    "empty": "没有相关记录",
+    "filter": {
+      "all": "全部",
+      "handling": "处理",
+      "callback": "回电",
+      "feedback": "反馈",
+      "room": "会话合并"
+    },
+    "actor": "操作人：{{name}}"
+  },
+  "threadEvent": {
+    "callback": "回电请求",
+    "feedback": "客户反馈",
+    "stars": "{{n}} 星"
   }
 }

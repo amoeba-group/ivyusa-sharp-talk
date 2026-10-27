@@ -13,10 +13,10 @@ import type { ConversationMessage } from './history.service';
 // Same reading as the live chat thread (PLN-261027 D2·D3): agent = primary,
 // automated answer = green, automated notice = grey dashed.
 const SENDER_TONE: Record<string, { bg: string; label: string }> = {
-  user: { bg: 'bg-gray-50', label: 'sender.user' },
-  ai: { bg: 'border border-emerald-200 bg-emerald-50', label: 'sender.ai' },
+  user: { bg: 'border border-gray-200 bg-white', label: 'sender.user' },
+  ai: { bg: 'border border-emerald-300 bg-emerald-100', label: 'sender.ai' },
   agent: { bg: 'bg-primary-50', label: 'sender.agent' },
-  system: { bg: 'border border-dashed border-gray-300 bg-gray-50', label: 'sender.system' },
+  system: { bg: 'border border-dashed border-amber-300 bg-amber-50', label: 'sender.system' },
 };
 
 function fmtTime(value: string): string {
