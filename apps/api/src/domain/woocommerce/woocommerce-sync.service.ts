@@ -9,6 +9,7 @@ import { IntegrationCredential } from '../tenant/entity/integration-credential.e
 import { IntegrationService } from '../integration/integration.service';
 import { parseProviderConfig } from '../ecommerce/provider-config.util';
 import { WooClient, WooConfig, WooOrder } from './woocommerce.client';
+import { PLATFORM } from '../customer/customer-platform-link.service';
 
 const WOO = INTEGRATION_PROVIDER.WOOCOMMERCE;
 const PAGE_LIMIT = 100;
@@ -78,7 +79,10 @@ export class WooSyncService {
     let customerId: number | null = null;
     if (email) {
       const customer = await this.customerService.findOrCreateByEmail(tenantId, email, name);
-      if (customer) customerId = customer.id;
+      if (customer) {
+        customerId = customer.id;
+        await this.customerService.linkPlatform(tenantId, customer.id, PLATFORM.WOOCOMMERCE, o.customer_id || null, name);
+      }
     }
 
     const internal = mapStatus(o.status);

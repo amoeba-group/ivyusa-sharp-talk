@@ -45,4 +45,12 @@ export interface CustomerDetailResponse {
     createdAt: Date;
     endedAt: Date | null;
   }>;
+  /** Platform accounts this person is known by (PLN-261027 D12). */
+  platforms: Array<{
+    provider: string;
+    externalId: string;
+    displayName: string | null;
+    firstSeenAt: Date;
+    lastSeenAt: Date;
+  }>;
 }

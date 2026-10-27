@@ -13,6 +13,7 @@ function build() {
   const customer = {
     findOrCreateByCafe24Identifier: jest.fn(async () => ({ id: 42 })),
     adoptCafe24MemberId: jest.fn(async () => undefined),
+    linkPlatform: jest.fn(async () => undefined),
   };
   const token = { findTenantIdByMallId: jest.fn(async () => 7), getConnection: jest.fn(async () => null) };
   const sync = { syncOrders: jest.fn() };

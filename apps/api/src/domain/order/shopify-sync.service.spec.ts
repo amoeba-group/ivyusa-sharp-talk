@@ -53,7 +53,7 @@ describe('ShopifySyncService.syncOrders', () => {
       recordShopifyOutcome: jest.fn().mockResolvedValue(undefined),
       getShopifySyncCursor: jest.fn().mockResolvedValue(cursor),
     };
-    const customerService = { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }) };
+    const customerService = { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }), linkPlatform: jest.fn(async () => undefined) };
     const publish = jest.fn(async () => undefined);
     const svc = new ShopifySyncService(
       orderRepo as never,

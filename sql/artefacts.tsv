@@ -136,6 +136,7 @@
 261026-chat-close-callback.sql	table	callback_requests	-
 261026-chat-close-callback.sql	column	tenants	chat_close_policy
 261027-customer-memo.sql	column	customers	memo
+261027-customer-platform-links.sql	table	customer_platform_links	-
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

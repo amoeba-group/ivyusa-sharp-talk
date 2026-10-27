@@ -36,6 +36,7 @@ import { ErasureSuppressionModule } from './erasure-suppression.module';
 import { PrivacyController, ShopifyComplianceController } from './privacy.controller';
 import { ModerationLog } from '../moderation/entity/moderation-log.entity';
 import { AgentAlert } from '../agent/entity/agent-alert.entity';
+import { CustomerPlatformLink } from '../customer/entity/customer-platform-link.entity';
 
 /**
  * Privacy / consumer-rights module: Shopify GDPR webhooks (audit High-2) and
@@ -47,6 +48,7 @@ import { AgentAlert } from '../agent/entity/agent-alert.entity';
     // Merged rooms keyed on an erased customer go with them (PLN-261023).
     MergedRoomModule,
     TypeOrmModule.forFeature([
+      CustomerPlatformLink,
       Customer,
       Session,
       OrderCache,

@@ -151,6 +151,18 @@
     "noConversations": "Không có hội thoại",
     "saved": "Đã lưu khách hàng",
     "saveFailed": "Không lưu được khách hàng",
-    "revealFailed": "Không hiển thị được thông tin liên hệ"
+    "revealFailed": "Không hiển thị được thông tin liên hệ",
+    "tabPlatforms": "Nền tảng {{count}}",
+    "noPlatforms": "Chưa có tài khoản nền tảng liên kết",
+    "platform": "Nền tảng",
+    "lastSeen": "Lần cuối",
+    "provider": {
+      "shopify": "Shopify",
+      "cafe24": "Cafe24",
+      "woocommerce": "WooCommerce",
+      "haravan": "Haravan",
+      "odoo": "Odoo",
+      "identify": "Thành viên trang (identify)"
+    }
   }
 }

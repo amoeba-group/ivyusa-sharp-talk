@@ -8,6 +8,7 @@ import { ShopifyAdminClient, ShopifyOrderDto } from './shopify-admin.client';
 import { TenantService } from '../tenant/tenant.service';
 import { CustomerService } from '../customer/customer.service';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
+import { PLATFORM } from '../customer/customer-platform-link.service';
 
 /**
  * Shopify money → number. Amounts arrive as strings ("55.00"), sometimes as
@@ -239,8 +240,10 @@ export class ShopifySyncService {
         name,
         shopifyCustomerId,
       );
-      if (customer) customerId = customer.id;
-      else identityErased = true;
+      if (customer) {
+        customerId = customer.id;
+        await this.customerService.linkPlatform(tenantId, customer.id, PLATFORM.SHOPIFY, shopifyCustomerId, name);
+      } else identityErased = true;
     }
 
     const internal = this.mapStatus(o.financial_status, o.fulfillment_status);

@@ -151,6 +151,18 @@
     "noConversations": "대화가 없습니다",
     "saved": "고객 정보를 저장했습니다",
     "saveFailed": "고객 정보를 저장하지 못했습니다",
-    "revealFailed": "연락처를 열람하지 못했습니다"
+    "revealFailed": "연락처를 열람하지 못했습니다",
+    "tabPlatforms": "연동 플랫폼 {{count}}",
+    "noPlatforms": "연동된 플랫폼 계정이 없습니다",
+    "platform": "플랫폼",
+    "lastSeen": "최근 확인",
+    "provider": {
+      "shopify": "Shopify",
+      "cafe24": "Cafe24",
+      "woocommerce": "WooCommerce",
+      "haravan": "Haravan",
+      "odoo": "Odoo",
+      "identify": "사이트 회원(identify)"
+    }
   }
 }

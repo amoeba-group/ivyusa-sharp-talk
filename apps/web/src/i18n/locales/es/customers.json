@@ -151,6 +151,18 @@
     "noConversations": "Sin conversaciones",
     "saved": "Cliente guardado",
     "saveFailed": "No se pudo guardar el cliente",
-    "revealFailed": "No se pudieron mostrar los datos de contacto"
+    "revealFailed": "No se pudieron mostrar los datos de contacto",
+    "tabPlatforms": "Plataformas {{count}}",
+    "noPlatforms": "Sin cuentas de plataforma vinculadas",
+    "platform": "Plataforma",
+    "lastSeen": "Última vez",
+    "provider": {
+      "shopify": "Shopify",
+      "cafe24": "Cafe24",
+      "woocommerce": "WooCommerce",
+      "haravan": "Haravan",
+      "odoo": "Odoo",
+      "identify": "Miembro del sitio (identify)"
+    }
   }
 }

@@ -151,6 +151,18 @@
     "noConversations": "暂无会话",
     "saved": "客户信息已保存",
     "saveFailed": "无法保存客户信息",
-    "revealFailed": "无法显示联系方式"
+    "revealFailed": "无法显示联系方式",
+    "tabPlatforms": "关联平台 {{count}}",
+    "noPlatforms": "没有关联的平台账户",
+    "platform": "平台",
+    "lastSeen": "最近确认",
+    "provider": {
+      "shopify": "Shopify",
+      "cafe24": "Cafe24",
+      "woocommerce": "WooCommerce",
+      "haravan": "Haravan",
+      "odoo": "Odoo",
+      "identify": "站点会员（identify）"
+    }
   }
 }

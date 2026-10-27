@@ -9,6 +9,7 @@ import { TenantService } from '../tenant/tenant.service';
 import { tenantMall } from './cafe24-mall';
 import { Cafe24TokenService } from './cafe24-token.service';
 import { Cafe24AdminClient, Cafe24Order, Cafe24OrderItem } from './cafe24-admin.client';
+import { PLATFORM } from '../customer/customer-platform-link.service';
 
 const CAFE24 = INTEGRATION_PROVIDER.CAFE24;
 const DEFAULT_LOOKBACK_DAYS = 7;
@@ -124,6 +125,10 @@ export class Cafe24SyncService {
           await this.customerService.adoptCafe24MemberId(tenantId, customer.id, memberId);
         }
       }
+    }
+
+    if (customerId != null && memberId) {
+      await this.customerService.linkPlatform(tenantId, customerId, PLATFORM.CAFE24, memberId, name);
     }
 
     const internal = this.client.deriveInternalStatus(o.items);

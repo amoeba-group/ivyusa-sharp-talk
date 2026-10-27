@@ -9,6 +9,7 @@ import { IntegrationCredential } from '../tenant/entity/integration-credential.e
 import { decryptSecret } from '../../global/util/crypto.util';
 import { IntegrationService } from '../integration/integration.service';
 import { OdooClient, OdooConfig, OdooOrder, OdooOrderLine } from './odoo.client';
+import { PLATFORM } from '../customer/customer-platform-link.service';
 
 const ODOO = INTEGRATION_PROVIDER.ODOO;
 const PAGE_LIMIT = 100;
@@ -122,7 +123,10 @@ export class OdooSyncService {
     let customerId: number | null = null;
     if (email) {
       const customer = await this.customerService.findOrCreateByEmail(tenantId, email, name);
-      if (customer) customerId = customer.id;
+      if (customer) {
+        customerId = customer.id;
+        await this.customerService.linkPlatform(tenantId, customer.id, PLATFORM.ODOO, pid, name);
+      }
     }
 
     const internal = mapState(o.state);

@@ -50,6 +50,7 @@ describe('OdooSyncService.syncOrders', () => {
     };
     const created: Array<{ email: string; name?: string }> = [];
     const customerService = {
+      linkPlatform: jest.fn(async () => undefined),
       findOrCreateByEmail: jest.fn(async (_t: number, email: string, name?: string) => {
         created.push({ email, name });
         return { id: 500 + created.length };

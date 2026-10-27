@@ -91,6 +91,7 @@ export class CustomerMapper {
       firstLandingPath: d.firstLandingPath,
       companies: d.companies,
       conversations: d.conversations,
+      platforms: d.platforms,
     };
   }
 

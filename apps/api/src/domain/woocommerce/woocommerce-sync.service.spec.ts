@@ -74,7 +74,10 @@ describe('WooSyncService', () => {
     const credRepo = { findOne: jest.fn().mockResolvedValue({ secretEnc: Buffer.from('x') }) };
     const client = { pullOrders: jest.fn(async (_c: unknown, o: { page: number }) => (o.page === 1 ? orders : [])) };
     const created: string[] = [];
-    const customerService = { findOrCreateByEmail: jest.fn(async (_t: number, e: string) => { created.push(e); return { id: 800 }; }) };
+    const customerService = {
+      findOrCreateByEmail: jest.fn(async (_t: number, e: string) => { created.push(e); return { id: 800 }; }),
+      linkPlatform: jest.fn(async () => undefined),
+    };
     const svc = new WooSyncService(orderRepo as never, itemRepo as never, credRepo as never, client as never, customerService as never, { upsert: jest.fn() } as never);
     return { svc, saved, items, created };
   }

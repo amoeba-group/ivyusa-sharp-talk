@@ -151,6 +151,18 @@
     "noConversations": "会話がありません",
     "saved": "顧客情報を保存しました",
     "saveFailed": "顧客情報を保存できませんでした",
-    "revealFailed": "連絡先を表示できませんでした"
+    "revealFailed": "連絡先を表示できませんでした",
+    "tabPlatforms": "連携プラットフォーム {{count}}",
+    "noPlatforms": "連携されたプラットフォームアカウントはありません",
+    "platform": "プラットフォーム",
+    "lastSeen": "最終確認",
+    "provider": {
+      "shopify": "Shopify",
+      "cafe24": "Cafe24",
+      "woocommerce": "WooCommerce",
+      "haravan": "Haravan",
+      "odoo": "Odoo",
+      "identify": "サイト会員（identify）"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, In, IsNull, Repository } from 'typeorm';
 import { Customer } from './entity/customer.entity';
@@ -14,6 +14,8 @@ import { Conversation } from '../chat/entity/conversation.entity';
 import { Session } from '../session/entity/session.entity';
 import { Company } from '../company/entity/company.entity';
 import { CompanyContact } from '../company/entity/company-contact.entity';
+import { CustomerPlatformLinkService } from './customer-platform-link.service';
+import type { Platform } from './customer-platform-link.service';
 
 /** First contact and volume per person (PLN-261027 D10) — computed, never stored. */
 export interface CustomerActivity {
@@ -36,6 +38,13 @@ export interface CustomerDetail {
     channel: string;
     createdAt: Date;
     endedAt: Date | null;
+  }>;
+  platforms: Array<{
+    provider: string;
+    externalId: string;
+    displayName: string | null;
+    firstSeenAt: Date;
+    lastSeenAt: Date;
   }>;
 }
 
@@ -77,7 +86,20 @@ export class CustomerService {
     @InjectRepository(Session) private readonly sessionRepo: Repository<Session>,
     @InjectRepository(CompanyContact) private readonly contactRepo: Repository<CompanyContact>,
     @InjectRepository(Company) private readonly companyRepo: Repository<Company>,
+    // Platform accounts per person (PLN-261027 S5) — optional so test doubles stay valid.
+    @Optional() private readonly platformLinks?: CustomerPlatformLinkService,
   ) {}
+
+  /** Record the platform account a sync / sign-in resolved to this person (best-effort). */
+  linkPlatform(
+    tenantId: number,
+    customerId: number,
+    provider: Platform,
+    externalId: string | number | null | undefined,
+    displayName?: string | null,
+  ): Promise<void> {
+    return this.platformLinks?.link(tenantId, Number(customerId), provider, externalId, displayName) ?? Promise.resolve();
+  }
 
   async list(
     tenantId: number,
@@ -446,7 +468,7 @@ export class CustomerService {
         .where('c.tenant_id = :tenantId', { tenantId })
         .andWhere('(c.customer_id = :id OR s.customer_id = :id)', { id })
         .andWhere(NOT_PREVIEW);
-    const [activity, firstSession, firstConv, recent, companies] = await Promise.all([
+    const [activity, firstSession, firstConv, recent, companies, platforms] = await Promise.all([
       this.activity(tenantId, [id]),
       this.sessionRepo
         .createQueryBuilder('s')
@@ -466,6 +488,7 @@ export class CustomerService {
         .limit(DETAIL_CONVERSATIONS)
         .getRawAndEntities(),
       this.companyNamesOf(tenantId, [id]),
+      this.platformLinks?.list(tenantId, id) ?? Promise.resolve([]),
     ]);
     // A messenger session's own channel (kakao, zalo, …) is more specific than the
     // conversation's default 'widget'.
@@ -490,6 +513,13 @@ export class CustomerService {
         channel: channelOf(c, recent.raw[i]),
         createdAt: c.createdAt,
         endedAt: c.endedAt,
+      })),
+      platforms: platforms.map((l) => ({
+        provider: l.provider,
+        externalId: l.externalId,
+        displayName: l.displayName,
+        firstSeenAt: l.firstSeenAt,
+        lastSeenAt: l.lastSeenAt,
       })),
     };
   }

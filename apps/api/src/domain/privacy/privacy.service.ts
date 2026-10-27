@@ -38,6 +38,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { maskPii } from '../../global/util/pii.util';
 import { blindIndex } from '../../global/util/crypto.util';
+import { CustomerPlatformLink } from '../customer/entity/customer-platform-link.entity';
 
 const REDACTED = '[redacted]';
 const EXTERNAL_CHANNELS = ['email', 'sms', 'web_push', 'push'];
@@ -89,6 +90,8 @@ export class PrivacyService {
     private readonly mergedRooms?: MergedRoomService,
     /** Callback requests carry a contact copy (PLN-261026); deleted with the person. */
     @Optional() @InjectRepository(CallbackRequest) private readonly callbackRepo?: Repository<CallbackRequest>,
+    /** Platform account names are the person's data (PLN-261027 D12). */
+    @Optional() @InjectRepository(CustomerPlatformLink) private readonly platformLinkRepo?: Repository<CustomerPlatformLink>,
   ) {}
 
   // ---- session resolution (widget DSAR/CCPA) ----
@@ -292,6 +295,8 @@ export class PrivacyService {
         this.diaryRepo.find({ where: { customerId } }),
       ]);
 
+    const platformLinks = (await this.platformLinkRepo?.find({ where: { customerId } })) ?? [];
+
     // Chat transcripts — the most sensitive free-text PII — via sessions → conversations.
     const sessions = await this.sessionRepo.find({ where: { customerId } });
     const sessionIds = sessions.map((s) => s.id);
@@ -349,6 +354,13 @@ export class PrivacyService {
         : null,
       // Addresses the widget was used from (PLN-261023 S2) — personal data, so
       // part of what the person gets back.
+      // Platform accounts the person is known by (PLN-261027 D12).
+      platformAccounts: platformLinks.map((l) => ({
+        provider: l.provider,
+        externalId: l.externalId,
+        displayName: l.displayName,
+        firstSeenAt: l.firstSeenAt,
+      })),
       visitorIps: sessions
         .filter((sn) => sn.firstIp || sn.lastIp)
         .map((sn) => ({ firstIp: sn.firstIp, lastIp: sn.lastIp, lastIpAt: sn.lastIpAt, sessionCreatedAt: sn.createdAt })),
@@ -562,6 +574,9 @@ export class PrivacyService {
     await this.callbackRepo
       ?.delete({ customerId })
       .catch((e: Error) => this.logger.warn(`callback erasure failed: ${e.message}`));
+    await this.platformLinkRepo
+      ?.delete({ customerId })
+      .catch((e: Error) => this.logger.warn(`platform link erasure failed: ${e.message}`));
 
     // Redact chat messages reachable from the customer's sessions.
     const sessions = await this.sessionRepo.find({ where: { customerId } });

@@ -5,6 +5,7 @@ import { TenantService } from '../tenant/tenant.service';
 import { ShopifyAdminClient } from '../order/shopify-admin.client';
 import { ShopifySyncService } from '../order/shopify-sync.service';
 import { verifyShopifyProxySignature } from '../../global/util/shopify-hmac.util';
+import { PLATFORM } from '../customer/customer-platform-link.service';
 
 export interface ProxyIdentityResult {
   authenticated: boolean;
@@ -82,6 +83,7 @@ export class ShopifyProxyService {
     if (!customer) {
       return { status: 'ok', result: { authenticated: false } };
     }
+    await this.customerService.linkPlatform(tenant.id, customer.id, PLATFORM.SHOPIFY, shopifyCustomerId, customer.name);
     // Enrich the row with the customer's real name/email from the Admin API when
     // we don't have them yet (the proxy only hands us the numeric id). Fire-and-
     // forget: nothing in this response needs it, and it must not add Admin API

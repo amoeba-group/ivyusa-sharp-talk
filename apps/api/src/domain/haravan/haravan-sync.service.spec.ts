@@ -89,7 +89,10 @@ describe('HaravanSyncService', () => {
     const credRepo = { findOne: jest.fn().mockResolvedValue({ secretEnc: Buffer.from('x') }) };
     const client = { pullOrders: jest.fn(async (_c: unknown, o: { page: number }) => (o.page === 1 ? orders : [])) };
     const created: string[] = [];
-    const customerService = { findOrCreateByEmail: jest.fn(async (_t: number, email: string) => { created.push(email); return { id: 700 }; }) };
+    const customerService = {
+      findOrCreateByEmail: jest.fn(async (_t: number, email: string) => { created.push(email); return { id: 700 }; }),
+      linkPlatform: jest.fn(async () => undefined),
+    };
     const integration = { upsert: jest.fn() };
     const svc = new HaravanSyncService(orderRepo as never, itemRepo as never, credRepo as never, client as never, customerService as never, integration as never);
     return { svc, saved, items, created };

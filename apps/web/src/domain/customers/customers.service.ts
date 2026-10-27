@@ -38,6 +38,14 @@ export interface CustomerDetail {
     createdAt: string;
     endedAt: string | null;
   }>;
+  /** Platform accounts (PLN-261027 D12). */
+  platforms: Array<{
+    provider: string;
+    externalId: string;
+    displayName: string | null;
+    firstSeenAt: string;
+    lastSeenAt: string;
+  }>;
 }
 
 export interface CustomerUpdate {

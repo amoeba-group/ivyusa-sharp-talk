@@ -9,6 +9,7 @@ import { Cafe24TokenService } from './cafe24-token.service';
 import { cafe24AuthHost } from './cafe24-admin.client';
 import { Cafe24SyncService } from './cafe24-sync.service';
 import { mallIdFromHost } from './cafe24-mall';
+import { PLATFORM } from '../customer/customer-platform-link.service';
 
 const STATE_TTL_SEC = 600;
 const TICKET_TTL_SEC = 60;
@@ -185,6 +186,7 @@ export class Cafe24CustomerAuthService {
         .catch((err: Error) =>
           this.logger.warn(`cafe24 member-id adopt failed mall=${parsed.mallId}: ${err.message}`),
         );
+      await this.customerService.linkPlatform(parsed.tenantId, customer.id, PLATFORM.CAFE24, userId, customer.name);
     }
     // Enrich the identifier-keyed row with the shopper's email + order history so
     // "my orders" populates. Fire-and-forget (never blocks the sign-in handshake),

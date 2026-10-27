@@ -25,6 +25,7 @@ import { CompanyService } from '../company/company.service';
 import type { Company } from '../company/entity/company.entity';
 import { HotelSyncService } from '../go2joy/hotel-sync.service';
 import { AuditService } from '../audit/audit.service';
+import { CustomerPlatformLinkService, PLATFORM } from '../customer/customer-platform-link.service';
 
 /** What the customer's own server signs, and what the SDK forwards. */
 export interface IdentifyInput {
@@ -73,6 +74,8 @@ export class EmbedService {
     @Optional() private readonly audit?: AuditService,
     // Hotel profile + room types from the Go2Joy Partner API (PLN-261023 D1-②).
     @Optional() private readonly hotels?: HotelSyncService,
+    // Which platform account a person is (PLN-261027 D12).
+    @Optional() private readonly platformLinks?: CustomerPlatformLinkService,
   ) {}
 
   /**
@@ -429,7 +432,11 @@ export class EmbedService {
     if (input.phone && !customer.phone) customer.phone = input.phone;
 
     try {
-      return await this.customerRepo.save(customer);
+      const saved = await this.customerRepo.save(customer);
+      // The row is keyed on this host user id either way (signed or claimed), so
+      // the platform account is the same fact the row already records.
+      await this.platformLinks?.link(tenantId, Number(saved.id), PLATFORM.IDENTIFY, input.userId, saved.name);
+      return saved;
     } catch (err) {
       // Two tabs signing in at once both miss the lookup and both insert. The
       // unique key is what makes that safe; losing the race is not an error, so

@@ -16,7 +16,7 @@ import { useCustomerDetail, useUpdateCustomer } from './customers.hooks';
 import { customersService } from './customers.service';
 import type { Customer } from './customers.service';
 
-type Tab = 'info' | 'conversations';
+type Tab = 'info' | 'conversations' | 'platforms';
 
 function fmtDateTime(value?: string | null): string {
   if (!value) return '—';
@@ -106,6 +106,7 @@ export function CustomerDetailModal({ id, onClose }: { id: number | null; onClos
   const tabs: Array<[Tab, string]> = [
     ['info', t('detail.tabInfo')],
     ['conversations', t('detail.tabConversations', { count: data?.conversations.length ?? 0 })],
+    ['platforms', t('detail.tabPlatforms', { count: data?.platforms.length ?? 0 })],
   ];
 
   return (
@@ -265,6 +266,36 @@ export function CustomerDetailModal({ id, onClose }: { id: number | null; onClos
               </label>
             </div>
           )}
+
+          {tab === 'platforms' &&
+            (data.platforms.length === 0 ? (
+              <p className="text-xs text-gray-400">{t('detail.noPlatforms')}</p>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs text-gray-500">
+                  <tr>
+                    <th className="py-1 font-normal">{t('detail.platform')}</th>
+                    <th className="py-1 font-normal">ID</th>
+                    <th className="py-1 font-normal">{t('name')}</th>
+                    <th className="py-1 font-normal">{t('detail.firstSeen')}</th>
+                    <th className="py-1 font-normal">{t('detail.lastSeen')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {data.platforms.map((p) => (
+                    <tr key={`${p.provider}:${p.externalId}`}>
+                      <td className="py-1.5">
+                        <Badge tone="info">{t(`detail.provider.${p.provider}`, { defaultValue: p.provider })}</Badge>
+                      </td>
+                      <td className="py-1.5 font-mono text-xs">{p.externalId}</td>
+                      <td className="py-1.5">{p.displayName ?? '—'}</td>
+                      <td className="py-1.5 text-xs text-gray-500">{fmtDateTime(p.firstSeenAt)}</td>
+                      <td className="py-1.5 text-xs text-gray-500">{fmtDateTime(p.lastSeenAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ))}
 
           {tab === 'conversations' &&
             (data.conversations.length === 0 ? (

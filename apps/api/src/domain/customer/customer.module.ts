@@ -10,15 +10,17 @@ import { Conversation } from '../chat/entity/conversation.entity';
 import { Session } from '../session/entity/session.entity';
 import { Company } from '../company/entity/company.entity';
 import { CompanyContact } from '../company/entity/company-contact.entity';
+import { CustomerPlatformLink } from './entity/customer-platform-link.entity';
+import { CustomerPlatformLinkService } from './customer-platform-link.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Customer, OrderCache, Conversation, Session, Company, CompanyContact]),
+    TypeOrmModule.forFeature([Customer, OrderCache, Conversation, Session, Company, CompanyContact, CustomerPlatformLink]),
     ErasureSuppressionModule,
     AuditModule,
   ],
   controllers: [CustomerController],
-  providers: [CustomerService],
-  exports: [CustomerService],
+  providers: [CustomerService, CustomerPlatformLinkService],
+  exports: [CustomerService, CustomerPlatformLinkService],
 })
 export class CustomerModule {}
