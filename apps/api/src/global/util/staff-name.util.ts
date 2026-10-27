@@ -17,3 +17,17 @@ export function staffDisplayName(user: { name?: string | null; email?: string | 
   const at = email.indexOf('@');
   return at > 0 ? email.slice(0, at) : email;
 }
+
+/**
+ * Login id and name together — "minh.le(Minh)" — for the handling history,
+ * where two staff with similar names must stay apart (PLN-261027 Takeover D3).
+ * The id is the address's local part; without a name it is the id alone.
+ */
+export function staffLabel(user: { name?: string | null; email?: string | null } | null | undefined): string | null {
+  if (!user) return null;
+  const email = user.email?.trim();
+  const id = email ? (email.indexOf('@') > 0 ? email.slice(0, email.indexOf('@')) : email) : null;
+  const name = user.name?.trim() || null;
+  if (id && name && name !== id) return `${id}(${name})`;
+  return id ?? name;
+}

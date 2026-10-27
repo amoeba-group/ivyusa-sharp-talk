@@ -13,7 +13,8 @@ import { Session } from '../session/entity/session.entity';
 import { maskIp } from '../../global/util/pii-display.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
-import { staffDisplayName } from '../../global/util/staff-name.util';
+import { staffLabel } from '../../global/util/staff-name.util';
+import { Message } from '../chat/entity/message.entity';
 
 export type HandlerEventKind =
   | 'started'
@@ -32,7 +33,12 @@ export type HandlerEventKind =
   | 'room_session_removed'
   | 'room_auto_join'
   | 'room_dissolved'
-  | 'room_session_ip';
+  | 'room_session_ip'
+  | 'staff_replied'
+  | 'handoff_acked'
+  | 'ai_paused'
+  | 'ai_resumed'
+  | 'auto_reply_changed';
 
 /** Kinds grouped for the history modal's filter (PLN-261027 Thread-Events D5). */
 export const HANDLER_EVENT_GROUP: Record<HandlerEventKind, 'handling' | 'callback' | 'feedback' | 'room'> = {
@@ -53,6 +59,11 @@ export const HANDLER_EVENT_GROUP: Record<HandlerEventKind, 'handling' | 'callbac
   room_auto_join: 'room',
   room_dissolved: 'room',
   room_session_ip: 'room',
+  staff_replied: 'handling',
+  handoff_acked: 'handling',
+  ai_paused: 'handling',
+  ai_resumed: 'handling',
+  auto_reply_changed: 'handling',
 };
 
 export interface HandlerEvent {
@@ -79,6 +90,10 @@ export interface HandlerEvent {
   /** Room events: the conversations (sessions) concerned; auto-join: on/off. */
   conversationIds: number[] | null;
   on: boolean | null;
+  /** Staff a handoff request paged (PLN-261027 Takeover D2); `on` = it also went to everyone. */
+  targetNames: string[] | null;
+  /** Replies a staff member sent in the conversation (Takeover D1). */
+  count: number | null;
 }
 
 export interface HandlerSummary {
@@ -109,6 +124,8 @@ const BLANK: Omit<HandlerEvent, 'at' | 'kind' | 'conversationId'> = {
   comment: null,
   conversationIds: null,
   on: null,
+  targetNames: null,
+  count: null,
 };
 
 /**
@@ -133,6 +150,8 @@ export class ConversationHandlersService {
     @InjectRepository(AuditLog) private readonly auditRepo: Repository<AuditLog>,
     // Visitor addresses of the room's sessions (PLN-261027 Merge-Add D6) — last, optional.
     @Optional() @InjectRepository(Session) private readonly sessionRepo?: Repository<Session>,
+    // Staff replies without an assignment (PLN-261027 Takeover D1) — optional, last.
+    @Optional() @InjectRepository(Message) private readonly msgRepo?: Repository<Message>,
   ) {}
 
   /** One conversation — the card (polled with the thread). */
@@ -381,7 +400,7 @@ export class ConversationHandlersService {
       }),
       this.alertRepo.find({
         where: { tenantId, conversationId: In(ids) },
-        select: { id: true, conversationId: true, reason: true, targetUserId: true, createdAt: true },
+        select: { id: true, conversationId: true, reason: true, targetUserId: true, ackedBy: true, ackedAt: true, createdAt: true },
         order: { createdAt: 'ASC', id: 'ASC' },
       }),
       this.callbackRepo.find({
@@ -391,12 +410,22 @@ export class ConversationHandlersService {
       }),
     ]);
 
+    const [replies, autoReplyAudits] = await Promise.all([
+      this.staffReplies(ids),
+      this.autoReplyAudits(tenantId, convs),
+    ]);
+
     const userIds = new Set<number>();
     for (const r of rows) {
       if (r.agentId != null) userIds.add(Number(r.agentId));
       if (r.assignedBy != null) userIds.add(Number(r.assignedBy));
     }
-    for (const a of alerts) if (a.targetUserId != null) userIds.add(Number(a.targetUserId));
+    for (const a of alerts) {
+      if (a.targetUserId != null) userIds.add(Number(a.targetUserId));
+      if (a.ackedBy != null) userIds.add(Number(a.ackedBy));
+    }
+    for (const r of replies) userIds.add(r.senderId);
+    for (const a of autoReplyAudits) userIds.add(a.actorId);
     for (const c of callbacks) if (c.handledBy != null) userIds.add(Number(c.handledBy));
     const names = await this.names([...userIds]);
     const nameOf = (id: number | null) => (id == null ? null : (names.get(Number(id)) ?? null));
@@ -408,13 +437,49 @@ export class ConversationHandlersService {
       const ev = (e: Omit<HandlerEvent, keyof typeof BLANK | 'conversationId'> & Partial<HandlerEvent>) =>
         events.push({ ...BLANK, conversationId: cid, ...e });
       ev({ at: conv.createdAt, kind: 'started' });
+      // One request = the alerts written together (a broadcast row plus one per
+      // paged staff member, same second, same reason) — Takeover D2.
+      const requests = new Map<string, typeof alerts>();
       for (const a of alerts.filter((x) => Number(x.conversationId) === cid)) {
+        const key = `${Math.floor(a.createdAt.getTime() / 1000)}|${a.reason}`;
+        requests.set(key, [...(requests.get(key) ?? []), a]);
+      }
+      for (const group of requests.values()) {
+        const targets = [...new Set(group.filter((a) => a.targetUserId != null).map((a) => Number(a.targetUserId)))];
         ev({
-          at: a.createdAt,
+          at: group[0].createdAt,
           kind: 'handoff_request',
-          reason: a.reason,
-          agentId: a.targetUserId != null ? Number(a.targetUserId) : null,
-          agentName: nameOf(a.targetUserId),
+          reason: group[0].reason,
+          targetNames: targets.map((id) => nameOf(id) ?? `#${id}`),
+          on: group.some((a) => a.targetUserId == null),
+        });
+        const acked = new Map<number, Date>();
+        for (const a of group) {
+          if (a.ackedBy == null || !a.ackedAt) continue;
+          const prev = acked.get(Number(a.ackedBy));
+          if (!prev || a.ackedAt < prev) acked.set(Number(a.ackedBy), a.ackedAt);
+        }
+        for (const [by, at] of acked) ev({ at, kind: 'handoff_acked', agentId: by, agentName: nameOf(by) });
+      }
+      // Staff who answered — with or without accepting (Takeover D1).
+      for (const r of replies.filter((x) => x.conversationId === cid)) {
+        ev({ at: r.firstAt, kind: 'staff_replied', agentId: r.senderId, agentName: nameOf(r.senderId), count: r.count });
+        const seen = handlersById.get(r.senderId);
+        if (seen) {
+          if (r.lastAt > seen.lastAt) seen.lastAt = r.lastAt;
+          if (r.firstAt < seen.firstAt) seen.firstAt = r.firstAt;
+        } else {
+          handlersById.set(r.senderId, { agentId: r.senderId, name: nameOf(r.senderId), firstAt: r.firstAt, lastAt: r.lastAt, current: false });
+        }
+      }
+      // Auto-reply switched off / handed back / changed by staff (Takeover D7).
+      for (const a of autoReplyAudits.filter((x) => x.conversationId === cid)) {
+        ev({
+          at: a.at,
+          kind: a.kind,
+          agentId: a.actorId,
+          agentName: nameOf(a.actorId),
+          reason: a.mode,
         });
       }
 
@@ -486,12 +551,67 @@ export class ConversationHandlersService {
     return { events, handlers: [...handlersById.values()] };
   }
 
+  /** First/last reply and count per conversation per staff member (Takeover D1). */
+  private async staffReplies(
+    conversationIds: number[],
+  ): Promise<Array<{ conversationId: number; senderId: number; firstAt: Date; lastAt: Date; count: number }>> {
+    if (!this.msgRepo || !conversationIds.length) return [];
+    const rows = await this.msgRepo
+      .createQueryBuilder('m')
+      .select('m.conversation_id', 'cid')
+      .addSelect('m.sender_id', 'sid')
+      .addSelect('MIN(m.created_at)', 'first')
+      .addSelect('MAX(m.created_at)', 'last')
+      .addSelect('COUNT(*)', 'n')
+      .where('m.conversation_id IN (:...ids)', { ids: conversationIds })
+      .andWhere("m.sender_type = 'agent'")
+      .andWhere('m.sender_id IS NOT NULL')
+      .groupBy('m.conversation_id')
+      .addGroupBy('m.sender_id')
+      .getRawMany<{ cid: string | number; sid: string | number; first: Date | string; last: Date | string; n: string | number }>();
+    return rows.map((r) => ({
+      conversationId: Number(r.cid),
+      senderId: Number(r.sid),
+      firstAt: new Date(r.first),
+      lastAt: new Date(r.last),
+      count: Number(r.n) || 0,
+    }));
+  }
+
+  /** Staff auto-reply switches on these conversations' sessions (Takeover D7). */
+  private async autoReplyAudits(
+    tenantId: number,
+    convs: ConvRow[],
+  ): Promise<Array<{ conversationId: number; at: Date; kind: 'ai_paused' | 'ai_resumed' | 'auto_reply_changed'; actorId: number; mode: string | null }>> {
+    if (!convs.length) return [];
+    const targets = [...new Set(convs.map((c) => `session:${c.sessionId}`))];
+    const rows = await this.auditRepo.find({
+      where: {
+        tenantId,
+        action: In(['agent.ai_paused', 'agent.ai_resumed', 'agent.session.auto_reply']),
+        target: In(targets),
+      },
+      select: { id: true, action: true, actorId: true, metadata: true, createdAt: true },
+      order: { createdAt: 'ASC', id: 'ASC' },
+    });
+    const ids = new Set(convs.map((c) => Number(c.id)));
+    const out: Array<{ conversationId: number; at: Date; kind: 'ai_paused' | 'ai_resumed' | 'auto_reply_changed'; actorId: number; mode: string | null }> = [];
+    for (const a of rows) {
+      const md = (a.metadata ?? {}) as { conversationId?: string; mode?: string };
+      const cid = Number(md.conversationId);
+      if (!ids.has(cid)) continue;
+      const kind = a.action === 'agent.ai_paused' ? 'ai_paused' : a.action === 'agent.ai_resumed' ? 'ai_resumed' : 'auto_reply_changed';
+      out.push({ conversationId: cid, at: a.createdAt, kind, actorId: Number(a.actorId), mode: md.mode ?? null });
+    }
+    return out;
+  }
+
   private async names(ids: number[]): Promise<Map<number, string>> {
     if (!ids.length) return new Map();
     const users = await this.userRepo.find({ where: { id: In(ids) }, select: { id: true, name: true, email: true } });
     const map = new Map<number, string>();
     for (const u of users) {
-      const name = staffDisplayName(u);
+      const name = staffLabel(u);
       if (name) map.set(Number(u.id), name);
     }
     return map;

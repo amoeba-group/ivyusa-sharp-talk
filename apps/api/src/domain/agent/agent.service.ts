@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, In, IsNull, LessThan, Not, Repository } from 'typeorm';
 import {
@@ -52,6 +52,7 @@ import {
   resolveAutoReply,
 } from '../messenger/auto-reply.util';
 import { staffDisplayName } from '../../global/util/staff-name.util';
+import { AuditLog } from '../audit/entity/audit-log.entity';
 
 /**
  * Sandbox threads are not customer conversations (AN-260826 D-2/D-6).
@@ -185,6 +186,8 @@ export class AgentService {
     /** AI-agent names for the queue rows/filter (REQ-260825 R6/R7). */
     @InjectRepository(AiAgent)
     private readonly aiAgentRepo?: Repository<AiAgent>,
+    // Last pause's previous mode, for the takeover hand-over (PLN-261027 Takeover D6) — optional, last.
+    @Optional() @InjectRepository(AuditLog) private readonly auditRepo?: Repository<AuditLog>,
   ) {}
 
   /**
@@ -470,6 +473,84 @@ export class AgentService {
    * shopper asked half an hour ago is worse than not answering it, so nothing
    * is replayed. The console says as much next to the control.
    */
+  /**
+   * A staff member takes the conversation over without accepting it
+   * (PLN-261027 Takeover D4): the session's AI auto-reply goes off and the mode
+   * it had is kept in the audit row, so the hand-over can restore exactly that.
+   * No assignment, no status change — accepting stays a separate act.
+   */
+  async aiPause(
+    conversationId: number,
+    tenantId: number,
+    actorUserId: number,
+  ): Promise<{ autoReplyMode: string }> {
+    const conversation = await this.requireConversation(conversationId, tenantId);
+    const session = await this.sessionRepo.findOne({
+      where: { id: conversation.sessionId },
+      select: { id: true, sessionToken: true, autoReplyMode: true },
+    });
+    const previousMode = session?.autoReplyMode ?? 'inherit';
+    if (previousMode !== 'off') {
+      await this.sessionRepo.update({ id: conversation.sessionId }, { autoReplyMode: 'off' });
+      if (session?.sessionToken) await this.redis.del(sessionCacheKey(session.sessionToken));
+    }
+    await this.auditAgentAction(actorUserId, tenantId, 'agent.ai_paused', `session:${conversation.sessionId}`, {
+      conversationId: String(conversationId),
+      previousMode,
+    });
+    return { autoReplyMode: 'off' };
+  }
+
+  /**
+   * "Done — hand over to the AI" for a conversation that was never accepted
+   * (PLN-261027 Takeover D6): the auto-reply mode goes back to what it was
+   * before the takeover and the customer gets the tenant's hand-back notice.
+   * An accepted conversation uses handBack (409 E5157 here).
+   */
+  async aiResume(
+    conversationId: number,
+    tenantId: number,
+    actorUserId: number,
+  ): Promise<{ autoReplyMode: string }> {
+    const conversation = await this.requireConversation(conversationId, tenantId);
+    if (conversation.status === CONVERSATION_STATUS.AGENT) {
+      this.logger.warn(`ai-resume rejected: conversation=${conversationId} is accepted — use hand back`);
+      throw new BusinessException(ERROR_CODE.CONVERSATION_ACCEPTED, HttpStatus.CONFLICT);
+    }
+    const lastPause = this.auditRepo
+      ? await this.auditRepo.findOne({
+          where: { tenantId, action: 'agent.ai_paused', target: `session:${conversation.sessionId}` },
+          order: { id: 'DESC' },
+          select: { id: true, metadata: true },
+        })
+      : null;
+    const recorded = (lastPause?.metadata as { previousMode?: string } | null)?.previousMode;
+    // Restore what the takeover replaced; a session that was already off goes back to the channel default.
+    const mode = recorded && recorded !== 'off' && isAutoReplyMode(recorded) ? recorded : 'inherit';
+    await this.sessionRepo.update({ id: conversation.sessionId }, { autoReplyMode: mode });
+    const session = await this.sessionRepo.findOne({
+      where: { id: conversation.sessionId },
+      select: { id: true, sessionToken: true, language: true },
+    });
+    if (session?.sessionToken) await this.redis.del(sessionCacheKey(session.sessionToken));
+    const language = session?.language ?? 'EN';
+    await this.msgRepo.save(
+      this.msgRepo.create({
+        tenantId,
+        conversationId,
+        senderType: SENDER_TYPE.SYSTEM,
+        body: await this.handbackNotice(tenantId, language),
+        lang: language,
+        retrievalTrace: null,
+      }),
+    );
+    await this.auditAgentAction(actorUserId, tenantId, 'agent.ai_resumed', `session:${conversation.sessionId}`, {
+      conversationId: String(conversationId),
+      mode,
+    });
+    return { autoReplyMode: mode };
+  }
+
   async setSessionAutoReply(
     conversationId: number,
     tenantId: number,

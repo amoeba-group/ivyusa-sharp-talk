@@ -208,7 +208,8 @@
     "saveError": "No se pudo cambiar la respuesta automática de esta sesión.",
     "auto": "Automática",
     "approve": "Requiere aprobación",
-    "awaitingApproval": "Borrador pendiente"
+    "awaitingApproval": "Borrador pendiente",
+    "inheritShort": "predeterminado del canal"
   },
   "kbProposeKnowledge": "Proponer como conocimiento",
   "draft": {
@@ -696,7 +697,14 @@
     "actor": "por {{name}}",
     "roomAddedManual": "Sesión añadida manualmente ({{sessions}})",
     "roomAddedForced": "Sesión añadida manualmente · fuera de la comprobación ({{sessions}})",
-    "roomSessionIp": "Acceso desde otra IP ({{ip}})"
+    "roomSessionIp": "Acceso desde otra IP ({{ip}})",
+    "pagedAll": "todos los agentes",
+    "paged": "avisados: {{names}}",
+    "acked": "Solicitud vista · {{name}}",
+    "staffReplied": "{{name}} atendió · {{count}} respuestas",
+    "aiPaused": "Respuesta automática desactivada · {{name}}",
+    "aiResumed": "Pasada a la IA · {{name}}",
+    "autoReplyChanged": "Respuesta automática: {{mode}} · {{name}}"
   },
   "threadEvent": {
     "callback": "Solicitud de llamada",
@@ -706,5 +714,17 @@
   "staff": {
     "label": "Personal",
     "all": "Todo {{count}}"
+  },
+  "takeover": {
+    "pause": "Desactivar respuesta automática y atender",
+    "pauseShort": "Desactivar respuesta automática",
+    "pauseHint": "Desactiva la respuesta automática de la IA en esta conversación sin aceptarla. Al terminar, devuélvala con [Pasar a la IA].",
+    "resume": "Listo · pasar a la IA",
+    "resumeHint": "Restaura la configuración anterior y avisa al cliente",
+    "resumeExplain": "Restaura la respuesta automática de la IA como estaba antes. A partir de aquí responde el agente de IA.",
+    "paused": "Respuesta automática desactivada: atienda al cliente directamente",
+    "resumed": "Conversación pasada a la IA",
+    "failed": "No se pudo cambiar la respuesta automática",
+    "stillOn": "La IA sigue respondiendo en esta conversación."
   }
 }

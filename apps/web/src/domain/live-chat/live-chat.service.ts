@@ -437,7 +437,12 @@ export interface HandlerEvent {
     | 'room_session_removed'
     | 'room_auto_join'
     | 'room_dissolved'
-    | 'room_session_ip';
+    | 'room_session_ip'
+    | 'staff_replied'
+    | 'handoff_acked'
+    | 'ai_paused'
+    | 'ai_resumed'
+    | 'auto_reply_changed';
   /** handling | callback | feedback | room — the history modal's filter. */
   group: 'handling' | 'callback' | 'feedback' | 'room';
   conversationId: string | null;
@@ -453,6 +458,10 @@ export interface HandlerEvent {
   comment: string | null;
   conversationIds: string[] | null;
   on: boolean | null;
+  /** Staff a handoff request paged (Takeover D2); `on` = everyone was paged too. */
+  targetNames?: string[] | null;
+  /** Replies a staff member sent (Takeover D1). */
+  count?: number | null;
 }
 
 /** A callback request shown inside the thread (PLN-261027 Thread-Events D2). */
@@ -664,6 +673,9 @@ export const liveChatService = {
   /** Return the thread to the AI without ending it (PLN-260810 S1). */
   handBack: (id: string) =>
     apiPost<{ id: string; status: string }>(`/agent/conversations/${id}/handback`, {}),
+  // Staff takeover without accepting (PLN-261027 Takeover D4/D6).
+  aiPause: (id: string) => apiPost<{ autoReplyMode: string }>(`/agent/conversations/${id}/ai-pause`, {}),
+  aiResume: (id: string) => apiPost<{ autoReplyMode: string }>(`/agent/conversations/${id}/ai-resume`, {}),
   alerts: (status = 'new') => apiGet<AgentAlert[]>(`/agent/alerts?status=${status}`),
   ackAlert: (id: string) => apiPost<AgentAlert>(`/agent/alerts/${id}/ack`),
   // POST, so a shopper's address typed into the search box never becomes part

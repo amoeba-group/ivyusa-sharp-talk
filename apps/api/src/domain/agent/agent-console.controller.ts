@@ -700,6 +700,20 @@ export class AgentConsoleController {
     );
   }
 
+  @Post('conversations/:id/ai-pause')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "Take over without accepting: turn this session's AI auto-reply off (previous mode kept)" })
+  async aiPause(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return this.agentService.aiPause(id, tenantOf(user), actorIdOf(user));
+  }
+
+  @Post('conversations/:id/ai-resume')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Hand a taken-over (not accepted) conversation back to the AI: restore auto-reply + notice' })
+  async aiResume(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return this.agentService.aiResume(id, tenantOf(user), actorIdOf(user));
+  }
+
   @Patch('conversations/:id/auto-reply')
   @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
   @ApiOperation({ summary: 'Set whether the AI answers this session (inherit/on/off)' })

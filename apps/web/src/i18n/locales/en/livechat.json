@@ -208,7 +208,8 @@
     "saveError": "Could not change auto-reply for this session.",
     "auto": "Auto",
     "approve": "Needs approval",
-    "awaitingApproval": "Draft waiting"
+    "awaitingApproval": "Draft waiting",
+    "inheritShort": "channel default"
   },
   "kbProposeKnowledge": "Propose as knowledge",
   "draft": {
@@ -696,7 +697,14 @@
     "actor": "by {{name}}",
     "roomAddedManual": "Session added manually ({{sessions}})",
     "roomAddedForced": "Session added manually · outside the check ({{sessions}})",
-    "roomSessionIp": "Visited from another IP ({{ip}})"
+    "roomSessionIp": "Visited from another IP ({{ip}})",
+    "pagedAll": "all agents",
+    "paged": "paged: {{names}}",
+    "acked": "Request seen · {{name}}",
+    "staffReplied": "{{name}} answered · {{count}} replies",
+    "aiPaused": "AI auto-reply turned off · {{name}}",
+    "aiResumed": "Handed over to AI · {{name}}",
+    "autoReplyChanged": "AI auto-reply set to {{mode}} · {{name}}"
   },
   "threadEvent": {
     "callback": "Callback request",
@@ -706,5 +714,17 @@
   "staff": {
     "label": "Staff",
     "all": "All {{count}}"
+  },
+  "takeover": {
+    "pause": "Turn off AI auto-reply and take over",
+    "pauseShort": "Turn off auto-reply",
+    "pauseHint": "Turns off this conversation's AI auto-reply without accepting it. Hand it back with [Hand over to AI] when you are done.",
+    "resume": "Done · hand over to AI",
+    "resumeHint": "Restores the auto-reply setting from before and tells the customer",
+    "resumeExplain": "Restores the AI auto-reply setting from before you took over. The AI agent answers the customer from here on.",
+    "paused": "AI auto-reply is off — answer the customer directly",
+    "resumed": "Handed over to the AI",
+    "failed": "Could not change auto-reply",
+    "stillOn": "The AI is still answering this conversation."
   }
 }

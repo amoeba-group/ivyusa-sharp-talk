@@ -60,11 +60,11 @@ describe('ConversationHandlersService.history', () => {
     expect(events.map((e) => e.kind)).toEqual(['started', 'handoff_request', 'assigned', 'transferred', 'ended']);
     expect(events[1].reason).toBe('user_request');
     expect(events[2]).toMatchObject({ agentName: 'minh', byName: null });
-    expect(events[3]).toMatchObject({ agentName: 'Thao', fromName: 'minh', byName: 'An' });
-    expect(events[4]).toMatchObject({ kind: 'ended', agentName: 'Thao' });
+    expect(events[3]).toMatchObject({ agentName: 'thao(Thao)', fromName: 'minh', byName: 'an(An)' });
+    expect(events[4]).toMatchObject({ kind: 'ended', agentName: 'thao(Thao)' });
     expect(handlers.map((h) => [h.name, h.current])).toEqual([
       ['minh', false],
-      ['Thao', true],
+      ['thao(Thao)', true],
     ]);
   });
 
@@ -104,7 +104,7 @@ describe('ConversationHandlersService — callbacks, feedback, room (PLN-261027 
     const { events } = await svc.history(77, 4);
     expect(events.map((e) => e.kind)).toEqual(['started', 'callback_requested', 'callback_done', 'ended', 'feedback']);
     const done = events.find((e) => e.kind === 'callback_done')!;
-    expect(done).toMatchObject({ agentName: 'Thao', reason: 'phone', durationMs: 21 * 60_000 });
+    expect(done).toMatchObject({ agentName: 'thao(Thao)', reason: 'phone', durationMs: 21 * 60_000 });
     expect(events.at(-1)).toMatchObject({ rating: 4, resolved: true, reason: 'fast', comment: 'nice' });
   });
 
@@ -137,15 +137,18 @@ describe('ConversationHandlersService — callbacks, feedback, room (PLN-261027 
       ['started', 90],
       ['room_session_joined', 90],
     ]);
-    expect(out.events[2]).toMatchObject({ byName: 'An', conversationIds: [80] });
-    expect(auditRepo.find.mock.calls[0][0].where).toMatchObject({ tenantId: 4, target: 'merged_room:3' });
+    expect(out.events[2]).toMatchObject({ byName: 'an(An)', conversationIds: [80] });
+    const roomQuery = auditRepo.find.mock.calls.map((c: any[]) => c[0].where).find((w: any) => w.target === 'merged_room:3');
+    expect(roomQuery).toMatchObject({ tenantId: 4 });
   });
 
   it('falls back to the one conversation when it is not in a room', async () => {
     const { svc, auditRepo } = build({ conv: { id: '6', sessionId: '1', agentId: null, createdAt: t(0), endedAt: null } });
     const out = await svc.roomHistory(6, 4);
     expect(out).toMatchObject({ roomId: null, conversationIds: [6] });
-    expect(auditRepo.find).not.toHaveBeenCalled();
+    // Only the auto-reply trail is read — no room audit for a conversation outside a room.
+    const targets = auditRepo.find.mock.calls.map((c: any[]) => JSON.stringify(c[0].where.target));
+    expect(targets.some((t: string) => t.includes('merged_room'))).toBe(false);
   });
 });
 
@@ -176,5 +179,47 @@ describe('ConversationHandlersService — another address per person (PLN-261027
     const ipEvents = out.events.filter((e) => e.kind === 'room_session_ip');
     expect(ipEvents.map((e) => e.conversationId)).toEqual([92]);
     expect(ipEvents[0].reason).not.toBe('192.0.2.55');
+  });
+});
+
+describe('ConversationHandlersService — staff who answered without accepting (PLN-261027 Takeover)', () => {
+  it('shows the paged staff, who acknowledged, staff replies with a count, and the AI pause / hand-over', async () => {
+    const { svc } = build({
+      conv: { id: '938', sessionId: '22', agentId: null, createdAt: t(0), endedAt: null },
+      alerts: [
+        // One request: a broadcast row and one row per paged staff member, same second.
+        { id: '1', conversationId: '938', reason: 'user_request', targetUserId: null, ackedBy: '7', ackedAt: t(3), createdAt: t(2) },
+        { id: '2', conversationId: '938', reason: 'user_request', targetUserId: '8', ackedBy: null, ackedAt: null, createdAt: t(2) },
+        { id: '3', conversationId: '938', reason: 'user_request', targetUserId: '9', ackedBy: null, ackedAt: null, createdAt: t(2) },
+      ],
+      audits: [
+        { id: '10', action: 'agent.ai_paused', actorId: '7', metadata: { conversationId: '938', previousMode: 'inherit' }, createdAt: t(4) },
+        { id: '11', action: 'agent.ai_resumed', actorId: '7', metadata: { conversationId: '938', mode: 'inherit' }, createdAt: t(20) },
+      ],
+      users,
+    });
+    (svc as any).msgRepo = {
+      createQueryBuilder: () => {
+        const qb: any = {};
+        for (const m of ['select', 'addSelect', 'where', 'andWhere', 'groupBy', 'addGroupBy']) qb[m] = () => qb;
+        qb.getRawMany = async () => [{ cid: '938', sid: '7', first: t(5), last: t(15), n: '3' }];
+        return qb;
+      },
+    };
+    const { events, handlers } = await svc.history(938, 4);
+    expect(events.map((e) => e.kind)).toEqual([
+      'started',
+      'handoff_request',
+      'handoff_acked',
+      'ai_paused',
+      'staff_replied',
+      'ai_resumed',
+    ]);
+    expect(events[1]).toMatchObject({ targetNames: ['thao(Thao)', 'an(An)'], on: true });
+    expect(events[2]).toMatchObject({ agentName: 'minh' });
+    expect(events[4]).toMatchObject({ agentName: 'minh', count: 3 });
+    expect(events[3]).toMatchObject({ agentName: 'minh' });
+    // A staff member who only replied is still one of the handlers.
+    expect(handlers.map((h) => h.name)).toEqual(['minh']);
   });
 });

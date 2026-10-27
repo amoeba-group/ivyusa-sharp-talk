@@ -208,7 +208,8 @@
     "saveError": "Không thay đổi được chế độ tự động trả lời cho phiên này.",
     "auto": "Tự động",
     "approve": "Cần duyệt",
-    "awaitingApproval": "Đang chờ bản nháp"
+    "awaitingApproval": "Đang chờ bản nháp",
+    "inheritShort": "mặc định kênh"
   },
   "kbProposeKnowledge": "Đề xuất thành tri thức",
   "draft": {
@@ -696,7 +697,14 @@
     "actor": "bởi {{name}}",
     "roomAddedManual": "Thêm phiên thủ công ({{sessions}})",
     "roomAddedForced": "Thêm phiên thủ công · ngoài xác định ({{sessions}})",
-    "roomSessionIp": "Truy cập từ IP khác ({{ip}})"
+    "roomSessionIp": "Truy cập từ IP khác ({{ip}})",
+    "pagedAll": "tất cả nhân viên",
+    "paged": "gọi: {{names}}",
+    "acked": "Đã xem yêu cầu · {{name}}",
+    "staffReplied": "{{name}} xử lý · {{count}} trả lời",
+    "aiPaused": "Tắt trả lời tự động AI · {{name}}",
+    "aiResumed": "Giao lại cho AI · {{name}}",
+    "autoReplyChanged": "Trả lời tự động AI: {{mode}} · {{name}}"
   },
   "threadEvent": {
     "callback": "Yêu cầu gọi lại",
@@ -706,5 +714,17 @@
   "staff": {
     "label": "Nhân viên",
     "all": "Tất cả {{count}}"
+  },
+  "takeover": {
+    "pause": "Tắt trả lời tự động AI và tự xử lý",
+    "pauseShort": "Tắt trả lời tự động",
+    "pauseHint": "Chỉ tắt trả lời tự động của AI cho hội thoại này, không nhận hội thoại. Xong thì trả lại bằng [Giao lại cho AI].",
+    "resume": "Đã trả lời xong · giao lại cho AI",
+    "resumeHint": "Khôi phục cài đặt trả lời tự động trước đó và thông báo cho khách",
+    "resumeExplain": "Khôi phục cài đặt trả lời tự động của AI như trước khi bạn xử lý. Từ đây nhân viên AI sẽ trả lời khách.",
+    "paused": "Đã tắt trả lời tự động AI — hãy trả lời khách trực tiếp",
+    "resumed": "Đã giao lại cho AI",
+    "failed": "Không đổi được trả lời tự động",
+    "stillOn": "AI vẫn đang trả lời trong hội thoại này."
   }
 }

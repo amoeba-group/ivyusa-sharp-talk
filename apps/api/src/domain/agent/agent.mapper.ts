@@ -374,6 +374,8 @@ export function toConversationHandlersResponse(view: {
       comment: e.comment,
       conversationIds: e.conversationIds?.map(String) ?? null,
       on: e.on,
+      targetNames: e.targetNames,
+      count: e.count,
     })),
     handlers: view.handlers.map((h) => ({
       agentId: String(h.agentId),

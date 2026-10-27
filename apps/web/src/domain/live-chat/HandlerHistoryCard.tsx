@@ -2,7 +2,11 @@ import { useState } from 'react';
 import {
   ArrowRightLeft,
   CheckCircle2,
+  Eye,
   Globe,
+  MessageSquareReply,
+  PauseCircle,
+  PlayCircle,
   Combine,
   Hand,
   Loader2,
@@ -47,6 +51,11 @@ const ICON: Record<HandlerEvent['kind'], typeof Users> = {
   room_auto_join: Settings2,
   room_dissolved: Split,
   room_session_ip: Globe,
+  staff_replied: MessageSquareReply,
+  handoff_acked: Eye,
+  ai_paused: PauseCircle,
+  ai_resumed: PlayCircle,
+  auto_reply_changed: Settings2,
 };
 
 const TONE: Record<HandlerEvent['group'], string> = {
@@ -73,9 +82,26 @@ function useEventText(aiAgentName?: string | null) {
     switch (e.kind) {
       case 'started':
         return aiAgentName ? t('handlers.startedAi', { name: aiAgentName }) : t('handlers.started');
-      case 'handoff_request':
-        return t('handlers.requested', {
+      case 'handoff_request': {
+        const base = t('handlers.requested', {
           reason: t(`handlers.reason.${e.reason ?? 'other'}`, { defaultValue: e.reason ?? '' }),
+        });
+        // Who was paged (PLN-261027 Takeover D2): named staff, and/or everyone.
+        const paged = [...(e.on ? [t('handlers.pagedAll')] : []), ...(e.targetNames ?? [])];
+        return paged.length ? `${base} → ${t('handlers.paged', { names: paged.join(', ') })}` : base;
+      }
+      case 'handoff_acked':
+        return t('handlers.acked', { name: who(e.agentName) });
+      case 'staff_replied':
+        return t('handlers.staffReplied', { name: who(e.agentName), count: e.count ?? 0 });
+      case 'ai_paused':
+        return t('handlers.aiPaused', { name: who(e.agentName) });
+      case 'ai_resumed':
+        return t('handlers.aiResumed', { name: who(e.agentName) });
+      case 'auto_reply_changed':
+        return t('handlers.autoReplyChanged', {
+          mode: t(`autoReply.${e.reason === 'inherit' ? 'inheritShort' : (e.reason ?? 'auto')}`, { defaultValue: e.reason ?? '' }),
+          name: who(e.agentName),
         });
       case 'assigned':
         return e.assignType === 'auto'

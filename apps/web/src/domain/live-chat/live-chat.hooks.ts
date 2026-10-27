@@ -656,8 +656,17 @@ export function useConversationActions(id: string | null) {
     mutationFn: () => liveChatService.handBack(id as string),
     onSuccess: invalidate,
   });
+  // Take over without accepting, then hand back to the AI (PLN-261027 Takeover D4/D6).
+  const aiPause = useMutation({
+    mutationFn: () => liveChatService.aiPause(id as string),
+    onSuccess: invalidate,
+  });
+  const aiResume = useMutation({
+    mutationFn: () => liveChatService.aiResume(id as string),
+    onSuccess: invalidate,
+  });
 
-  return { accept, end, send, handBack };
+  return { accept, end, send, handBack, aiPause, aiResume };
 }
 
 /** Link an existing customer or create a new one for the current conversation. */

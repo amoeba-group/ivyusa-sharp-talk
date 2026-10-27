@@ -208,7 +208,8 @@
     "saveError": "このセッションの自動返信を変更できませんでした。",
     "auto": "自動",
     "approve": "承認が必要",
-    "awaitingApproval": "下書き待ち"
+    "awaitingApproval": "下書き待ち",
+    "inheritShort": "チャネル既定"
   },
   "kbProposeKnowledge": "ナレッジとして提案",
   "draft": {
@@ -696,7 +697,14 @@
     "actor": "操作: {{name}}",
     "roomAddedManual": "セッションを手動追加（{{sessions}}）",
     "roomAddedForced": "セッションを手動追加 · 判定外（{{sessions}}）",
-    "roomSessionIp": "別のIPから接続（{{ip}}）"
+    "roomSessionIp": "別のIPから接続（{{ip}}）",
+    "pagedAll": "全担当者",
+    "paged": "呼び出し: {{names}}",
+    "acked": "要請確認 · {{name}}",
+    "staffReplied": "{{name}} 対応 · 返信 {{count}}",
+    "aiPaused": "AI自動応答オフ · {{name}}",
+    "aiResumed": "AIに引き継ぎ · {{name}}",
+    "autoReplyChanged": "AI自動応答を{{mode}}に変更 · {{name}}"
   },
   "threadEvent": {
     "callback": "コールバック要請",
@@ -706,5 +714,17 @@
   "staff": {
     "label": "スタッフ",
     "all": "すべて {{count}}"
+  },
+  "takeover": {
+    "pause": "AI自動応答をオフにして直接対応",
+    "pauseShort": "自動応答をオフ",
+    "pauseHint": "受け付けずに、この会話のAI自動応答だけをオフにします。対応が終わったら［AIに引き継ぐ］で戻してください。",
+    "resume": "対応完了 · AIに引き継ぐ",
+    "resumeHint": "オフにする前の自動応答設定に戻し、顧客に案内します",
+    "resumeExplain": "AI自動応答をオフにする前の設定に戻します。以降の問い合わせはAI担当が応答します。",
+    "paused": "AI自動応答をオフにしました — 直接対応してください",
+    "resumed": "AIに引き継ぎました",
+    "failed": "自動応答を変更できませんでした",
+    "stillOn": "AIがこの会話にまだ応答しています。"
   }
 }

@@ -7,6 +7,8 @@ import {
   User,
   ArrowDown,
   Megaphone,
+  PauseCircle,
+  PlayCircle,
   UserPlus,
   Search,
   Loader2,
@@ -519,8 +521,24 @@ export function LiveChatPage() {
     return () => el.removeEventListener('load', onLoad, true);
   }, [selected, scrollTarget]);
 
-  const { accept, end, send, handBack } = useConversationActions(selected);
+  const { accept, end, send, handBack, aiPause, aiResume } = useConversationActions(selected);
   const [handBackOpen, setHandBackOpen] = useState(false);
+  // Takeover without accepting (PLN-261027 Takeover): the AI is answering while
+  // nobody accepted; a staff reply then shows a one-line nudge to turn it off (D5).
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const [aiStillOnNotice, setAiStillOnNotice] = useState(false);
+  useEffect(() => setAiStillOnNotice(false), [selected]);
+  const ended = convo?.status === 'ended';
+  const aiAnswering = !!convo && !ended && convo.status !== 'agent' && convo.autoReplyEffective !== false;
+  const pausedByStaff = !!convo && !ended && convo.status !== 'agent' && convo.autoReplyMode === 'off';
+  const pauseAi = () =>
+    aiPause.mutate(undefined, {
+      onSuccess: () => {
+        setAiStillOnNotice(false);
+        toast.success(t('takeover.paused'));
+      },
+      onError: (e: Error) => toast.error(e.message || t('takeover.failed'), { sticky: true }),
+    });
 
   // Knowledge lookup (PLN-260810 S2/S3). Answer lives in component state, not
   // in the conversation: it is the agent checking, not a customer turn.
@@ -686,6 +704,7 @@ export function LiveChatPage() {
     setDraft('');
     try {
       await send.mutateAsync({ body, attachmentIds });
+      if (aiAnswering) setAiStillOnNotice(true);
       // Cleared only once the send succeeded: on failure the files are still
       // uploaded and still attachable, so the agent retries instead of
       // hunting for them again. Same for the quote chip.
@@ -1214,6 +1233,29 @@ export function LiveChatPage() {
                       <Bot className="h-4 w-4" /> {t('handBack')}
                     </Button>
                   )}
+                  {/* Without accepting (PLN-261027 Takeover D4/D6): stop the AI, answer, hand back. */}
+                  {aiAnswering && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      title={t('takeover.pauseHint')}
+                      onClick={pauseAi}
+                      disabled={aiPause.isPending}
+                    >
+                      <PauseCircle className="h-4 w-4" /> {t('takeover.pause')}
+                    </Button>
+                  )}
+                  {pausedByStaff && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      title={t('takeover.resumeHint')}
+                      onClick={() => setResumeOpen(true)}
+                      disabled={aiResume.isPending}
+                    >
+                      <PlayCircle className="h-4 w-4" /> {t('takeover.resume')}
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant="danger"
@@ -1709,6 +1751,22 @@ export function LiveChatPage() {
                   </select>
                 </div>
               )}
+              {aiStillOnNotice && aiAnswering && (
+                <div className="flex items-center gap-2 border-t border-warning/30 bg-warning/10 px-3 py-1.5 text-xs text-gray-700" role="status">
+                  <span className="min-w-0 flex-1">{t('takeover.stillOn')}</span>
+                  <Button size="sm" variant="secondary" onClick={pauseAi} disabled={aiPause.isPending}>
+                    {t('takeover.pauseShort')}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setAiStillOnNotice(false)}
+                    aria-label={t('close', { ns: 'common' })}
+                    className="opacity-60 hover:opacity-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
               <div className="flex items-center gap-2 border-t border-gray-100 p-3">
                 <input
                   ref={fileInputRef}
@@ -1781,7 +1839,10 @@ export function LiveChatPage() {
               {/* Who handled it, in order (PLN-261027 S2). */}
               <HandlerHistoryCard
                 conversationId={selected}
-                version={`${convo?.status ?? ''}|${convo?.assignedTo ?? ''}`}
+                // Re-read on owner/status changes, an auto-reply switch and each staff reply (PLN-261027 Takeover).
+                version={`${convo?.status ?? ''}|${convo?.assignedTo ?? ''}|${convo?.autoReplyMode ?? ''}|${
+                  (convo?.messages ?? []).filter((m) => m.senderType === 'agent').length
+                }`}
                 aiAgentName={convo?.aiAgentName}
               />
               {/* On-demand briefing + translation (REQ-260824 R3). */}
@@ -1988,6 +2049,38 @@ export function LiveChatPage() {
       {/* Handback confirmation (PLN-260810 S1). The thread keeps running, so
           the dialog says what changes and what does not — an agent reading
           "hand back" could reasonably fear it closes the conversation. */}
+      {/* Hand a taken-over (never accepted) conversation back to the AI (PLN-261027 Takeover D6). */}
+      <Modal
+        open={resumeOpen}
+        onClose={() => setResumeOpen(false)}
+        title={t('takeover.resume')}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setResumeOpen(false)}>
+              {tc('cancel')}
+            </Button>
+            <Button
+              disabled={aiResume.isPending}
+              onClick={() =>
+                aiResume.mutate(undefined, {
+                  onSuccess: () => {
+                    setResumeOpen(false);
+                    toast.success(t('takeover.resumed'));
+                  },
+                  onError: (e: Error) => toast.error(e.message || t('takeover.failed'), { sticky: true }),
+                })
+              }
+            >
+              {aiResume.isPending ? tc('loading') : t('takeover.resume')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2 text-sm text-gray-600">
+          <p>{t('takeover.resumeExplain')}</p>
+          <p className="text-xs text-gray-500">{t('handBackNoticePreview')}</p>
+        </div>
+      </Modal>
       <Modal
         open={handBackOpen}
         onClose={() => setHandBackOpen(false)}
