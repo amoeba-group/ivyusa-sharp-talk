@@ -28,8 +28,8 @@ TCR 참조. api 276개 묶음 2,752건, api·web tsc, i18n:check, CI 통과. 로
 | 환경 | 데이터 백필 | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | ✅ 10/27 배포 후 적용(백업 `~/backups/pre-261027-file-unattributed-staging.sql`: conversations·merged_room_sessions). 대상 1건: **대화 899 → 고객 518·기업 4 연결, 방 1 합류**(자동, added_by NULL). 방 1 멤버 19 | ✅ main `f13a2cb3` → `deploy-staging.sh` | API healthy, 부팅 1회, ERROR 0, 신규 라우트 `merged-rooms/:id/detail`·`room-options`·`merged-rooms/:id/sessions` 401 |
-| 프로덕션 | ⏳ 승인 대기 | ⏳ | — |
+| 프로덕션 | 사전 조회 대상 **0건** → 적용하지 않음(멱등 SQL이라 필요할 때 그대로 실행 가능) | ✅ 10/27 15:58 KST 전체 백업 `~/backups/sharptalk-production/20261027-1558-pre-261027-merge-add/db_sharptalk.sql` → `production` ff `cdb21bba..6a1ed92d`(#769·#771 문서 동승) → `deploy-self-hosted.sh`(applied 115, check-migrations OK) | api/web/widget 재생성, healthy, 부팅 1회, ERROR 0, 신규 라우트 401, 번들에 스탭 칩 포함 |
 
 ## 미검증·후속
-- 스테이징 실데이터 화면(방 1의 스탭 칩·IP·899 표시)은 육안으로 확인하지 않았다. 콘솔은 새로고침이 필요하다.
+- 스테이징·프로덕션 실데이터 화면(방 1의 스탭 칩·IP·899 표시 등)은 육안으로 확인하지 않았다. 콘솔은 새로고침이 필요하다.
 - 같은 원인의 누락은 D1 이후 새로 생기지 않는다. 다른 원인으로 빠진 세션은 [세션 추가]로 넣는다.
