@@ -527,7 +527,24 @@
     "autoJoinOn": "New sessions of this customer will be added",
     "autoJoinOff": "New sessions will no longer be added",
     "removed": "Session taken out of the room",
-    "dissolved": "Room unmerged — conversations are back as they were"
+    "dissolved": "Room unmerged — conversations are back as they were",
+    "joinRoom": "Add to merged room",
+    "joinSubmit": "Add this conversation",
+    "joinHint": "Pick the merged room for this conversation. If it is not listed, find it by a conversation number in that room.",
+    "joinNoRoom": "This customer or company has no merged room. Try a conversation number.",
+    "joinNoRoomForNumber": "That conversation is not in a merged room.",
+    "roomOption": "Merged room · session {{id}} and others ({{count}})",
+    "joinNumberPlaceholder": "Conversation number in the room",
+    "joinFind": "Find",
+    "addSession": "Add session",
+    "addSessionPlaceholder": "Conversation number (e.g. 899)",
+    "addSessionSubmit": "Add",
+    "sessionAdded": "Session added to the merged room",
+    "confirmForce": "Session {{id}} is not the same person by the check. Add it to this merged room anyway? It is recorded as a manual add (outside the check).",
+    "confirmForceSubmit": "Add anyway",
+    "ipDiffers": "Other IP",
+    "forced": "Manual (outside check)",
+    "inOtherRoom": "This session is already in another merged room (session {{id}}). Take it out there first."
   },
   "consultCategoryBadge": "Consult: {{name}}",
   "alarmCenter": {
@@ -625,7 +642,9 @@
   "bubble": {
     "autoReply": "Auto-reply",
     "systemNotice": "Automated notice",
-    "newBelow": "New messages"
+    "newBelow": "New messages",
+    "customer": "Customer",
+    "customerNamed": "Customer · {{name}}"
   },
   "handlers": {
     "title": "Handling history",
@@ -674,11 +693,18 @@
       "feedback": "Feedback",
       "room": "Merged sessions"
     },
-    "actor": "by {{name}}"
+    "actor": "by {{name}}",
+    "roomAddedManual": "Session added manually ({{sessions}})",
+    "roomAddedForced": "Session added manually · outside the check ({{sessions}})",
+    "roomSessionIp": "Visited from another IP ({{ip}})"
   },
   "threadEvent": {
     "callback": "Callback request",
     "feedback": "Customer feedback",
     "stars": "{{n}} stars"
+  },
+  "staff": {
+    "label": "Staff",
+    "all": "All {{count}}"
   }
 }

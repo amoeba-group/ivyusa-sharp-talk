@@ -148,3 +148,33 @@ describe('ConversationHandlersService — callbacks, feedback, room (PLN-261027 
     expect(auditRepo.find).not.toHaveBeenCalled();
   });
 });
+
+describe('ConversationHandlersService — another address per person (PLN-261027 Merge-Add D6)', () => {
+  it('flags the same staff member on a new address, not two staff on two networks', async () => {
+    const { svc } = build({
+      conv: { id: '92', sessionId: '13', agentId: null, createdAt: t(40), endedAt: null },
+      place: { id: '1', roomId: '3' },
+      members: [
+        { sessionId: '11', state: 'member', addedBy: '9', createdAt: t(20) },
+        { sessionId: '12', state: 'member', addedBy: null, createdAt: t(30) },
+        { sessionId: '13', state: 'member', addedBy: null, createdAt: t(40) },
+      ],
+      roomConvs: [
+        { id: '80', sessionId: '11', customerId: '518', agentId: null, createdAt: t(0), endedAt: t(5) },
+        { id: '90', sessionId: '12', customerId: '593', agentId: null, createdAt: t(30), endedAt: null },
+        { id: '92', sessionId: '13', customerId: '518', agentId: null, createdAt: t(40), endedAt: null },
+      ],
+    });
+    (svc as any).sessionRepo = {
+      find: jest.fn(async () => [
+        { id: '11', firstIp: '203.0.113.7', lastIp: null, customerId: null, createdAt: t(0) },
+        { id: '12', firstIp: '198.51.100.9', lastIp: null, customerId: null, createdAt: t(30) },
+        { id: '13', firstIp: '192.0.2.55', lastIp: null, customerId: null, createdAt: t(40) },
+      ]),
+    };
+    const out = await svc.roomHistory(92, 4);
+    const ipEvents = out.events.filter((e) => e.kind === 'room_session_ip');
+    expect(ipEvents.map((e) => e.conversationId)).toEqual([92]);
+    expect(ipEvents[0].reason).not.toBe('192.0.2.55');
+  });
+});

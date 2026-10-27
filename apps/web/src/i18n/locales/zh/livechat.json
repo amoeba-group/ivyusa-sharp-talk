@@ -527,7 +527,24 @@
     "autoJoinOn": "将自动加入该客户的新会话",
     "autoJoinOff": "不再加入新会话",
     "removed": "已将会话移出会话室",
-    "dissolved": "已取消合并 — 会话恢复原状"
+    "dissolved": "已取消合并 — 会话恢复原状",
+    "joinRoom": "加入合并会话室",
+    "joinSubmit": "加入此会话",
+    "joinHint": "请选择此会话要加入的合并会话室。若不在列表中，可用该会话室中的会话编号查找。",
+    "joinNoRoom": "该客户/企业没有合并会话室。请尝试会话编号。",
+    "joinNoRoomForNumber": "该编号的会话不属于任何合并会话室。",
+    "roomOption": "合并会话室 · 会话 {{id}} 等（{{count}} 个）",
+    "joinNumberPlaceholder": "会话室中的会话编号",
+    "joinFind": "查找",
+    "addSession": "添加会话",
+    "addSessionPlaceholder": "会话编号（例：899）",
+    "addSessionSubmit": "添加",
+    "sessionAdded": "已将会话加入合并会话室",
+    "confirmForce": "会话 {{id}} 未被判定为同一人。仍要加入此合并会话室吗？将记录为手动添加（判定外）。",
+    "confirmForceSubmit": "仍然添加",
+    "ipDiffers": "不同 IP",
+    "forced": "手动（判定外）",
+    "inOtherRoom": "该会话已在另一个合并会话室（会话 {{id}}）中。请先从那里移出。"
   },
   "consultCategoryBadge": "咨询: {{name}}",
   "alarmCenter": {
@@ -625,7 +642,9 @@
   "bubble": {
     "autoReply": "自动回复",
     "systemNotice": "自动通知",
-    "newBelow": "新消息"
+    "newBelow": "新消息",
+    "customer": "客户",
+    "customerNamed": "客户 · {{name}}"
   },
   "handlers": {
     "title": "处理记录",
@@ -674,11 +693,18 @@
       "feedback": "反馈",
       "room": "会话合并"
     },
-    "actor": "操作人：{{name}}"
+    "actor": "操作人：{{name}}",
+    "roomAddedManual": "手动添加会话（{{sessions}}）",
+    "roomAddedForced": "手动添加会话 · 判定外（{{sessions}}）",
+    "roomSessionIp": "来自其他 IP 的访问（{{ip}}）"
   },
   "threadEvent": {
     "callback": "回电请求",
     "feedback": "客户反馈",
     "stars": "{{n}} 星"
+  },
+  "staff": {
+    "label": "员工",
+    "all": "全部 {{count}}"
   }
 }

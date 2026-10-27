@@ -74,6 +74,8 @@ export class ConversationQuery {
   @IsOptional() @IsString() limit?: string;
   /** Load the block older than this message id. */
   @IsOptional() @IsString() before_id?: string;
+  /** Merged room: only this customer's (staff member's) conversations (PLN-261027 Merge-Add D9). */
+  @IsOptional() @IsString() staff?: string;
 }
 
 export class ListStatsQuery {
@@ -215,6 +217,18 @@ export class MergeSessionsRequest {
   /** Other sessions to merge; this conversation's own session is always included. */
   @IsArray() @ArrayMaxSize(50) @IsInt({ each: true }) session_ids: number[];
   @IsBoolean() auto_join: boolean;
+}
+
+/** Add one session to a room by one of its conversations (PLN-261027 Merge-Add D4). */
+export class AddRoomSessionRequest {
+  @IsInt() @Min(1) conversation_id: number;
+  /** The operator confirmed adding a session the same-person check did not match. */
+  @IsOptional() @IsBoolean() force?: boolean;
+}
+
+/** Rooms a conversation can join; `target` = a conversation number typed in. */
+export class RoomOptionsQuery {
+  @IsOptional() @Matches(/^\d{1,12}$/) target?: string;
 }
 
 export class MergedRoomAutoJoinRequest {

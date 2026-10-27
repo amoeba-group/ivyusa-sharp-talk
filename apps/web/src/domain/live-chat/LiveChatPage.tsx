@@ -131,6 +131,9 @@ function anchorTranslateMenu(id: string, rect: DOMRect): TranslateMenuAnchor {
   return { id, style };
 }
 
+/** One colour per staff member of a company room, in order (PLN-261027 Merge-Add D8). */
+const STAFF_COLOURS = ['bg-sky-500', 'bg-rose-500', 'bg-amber-500', 'bg-violet-500', 'bg-teal-500', 'bg-lime-600'];
+
 export function LiveChatPage() {
   const { t } = useTranslation('livechat');
   const { t: tc } = useTranslation('common');
@@ -268,8 +271,11 @@ export function LiveChatPage() {
   );
   const contentSearch = searchIn === 'content' && listSearch.trim().length >= 2;
   const { data: groups, isLoading: groupsLoading } = useGroups(scope === 'groups');
+  // Staff view of a company room (PLN-261027 Merge-Add D9): one staff member's conversations only.
+  const [staff, setStaff] = useState<string | null>(null);
+  useEffect(() => setStaff(null), [selected]);
   const { data: convo, isLoading: convoLoading, isFetching: convoFetching, refetch: refetchConvo } =
-    useConversation(selected);
+    useConversation(selected, staff);
 
   // Prefer the detail's channel (a deep-linked thread may not be in the list).
   const activeChannel = (
@@ -367,10 +373,27 @@ export function LiveChatPage() {
     setTrOpenFor(null);
     setIssueTarget(null);
     setIssueMemo('');
-  }, [selected]);
+  }, [selected, staff]);
 
   const messages = [...older, ...(convo?.messages ?? [])];
   const roomConversationById = new Map((convo?.mergedRoom?.conversations ?? []).map((c) => [c.id, c]));
+  // Staff of a company room (PLN-261027 Merge-Add D8·D9): the distinct customer
+  // sides of its conversations, in order of first appearance, each with a colour.
+  const roomStaff = (() => {
+    const out: Array<{ customerId: string; name: string | null; role: string | null; count: number }> = [];
+    for (const c of convo?.mergedRoom?.conversations ?? []) {
+      if (!c.customerId) continue;
+      const seen = out.find((s) => s.customerId === c.customerId);
+      if (seen) seen.count += 1;
+      else out.push({ customerId: c.customerId, name: c.customerName ?? null, role: c.role ?? null, count: 1 });
+    }
+    return out;
+  })();
+  const multiStaff = roomStaff.length > 1;
+  const staffColour = (customerId: string | null | undefined) => {
+    const i = customerId ? roomStaff.findIndex((s) => s.customerId === customerId) : -1;
+    return i < 0 ? 'bg-gray-300' : STAFF_COLOURS[i % STAFF_COLOURS.length];
+  };
   const hasOlder = older.length ? olderHasMore : !!convo?.hasMore;
   // Callbacks + feedback inside the thread at their time (PLN-261027 Thread-Events D2).
   // While older pages are unloaded, events before the first loaded message wait for them.
@@ -392,7 +415,7 @@ export function LiveChatPage() {
     if (!selected || !oldest || loadingOlder) return;
     setLoadingOlder(true);
     try {
-      const res = await liveChatService.conversation(selected, oldest);
+      const res = await liveChatService.conversation(selected, oldest, staff);
       const el = threadRef.current;
       olderAnchorRef.current = el ? { height: el.scrollHeight, top: el.scrollTop } : null;
       setOlder((prev) => [...res.messages, ...prev]);
@@ -415,7 +438,7 @@ export function LiveChatPage() {
       try {
         // Bounded: a hit is never more than a few hundred pages back in practice.
         for (let guard = 0; more && oldest && guard < 50; guard += 1) {
-          const res = await liveChatService.conversation(selected, oldest);
+          const res = await liveChatService.conversation(selected, oldest, staff);
           acc = [...res.messages, ...acc];
           more = !!res.hasMore;
           oldest = res.messages[0]?.id;
@@ -467,21 +490,23 @@ export function LiveChatPage() {
     tailRef.current = null;
     atBottomRef.current = true;
     setNewBelow(false);
-  }, [selected]);
+  }, [selected, staff]);
   const tail = convo?.messages?.[convo.messages.length - 1];
   // New callbacks / feedback at the end move the tail too (Thread-Events D2).
   const tailId = tail?.id ? `${tail.id}:${threadEvents.length}` : null;
   useLayoutEffect(() => {
     if (!selected || !tailId) return;
-    const first = openedRef.current !== selected;
+    // A staff switch re-opens the thread at its latest message, like a new room.
+    const openKey = `${selected}|${staff ?? ''}`;
+    const first = openedRef.current !== openKey;
     const grew = tailRef.current !== tailId;
-    openedRef.current = selected;
+    openedRef.current = openKey;
     tailRef.current = tailId;
     if (scrollTarget || (first && findOpen)) return;
     // An agent's own reply always comes into view, wherever they were reading.
     if (first || (grew && (atBottomRef.current || tail?.senderType === 'agent'))) scrollToBottom();
     else if (grew) setNewBelow(true);
-  }, [selected, tailId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected, staff, tailId]); // eslint-disable-line react-hooks/exhaustive-deps
   // Images and attachment previews finish loading after the jump and push the
   // last message back out of view; `load` does not bubble, so listen in capture.
   useEffect(() => {
@@ -1222,6 +1247,40 @@ export function LiveChatPage() {
                 onOpenConversation={(id) => setSelected(id)}
               />
 
+              {/* Staff chips (PLN-261027 Merge-Add D9) — only when the room holds more than one staff member. */}
+              {multiStaff && (
+                <div className="flex flex-wrap items-center gap-1.5 border-b border-gray-100 px-4 py-2 text-xs">
+                  <span className="text-gray-500">{t('staff.label')}</span>
+                  <button
+                    type="button"
+                    onClick={() => setStaff(null)}
+                    className={cn(
+                      'rounded-full border px-2.5 py-0.5',
+                      staff == null ? 'border-primary-500 bg-primary-500 text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                    )}
+                  >
+                    {t('staff.all', { count: convo?.mergedRoom?.conversations.length ?? 0 })}
+                  </button>
+                  {roomStaff.map((s) => (
+                    <button
+                      key={s.customerId}
+                      type="button"
+                      onClick={() => setStaff(s.customerId)}
+                      className={cn(
+                        'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5',
+                        staff === s.customerId
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                      )}
+                    >
+                      <span className={cn('h-2 w-2 rounded-full', staffColour(s.customerId))} aria-hidden />
+                      {s.name ?? t('bubble.customer')}
+                      {s.role && <span className="text-gray-400">· {s.role}</span>}
+                      <span className="text-gray-400">{s.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="relative flex min-h-0 flex-1 flex-col">
               <div
                 ref={threadRef}
@@ -1276,6 +1335,13 @@ export function LiveChatPage() {
                           <span className="flex items-center gap-1 text-[11px] font-medium text-primary-600">
                             {t('sessionLabel', { id: roomConv.id })}
                             <ChannelBadge channel={roomConv.channel} />
+                            {multiStaff && roomConv.customerName && (
+                              <span className="inline-flex items-center gap-1">
+                                <span className={cn('h-2 w-2 rounded-full', staffColour(roomConv.customerId))} aria-hidden />
+                                {roomConv.customerName}
+                                {roomConv.role && ` (${roomConv.role})`}
+                              </span>
+                            )}
                             {absTime(roomConv.createdAt)}
                             {roomConv.status !== 'ended' && ` · ${t('merge.inProgress')}`}
                             {roomConv.id === selected && ` · ${t('merge.replyHere')}`}
@@ -1333,6 +1399,22 @@ export function LiveChatPage() {
                             )}
                           </span>
                         )}
+                        {m.senderType === 'user' &&
+                          (() => {
+                            // Who wrote it (PLN-261027 Merge-Add D7·D8): the customer side of
+                            // the message's conversation; a staff colour in a multi-staff room.
+                            const rc = m.conversationId ? roomConversationById.get(m.conversationId) : undefined;
+                            const name = rc
+                              ? rc.customerName
+                              : (convo?.person?.name ?? convo?.customer?.name ?? convo?.identity?.name ?? null);
+                            return (
+                              <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-gray-500">
+                                {multiStaff && <span className={cn('h-2 w-2 rounded-full', staffColour(rc?.customerId))} aria-hidden />}
+                                {name ? t('bubble.customerNamed', { name }) : t('bubble.customer')}
+                                {multiStaff && rc?.role && <span className="font-normal text-gray-400">({rc.role})</span>}
+                              </span>
+                            );
+                          })()}
                         {m.senderType === 'system' && (
                           <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-amber-700">
                             <Megaphone className="h-3 w-3" /> {t('bubble.systemNotice')}

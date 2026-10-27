@@ -1,4 +1,4 @@
-import type { MergeCandidateView, MergedRoomView } from '../merged-room/merged-room.service';
+import type { MergeCandidateView, MergedRoomView, MergedSessionDetail, RoomOption } from '../merged-room/merged-room.service';
 import { HANDLER_EVENT_GROUP } from './conversation-handlers.service';
 import type { HandlerEvent, HandlerSummary } from './conversation-handlers.service';
 import type { AnswerRating } from './entity/answer-rating.entity';
@@ -296,6 +296,36 @@ export function toMergedRoomResponse(room: MergedRoomView | null) {
       auto: s.auto,
     })),
   };
+}
+
+/** The manage dialog: members with masked address, other-address and forced flags (PLN-261027 Merge-Add D4·D6). */
+export function toMergedRoomDetailResponse(d: { room: MergedRoomView; sessions: MergedSessionDetail[] }) {
+  return {
+    ...toMergedRoomResponse(d.room)!,
+    sessions: d.sessions.map((s) => ({
+      sessionId: String(s.sessionId),
+      conversationId: String(s.conversationId),
+      channel: s.channel,
+      alias: s.alias,
+      lastAt: s.lastAt,
+      firstAt: s.firstAt,
+      open: s.open,
+      auto: s.auto,
+      ip: s.ip,
+      ipDiffers: s.ipDiffers,
+      forced: s.forced,
+    })),
+  };
+}
+
+export function toRoomOptionsResponse(rooms: RoomOption[]) {
+  return rooms.map((r) => ({
+    id: String(r.id),
+    sessionCount: r.sessionCount,
+    latestConversationId: r.latestConversationId != null ? String(r.latestConversationId) : null,
+    customerId: r.customerId != null ? String(r.customerId) : null,
+    companyId: r.companyId != null ? String(r.companyId) : null,
+  }));
 }
 
 export function toMergeCandidatesResponse(r: { sessionId: number; room: MergedRoomView | null; sessions: MergeCandidateView[] }) {

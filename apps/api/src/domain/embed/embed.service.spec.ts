@@ -417,6 +417,22 @@ describe('EmbedService.identify — unsigned host, claimed', () => {
     expect(convRepo.update).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 5 }), { customerId: 100, companyId: null });
   });
 
+  it('files the session\'s earlier, unfiled conversations too — including ended ones — then auto-joins (PLN-261027 Merge-Add D1)', async () => {
+    process.env[ENV] = '1';
+    const { svc, convRepo } = harness({ hotel: { id: '4' } });
+    const autoJoin = jest.fn(async () => undefined);
+    (svc as any).mergedRooms = { autoJoin };
+    await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'x', name: 'ADMIN123', attributes: ATTRS });
+    const calls = convRepo.update.mock.calls as unknown as Array<[Record<string, unknown>, Record<string, unknown>]>;
+    // Open conversations as before, plus any conversation of the session filed under nobody (any status).
+    const earlier = calls.find(([where]) => !('status' in where));
+    expect(earlier).toBeDefined();
+    expect(earlier![0]).toMatchObject({ sessionId: 5 });
+    expect(Object.keys(earlier![0]).sort()).toEqual(['companyId', 'customerId', 'sessionId']);
+    expect(earlier![1]).toEqual({ customerId: 100, companyId: 4 });
+    expect(autoJoin).toHaveBeenCalledWith(expect.anything(), 5);
+  });
+
   describe('console record of a claimed user (PLN-261023 S4)', () => {
     it("links the contact to the hotel's existing company and files the conversation under both", async () => {
       process.env[ENV] = '1';

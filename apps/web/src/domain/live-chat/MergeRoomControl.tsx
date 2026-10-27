@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Combine } from 'lucide-react';
+import { ChevronDown, Combine, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
+import { Input } from '@/components/Field';
 import { ChannelBadge } from './ChannelBadge';
-import { useMergeCandidates, useMergedRoomActions } from './live-chat.hooks';
+import { useMergeCandidates, useMergedRoomActions, useMergedRoomDetail, useRoomOptions } from './live-chat.hooks';
 import type { MergedRoomView } from './live-chat.service';
 
 /**
@@ -30,7 +31,42 @@ export function MergeRoomControl({
   const { t, i18n } = useTranslation('livechat');
   const { data } = useMergeCandidates(conversationId);
   const actions = useMergedRoomActions();
-  const [dialog, setDialog] = useState<'merge' | 'room' | null>(null);
+  const [dialog, setDialog] = useState<'merge' | 'room' | 'join' | null>(null);
+  // Manual add (PLN-261027 Merge-Add D4): the number typed in, and the one
+  // waiting for the operator's "add anyway" after the same-person check said no.
+  const [addNumber, setAddNumber] = useState('');
+  const [confirmAdd, setConfirmAdd] = useState<{ roomId: string; conversationId: string } | null>(null);
+  const [joinRoom, setJoinRoom] = useState<string | null>(null);
+  const [joinTarget, setJoinTarget] = useState<string | null>(null);
+  const [joinNumber, setJoinNumber] = useState('');
+  const detail = useMergedRoomDetail(room?.id ?? null, dialog === 'room');
+  const options = useRoomOptions(conversationId, dialog === 'join', joinTarget);
+  useEffect(() => {
+    setAddNumber('');
+    setConfirmAdd(null);
+    setJoinRoom(null);
+    setJoinTarget(null);
+    setJoinNumber('');
+  }, [dialog, conversationId]);
+  useEffect(() => {
+    if (options.data?.length && !joinRoom) setJoinRoom(options.data[0].id);
+  }, [options.data, joinRoom]);
+
+  /** Add a session by conversation number; a non-match asks first (E5156). */
+  const addSession = (roomId: string, target: string, force = false, done?: () => void) =>
+    actions.addSession.mutate(
+      { roomId, conversationId: target, force },
+      {
+        onSuccess: () => {
+          setConfirmAdd(null);
+          setAddNumber('');
+          done?.();
+        },
+        onError: (e: Error & { code?: string }) => {
+          if (e.code === 'E5156') setConfirmAdd({ roomId, conversationId: target });
+        },
+      },
+    );
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [autoJoin, setAutoJoin] = useState(true);
 
@@ -52,7 +88,10 @@ export function MergeRoomControl({
     new Date(iso).toLocaleString(i18n.language, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const matchLabel = (how: 'customer' | 'email' | 'claimed' | 'company') => t(`merge.matchedBy.${how}`);
 
-  if (!room && !addable.length) return null;
+
+  // Detail rows (address, flags) once loaded; the header's view until then.
+  const roomRows: Array<MergedRoomView['sessions'][number] & Partial<{ ip: string | null; ipDiffers: boolean; forced: boolean }>> =
+    detail.data?.sessions ?? room?.sessions ?? [];
 
   const submit = () =>
     actions.merge.mutate(
@@ -76,9 +115,89 @@ export function MergeRoomControl({
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
       ) : (
-        <Button size="sm" variant="secondary" onClick={() => setDialog('merge')}>
-          <Combine className="h-4 w-4" /> {t('merge.open', { count: addable.length })}
-        </Button>
+        <>
+          {addable.length > 0 && (
+            <Button size="sm" variant="secondary" onClick={() => setDialog('merge')}>
+              <Combine className="h-4 w-4" /> {t('merge.open', { count: addable.length })}
+            </Button>
+          )}
+          {/* A session the check missed can still go into a room (PLN-261027 Merge-Add D4②). */}
+          <Button size="sm" variant="secondary" onClick={() => setDialog('join')}>
+            <PlusCircle className="h-4 w-4" /> {t('merge.joinRoom')}
+          </Button>
+        </>
+      )}
+
+      {/* ③ add THIS conversation to a room (D4②). */}
+      {!room && (
+        <Modal
+          open={dialog === 'join'}
+          onClose={() => setDialog(null)}
+          size="md"
+          title={t('merge.joinRoom')}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDialog(null)}>
+                {t('groups.cancel')}
+              </Button>
+              <Button
+                disabled={!joinRoom || actions.addSession.isPending}
+                onClick={() => joinRoom && addSession(joinRoom, conversationId, false, () => setDialog(null))}
+              >
+                {t('merge.joinSubmit')}
+              </Button>
+            </>
+          }
+        >
+          <p className="mb-3 text-xs text-gray-500">{t('merge.joinHint')}</p>
+          {options.isLoading && <p className="text-xs text-gray-400">{t('loading', { ns: 'common' })}</p>}
+          {options.data && options.data.length === 0 && (
+            <p className="mb-2 text-xs text-gray-400">{joinTarget ? t('merge.joinNoRoomForNumber') : t('merge.joinNoRoom')}</p>
+          )}
+          {!!options.data?.length && (
+            <ul className="mb-3 divide-y divide-gray-100 rounded-md border border-gray-200 text-sm">
+              {options.data.map((o) => (
+                <li key={o.id}>
+                  <label className="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-gray-50">
+                    <input type="radio" name="join-room" checked={joinRoom === o.id} onChange={() => setJoinRoom(o.id)} />
+                    <span className="font-medium">
+                      {t('merge.roomOption', { id: o.latestConversationId ?? '—', count: o.sessionCount })}
+                    </span>
+                    {o.companyId && <Badge tone="info">{t('company.badge')}</Badge>}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex items-center gap-2">
+            <Input
+              inputMode="numeric"
+              value={joinNumber}
+              placeholder={t('merge.joinNumberPlaceholder')}
+              onChange={(e) => setJoinNumber(e.target.value.replace(/\D/g, ''))}
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              className="shrink-0 whitespace-nowrap"
+              disabled={!joinNumber}
+              onClick={() => {
+                setJoinRoom(null);
+                setJoinTarget(joinNumber);
+              }}
+            >
+              {t('merge.joinFind')}
+            </Button>
+          </div>
+          {confirmAdd && (
+            <ConfirmAdd
+              number={confirmAdd.conversationId}
+              pending={actions.addSession.isPending}
+              onCancel={() => setConfirmAdd(null)}
+              onConfirm={() => addSession(confirmAdd.roomId, confirmAdd.conversationId, true, () => setDialog(null))}
+            />
+          )}
+        </Modal>
       )}
 
       {/* ① merge dialog — session metadata only, nothing of the other sessions is shown before merging. */}
@@ -170,8 +289,35 @@ export function MergeRoomControl({
             </>
           }
         >
+          {/* Add a session the check missed, by its conversation number (PLN-261027 Merge-Add D4①). */}
+          <form
+            className="mb-3 flex items-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-3 py-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (addNumber) addSession(room.id, addNumber);
+            }}
+          >
+            <span className="shrink-0 text-xs font-medium text-primary-700">{t('merge.addSession')}</span>
+            <Input
+              inputMode="numeric"
+              value={addNumber}
+              placeholder={t('merge.addSessionPlaceholder')}
+              onChange={(e) => setAddNumber(e.target.value.replace(/\D/g, ''))}
+            />
+            <Button size="sm" type="submit" className="shrink-0 whitespace-nowrap" disabled={!addNumber || actions.addSession.isPending}>
+              {t('merge.addSessionSubmit')}
+            </Button>
+          </form>
+          {confirmAdd && (
+            <ConfirmAdd
+              number={confirmAdd.conversationId}
+              pending={actions.addSession.isPending}
+              onCancel={() => setConfirmAdd(null)}
+              onConfirm={() => addSession(confirmAdd.roomId, confirmAdd.conversationId, true)}
+            />
+          )}
           <ul className="divide-y divide-gray-100 rounded-md border border-gray-200 text-sm">
-            {room.sessions.map((s) => (
+            {roomRows.map((s) => (
               <li key={s.sessionId} className="flex items-center gap-2 px-3 py-2">
                 <button
                   type="button"
@@ -187,6 +333,9 @@ export function MergeRoomControl({
                     {s.open ? t('merge.inProgress') : t('merge.lastAt', { when: when(s.lastAt) })}
                   </span>
                   {s.auto && <Badge tone="gray">{t('merge.autoJoined')}</Badge>}
+                  {s.ip && <span className="font-mono text-[11px] text-gray-400">{s.ip}</span>}
+                  {s.ipDiffers && <Badge tone="warning">{t('merge.ipDiffers')}</Badge>}
+                  {s.forced && <Badge tone="warning">{t('merge.forced')}</Badge>}
                 </button>
                 <Button
                   size="sm"
@@ -218,5 +367,33 @@ export function MergeRoomControl({
         </Modal>
       )}
     </>
+  );
+}
+
+/** "Not the same person by the check — add anyway?" (PLN-261027 Merge-Add D4). */
+function ConfirmAdd({
+  number,
+  pending,
+  onCancel,
+  onConfirm,
+}: {
+  number: string;
+  pending: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useTranslation('livechat');
+  return (
+    <div className="mt-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-gray-700" role="alert">
+      <p>{t('merge.confirmForce', { id: number })}</p>
+      <div className="mt-2 flex justify-end gap-2">
+        <Button size="sm" variant="ghost" onClick={onCancel}>
+          {t('groups.cancel')}
+        </Button>
+        <Button size="sm" disabled={pending} onClick={onConfirm}>
+          {t('merge.confirmForceSubmit')}
+        </Button>
+      </div>
+    </div>
   );
 }

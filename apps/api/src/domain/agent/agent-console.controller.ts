@@ -72,6 +72,8 @@ import {
   toSessionResponse,
   toIdentityResponse,
   toMergeCandidatesResponse,
+  toMergedRoomDetailResponse,
+  toRoomOptionsResponse,
   toConversationHandlersResponse,
   toMergedRoomResponse,
   toRatingResponse,
@@ -83,6 +85,8 @@ import {
   AlertSettingsRequest,
   MergedRoomAutoJoinRequest,
   MergeSessionsRequest,
+  AddRoomSessionRequest,
+  RoomOptionsQuery,
   RateAnswerRequest,
   RatingSummaryQuery,
 } from './dto/request/agent.request';
@@ -235,6 +239,39 @@ export class AgentConsoleController {
   async mergeSessions(@CurrentUser() user: Principal, @Body() body: MergeSessionsRequest) {
     return toMergedRoomResponse(
       await this.mergedRooms.merge(tenantOf(user), actorIdOf(user), body.conversation_id, body.session_ids, body.auto_join),
+    );
+  }
+
+  @Post('merged-rooms/:id/sessions')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Add one session to the room by a conversation number (force = operator confirmed a non-match)' })
+  async addRoomSession(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: AddRoomSessionRequest,
+  ) {
+    return toMergedRoomResponse(
+      await this.mergedRooms.addSession(tenantOf(user), actorIdOf(user), id, body.conversation_id, !!body.force),
+    );
+  }
+
+  @Get('merged-rooms/:id/detail')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Members for the manage dialog: masked address, other-address and forced flags' })
+  async mergedRoomDetail(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return toMergedRoomDetailResponse(await this.mergedRooms.roomDetail(tenantOf(user), id));
+  }
+
+  @Get('conversations/:id/room-options')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "Rooms this conversation can join: its customer's/company's, or the room of conversation `target`" })
+  async roomOptions(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: RoomOptionsQuery,
+  ) {
+    return toRoomOptionsResponse(
+      await this.mergedRooms.roomOptions(tenantOf(user), id, query.target != null ? Number(query.target) : undefined),
     );
   }
 
@@ -752,6 +789,15 @@ export class AgentConsoleController {
     // Merged room (PLN-261023): the transcript spans every conversation of the
     // room's sessions; header, panel and actions stay on THIS conversation.
     const roomConversations = await this.mergedRooms.roomConversations(tenantId, Number(conversation.sessionId));
+    // Who each conversation's customer side is — bubble labels and staff colours (PLN-261027 Merge-Add D7·D8).
+    const people = await this.mergedRooms.conversationPeople(
+      tenantId,
+      roomConversations ?? [{ id, sessionId: Number(conversation.sessionId) }],
+    );
+    // Staff view (D9): only that customer's conversations of the room.
+    const staff = query.staff != null && roomConversations ? Number(query.staff) : null;
+    const scoped =
+      staff != null ? roomConversations!.filter((c) => people.get(c.id)?.customerId === staff) : roomConversations;
     // The briefing is NOT computed here any more (PLN-260807 D1): it is a model
     // call, and waiting for it kept a two-message conversation on screen for
     // 6-8 seconds. The console fetches it separately, after the transcript.
@@ -762,7 +808,7 @@ export class AgentConsoleController {
         limit: query.limit != null ? Number(query.limit) : undefined,
         beforeId: query.before_id != null ? Number(query.before_id) : undefined,
       },
-      roomConversations?.map((c) => c.id),
+      scoped?.length ? scoped.map((c) => c.id) : roomConversations?.map((c) => c.id),
     );
     // PII-access audit (PRV-H4): the agent sees the transcript + customer panel.
     await this.agentService.auditConversationView(actorIdOf(user), tenantId, id);
@@ -785,7 +831,7 @@ export class AgentConsoleController {
     // Callbacks + the customer's feedback inside the thread (PLN-261027 Thread-Events D2/D3).
     const threadEvents = await this.handlers.threadEvents(
       tenantId,
-      roomConversations ? roomConversations.map((c) => Number(c.id)) : [id],
+      scoped?.length ? scoped.map((c) => Number(c.id)) : roomConversations ? roomConversations.map((c) => Number(c.id)) : [id],
     );
     return {
       ...threadEvents,
@@ -847,6 +893,8 @@ export class AgentConsoleController {
       ),
       hasMore,
       customer,
+      // This conversation's customer side (bubble label, D7).
+      person: people.get(id) ?? null,
       // Merged room header/menu + the dividers between its conversations.
       mergedRoom: roomConversations
         ? {
@@ -857,6 +905,9 @@ export class AgentConsoleController {
               channel: c.channel,
               status: c.status,
               createdAt: c.createdAt,
+              customerId: people.get(c.id)?.customerId != null ? String(people.get(c.id)!.customerId) : null,
+              customerName: people.get(c.id)?.name ?? null,
+              role: people.get(c.id)?.role ?? null,
             })),
           }
         : null,

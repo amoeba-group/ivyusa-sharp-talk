@@ -527,7 +527,24 @@
     "autoJoinOn": "この顧客の新しいセッションを追加します",
     "autoJoinOff": "新しいセッションは追加されなくなります",
     "removed": "セッションをルームから除外しました",
-    "dissolved": "統合を解除しました — 会話は元に戻ります"
+    "dissolved": "統合を解除しました — 会話は元に戻ります",
+    "joinRoom": "統合会話ルームに追加",
+    "joinSubmit": "この会話を追加",
+    "joinHint": "この会話を入れる統合会話ルームを選んでください。一覧にない場合は、そのルームの会話番号で探せます。",
+    "joinNoRoom": "この顧客・企業の統合会話ルームはありません。会話番号で探してください。",
+    "joinNoRoomForNumber": "その番号の会話は統合会話ルームに属していません。",
+    "roomOption": "統合会話ルーム · セッション {{id}} ほか（{{count}}件）",
+    "joinNumberPlaceholder": "ルーム内の会話番号",
+    "joinFind": "検索",
+    "addSession": "セッション追加",
+    "addSessionPlaceholder": "会話番号（例: 899）",
+    "addSessionSubmit": "追加",
+    "sessionAdded": "セッションを統合会話ルームに追加しました",
+    "confirmForce": "セッション {{id}} は同一人物判定に該当しません。それでもこの統合会話ルームに追加しますか？手動追加（判定外）として記録されます。",
+    "confirmForceSubmit": "それでも追加",
+    "ipDiffers": "別IP",
+    "forced": "手動（判定外）",
+    "inOtherRoom": "このセッションは既に別の統合会話ルーム（セッション {{id}}）にあります。先にそのルームから外してください。"
   },
   "consultCategoryBadge": "相談: {{name}}",
   "alarmCenter": {
@@ -625,7 +642,9 @@
   "bubble": {
     "autoReply": "自動応答",
     "systemNotice": "自動案内",
-    "newBelow": "新着メッセージ"
+    "newBelow": "新着メッセージ",
+    "customer": "顧客",
+    "customerNamed": "顧客 · {{name}}"
   },
   "handlers": {
     "title": "対応履歴",
@@ -674,11 +693,18 @@
       "feedback": "フィードバック",
       "room": "セッション統合"
     },
-    "actor": "操作: {{name}}"
+    "actor": "操作: {{name}}",
+    "roomAddedManual": "セッションを手動追加（{{sessions}}）",
+    "roomAddedForced": "セッションを手動追加 · 判定外（{{sessions}}）",
+    "roomSessionIp": "別のIPから接続（{{ip}}）"
   },
   "threadEvent": {
     "callback": "コールバック要請",
     "feedback": "顧客フィードバック",
     "stars": "{{n}}つ星"
+  },
+  "staff": {
+    "label": "スタッフ",
+    "all": "すべて {{count}}"
   }
 }

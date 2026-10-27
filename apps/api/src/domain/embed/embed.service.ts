@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { CONSENT_STATE, CONVERSATION_STATUS, CUSTOMER_TYPE, SESSION_IDENTITY, canonicalRegion, isRegionValue } from '@sharptalk/types';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
@@ -26,6 +26,7 @@ import type { Company } from '../company/entity/company.entity';
 import { HotelSyncService } from '../go2joy/hotel-sync.service';
 import { AuditService } from '../audit/audit.service';
 import { CustomerPlatformLinkService, PLATFORM } from '../customer/customer-platform-link.service';
+import { MergedRoomService } from '../merged-room/merged-room.service';
 
 /** What the customer's own server signs, and what the SDK forwards. */
 export interface IdentifyInput {
@@ -76,6 +77,8 @@ export class EmbedService {
     @Optional() private readonly hotels?: HotelSyncService,
     // Which platform account a person is (PLN-261027 D12).
     @Optional() private readonly platformLinks?: CustomerPlatformLinkService,
+    // A sign-in that files earlier conversations may join the person's room (PLN-261027 Merge-Add D1).
+    @Optional() private readonly mergedRooms?: MergedRoomService,
   ) {}
 
   /**
@@ -336,8 +339,33 @@ export class EmbedService {
         },
         { customerId: account.customerId, companyId: account.companyId },
       );
+      await this.fileEarlierConversations(session, account);
     } catch (err) {
       this.logger.warn(`claimed conversation not attributed (session ${session.id}): ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Conversations this session had before the sign-in — already ended, so the
+   * open-only stamp above misses them — are filed under the account too, but
+   * only those filed under nobody (PLN-261027 Merge-Add D1: a conversation that
+   * ended before the sign-in stayed a guest's and never joined the person's
+   * merged room). Then the session may auto-join that room. Never throws.
+   */
+  private async fileEarlierConversations(
+    session: Session,
+    account: { customerId: number | null; companyId: number | null },
+  ): Promise<void> {
+    if (!this.convRepo || (account.customerId == null && account.companyId == null)) return;
+    try {
+      await this.convRepo.update(
+        { sessionId: session.id, customerId: IsNull(), companyId: IsNull() },
+        { customerId: account.customerId, companyId: account.companyId },
+      );
+      const tenantId = session.tenantId != null ? Number(session.tenantId) : null;
+      await this.mergedRooms?.autoJoin(tenantId, Number(session.id));
+    } catch (err) {
+      this.logger.warn(`earlier conversations not filed (session ${session.id}): ${(err as Error).message}`);
     }
   }
 
@@ -352,6 +380,10 @@ export class EmbedService {
         },
         { customerId: session.customerId, companyId: session.companyId ?? null },
       );
+      await this.fileEarlierConversations(session, {
+        customerId: session.customerId != null ? Number(session.customerId) : null,
+        companyId: session.companyId != null ? Number(session.companyId) : null,
+      });
     } catch (err) {
       this.logger.warn(`open conversation not re-attributed (session ${session.id}): ${(err as Error).message}`);
     }

@@ -527,7 +527,24 @@
     "autoJoinOn": "Se añadirán las nuevas sesiones de este cliente",
     "autoJoinOff": "Ya no se añadirán sesiones nuevas",
     "removed": "Sesión retirada de la sala",
-    "dissolved": "Unificación deshecha — las conversaciones vuelven a estar como antes"
+    "dissolved": "Unificación deshecha — las conversaciones vuelven a estar como antes",
+    "joinRoom": "Añadir a sala unificada",
+    "joinSubmit": "Añadir esta conversación",
+    "joinHint": "Elija la sala unificada para esta conversación. Si no aparece, búsquela por el número de una conversación de esa sala.",
+    "joinNoRoom": "Este cliente o empresa no tiene sala unificada. Pruebe con un número de conversación.",
+    "joinNoRoomForNumber": "Esa conversación no está en una sala unificada.",
+    "roomOption": "Sala unificada · sesión {{id}} y otras ({{count}})",
+    "joinNumberPlaceholder": "Número de conversación de la sala",
+    "joinFind": "Buscar",
+    "addSession": "Añadir sesión",
+    "addSessionPlaceholder": "Número de conversación (p. ej., 899)",
+    "addSessionSubmit": "Añadir",
+    "sessionAdded": "Sesión añadida a la sala unificada",
+    "confirmForce": "La sesión {{id}} no es la misma persona según la comprobación. ¿Añadirla igualmente? Quedará registrada como añadido manual (fuera de la comprobación).",
+    "confirmForceSubmit": "Añadir igualmente",
+    "ipDiffers": "Otra IP",
+    "forced": "Manual (fuera de comprobación)",
+    "inOtherRoom": "Esta sesión ya está en otra sala unificada (sesión {{id}}). Retírela de allí primero."
   },
   "consultCategoryBadge": "Consulta: {{name}}",
   "alarmCenter": {
@@ -625,7 +642,9 @@
   "bubble": {
     "autoReply": "Respuesta automática",
     "systemNotice": "Aviso automático",
-    "newBelow": "Mensajes nuevos"
+    "newBelow": "Mensajes nuevos",
+    "customer": "Cliente",
+    "customerNamed": "Cliente · {{name}}"
   },
   "handlers": {
     "title": "Historial de atención",
@@ -674,11 +693,18 @@
       "feedback": "Opiniones",
       "room": "Sesiones unificadas"
     },
-    "actor": "por {{name}}"
+    "actor": "por {{name}}",
+    "roomAddedManual": "Sesión añadida manualmente ({{sessions}})",
+    "roomAddedForced": "Sesión añadida manualmente · fuera de la comprobación ({{sessions}})",
+    "roomSessionIp": "Acceso desde otra IP ({{ip}})"
   },
   "threadEvent": {
     "callback": "Solicitud de llamada",
     "feedback": "Opinión del cliente",
     "stars": "{{n}} estrellas"
+  },
+  "staff": {
+    "label": "Personal",
+    "all": "Todo {{count}}"
   }
 }

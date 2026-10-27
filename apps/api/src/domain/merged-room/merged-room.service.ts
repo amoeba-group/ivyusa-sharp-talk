@@ -1,12 +1,16 @@
 import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, Like, Not, Repository } from 'typeorm';
 import { CONVERSATION_STATUS } from '@sharptalk/types';
 import { MergedRoom } from './entity/merged-room.entity';
 import { MERGED_SESSION_STATE, MergedRoomSession } from './entity/merged-room-session.entity';
 import { Session } from '../session/entity/session.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Customer } from '../customer/entity/customer.entity';
+import { Company } from '../company/entity/company.entity';
+import { AuditLog } from '../audit/entity/audit-log.entity';
+import { maskIp } from '../../global/util/pii-display.util';
+import { unsignedIdentifyAllowed } from '../embed/unsigned-identify';
 import { AuditService } from '../audit/audit.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -34,6 +38,34 @@ export interface MergedSessionView {
   open: boolean;
   /** Joined by auto-join rather than by an operator. */
   auto: boolean;
+}
+
+/** A member row of the manage dialog (PLN-261027 Merge-Add D4·D6). */
+export interface MergedSessionDetail extends MergedSessionView {
+  /** Visitor address, masked; the full one is the audited reveal. */
+  ip: string | null;
+  /** Differs from the same person's first session's address — another place or device. */
+  ipDiffers: boolean;
+  /** Added by an operator although the same-person check did not match it. */
+  forced: boolean;
+  firstAt: Date;
+}
+
+/** A room the conversation can be added to (PLN-261027 Merge-Add D4②). */
+export interface RoomOption {
+  id: number;
+  sessionCount: number;
+  /** Newest conversation of the room — how the console names it. */
+  latestConversationId: number | null;
+  customerId: number | null;
+  companyId: number | null;
+}
+
+/** Who a conversation's customer side is (PLN-261027 Merge-Add D7·D8). */
+export interface ConversationPerson {
+  customerId: number | null;
+  name: string | null;
+  role: string | null;
 }
 
 export interface MergedRoomView {
@@ -103,6 +135,9 @@ export class MergedRoomService {
     @InjectRepository(Conversation) private readonly convRepo: Repository<Conversation>,
     @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
     @Optional() private readonly audit?: AuditService,
+    // Identify-attribute matching and the manage dialog (PLN-261027 Merge-Add) — optional, last.
+    @Optional() @InjectRepository(Company) private readonly companyRepo?: Repository<Company>,
+    @Optional() @InjectRepository(AuditLog) private readonly auditRepo?: Repository<AuditLog>,
   ) {}
 
   // ---- identity ----
@@ -111,9 +146,18 @@ export class MergedRoomService {
   private async identityOf(tenantId: number, sessionId: number): Promise<Identity | null> {
     const session = await this.sessionRepo.findOne({
       where: { id: sessionId, tenantId },
-      select: { id: true, customerId: true, companyId: true },
+      select: { id: true, customerId: true, companyId: true, identityAttributes: true, identityLevel: true },
     });
     if (!session) return null;
+    // What the host said about this visitor (PLN-261027 Merge-Add D3): a claimed
+    // sign-in leaves the session row empty, so its user id / hotel id are the
+    // only tie for a conversation that ended before the sign-in. An unsigned
+    // claim counts only where the tenant still accepts unsigned identities —
+    // the same gate that files claimed conversations (PLN-261023 S4).
+    const trusted = session.identityLevel !== 'claimed' || unsignedIdentifyAllowed(tenantId);
+    const fromHost = trusted
+      ? await this.hostIdentity(tenantId, session.identityAttributes)
+      : { customerId: null, companyId: null };
     const filed = await this.convRepo.find({
       where: [
         { tenantId, sessionId, customerId: Not(IsNull()) },
@@ -126,10 +170,12 @@ export class MergedRoomService {
     const own = [
       ...(session.customerId != null ? [Number(session.customerId)] : []),
       ...filed.filter((c) => c.customerId != null).map((c) => Number(c.customerId)),
+      ...(fromHost.customerId != null ? [fromHost.customerId] : []),
     ];
     const companies = [
       ...(session.companyId != null ? [Number(session.companyId)] : []),
       ...filed.filter((c) => c.companyId != null).map((c) => Number(c.companyId)),
+      ...(fromHost.companyId != null ? [fromHost.companyId] : []),
     ];
     if (!own.length && !companies.length) return null;
     const unique = [...new Set(own)];
@@ -138,6 +184,27 @@ export class MergedRoomService {
       own: unique,
       customerIds: unique.length ? await this.withSameEmail(tenantId, unique) : [],
       companyIds: [...new Set(companies)],
+    };
+  }
+
+  /** The customer / company a session's identify attributes name, if they exist. */
+  private async hostIdentity(
+    tenantId: number,
+    attrs: Record<string, string> | null | undefined,
+  ): Promise<{ customerId: number | null; companyId: number | null }> {
+    const userId = attrs?.user_id?.trim();
+    const hotelId = attrs?.hotel_id?.trim();
+    const [customer, company] = await Promise.all([
+      userId
+        ? this.customerRepo.findOne({ where: { tenantId, externalCustomerId: userId }, select: { id: true } })
+        : null,
+      hotelId && this.companyRepo
+        ? this.companyRepo.findOne({ where: { tenantId, externalKey: `hotel:${hotelId}` }, select: { id: true } })
+        : null,
+    ]);
+    return {
+      customerId: customer ? Number(customer.id) : null,
+      companyId: company ? Number(company.id) : null,
     };
   }
 
@@ -176,6 +243,7 @@ export class MergedRoomService {
   ): Promise<Map<number, MergeMatch>> {
     const out = new Map<number, MergeMatch>();
     if (identity.customerIds.length) await this.sessionsOfCustomers(tenantId, identity, emailOnly, out);
+    await this.sessionsByHostAttributes(tenantId, identity, out);
     if (identity.companyIds.length) {
       const byCompany = await this.sessionRepo.find({
         where: { tenantId, companyId: In(identity.companyIds) },
@@ -194,6 +262,49 @@ export class MergedRoomService {
       for (const r of filedUnder) if (!out.has(Number(r.sessionId))) out.set(Number(r.sessionId), 'company');
     }
     return out;
+  }
+
+  /**
+   * Sessions whose identify attributes name one of these customers (user id)
+   * or companies (hotel id) — signed-in sessions whose conversations were never
+   * filed, e.g. a conversation that ended before the sign-in (PLN-261027 D3).
+   * Read on demand (merge dialog), so the JSON scan stays off the message path.
+   */
+  private async sessionsByHostAttributes(
+    tenantId: number,
+    identity: Identity,
+    out: Map<number, MergeMatch>,
+  ): Promise<void> {
+    const [customers, companies] = await Promise.all([
+      identity.customerIds.length
+        ? this.customerRepo.find({
+            where: { tenantId, id: In(identity.customerIds), externalCustomerId: Not(IsNull()) },
+            select: { id: true, externalCustomerId: true },
+          })
+        : [],
+      identity.companyIds.length && this.companyRepo
+        ? this.companyRepo.find({
+            where: { tenantId, id: In(identity.companyIds), externalKey: Like('hotel:%') },
+            select: { id: true, externalKey: true },
+          })
+        : [],
+    ]);
+    const userIds = customers.map((c) => c.externalCustomerId as string);
+    const hotelIds = companies.map((c) => c.externalKey.slice('hotel:'.length));
+    const find = async (path: string, values: string[], how: MergeMatch) => {
+      if (!values.length) return;
+      const rows = await this.sessionRepo
+        .createQueryBuilder('s')
+        .select('s.id', 'id')
+        .where('s.tenant_id = :tenantId', { tenantId })
+        .andWhere(`JSON_UNQUOTE(JSON_EXTRACT(s.identity_attributes, '${path}')) IN (:...values)`, { values })
+        .orderBy('s.id', 'DESC')
+        .limit(CANDIDATE_LIMIT)
+        .getRawMany<{ id: string }>();
+      for (const r of rows) if (!out.has(Number(r.id))) out.set(Number(r.id), how);
+    };
+    await find('$.user_id', userIds, 'claimed');
+    await find('$.hotel_id', hotelIds, 'company');
   }
 
   private async sessionsOfCustomers(
@@ -223,6 +334,225 @@ export class MergedRoomService {
   }
 
   // ---- reads ----
+
+  /** Does this session belong to the room's person or company (the merge check)? */
+  private async sessionMatchesRoom(tenantId: number, sessionId: number, room: MergedRoom): Promise<boolean> {
+    const identity = await this.identityOf(tenantId, sessionId);
+    if (!identity) return false;
+    if (room.customerId != null && identity.customerIds.includes(Number(room.customerId))) return true;
+    if (room.companyId != null && identity.companyIds.includes(Number(room.companyId))) return true;
+    return (await this.roomsFor(tenantId, identity)).some((r) => Number(r.id) === Number(room.id));
+  }
+
+  /**
+   * Add one session to a room by one of its conversations (PLN-261027 Merge-Add
+   * D4/D5) — the operator's way in for a session the same-person check missed.
+   * A session the check does not match needs `force` (the operator confirmed);
+   * it is recorded as forced in the audit trail. A session in another room is
+   * refused with that room named — it has to be taken out there first.
+   */
+  async addSession(
+    tenantId: number,
+    userId: number,
+    roomId: number,
+    conversationId: number,
+    force: boolean,
+  ): Promise<MergedRoomView> {
+    const room = await this.owned(roomId, tenantId);
+    const conv = await this.convRepo.findOne({ where: { id: conversationId, tenantId }, select: { id: true, sessionId: true } });
+    if (!conv) throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    const sessionId = Number(conv.sessionId);
+    const place = await this.memberRepo.findOne({ where: { tenantId, sessionId } });
+    if (place && Number(place.roomId) !== roomId && place.state === MERGED_SESSION_STATE.MEMBER) {
+      const other = await this.latestConversations(tenantId, [sessionId]);
+      this.logger.warn(`add-session refused: session=${sessionId} sits in room ${place.roomId}`);
+      throw new BusinessException(ERROR_CODE.MERGE_SESSION_CONFLICT, HttpStatus.CONFLICT, {
+        roomId: [String(place.roomId)],
+        conversationId: [String(other.get(sessionId)?.id ?? conversationId)],
+      });
+    }
+    if (place && Number(place.roomId) === roomId && place.state === MERGED_SESSION_STATE.MEMBER) {
+      return (await this.view(tenantId, roomId))!;
+    }
+    const matches = await this.sessionMatchesRoom(tenantId, sessionId, room);
+    if (!matches && !force) {
+      this.logger.warn(`add-session needs confirmation: session=${sessionId} room=${roomId}`);
+      throw new BusinessException(ERROR_CODE.MERGE_NEEDS_CONFIRM, HttpStatus.CONFLICT);
+    }
+    if (place) {
+      // Taken out of this room earlier, or out of another room: it moves here.
+      await this.memberRepo.update(
+        { id: Number(place.id) },
+        { roomId, state: MERGED_SESSION_STATE.MEMBER, addedBy: userId },
+      );
+    } else {
+      await this.memberRepo.save(
+        this.memberRepo.create({ tenantId, roomId, sessionId, state: MERGED_SESSION_STATE.MEMBER, addedBy: userId }),
+      );
+    }
+    await this.audit?.write({
+      tenantId,
+      actorType: 'user',
+      actorId: userId,
+      action: 'merged_room.sessions_added',
+      target: `merged_room:${roomId}`,
+      metadata: { sessionIds: [sessionId], conversationId, manual: true, forced: !matches },
+    });
+    return (await this.view(tenantId, roomId))!;
+  }
+
+  /**
+   * Rooms a conversation could join (PLN-261027 Merge-Add D4②): its person's
+   * or company's rooms, or — with `targetConversationId` — the room that
+   * conversation sits in (the operator typed its number).
+   */
+  async roomOptions(tenantId: number, conversationId: number, targetConversationId?: number): Promise<RoomOption[]> {
+    const conv = await this.convRepo.findOne({ where: { id: conversationId, tenantId }, select: { id: true, sessionId: true } });
+    if (!conv) throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    let rooms: MergedRoom[] = [];
+    if (targetConversationId != null) {
+      const target = await this.convRepo.findOne({
+        where: { id: targetConversationId, tenantId },
+        select: { id: true, sessionId: true },
+      });
+      const place = target
+        ? await this.memberRepo.findOne({
+            where: { tenantId, sessionId: Number(target.sessionId), state: MERGED_SESSION_STATE.MEMBER },
+          })
+        : null;
+      const room = place ? await this.roomRepo.findOne({ where: { id: Number(place.roomId), tenantId } }) : null;
+      rooms = room ? [room] : [];
+    } else {
+      const identity = await this.identityOf(tenantId, Number(conv.sessionId));
+      rooms = identity ? await this.roomsFor(tenantId, identity) : [];
+    }
+    if (!rooms.length) return [];
+    const members = await this.memberRepo.find({
+      where: { tenantId, roomId: In(rooms.map((r) => Number(r.id))), state: MERGED_SESSION_STATE.MEMBER },
+    });
+    const latest = await this.latestConversations(tenantId, members.map((m) => Number(m.sessionId)));
+    return rooms.map((r) => {
+      const mine = members.filter((m) => Number(m.roomId) === Number(r.id));
+      const ids = mine.map((m) => Number(latest.get(Number(m.sessionId))?.id ?? 0)).filter(Boolean);
+      return {
+        id: Number(r.id),
+        sessionCount: mine.length,
+        latestConversationId: ids.length ? Math.max(...ids) : null,
+        customerId: r.customerId != null ? Number(r.customerId) : null,
+        companyId: r.companyId != null ? Number(r.companyId) : null,
+      };
+    });
+  }
+
+  /**
+   * The manage dialog's rows (PLN-261027 Merge-Add D4·D6): each member with its
+   * masked address, whether the address differs from the room's first
+   * session's, and whether an operator forced it in. Read when the dialog
+   * opens — the forced flag comes from the audit trail.
+   */
+  async roomDetail(tenantId: number, roomId: number): Promise<{ room: MergedRoomView; sessions: MergedSessionDetail[] }> {
+    await this.owned(roomId, tenantId);
+    const view = (await this.view(tenantId, roomId))!;
+    const ids = view.sessions.map((s) => s.sessionId);
+    const [sessions, audits] = await Promise.all([
+      ids.length
+        ? this.sessionRepo.find({
+            where: { tenantId, id: In(ids) },
+            select: { id: true, firstIp: true, lastIp: true, createdAt: true },
+          })
+        : [],
+      this.auditRepo
+        ? this.auditRepo.find({
+            where: { tenantId, target: `merged_room:${roomId}`, action: 'merged_room.sessions_added' },
+            select: { id: true, metadata: true },
+          })
+        : [],
+    ]);
+    const forced = new Set<number>();
+    for (const a of audits) {
+      const md = (a.metadata ?? {}) as { forced?: boolean; sessionIds?: unknown[] };
+      if (md.forced) for (const sid of md.sessionIds ?? []) forced.add(Number(sid));
+    }
+    const byId = new Map(sessions.map((s) => [Number(s.id), s]));
+    const ipOf = (sid: number) => {
+      const s = byId.get(sid);
+      return s?.firstIp ?? s?.lastIp ?? null;
+    };
+    // "Another place" is per person: in a company room each staff member is
+    // compared with their own first session — two staff on two networks is
+    // normal, the same staff on a new network is the signal (Merge-Add D6).
+    const people = await this.conversationPeople(
+      tenantId,
+      view.sessions.map((s) => ({ id: s.conversationId, sessionId: s.sessionId })),
+    );
+    const personOf = (s: MergedSessionView) => String(people.get(s.conversationId)?.customerId ?? 'room');
+    const refIp = new Map<string, string>();
+    for (const s of [...view.sessions].sort(
+      (a, b) => (byId.get(a.sessionId)?.createdAt?.getTime() ?? 0) - (byId.get(b.sessionId)?.createdAt?.getTime() ?? 0),
+    )) {
+      const ip = ipOf(s.sessionId);
+      if (ip && !refIp.has(personOf(s))) refIp.set(personOf(s), ip);
+    }
+    return {
+      room: view,
+      sessions: view.sessions.map((s) => {
+        const ip = ipOf(s.sessionId);
+        const ref = refIp.get(personOf(s)) ?? null;
+        return {
+          ...s,
+          ip: maskIp(ip),
+          ipDiffers: !!ip && !!ref && ip !== ref,
+          forced: forced.has(s.sessionId),
+          firstAt: byId.get(s.sessionId)?.createdAt ?? s.lastAt,
+        };
+      }),
+    };
+  }
+
+  /**
+   * The customer side of each conversation (PLN-261027 Merge-Add D7·D8): the
+   * conversation's customer, else the session's, named by the customer row or
+   * the host's identify; plus the host role. One pass for a room.
+   */
+  async conversationPeople(
+    tenantId: number,
+    convs: Array<{ id: number; sessionId: number }>,
+  ): Promise<Map<number, ConversationPerson>> {
+    const out = new Map<number, ConversationPerson>();
+    if (!convs.length) return out;
+    const [rows, sessions] = await Promise.all([
+      this.convRepo.find({
+        where: { tenantId, id: In(convs.map((c) => c.id)) },
+        select: { id: true, sessionId: true, customerId: true },
+      }),
+      this.sessionRepo.find({
+        where: { tenantId, id: In([...new Set(convs.map((c) => c.sessionId))]) },
+        select: { id: true, customerId: true, identityAttributes: true },
+      }),
+    ]);
+    const sessionById = new Map(sessions.map((s) => [Number(s.id), s]));
+    const customerIdOf = (c: Conversation) =>
+      c.customerId != null
+        ? Number(c.customerId)
+        : sessionById.get(Number(c.sessionId))?.customerId != null
+          ? Number(sessionById.get(Number(c.sessionId))!.customerId)
+          : null;
+    const customerIds = [...new Set(rows.map(customerIdOf).filter((id): id is number => id != null))];
+    const names = customerIds.length
+      ? await this.customerRepo.find({ where: { tenantId, id: In(customerIds) }, select: { id: true, name: true } })
+      : [];
+    const nameOf = new Map(names.map((n) => [Number(n.id), n.name]));
+    for (const c of rows) {
+      const attrs = sessionById.get(Number(c.sessionId))?.identityAttributes ?? null;
+      const customerId = customerIdOf(c);
+      out.set(Number(c.id), {
+        customerId,
+        name: (customerId != null ? nameOf.get(customerId) : null) || attrs?.name || attrs?.user_id || null,
+        role: attrs?.role ?? null,
+      });
+    }
+    return out;
+  }
 
   /** The room a session is a member of, or null. */
   async roomOfSession(tenantId: number, sessionId: number): Promise<MergedRoomView | null> {

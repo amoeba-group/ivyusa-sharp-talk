@@ -340,6 +340,10 @@ export const ERROR_CODE = {
   /** Unknown id, or another tenant's request. */
   CALLBACK_NOT_FOUND: { code: 'E5155', message: 'Callback request not found' },
 
+  // E5156 — merged room manual add (PLN-261027-LiveChat-Merge-Add-Missing-Session).
+  /** The session is not the room's person or company by the same-person check — confirm to add anyway. */
+  MERGE_NEEDS_CONFIRM: { code: 'E5156', message: 'This session does not match the merged room; confirm to add it anyway' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

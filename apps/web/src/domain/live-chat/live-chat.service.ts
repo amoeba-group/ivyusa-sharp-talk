@@ -46,6 +46,34 @@ export interface MergedRoomConversation {
   channel: string;
   status: string;
   createdAt: string;
+  /** The conversation's customer side (PLN-261027 Merge-Add D7·D8) — the staff member in a company room. */
+  customerId?: string | null;
+  customerName?: string | null;
+  role?: string | null;
+}
+
+/** Manage dialog rows (PLN-261027 Merge-Add D4·D6). */
+export interface MergedRoomDetail extends MergedRoomView {
+  sessions: Array<
+    MergedRoomView['sessions'][number] & {
+      firstAt: string;
+      /** Masked visitor address. */
+      ip: string | null;
+      /** Differs from the room's first session's address. */
+      ipDiffers: boolean;
+      /** Added by an operator outside the same-person check. */
+      forced: boolean;
+    }
+  >;
+}
+
+/** A room this conversation can join (PLN-261027 Merge-Add D4②). */
+export interface RoomOption {
+  id: string;
+  sessionCount: number;
+  latestConversationId: string | null;
+  customerId: string | null;
+  companyId: string | null;
 }
 
 /** The merge dialog's rows — session metadata only. */
@@ -231,6 +259,8 @@ export interface ConversationDetail {
   customer?: CustomerContext | null;
   /** Same-customer merged room (PLN-261023); the messages above then span all its conversations. */
   mergedRoom?: (MergedRoomView & { conversations: MergedRoomConversation[] }) | null;
+  /** This conversation's customer side (bubble label, PLN-261027 Merge-Add D7). */
+  person?: { customerId: number | null; name: string | null; role: string | null } | null;
 }
 
 /** One booking kind's operating window; start/end are hours 0-23. */
@@ -406,7 +436,8 @@ export interface HandlerEvent {
     | 'room_session_joined'
     | 'room_session_removed'
     | 'room_auto_join'
-    | 'room_dissolved';
+    | 'room_dissolved'
+    | 'room_session_ip';
   /** handling | callback | feedback | room — the history modal's filter. */
   group: 'handling' | 'callback' | 'feedback' | 'room';
   conversationId: string | null;
@@ -528,10 +559,10 @@ export const liveChatService = {
     apiPost<{ approved: boolean }>(`/agent/conversations/${id}/draft/approve`, body ? { body } : {}),
   discardDraft: (id: string) =>
     apiPost<{ discarded: boolean }>(`/agent/conversations/${id}/draft/discard`),
-  conversation: (id: string, beforeId?: string) =>
+  conversation: (id: string, beforeId?: string, staff?: string | null) =>
     apiGet<ConversationDetail>(
       `/agent/conversations/${id}`,
-      beforeId ? { before_id: beforeId } : undefined,
+      beforeId || staff ? { ...(beforeId ? { before_id: beforeId } : {}), ...(staff ? { staff } : {}) } : undefined,
     ),
   // Read-only: returns the stored briefing (or briefing:null) — generation is
   // an explicit POST since REQ-260824 R3.
@@ -571,6 +602,15 @@ export const liveChatService = {
   // The merged room's whole history, for the modal (PLN-261027 Thread-Events D5).
   history: (conversationId: string) =>
     apiGet<ConversationHandlers>(`/agent/conversations/${conversationId}/history`),
+  // Manual add + manage dialog (PLN-261027 Merge-Add D4·D6).
+  addRoomSession: (roomId: string, conversationId: string, force: boolean) =>
+    apiPost<MergedRoomView>(`/agent/merged-rooms/${roomId}/sessions`, {
+      conversation_id: Number(conversationId),
+      ...(force ? { force: true } : {}),
+    }),
+  mergedRoomDetail: (roomId: string) => apiGet<MergedRoomDetail>(`/agent/merged-rooms/${roomId}/detail`),
+  roomOptions: (conversationId: string, target?: string) =>
+    apiGet<RoomOption[]>(`/agent/conversations/${conversationId}/room-options`, target ? { target } : undefined),
   // Same-customer merged room (PLN-261023-LiveChat-Merge-Same-Customer-Sessions).
   mergeCandidates: (conversationId: string) =>
     apiGet<MergeCandidates>(`/agent/conversations/${conversationId}/merge-candidates`),

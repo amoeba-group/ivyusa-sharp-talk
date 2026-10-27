@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ArrowRightLeft,
   CheckCircle2,
+  Globe,
   Combine,
   Hand,
   Loader2,
@@ -45,6 +46,7 @@ const ICON: Record<HandlerEvent['kind'], typeof Users> = {
   room_session_removed: Split,
   room_auto_join: Settings2,
   room_dissolved: Split,
+  room_session_ip: Globe,
 };
 
 const TONE: Record<HandlerEvent['group'], string> = {
@@ -101,7 +103,12 @@ function useEventText(aiAgentName?: string | null) {
       case 'room_created':
         return t('handlers.roomCreated', { sessions: sessions(e.conversationIds) });
       case 'room_sessions_added':
-        return t('handlers.roomAdded', { sessions: sessions(e.conversationIds) });
+        // Manual add from the room dialog (PLN-261027 Merge-Add D4); forced = outside the check.
+        return e.reason === 'forced'
+          ? t('handlers.roomAddedForced', { sessions: sessions(e.conversationIds) })
+          : e.reason === 'manual'
+            ? t('handlers.roomAddedManual', { sessions: sessions(e.conversationIds) })
+            : t('handlers.roomAdded', { sessions: sessions(e.conversationIds) });
       case 'room_session_joined':
         return t('handlers.roomJoined', { sessions: sessions(e.conversationIds) });
       case 'room_session_removed':
@@ -110,6 +117,8 @@ function useEventText(aiAgentName?: string | null) {
         return e.on ? t('handlers.roomAutoOn') : t('handlers.roomAutoOff');
       case 'room_dissolved':
         return t('handlers.roomDissolved');
+      case 'room_session_ip':
+        return t('handlers.roomSessionIp', { ip: e.reason ?? '—' });
     }
   };
   return { text, when };

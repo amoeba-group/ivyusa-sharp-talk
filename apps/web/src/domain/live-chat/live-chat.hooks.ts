@@ -218,11 +218,12 @@ export function useTranslateMessage() {
   });
 }
 
-export const useConversation = (id: string | null) => {
+export const useConversation = (id: string | null, staff: string | null = null) => {
   const tenantKey = useTenantKey();
   return useQuery({
-    queryKey: ['agent', tenantKey, 'conversation', id],
-    queryFn: () => liveChatService.conversation(id as string),
+    // `staff` narrows a merged room to one staff member's conversations (PLN-261027 Merge-Add D9).
+    queryKey: ['agent', tenantKey, 'conversation', id, staff],
+    queryFn: () => liveChatService.conversation(id as string, undefined, staff),
     enabled: !!id,
     // The customer keeps typing while the agent watches: without a poll their
     // new messages only appeared after the agent acted (PLN-260804).
@@ -362,6 +363,28 @@ export const useConversationHistory = (conversationId: string | null, open: bool
   });
 };
 
+/** Manage dialog rows with addresses (PLN-261027 Merge-Add D6) — read when it opens. */
+export const useMergedRoomDetail = (roomId: string | null, open: boolean) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'room-detail', roomId],
+    queryFn: () => liveChatService.mergedRoomDetail(roomId as string),
+    enabled: !!roomId && open,
+    staleTime: 0,
+  });
+};
+
+/** Rooms a conversation can join (D4②); `target` = a conversation number typed in. */
+export const useRoomOptions = (conversationId: string | null, open: boolean, target: string | null) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'room-options', conversationId, target],
+    queryFn: () => liveChatService.roomOptions(conversationId as string, target ?? undefined),
+    enabled: !!conversationId && open,
+    staleTime: 0,
+  });
+};
+
 export const useMergeCandidates = (conversationId: string | null) => {
   const tenantKey = useTenantKey();
   return useQuery({
@@ -412,6 +435,25 @@ export const useMergedRoomActions = () => {
         toast.success(t(res.dissolved ? 'merge.dissolved' : 'merge.removed'));
       },
       onError: fail('merge.error'),
+    }),
+    // Manual add (PLN-261027 Merge-Add D4). E5156 = not the same person by the
+    // check: the caller asks the operator and retries with force — no toast for it.
+    addSession: useMutation({
+      mutationFn: (v: { roomId: string; conversationId: string; force: boolean }) =>
+        liveChatService.addRoomSession(v.roomId, v.conversationId, v.force),
+      onSuccess: () => {
+        refresh();
+        qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'room-detail'] });
+        toast.success(t('merge.sessionAdded'));
+      },
+      onError: (e: Error & { code?: string; details?: Record<string, string[]> }) => {
+        if (e.code === 'E5156') return;
+        if (e.code === 'E5106' && e.details?.conversationId?.[0]) {
+          toast.error(t('merge.inOtherRoom', { id: e.details.conversationId[0] }), { sticky: true });
+          return;
+        }
+        fail('merge.error')(e);
+      },
     }),
     dissolve: useMutation({
       mutationFn: (roomId: string) => liveChatService.dissolveMergedRoom(roomId),

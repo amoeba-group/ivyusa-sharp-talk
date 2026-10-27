@@ -5,6 +5,8 @@ import { MergedRoomSession } from './entity/merged-room-session.entity';
 import { Session } from '../session/entity/session.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Customer } from '../customer/entity/customer.entity';
+import { Company } from '../company/entity/company.entity';
+import { AuditLog } from '../audit/entity/audit-log.entity';
 import { AuditModule } from '../audit/audit.module';
 import { MergedRoomService } from './merged-room.service';
 
@@ -14,7 +16,7 @@ import { MergedRoomService } from './merged-room.service';
  * without a module cycle.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([MergedRoom, MergedRoomSession, Session, Conversation, Customer]), AuditModule],
+  imports: [TypeOrmModule.forFeature([MergedRoom, MergedRoomSession, Session, Conversation, Customer, Company, AuditLog]), AuditModule],
   providers: [MergedRoomService],
   exports: [MergedRoomService],
 })

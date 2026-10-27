@@ -527,7 +527,24 @@
     "autoJoinOn": "Các phiên mới của khách hàng này sẽ được thêm",
     "autoJoinOff": "Sẽ không thêm phiên mới nữa",
     "removed": "Đã tách phiên khỏi phòng",
-    "dissolved": "Đã bỏ gộp — các hội thoại trở lại như cũ"
+    "dissolved": "Đã bỏ gộp — các hội thoại trở lại như cũ",
+    "joinRoom": "Thêm vào phòng gộp",
+    "joinSubmit": "Thêm hội thoại này",
+    "joinHint": "Chọn phòng gộp cho hội thoại này. Nếu không có trong danh sách, hãy tìm bằng số hội thoại trong phòng đó.",
+    "joinNoRoom": "Khách hàng/doanh nghiệp này chưa có phòng gộp. Hãy thử số hội thoại.",
+    "joinNoRoomForNumber": "Hội thoại đó không thuộc phòng gộp nào.",
+    "roomOption": "Phòng gộp · phiên {{id}} và các phiên khác ({{count}})",
+    "joinNumberPlaceholder": "Số hội thoại trong phòng",
+    "joinFind": "Tìm",
+    "addSession": "Thêm phiên",
+    "addSessionPlaceholder": "Số hội thoại (vd: 899)",
+    "addSessionSubmit": "Thêm",
+    "sessionAdded": "Đã thêm phiên vào phòng gộp",
+    "confirmForce": "Phiên {{id}} không được xác định là cùng một người. Vẫn thêm vào phòng gộp này? Sẽ được ghi là thêm thủ công (ngoài xác định).",
+    "confirmForceSubmit": "Vẫn thêm",
+    "ipDiffers": "IP khác",
+    "forced": "Thủ công (ngoài xác định)",
+    "inOtherRoom": "Phiên này đã ở phòng gộp khác (phiên {{id}}). Hãy bỏ khỏi phòng đó trước."
   },
   "consultCategoryBadge": "Tư vấn: {{name}}",
   "alarmCenter": {
@@ -625,7 +642,9 @@
   "bubble": {
     "autoReply": "Trả lời tự động",
     "systemNotice": "Thông báo tự động",
-    "newBelow": "Tin nhắn mới"
+    "newBelow": "Tin nhắn mới",
+    "customer": "Khách hàng",
+    "customerNamed": "Khách hàng · {{name}}"
   },
   "handlers": {
     "title": "Lịch sử xử lý",
@@ -674,11 +693,18 @@
       "feedback": "Phản hồi",
       "room": "Gộp phiên"
     },
-    "actor": "bởi {{name}}"
+    "actor": "bởi {{name}}",
+    "roomAddedManual": "Thêm phiên thủ công ({{sessions}})",
+    "roomAddedForced": "Thêm phiên thủ công · ngoài xác định ({{sessions}})",
+    "roomSessionIp": "Truy cập từ IP khác ({{ip}})"
   },
   "threadEvent": {
     "callback": "Yêu cầu gọi lại",
     "feedback": "Phản hồi của khách",
     "stars": "{{n}} sao"
+  },
+  "staff": {
+    "label": "Nhân viên",
+    "all": "Tất cả {{count}}"
   }
 }

@@ -282,3 +282,108 @@ describe('MergedRoomService (PLN-261023)', () => {
     expect(h.members.rows).toHaveLength(0);
   });
 });
+
+describe('MergedRoomService — manual add, host identity, addresses, people (PLN-261027 Merge-Add)', () => {
+  const withRoom = () => {
+    const h = harness();
+    h.rooms.rows.push({ id: '1', tenantId: T, customerId: '10', companyId: null, autoJoin: 1 });
+    h.members.rows.push({ id: '1', tenantId: T, roomId: '1', sessionId: '101', state: 'member', addedBy: '7', createdAt: new Date() });
+    return h;
+  };
+
+  it('adds a matching session at once and records the manual add', async () => {
+    const h = withRoom();
+    const view = await h.svc.addSession(T, 7, 1, 503, false);
+    expect(view.sessions.map((s) => s.sessionId).sort()).toEqual([101, 103]);
+    expect(h.audit.write).toHaveBeenLastCalledWith(
+      expect.objectContaining({ action: 'merged_room.sessions_added', metadata: expect.objectContaining({ manual: true, forced: false }) }),
+    );
+  });
+
+  it('asks for confirmation for a non-matching session, then adds it as forced', async () => {
+    const h = withRoom();
+    await expect(h.svc.addSession(T, 7, 1, 504, false)).rejects.toMatchObject({ status: 409 });
+    expect(h.members.rows.some((m) => String(m.sessionId) === '104')).toBe(false);
+    await h.svc.addSession(T, 7, 1, 504, true);
+    expect(h.members.rows.find((m) => String(m.sessionId) === '104')).toMatchObject({ state: 'member', roomId: 1 });
+    expect(h.audit.write).toHaveBeenLastCalledWith(expect.objectContaining({ metadata: expect.objectContaining({ forced: true }) }));
+  });
+
+  it('refuses a session that sits in another room and names that room', async () => {
+    const h = withRoom();
+    h.rooms.rows.push({ id: '2', tenantId: T, customerId: '20', companyId: null, autoJoin: 0 });
+    h.members.rows.push({ id: '2', tenantId: T, roomId: '2', sessionId: '104', state: 'member', addedBy: '7', createdAt: new Date() });
+    await expect(h.svc.addSession(T, 7, 1, 504, true)).rejects.toMatchObject({ status: 409, details: { roomId: ['2'] } });
+  });
+
+  it('treats a conversation of another tenant as not found', async () => {
+    const h = withRoom();
+    await expect(h.svc.addSession(T, 7, 1, 506, true)).rejects.toMatchObject({ status: 404 });
+  });
+
+  it('matches a session by the host user id when nothing is filed (a conversation that ended before sign-in)', async () => {
+    const h = withRoom();
+    const customers = (h.svc as any).customerRepo;
+    customers.rows.find((c: Row) => c.id === '10').externalCustomerId = 'laquan10';
+    const sessions = (h.svc as any).sessionRepo;
+    const s105 = sessions.rows.find((s: Row) => s.id === '105');
+    s105.identityLevel = 'verified';
+    s105.identityAttributes = { user_id: 'laquan10' };
+    sessions.createQueryBuilder = () => {
+      let values: string[] = [];
+      const qb: any = {
+        select: () => qb,
+        where: () => qb,
+        andWhere: (_sql: string, p?: Row) => ((values = p?.values ?? values), qb),
+        orderBy: () => qb,
+        limit: () => qb,
+        getRawMany: async () =>
+          sessions.rows.filter((s: Row) => values.includes(s.identityAttributes?.user_id)).map((s: Row) => ({ id: s.id })),
+      };
+      return qb;
+    };
+    // From the room's side the guest-looking session is now a candidate…
+    const res = await h.svc.candidates(507, T);
+    expect(res.sessions.find((s) => s.sessionId === 105)).toMatchObject({ matchedBy: 'claimed', unverified: true });
+    // …and adding it needs no confirmation.
+    const view = await h.svc.addSession(T, 7, 1, 505, false);
+    expect(view.sessions.map((s) => s.sessionId)).toContain(105);
+  });
+
+  it('room detail: masked address, other-address flag per person (not between staff), forced flag from the audit trail', async () => {
+    const h = withRoom();
+    const sessions = (h.svc as any).sessionRepo;
+    Object.assign(sessions.rows.find((s: Row) => s.id === '101'), { firstIp: '203.0.113.7', createdAt: new Date('2026-10-01') });
+    // Same person (customer 10, claimed conversation) from another network…
+    Object.assign(sessions.rows.find((s: Row) => s.id === '103'), { firstIp: '192.0.2.55', createdAt: new Date('2026-10-20') });
+    // …and someone else (customer 20) on their own network.
+    Object.assign(sessions.rows.find((s: Row) => s.id === '104'), { firstIp: '198.51.100.9', createdAt: new Date('2026-10-05') });
+    h.members.rows.push(
+      { id: '3', tenantId: T, roomId: '1', sessionId: '103', state: 'member', addedBy: '7', createdAt: new Date() },
+      { id: '4', tenantId: T, roomId: '1', sessionId: '104', state: 'member', addedBy: '7', createdAt: new Date() },
+    );
+    const auditRepo = { find: jest.fn(async () => [{ id: '1', metadata: { forced: true, sessionIds: [104] } }]) };
+    (h.svc as any).auditRepo = auditRepo;
+    const d = await h.svc.roomDetail(T, 1);
+    const row = (sid: number) => d.sessions.find((s) => s.sessionId === sid)!;
+    expect(row(101)).toMatchObject({ ipDiffers: false, forced: false });
+    expect(row(103)).toMatchObject({ ipDiffers: true, forced: false });
+    expect(row(104)).toMatchObject({ ipDiffers: false, forced: true });
+    expect(row(103).ip).not.toBe('192.0.2.55');
+    expect(auditRepo.find.mock.calls[0][0].where).toMatchObject({ tenantId: T, target: 'merged_room:1' });
+  });
+
+  it('conversation people: the conversation customer, else the session customer, named by the row or the host', async () => {
+    const h = harness();
+    const customers = (h.svc as any).customerRepo;
+    customers.rows.push({ id: '30', tenantId: T, name: null }, { id: '31', tenantId: T, name: 'Staff B' });
+    const sessions = (h.svc as any).sessionRepo;
+    sessions.rows.find((s: Row) => s.id === '201').identityAttributes = { user_id: 'laquan10', role: 'Quản lý' };
+    const people = await h.svc.conversationPeople(T, [
+      { id: 601, sessionId: 201 },
+      { id: 602, sessionId: 202 },
+    ]);
+    expect(people.get(601)).toEqual({ customerId: 30, name: 'laquan10', role: 'Quản lý' });
+    expect(people.get(602)).toEqual({ customerId: 31, name: 'Staff B', role: null });
+  });
+});

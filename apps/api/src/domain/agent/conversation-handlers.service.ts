@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Like, Not, Repository } from 'typeorm';
 import { maskContact } from '@sharptalk/types';
@@ -9,6 +9,8 @@ import { AgentAlert } from './entity/agent-alert.entity';
 import { CallbackRequest } from '../callback/entity/callback-request.entity';
 import { MergedRoomSession } from '../merged-room/entity/merged-room-session.entity';
 import { AuditLog } from '../audit/entity/audit-log.entity';
+import { Session } from '../session/entity/session.entity';
+import { maskIp } from '../../global/util/pii-display.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { staffDisplayName } from '../../global/util/staff-name.util';
@@ -29,7 +31,8 @@ export type HandlerEventKind =
   | 'room_session_joined'
   | 'room_session_removed'
   | 'room_auto_join'
-  | 'room_dissolved';
+  | 'room_dissolved'
+  | 'room_session_ip';
 
 /** Kinds grouped for the history modal's filter (PLN-261027 Thread-Events D5). */
 export const HANDLER_EVENT_GROUP: Record<HandlerEventKind, 'handling' | 'callback' | 'feedback' | 'room'> = {
@@ -49,6 +52,7 @@ export const HANDLER_EVENT_GROUP: Record<HandlerEventKind, 'handling' | 'callbac
   room_session_removed: 'room',
   room_auto_join: 'room',
   room_dissolved: 'room',
+  room_session_ip: 'room',
 };
 
 export interface HandlerEvent {
@@ -89,6 +93,7 @@ export interface HandlerSummary {
 const END_SLACK_MS = 5_000;
 
 type ConvRow = Pick<Conversation, 'id' | 'sessionId' | 'agentId' | 'createdAt' | 'endedAt'> &
+  Partial<Pick<Conversation, 'customerId'>> &
   Partial<Pick<Conversation, 'csatRating' | 'csatRatedAt' | 'csatResolved' | 'csatReason' | 'csatComment'>>;
 
 const BLANK: Omit<HandlerEvent, 'at' | 'kind' | 'conversationId'> = {
@@ -126,6 +131,8 @@ export class ConversationHandlersService {
     @InjectRepository(CallbackRequest) private readonly callbackRepo: Repository<CallbackRequest>,
     @InjectRepository(MergedRoomSession) private readonly memberRepo: Repository<MergedRoomSession>,
     @InjectRepository(AuditLog) private readonly auditRepo: Repository<AuditLog>,
+    // Visitor addresses of the room's sessions (PLN-261027 Merge-Add D6) — last, optional.
+    @Optional() @InjectRepository(Session) private readonly sessionRepo?: Repository<Session>,
   ) {}
 
   /** One conversation — the card (polled with the thread). */
@@ -198,7 +205,16 @@ export class ConversationHandlersService {
           }
           break;
         case 'merged_room.sessions_added':
-          roomEvents.push({ ...BLANK, at, kind: 'room_sessions_added', conversationId: null, byName: by, conversationIds: label(md.sessionIds) });
+          roomEvents.push({
+            ...BLANK,
+            at,
+            kind: 'room_sessions_added',
+            conversationId: null,
+            byName: by,
+            conversationIds: label(md.sessionIds),
+            // Operator's manual add (Merge-Add D4); forced = outside the same-person check.
+            reason: md.manual ? (md.forced ? 'forced' : 'manual') : null,
+          });
           break;
         case 'merged_room.auto_joined': {
           const ids = label(md.sessionId);
@@ -229,6 +245,38 @@ export class ConversationHandlersService {
         byName: nameOf(first.addedBy),
         conversationIds: label(members.filter((m) => m.createdAt.getTime() === first.createdAt.getTime()).map((m) => m.sessionId)),
       });
+    }
+
+    // A member session reached from another address than the same person's
+    // first one (Merge-Add D6) — that staff member from another place or device.
+    // Per person: two staff on two networks in a company room is not a signal.
+    if (this.sessionRepo && memberSessions.length > 1) {
+      const sessions = await this.sessionRepo.find({
+        where: { tenantId, id: In(memberSessions) },
+        select: { id: true, firstIp: true, lastIp: true, customerId: true, createdAt: true },
+        order: { createdAt: 'ASC', id: 'ASC' },
+      });
+      const personOfSession = new Map<number, string>();
+      for (const c of convs) {
+        const who = c.customerId ?? null;
+        if (who != null) personOfSession.set(Number(c.sessionId), String(who));
+      }
+      const ipOf = (s: Session) => s.firstIp ?? s.lastIp ?? null;
+      const personOf = (s: Session) =>
+        personOfSession.get(Number(s.id)) ?? (s.customerId != null ? String(s.customerId) : 'room');
+      const refIp = new Map<string, string>();
+      for (const s of sessions) {
+        const ip = ipOf(s);
+        if (!ip) continue;
+        const ref = refIp.get(personOf(s));
+        if (!ref) {
+          refIp.set(personOf(s), ip);
+          continue;
+        }
+        if (ip === ref) continue;
+        const ids = label(s.id);
+        roomEvents.push({ ...BLANK, at: s.createdAt, kind: 'room_session_ip', conversationId: ids[0] ?? null, conversationIds: ids, reason: maskIp(ip) });
+      }
     }
 
     const events = [...base.events, ...roomEvents].sort((a, b) => a.at.getTime() - b.at.getTime());
@@ -298,6 +346,7 @@ export class ConversationHandlersService {
     return {
       id: true,
       sessionId: true,
+      customerId: true,
       agentId: true,
       createdAt: true,
       endedAt: true,
