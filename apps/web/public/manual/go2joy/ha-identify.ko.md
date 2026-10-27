@@ -22,6 +22,8 @@
 
 **이 표가 이 문서의 핵심입니다.** 각 줄의 확인 방법까지 통과하면 완료입니다.
 
+> **진행 현황 (10/27 HA UAT 확인)**: 완료 **B5 · B6(UAT)**. 나머지는 아직 시작 전입니다. B4는 일부만(로그아웃 버튼·토큰 만료 시 `logout` 호출, 다른 탭 로그아웃 처리는 없음).
+
 ### A. HA 백엔드 (WR-01 · WR-02) — 10/27(화)
 - [ ] **A1. 서명 키(embed secret)를 HA 서버 환경변수에만 둔다** — FE·브라우저·앱·로그·문서에 넣지 않는다. 스테이징 값은 SharpTalk이 보안 채널로 전달(WR-02 결정 당일).
   확인: 저장소·번들 어디에도 secret 문자열이 없다.
@@ -46,8 +48,8 @@
 - [ ] **B2. A2의 응답을 받아 `SharpTalk.identify(응답)`에 그대로 넘긴다**(키 추가·수정 금지).
 - [ ] **B3. 다시 호출하는 시점**: 로그인 확정 · 페이지 새로고침 · **호텔 선택 변경(전체 호텔 포함)** · HA 언어 변경.
 - [ ] **B4. `SharpTalk.logout()` 호출 시점**: 로그아웃 버튼 · **세션·토큰 만료 자동 로그아웃** · 다른 계정 로그인 직전 · 다른 탭 로그아웃(`storage` 이벤트 등).
-- [ ] **B5. `locale`** — 지금처럼 `localStorage.lang` → `vi`/`en`, 바뀌면 `setLocale`.
-- [ ] **B6. CSP(`script-src` · `frame-src` · `connect-src`)·CORS에 SharpTalk 도메인 허용.**
+- [x] **B5. `locale`** — 지금처럼 `localStorage.lang` → `vi`/`en`, 바뀌면 `setLocale`. *(10/27 확인: 완료)*
+- [x] **B6. CSP(`script-src` · `frame-src` · `connect-src`)·CORS에 SharpTalk 도메인 허용.** *(10/27 확인: UAT 완료 — CSP 제한 없음, 위젯 정상 로드. 운영은 D3)*
 - [ ] **B7. SharpTalk 도메인 3곳**(`embed.js` src · `widgetUrl` · `ivy:event` origin 검사)을 **환경 설정값 하나**로 묶는다(운영 전환 시 한 번에 교체).
   확인(B 전체): DevTools › Network `POST …/public/embed/identify` **200**(`consentState: "granted"`), 페이지에 `ivy:event` `identified {ok: true}`.
 

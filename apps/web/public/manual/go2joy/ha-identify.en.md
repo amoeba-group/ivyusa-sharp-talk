@@ -22,6 +22,8 @@
 
 **This checklist is the core of this document.** An item is done when its check passes.
 
+> **Progress (HA UAT checked 10/27)**: done **B5 · B6 (UAT)**. Everything else has not started yet. B4 is partial (`logout` is called on the sign-out button and on token expiry; sign-out in another tab is not handled).
+
 ### A. HA backend (WR-01 · WR-02) — Tue 10/27
 - [ ] **A1. Keep the signing key (embed secret) only in HA server environment variables.** Do not put it in FE, the browser, the app, logs or documents. SharpTalk sends the staging value over a secure channel (on the day WR-02 is decided).
   Check: the secret string appears nowhere in the repository or bundles.
@@ -46,8 +48,8 @@
 - [ ] **B2. Take the A2 response and pass it to `SharpTalk.identify(response)` unchanged** (do not add or change keys).
 - [ ] **B3. Call again on**: sign-in confirmed · page reload · **hotel selection change (incl. All hotels)** · HA language change.
 - [ ] **B4. Call `SharpTalk.logout()` on**: sign-out button · **automatic sign-out on session/token expiry** · right before another account signs in · sign-out in another tab (`storage` event etc.).
-- [ ] **B5. `locale`**: same as now, `localStorage.lang` → `vi`/`en`. Call `setLocale` when it changes.
-- [ ] **B6. Allow the SharpTalk domain in CSP (`script-src` · `frame-src` · `connect-src`) and CORS.**
+- [x] **B5. `locale`**: same as now, `localStorage.lang` → `vi`/`en`. Call `setLocale` when it changes. *(checked 10/27: done)*
+- [x] **B6. Allow the SharpTalk domain in CSP (`script-src` · `frame-src` · `connect-src`) and CORS.** *(checked 10/27: done on UAT — no CSP restriction, the widget loads normally. Production is D3)*
 - [ ] **B7. Put the 3 SharpTalk domain uses** (`embed.js` src · `widgetUrl` · `ivy:event` origin check) **behind one environment setting** (so you change it once when moving to production).
   Check (all of B): DevTools › Network `POST …/public/embed/identify` **200** (`consentState: "granted"`), and the page receives `ivy:event` `identified {ok: true}`.
 

@@ -145,6 +145,9 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <hr>
 <h2 id="ha가-해야-할-일--체크리스트">✅ HA가 해야 할 일 — 체크리스트</h2>
 <p><strong>이 표가 이 문서의 핵심입니다.</strong> 각 줄의 확인 방법까지 통과하면 완료입니다.</p>
+<blockquote>
+<p><strong>진행 현황 (10/27 HA UAT 확인)</strong>: 완료 <strong>B5 · B6(UAT)</strong>. 나머지는 아직 시작 전입니다. B4는 일부만(로그아웃 버튼·토큰 만료 시 <code>logout</code> 호출, 다른 탭 로그아웃 처리는 없음).</p>
+</blockquote>
 <h3 id="a-ha-백엔드-wr-01--wr-02--1027화">A. HA 백엔드 (WR-01 · WR-02) — 10/27(화)</h3>
 <ul>
 <li><input disabled="" type="checkbox"> <strong>A1. 서명 키(embed secret)를 HA 서버 환경변수에만 둔다</strong> — FE·브라우저·앱·로그·문서에 넣지 않는다. 스테이징 값은 SharpTalk이 보안 채널로 전달(WR-02 결정 당일).
@@ -173,8 +176,8 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <li><input disabled="" type="checkbox"> <strong>B2. A2의 응답을 받아 <code>SharpTalk.identify(응답)</code>에 그대로 넘긴다</strong>(키 추가·수정 금지).</li>
 <li><input disabled="" type="checkbox"> <strong>B3. 다시 호출하는 시점</strong>: 로그인 확정 · 페이지 새로고침 · <strong>호텔 선택 변경(전체 호텔 포함)</strong> · HA 언어 변경.</li>
 <li><input disabled="" type="checkbox"> <strong>B4. <code>SharpTalk.logout()</code> 호출 시점</strong>: 로그아웃 버튼 · <strong>세션·토큰 만료 자동 로그아웃</strong> · 다른 계정 로그인 직전 · 다른 탭 로그아웃(<code>storage</code> 이벤트 등).</li>
-<li><input disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong> — 지금처럼 <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>, 바뀌면 <code>setLocale</code>.</li>
-<li><input disabled="" type="checkbox"> <strong>B6. CSP(<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>)·CORS에 SharpTalk 도메인 허용.</strong></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong> — 지금처럼 <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>, 바뀌면 <code>setLocale</code>. <em>(10/27 확인: 완료)</em></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>B6. CSP(<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>)·CORS에 SharpTalk 도메인 허용.</strong> <em>(10/27 확인: UAT 완료 — CSP 제한 없음, 위젯 정상 로드. 운영은 D3)</em></li>
 <li><input disabled="" type="checkbox"> <strong>B7. SharpTalk 도메인 3곳</strong>(<code>embed.js</code> src · <code>widgetUrl</code> · <code>ivy:event</code> origin 검사)을 <strong>환경 설정값 하나</strong>로 묶는다(운영 전환 시 한 번에 교체).
 확인(B 전체): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200</strong>(<code>consentState: "granted"</code>), 페이지에 <code>ivy:event</code> <code>identified {ok: true}</code>.</li>
 </ul>

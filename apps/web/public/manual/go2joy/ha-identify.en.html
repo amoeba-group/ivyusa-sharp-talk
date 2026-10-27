@@ -145,6 +145,9 @@ SharpTalk verifies the signature, registers the hotel as a business customer and
 <hr>
 <h2 id="what-ha-must-do--checklist">✅ What HA must do — checklist</h2>
 <p><strong>This checklist is the core of this document.</strong> An item is done when its check passes.</p>
+<blockquote>
+<p><strong>Progress (HA UAT checked 10/27)</strong>: done <strong>B5 · B6 (UAT)</strong>. Everything else has not started yet. B4 is partial (<code>logout</code> is called on the sign-out button and on token expiry; sign-out in another tab is not handled).</p>
+</blockquote>
 <h3 id="a-ha-backend-wr-01--wr-02--tue-1027">A. HA backend (WR-01 · WR-02) — Tue 10/27</h3>
 <ul>
 <li><input disabled="" type="checkbox"> <strong>A1. Keep the signing key (embed secret) only in HA server environment variables.</strong> Do not put it in FE, the browser, the app, logs or documents. SharpTalk sends the staging value over a secure channel (on the day WR-02 is decided).
@@ -173,8 +176,8 @@ Check: a call without sign-in returns 401.</li>
 <li><input disabled="" type="checkbox"> <strong>B2. Take the A2 response and pass it to <code>SharpTalk.identify(response)</code> unchanged</strong> (do not add or change keys).</li>
 <li><input disabled="" type="checkbox"> <strong>B3. Call again on</strong>: sign-in confirmed · page reload · <strong>hotel selection change (incl. All hotels)</strong> · HA language change.</li>
 <li><input disabled="" type="checkbox"> <strong>B4. Call <code>SharpTalk.logout()</code> on</strong>: sign-out button · <strong>automatic sign-out on session/token expiry</strong> · right before another account signs in · sign-out in another tab (<code>storage</code> event etc.).</li>
-<li><input disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong>: same as now, <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>. Call <code>setLocale</code> when it changes.</li>
-<li><input disabled="" type="checkbox"> <strong>B6. Allow the SharpTalk domain in CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) and CORS.</strong></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong>: same as now, <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>. Call <code>setLocale</code> when it changes. <em>(checked 10/27: done)</em></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>B6. Allow the SharpTalk domain in CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) and CORS.</strong> <em>(checked 10/27: done on UAT — no CSP restriction, the widget loads normally. Production is D3)</em></li>
 <li><input disabled="" type="checkbox"> <strong>B7. Put the 3 SharpTalk domain uses</strong> (<code>embed.js</code> src · <code>widgetUrl</code> · <code>ivy:event</code> origin check) <strong>behind one environment setting</strong> (so you change it once when moving to production).
 Check (all of B): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200</strong> (<code>consentState: "granted"</code>), and the page receives <code>ivy:event</code> <code>identified {ok: true}</code>.</li>
 </ul>

@@ -145,6 +145,9 @@ SharpTalk xác minh chữ ký, đăng ký khách sạn là khách hàng doanh ng
 <hr>
 <h2 id="việc-ha-cần-làm--checklist">✅ Việc HA cần làm — checklist</h2>
 <p><strong>Checklist này là phần cốt lõi của tài liệu.</strong> Một mục được xem là xong khi phần kiểm tra của mục đó đạt.</p>
+<blockquote>
+<p><strong>Tiến độ (kiểm tra HA UAT 10/27)</strong>: đã xong <strong>B5 · B6 (UAT)</strong>. Các mục còn lại chưa bắt đầu. B4 mới xong một phần (đã gọi <code>logout</code> khi bấm nút đăng xuất và khi token hết hạn; chưa xử lý đăng xuất ở tab khác).</p>
+</blockquote>
 <h3 id="a-ha-backend-wr-01--wr-02--thứ-ba-1027">A. HA backend (WR-01 · WR-02) — Thứ Ba 10/27</h3>
 <ul>
 <li><input disabled="" type="checkbox"> <strong>A1. Chỉ lưu khóa ký (embed secret) trong biến môi trường của HA server.</strong> Không đưa vào FE, trình duyệt, ứng dụng, log hay tài liệu. SharpTalk gửi giá trị staging qua kênh bảo mật (vào ngày WR-02 được chốt).
@@ -173,8 +176,8 @@ Kiểm tra: gọi khi chưa đăng nhập trả về 401.</li>
 <li><input disabled="" type="checkbox"> <strong>B2. Lấy phản hồi của A2 và chuyển nguyên trạng cho <code>SharpTalk.identify(response)</code></strong> (không thêm hay sửa key).</li>
 <li><input disabled="" type="checkbox"> <strong>B3. Gọi lại khi</strong>: xác nhận đăng nhập · tải lại trang · <strong>đổi khách sạn đang chọn (kể cả Tất cả khách sạn)</strong> · đổi ngôn ngữ HA.</li>
 <li><input disabled="" type="checkbox"> <strong>B4. Gọi <code>SharpTalk.logout()</code> khi</strong>: bấm nút đăng xuất · <strong>tự động đăng xuất do hết hạn phiên/token</strong> · ngay trước khi tài khoản khác đăng nhập · đăng xuất ở tab khác (sự kiện <code>storage</code> v.v.).</li>
-<li><input disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong>: giữ như hiện tại, <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>. Gọi <code>setLocale</code> khi giá trị thay đổi.</li>
-<li><input disabled="" type="checkbox"> <strong>B6. Cho phép domain SharpTalk trong CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) và CORS.</strong></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong>: giữ như hiện tại, <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>. Gọi <code>setLocale</code> khi giá trị thay đổi. <em>(kiểm tra 10/27: đã xong)</em></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>B6. Cho phép domain SharpTalk trong CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) và CORS.</strong> <em>(kiểm tra 10/27: xong trên UAT — không có CSP chặn, widget tải bình thường. Production thuộc D3)</em></li>
 <li><input disabled="" type="checkbox"> <strong>B7. Đặt 3 chỗ dùng domain SharpTalk</strong> (src của <code>embed.js</code> · <code>widgetUrl</code> · kiểm tra origin của <code>ivy:event</code>) <strong>sau một thiết lập môi trường duy nhất</strong> (để chỉ cần đổi một lần khi chuyển sang production).
 Kiểm tra (toàn bộ B): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200</strong> (<code>consentState: "granted"</code>), và trang nhận được <code>ivy:event</code> <code>identified {ok: true}</code>.</li>
 </ul>

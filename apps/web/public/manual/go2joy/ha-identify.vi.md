@@ -22,6 +22,8 @@
 
 **Checklist này là phần cốt lõi của tài liệu.** Một mục được xem là xong khi phần kiểm tra của mục đó đạt.
 
+> **Tiến độ (kiểm tra HA UAT 10/27)**: đã xong **B5 · B6 (UAT)**. Các mục còn lại chưa bắt đầu. B4 mới xong một phần (đã gọi `logout` khi bấm nút đăng xuất và khi token hết hạn; chưa xử lý đăng xuất ở tab khác).
+
 ### A. HA backend (WR-01 · WR-02) — Thứ Ba 10/27
 - [ ] **A1. Chỉ lưu khóa ký (embed secret) trong biến môi trường của HA server.** Không đưa vào FE, trình duyệt, ứng dụng, log hay tài liệu. SharpTalk gửi giá trị staging qua kênh bảo mật (vào ngày WR-02 được chốt).
   Kiểm tra: chuỗi secret không xuất hiện ở bất kỳ đâu trong repository hay bundle.
@@ -46,8 +48,8 @@
 - [ ] **B2. Lấy phản hồi của A2 và chuyển nguyên trạng cho `SharpTalk.identify(response)`** (không thêm hay sửa key).
 - [ ] **B3. Gọi lại khi**: xác nhận đăng nhập · tải lại trang · **đổi khách sạn đang chọn (kể cả Tất cả khách sạn)** · đổi ngôn ngữ HA.
 - [ ] **B4. Gọi `SharpTalk.logout()` khi**: bấm nút đăng xuất · **tự động đăng xuất do hết hạn phiên/token** · ngay trước khi tài khoản khác đăng nhập · đăng xuất ở tab khác (sự kiện `storage` v.v.).
-- [ ] **B5. `locale`**: giữ như hiện tại, `localStorage.lang` → `vi`/`en`. Gọi `setLocale` khi giá trị thay đổi.
-- [ ] **B6. Cho phép domain SharpTalk trong CSP (`script-src` · `frame-src` · `connect-src`) và CORS.**
+- [x] **B5. `locale`**: giữ như hiện tại, `localStorage.lang` → `vi`/`en`. Gọi `setLocale` khi giá trị thay đổi. *(kiểm tra 10/27: đã xong)*
+- [x] **B6. Cho phép domain SharpTalk trong CSP (`script-src` · `frame-src` · `connect-src`) và CORS.** *(kiểm tra 10/27: xong trên UAT — không có CSP chặn, widget tải bình thường. Production thuộc D3)*
 - [ ] **B7. Đặt 3 chỗ dùng domain SharpTalk** (src của `embed.js` · `widgetUrl` · kiểm tra origin của `ivy:event`) **sau một thiết lập môi trường duy nhất** (để chỉ cần đổi một lần khi chuyển sang production).
   Kiểm tra (toàn bộ B): DevTools › Network `POST …/public/embed/identify` **200** (`consentState: "granted"`), và trang nhận được `ivy:event` `identified {ok: true}`.
 
