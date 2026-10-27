@@ -75,6 +75,11 @@ describe('AnalyticsService — conversation history', () => {
       skip: jest.fn(() => qb),
       take: jest.fn(() => qb),
       getManyAndCount: jest.fn(async () => [[conversation], 1] as [Conversation[], number]),
+      // lastAgents (PLN-261027 D14): one raw query for the page's last agents.
+      select: jest.fn(() => qb),
+      addSelect: jest.fn(() => qb),
+      where: jest.fn(() => qb),
+      getRawMany: jest.fn(async () => [{ cid: '77', aid: conversation.agentId }]),
     };
     convFindOne = jest.fn(async () => ('conv' in opts ? opts.conv : conversation));
     const convRepo = {
@@ -203,5 +208,52 @@ describe('AnalyticsService — conversation history', () => {
     expect(msgs[1].trace).toBeNull();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (messages[1] as any).retrievalTrace = { citations: [], confidence: 0.56 };
+  });
+});
+
+/** History rows read like the live chat list (PLN-261027 D13). */
+describe('AnalyticsService — history customer label', () => {
+  const svc = new AnalyticsService(
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    { find: jest.fn(async () => [{ id: '8', name: 'Nguyen A' }]) } as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    { find: jest.fn(async () => [{ id: '3', name: 'Hotel Luna' }]) } as never,
+  );
+  const label = (convs: object[], sessions: Array<[string, object]>) =>
+    (svc as unknown as { customerLabels: (c: object[], s: Map<string, object>) => Promise<Map<string, string | null>> })
+      .customerLabels(convs, new Map(sessions));
+
+  it('uses the claimed conversation customer and the company: "person / company"', async () => {
+    const out = await label(
+      [{ id: 1, sessionId: 10, customerId: 8, companyId: 3 }],
+      [['10', { customerId: null, companyId: null, alias: null, identity: null }]],
+    );
+    expect(out.get('1')).toBe('Nguyen A / Hotel Luna');
+  });
+
+  it('prefers the alias, then falls back to the host-sent names', async () => {
+    const out = await label(
+      [
+        { id: 1, sessionId: 10, customerId: null, companyId: null },
+        { id: 2, sessionId: 11, customerId: null, companyId: null },
+        { id: 3, sessionId: 12, customerId: null, companyId: null },
+      ],
+      [
+        ['10', { customerId: null, companyId: null, alias: 'VIP 문의', identity: { name: 'X' } }],
+        ['11', { customerId: null, companyId: null, alias: null, identity: { name: 'Tran B', hotel_name: 'Del Luna' } }],
+        ['12', { customerId: null, companyId: null, alias: null, identity: null }],
+      ],
+    );
+    expect(out.get('1')).toBe('VIP 문의');
+    expect(out.get('2')).toBe('Tran B / Del Luna');
+    expect(out.get('3')).toBeNull();
   });
 });

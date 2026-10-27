@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { MessageBody } from '../../components/RichText';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
@@ -9,11 +10,13 @@ import type { ConversationMessage } from './history.service';
  * theme's success/warning tokens are single values with no 50-step, so the
  * tints come from Tailwind's stock palette.
  */
+// Same reading as the live chat thread (PLN-261027 D2·D3): agent = primary,
+// automated answer = green, automated notice = grey dashed.
 const SENDER_TONE: Record<string, { bg: string; label: string }> = {
   user: { bg: 'bg-gray-50', label: 'sender.user' },
-  ai: { bg: 'bg-primary-50', label: 'sender.ai' },
-  agent: { bg: 'bg-emerald-50', label: 'sender.agent' },
-  system: { bg: 'bg-amber-50', label: 'sender.system' },
+  ai: { bg: 'border border-emerald-200 bg-emerald-50', label: 'sender.ai' },
+  agent: { bg: 'bg-primary-50', label: 'sender.agent' },
+  system: { bg: 'border border-dashed border-gray-300 bg-gray-50', label: 'sender.system' },
 };
 
 function fmtTime(value: string): string {
@@ -29,12 +32,19 @@ function fmtTime(value: string): string {
 export function ConversationTranscript({
   conversationId,
   onOpenSource,
+  highlightMessageId,
 }: {
   conversationId: string;
   onOpenSource?: (documentId: string) => void;
+  /** A work log entry's message (PLN-261027 D7): outlined and scrolled into view. */
+  highlightMessageId?: string | null;
 }) {
   const { t } = useTranslation('history');
   const { data, isLoading, error } = useConversationDetail(conversationId);
+  useEffect(() => {
+    if (!highlightMessageId || !data) return;
+    document.getElementById(`tr-msg-${highlightMessageId}`)?.scrollIntoView({ block: 'center' });
+  }, [highlightMessageId, data]);
 
   if (isLoading) return <p className="py-6 text-sm text-gray-400">{t('loadingThread')}</p>;
   if (error) return <p className="py-6 text-sm text-error">{(error as Error).message}</p>;
@@ -54,7 +64,13 @@ export function ConversationTranscript({
       <div className="space-y-2">
         {data.messages.length === 0 && <p className="text-sm text-gray-400">{t('noMessages')}</p>}
         {data.messages.map((m) => (
-          <MessageBubble key={m.id} message={m} onOpenSource={onOpenSource} />
+          <MessageBubble
+            key={m.id}
+            message={m}
+            customerName={data.customerName}
+            highlighted={highlightMessageId != null && String(m.id) === String(highlightMessageId)}
+            onOpenSource={onOpenSource}
+          />
         ))}
       </div>
 
@@ -74,21 +90,36 @@ function Meta({ label, value }: { label: string; value: string }) {
 
 function MessageBubble({
   message,
+  customerName,
+  highlighted,
   onOpenSource,
 }: {
   message: ConversationMessage;
+  customerName?: string | null;
+  highlighted?: boolean;
   onOpenSource?: (documentId: string) => void;
 }) {
   const { t } = useTranslation('history');
   const tone = SENDER_TONE[message.senderType] ?? SENDER_TONE.system;
+  const name =
+    message.senderType === 'agent'
+      ? message.senderName
+      : message.senderType === 'user'
+        ? customerName
+        : null;
   const citations = message.trace?.citations ?? [];
   const confidence = message.trace?.confidence;
 
   return (
-    <div className={`rounded-lg p-3 ${tone.bg}`}>
+    <div
+      id={`tr-msg-${message.id}`}
+      className={`rounded-lg p-3 ${tone.bg} ${highlighted ? 'ring-2 ring-amber-400' : ''}`}
+    >
       <div className="mb-1 flex items-center gap-2 text-xs text-gray-500">
+        {/* Role first, then who (PLN-261027 D7): customer and agent turns stay
+            distinguishable even when the names look alike. */}
         <span className="font-medium text-gray-700">
-          {message.senderName ?? t(tone.label)}
+          {name ? t('senderWithName', { role: t(tone.label), name }) : t(tone.label)}
         </span>
         <span>{fmtTime(message.createdAt)}</span>
         {message.trace?.reason && <Badge tone="warning">{message.trace.reason}</Badge>}

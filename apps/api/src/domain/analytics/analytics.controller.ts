@@ -191,7 +191,8 @@ export class AnalyticsController {
 
   @Get('conversations/:id')
   @RequireCapability(CAPABILITY.ANALYTICS_READ)
-  @RequireMenu('history')
+  // Opened from the history list and from a work log row (PLN-261027 D7).
+  @RequireMenu('history', 'work_log')
   @ApiOperation({ summary: 'Conversation transcript with AI grounding (SCR-104)' })
   async conversationDetail(@CurrentUser() user: Principal, @Param('id') id: string) {
     const tenantId = tenantScope(user);

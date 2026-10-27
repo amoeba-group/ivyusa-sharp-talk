@@ -16,6 +16,7 @@ import { toDateKey } from '../../global/util/date-range.util';
 import { classifyOutcome } from '../../global/util/resolution.util';
 import { AuditLog } from '../audit/entity/audit-log.entity';
 import { staffDisplayName } from '../../global/util/staff-name.util';
+import { Company } from '../company/entity/company.entity';
 
 export interface DashboardKpis {
   activeChats: number;
@@ -58,6 +59,15 @@ export interface ConversationSearchParams {
   size: number;
 }
 
+interface SessionInfo {
+  channel: string | null;
+  customerId: number | null;
+  companyId: number | null;
+  alias: string | null;
+  identity: Record<string, string> | null;
+  language: string;
+}
+
 export interface ConversationRow {
   id: number;
   status: string;
@@ -70,6 +80,17 @@ export interface ConversationRow {
   startedAt: Date;
   endedAt: Date | null;
 }
+
+/**
+ * The conversation's last agent (PLN-261027 D14). `agent_id` is cleared when
+ * the conversation goes back to the AI or ends, so a handled conversation
+ * would read as unhandled; fall back to the last assignment, then the last
+ * agent turn (relayed agent replies have no assignment).
+ */
+const LAST_AGENT_EXPR =
+  '(COALESCE(c.agent_id, ' +
+  '(SELECT la.agent_id FROM assignments la WHERE la.conversation_id = c.id AND la.agent_id IS NOT NULL ORDER BY la.id DESC LIMIT 1), ' +
+  "(SELECT lm.sender_id FROM messages lm WHERE lm.conversation_id = c.id AND lm.sender_type = 'agent' AND lm.sender_id IS NOT NULL ORDER BY lm.id DESC LIMIT 1)))";
 
 /** Short cache so a busy console doesn't recompute the KPI set per pageview (PERF-8). */
 const DASHBOARD_CACHE_TTL_SEC = 30;
@@ -91,6 +112,8 @@ export class AnalyticsService {
     // else, and the resolution definition needs it (see resolutionCounts).
     @InjectRepository(AuditLog) private readonly auditRepo: Repository<AuditLog>,
     private readonly redis: RedisService,
+    // Last so the positional test doubles keep their slots (PLN-261027 D13).
+    @InjectRepository(Company) private readonly companyRepo: Repository<Company>,
   ) {}
 
   /**
@@ -312,7 +335,7 @@ export class AnalyticsService {
     if (params.restrictToAgentId != null) {
       qb.andWhere('c.agent_id = :scopeAgent', { scopeAgent: params.restrictToAgentId });
     }
-    if (params.agentId != null) qb.andWhere('c.agent_id = :agentId', { agentId: params.agentId });
+    if (params.agentId != null) qb.andWhere(`${LAST_AGENT_EXPR} = :agentId`, { agentId: params.agentId });
     if (!params.includePreview) {
       // The preview marker lives on the session, not the conversation:
       // getOrCreateConversation always writes channel='widget'. Filtering on
@@ -333,25 +356,27 @@ export class AnalyticsService {
       .take(params.size);
     const [conversations, total] = await qb.getManyAndCount();
 
-    const [countByConv, sessionInfo, agentNames] = await Promise.all([
+    const [countByConv, sessionInfo, lastAgents] = await Promise.all([
       this.messageCounts(conversations.map((c) => c.id)),
       this.sessionInfo(conversations.map((c) => c.sessionId)),
-      this.agentNames(conversations.map((c) => c.agentId)),
+      this.lastAgents(conversations.map((c) => c.id)),
     ]);
-    const customerNames = await this.customerNames(
-      [...sessionInfo.values()].map((s) => s.customerId),
-    );
+    const [labels, agentNames] = await Promise.all([
+      this.customerLabels(conversations, sessionInfo),
+      this.agentNames([...lastAgents.values()]),
+    ]);
 
     const items = conversations.map((c) => {
       const s = sessionInfo.get(String(c.sessionId));
+      const agentId = lastAgents.get(String(c.id)) ?? null;
       return {
         id: c.id,
         status: c.status,
         escalated: c.escalated === 1,
         channel: s?.channel ?? c.channel,
-        customerName: s?.customerId != null ? (customerNames.get(String(s.customerId)) ?? null) : null,
-        agentId: c.agentId,
-        agentName: c.agentId != null ? (agentNames.get(String(c.agentId)) ?? null) : null,
+        customerName: labels.get(String(c.id)) ?? null,
+        agentId,
+        agentName: agentId != null ? (agentNames.get(String(agentId)) ?? null) : null,
         messageCount: countByConv.get(String(c.id)) ?? 0,
         startedAt: c.createdAt,
         endedAt: c.endedAt,
@@ -381,13 +406,17 @@ export class AnalyticsService {
     const conv = await this.convRepo.findOne({ where });
     if (!conv) return null;
 
-    const [messages, sessionInfo, agentNames] = await Promise.all([
+    const [messages, sessionInfo, lastAgents] = await Promise.all([
       this.msgRepo.find({ where: { conversationId: id }, order: { id: 'ASC' } }),
       this.sessionInfo([conv.sessionId]),
-      this.agentNames([conv.agentId]),
+      this.lastAgents([conv.id]),
     ]);
     const session = sessionInfo.get(String(conv.sessionId));
-    const customerNames = await this.customerNames([session?.customerId ?? null]);
+    const lastAgentId = lastAgents.get(String(conv.id)) ?? null;
+    const [labels, agentNames] = await Promise.all([
+      this.customerLabels([conv], sessionInfo),
+      this.agentNames([lastAgentId]),
+    ]);
     // Agent turns carry the sending user id; resolve those too so the thread
     // reads as a conversation between named people, not sender_type labels.
     const senderNames = await this.agentNames(messages.map((m) => m.senderId));
@@ -398,10 +427,9 @@ export class AnalyticsService {
       escalated: conv.escalated === 1,
       channel: session?.channel ?? conv.channel,
       language: session?.language ?? null,
-      customerName:
-        session?.customerId != null ? (customerNames.get(String(session.customerId)) ?? null) : null,
-      agentId: conv.agentId,
-      agentName: conv.agentId != null ? (agentNames.get(String(conv.agentId)) ?? null) : null,
+      customerName: labels.get(String(conv.id)) ?? null,
+      agentId: lastAgentId,
+      agentName: lastAgentId != null ? (agentNames.get(String(lastAgentId)) ?? null) : null,
       startedAt: conv.createdAt,
       endedAt: conv.endedAt,
       messages: messages.map((m) => ({
@@ -535,19 +563,78 @@ export class AnalyticsService {
   /** session id → channel/customer/language, in one query. */
   private async sessionInfo(
     ids: number[],
-  ): Promise<Map<string, { channel: string | null; customerId: number | null; language: string }>> {
+  ): Promise<Map<string, SessionInfo>> {
     const unique = [...new Set(ids)];
     if (unique.length === 0) return new Map();
     const rows = await this.sessionRepo.find({
       where: { id: In(unique) },
-      select: ['id', 'channel', 'customerId', 'language'],
+      select: ['id', 'channel', 'customerId', 'companyId', 'alias', 'identityAttributes', 'language'],
     });
     return new Map(
       rows.map((r) => [
         String(r.id),
-        { channel: r.channel, customerId: r.customerId, language: r.language },
+        {
+          channel: r.channel,
+          customerId: r.customerId,
+          companyId: r.companyId,
+          alias: r.alias,
+          identity: r.identityAttributes,
+          language: r.language,
+        },
       ]),
     );
+  }
+
+  /**
+   * Conversation id → the live chat list's title (PLN-261027 D13): the
+   * operator's alias, else "person / company". The person is the session's
+   * customer, or the conversation's (a claimed sign-in files the conversation,
+   * not the session), else the name the host sent; the company likewise falls
+   * back to the host's hotel name.
+   */
+  private async customerLabels(
+    conversations: Array<Pick<Conversation, 'id' | 'sessionId' | 'customerId' | 'companyId'>>,
+    sessions: Map<string, SessionInfo>,
+  ): Promise<Map<string, string | null>> {
+    const personOf = (c: (typeof conversations)[number]) =>
+      sessions.get(String(c.sessionId))?.customerId ?? c.customerId ?? null;
+    const companyOf = (c: (typeof conversations)[number]) =>
+      c.companyId ?? sessions.get(String(c.sessionId))?.companyId ?? null;
+    const [people, companies] = await Promise.all([
+      this.customerNames(conversations.map(personOf)),
+      this.companyNames(conversations.map(companyOf)),
+    ]);
+    const out = new Map<string, string | null>();
+    for (const c of conversations) {
+      const s = sessions.get(String(c.sessionId));
+      const alias = s?.alias?.trim();
+      const personId = personOf(c);
+      const companyId = companyOf(c);
+      const person = (personId != null ? people.get(String(personId)) : undefined) ?? s?.identity?.name ?? null;
+      const company =
+        (companyId != null ? companies.get(String(companyId)) : undefined) ?? s?.identity?.hotel_name ?? null;
+      out.set(String(c.id), alias || [person, company].filter(Boolean).join(' / ') || null);
+    }
+    return out;
+  }
+
+  private async companyNames(ids: Array<number | null>): Promise<Map<string, string>> {
+    const unique = [...new Set(ids.filter((i): i is number => i != null))];
+    if (unique.length === 0) return new Map();
+    const rows = await this.companyRepo.find({ where: { id: In(unique) }, select: ['id', 'name'] });
+    return new Map(rows.filter((r) => r.name).map((r) => [String(r.id), r.name as string]));
+  }
+
+  /** Conversation id → last agent user id (LAST_AGENT_EXPR), one query per page. */
+  private async lastAgents(ids: number[]): Promise<Map<string, number>> {
+    if (ids.length === 0) return new Map();
+    const rows = await this.convRepo
+      .createQueryBuilder('c')
+      .select('c.id', 'cid')
+      .addSelect(LAST_AGENT_EXPR, 'aid')
+      .where('c.id IN (:...ids)', { ids })
+      .getRawMany<{ cid: string | number; aid: string | number | null }>();
+    return new Map(rows.filter((r) => r.aid != null).map((r) => [String(r.cid), Number(r.aid)]));
   }
 
   /**

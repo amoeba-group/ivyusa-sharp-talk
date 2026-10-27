@@ -14,7 +14,7 @@
   "ended_status": "Finalizado",
   "empty": "No se encontraron conversaciones.",
   "detailTitle": "Detalle de la conversación",
-  "agent": "Agente",
+  "agent": "Agente (último)",
   "allAgents": "Todos los agentes",
   "channel": "Canal",
   "previewChannel": "Vista previa",
@@ -32,11 +32,12 @@
   "viewAudited": "La apertura de una transcripción queda registrada en el registro de auditoría.",
   "sender": {
     "user": "Cliente",
-    "ai": "IA",
+    "ai": "Respuesta automática",
     "agent": "Agente",
-    "system": "Sistema"
+    "system": "Aviso automático"
   },
   "segment": "Segmento",
   "segmentB2b": "Empresa (B2B)",
-  "segmentB2c": "Consumidor (B2C)"
+  "segmentB2c": "Consumidor (B2C)",
+  "senderWithName": "{{role}} · {{name}}"
 }

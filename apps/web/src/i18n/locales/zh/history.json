@@ -14,7 +14,7 @@
   "ended_status": "已结束",
   "empty": "未找到会话。",
   "detailTitle": "会话详情",
-  "agent": "客服",
+  "agent": "客服（最后）",
   "allAgents": "全部客服",
   "channel": "渠道",
   "previewChannel": "预览",
@@ -32,11 +32,12 @@
   "viewAudited": "打开会话内容会记录到审计日志。",
   "sender": {
     "user": "客户",
-    "ai": "AI",
+    "ai": "自动回复",
     "agent": "客服",
-    "system": "系统"
+    "system": "自动通知"
   },
   "segment": "客户类型",
   "segmentB2b": "企业 (B2B)",
-  "segmentB2c": "个人 (B2C)"
+  "segmentB2c": "个人 (B2C)",
+  "senderWithName": "{{role}} · {{name}}"
 }

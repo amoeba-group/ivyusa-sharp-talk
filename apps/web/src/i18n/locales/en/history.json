@@ -14,7 +14,7 @@
   "ended_status": "Ended",
   "empty": "No conversations found.",
   "detailTitle": "Conversation detail",
-  "agent": "Agent",
+  "agent": "Agent (last)",
   "allAgents": "All agents",
   "channel": "Channel",
   "previewChannel": "Preview",
@@ -32,11 +32,12 @@
   "viewAudited": "Opening a transcript is recorded in the audit log.",
   "sender": {
     "user": "Customer",
-    "ai": "AI",
+    "ai": "Auto-reply",
     "agent": "Agent",
-    "system": "System"
+    "system": "Automated notice"
   },
   "segment": "Customer segment",
   "segmentB2b": "Business (B2B)",
-  "segmentB2c": "Consumer (B2C)"
+  "segmentB2c": "Consumer (B2C)",
+  "senderWithName": "{{role}} · {{name}}"
 }

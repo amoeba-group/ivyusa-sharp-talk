@@ -24,5 +24,7 @@
   },
   "hostBadge": "HA",
   "hostUser": "HA user",
-  "unverified": "Unverified"
+  "unverified": "Unverified",
+  "openTranscript": "View conversation",
+  "transcriptTitle": "Transcript · conversation {{id}}"
 }

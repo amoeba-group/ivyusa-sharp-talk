@@ -14,7 +14,7 @@
   "ended_status": "Đã kết thúc",
   "empty": "Không tìm thấy cuộc hội thoại nào.",
   "detailTitle": "Chi tiết hội thoại",
-  "agent": "Nhân viên",
+  "agent": "Nhân viên (gần nhất)",
   "allAgents": "Tất cả nhân viên",
   "channel": "Kênh",
   "previewChannel": "Xem thử",
@@ -32,11 +32,12 @@
   "viewAudited": "Việc mở nội dung hội thoại được ghi vào nhật ký kiểm tra.",
   "sender": {
     "user": "Khách hàng",
-    "ai": "AI",
+    "ai": "Trả lời tự động",
     "agent": "Nhân viên",
-    "system": "Hệ thống"
+    "system": "Thông báo tự động"
   },
   "segment": "Phân khúc",
   "segmentB2b": "Doanh nghiệp (B2B)",
-  "segmentB2c": "Cá nhân (B2C)"
+  "segmentB2c": "Cá nhân (B2C)",
+  "senderWithName": "{{role}} · {{name}}"
 }

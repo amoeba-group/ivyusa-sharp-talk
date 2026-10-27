@@ -24,5 +24,7 @@
   },
   "hostBadge": "HA",
   "hostUser": "HA 사용자",
-  "unverified": "미검증"
+  "unverified": "미검증",
+  "openTranscript": "대화 보기",
+  "transcriptTitle": "대화 기록 · 대화 {{id}}"
 }

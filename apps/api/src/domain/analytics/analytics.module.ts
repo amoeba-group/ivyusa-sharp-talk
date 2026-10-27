@@ -19,10 +19,12 @@ import { AnalyticsService } from './analytics.service';
 import { QuestionStatsService } from './question-stats.service';
 import { AnalyticsBreakdownService } from './analytics-breakdown.service';
 import { AnalyticsController } from './analytics.controller';
+import { Company } from '../company/entity/company.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      Company,
       Conversation,
       Message,
       Notification,

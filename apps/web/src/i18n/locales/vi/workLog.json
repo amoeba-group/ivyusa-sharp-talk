@@ -24,5 +24,7 @@
   },
   "hostBadge": "HA",
   "hostUser": "Người dùng HA",
-  "unverified": "Chưa xác minh"
+  "unverified": "Chưa xác minh",
+  "openTranscript": "Xem hội thoại",
+  "transcriptTitle": "Nội dung · hội thoại {{id}}"
 }

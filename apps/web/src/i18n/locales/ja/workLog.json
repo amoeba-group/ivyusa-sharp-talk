@@ -24,5 +24,7 @@
   },
   "hostBadge": "HA",
   "hostUser": "HAユーザー",
-  "unverified": "未検証"
+  "unverified": "未検証",
+  "openTranscript": "会話を見る",
+  "transcriptTitle": "会話記録 · 会話 {{id}}"
 }

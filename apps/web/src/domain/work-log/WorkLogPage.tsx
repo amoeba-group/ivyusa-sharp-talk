@@ -6,6 +6,8 @@ import { Badge } from '@/components/Badge';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
+import { Modal } from '@/components/Modal';
+import { ConversationTranscript } from '@/domain/history/ConversationTranscript';
 import { FormRow, Input, Select } from '@/components/Field';
 import { useUsers } from '@/domain/users/users.hooks';
 import { useWorkLog } from './work-log.hooks';
@@ -41,6 +43,9 @@ export function WorkLogPage() {
   const [actorId, setActorId] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+
+  // The conversation behind a row, with the message that row sent (PLN-261027 D7).
+  const [open, setOpen] = useState<{ conversationId: string; messageId: string | null } | null>(null);
 
   const users = useUsers();
   const { data, isLoading, error } = useWorkLog({
@@ -82,7 +87,25 @@ export function WorkLogPage() {
       // cell, so an action added server-side is still readable here.
       render: (r) => <Badge tone="info">{t(`actions.${r.action}`, { defaultValue: r.action })}</Badge>,
     },
-    { key: 'target', header: t('target'), render: (r) => <span className="font-mono text-xs">{fmtTarget(r.target)}</span> },
+    {
+      key: 'target',
+      header: t('target'),
+      render: (r) => {
+        const [kind, id] = (r.target ?? '').split(':');
+        if (kind !== 'conversation' || !id) return <span className="font-mono text-xs">{fmtTarget(r.target)}</span>;
+        const messageId = r.metadata?.messageId;
+        return (
+          <button
+            type="button"
+            className="font-mono text-xs text-primary-600 hover:underline"
+            title={t('openTranscript')}
+            onClick={() => setOpen({ conversationId: id, messageId: messageId != null ? String(messageId) : null })}
+          >
+            {fmtTarget(r.target)} ›
+          </button>
+        );
+      },
+    },
     {
       key: 'result',
       header: t('result'),
@@ -142,6 +165,16 @@ export function WorkLogPage() {
       <Pagination page={page} pageSize={PAGE_SIZE} total={data?.total ?? 0} onPageChange={setPage} />
 
       <p className="mt-3 text-xs text-gray-400">{t('notice')}</p>
+      <Modal
+        open={!!open}
+        onClose={() => setOpen(null)}
+        size="lg"
+        title={open ? t('transcriptTitle', { id: open.conversationId }) : ''}
+      >
+        {open && (
+          <ConversationTranscript conversationId={open.conversationId} highlightMessageId={open.messageId} />
+        )}
+      </Modal>
     </div>
   );
 }

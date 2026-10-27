@@ -14,7 +14,7 @@
   "ended_status": "終了",
   "empty": "会話が見つかりません。",
   "detailTitle": "会話の詳細",
-  "agent": "担当者",
+  "agent": "担当者（最終）",
   "allAgents": "すべての担当者",
   "channel": "チャネル",
   "previewChannel": "プレビュー",
@@ -32,11 +32,12 @@
   "viewAudited": "会話内容の閲覧は監査ログに記録されます。",
   "sender": {
     "user": "顧客",
-    "ai": "AI",
+    "ai": "自動応答",
     "agent": "担当者",
-    "system": "システム"
+    "system": "自動案内"
   },
   "segment": "顧客区分",
   "segmentB2b": "法人 (B2B)",
-  "segmentB2c": "一般 (B2C)"
+  "segmentB2c": "一般 (B2C)",
+  "senderWithName": "{{role}} · {{name}}"
 }

@@ -24,5 +24,7 @@
   },
   "hostBadge": "HA",
   "hostUser": "HA 用户",
-  "unverified": "未验证"
+  "unverified": "未验证",
+  "openTranscript": "查看会话",
+  "transcriptTitle": "会话记录 · 会话 {{id}}"
 }
