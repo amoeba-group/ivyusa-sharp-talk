@@ -621,5 +621,10 @@
     "updateError": "无法更新回电请求状态",
     "handled": "{{name}} · {{at}}",
     "empty": "暂无回电请求"
+  },
+  "bubble": {
+    "autoReply": "自动回复",
+    "systemNotice": "自动通知",
+    "newBelow": "新消息"
   }
 }

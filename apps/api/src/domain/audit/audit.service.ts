@@ -7,6 +7,7 @@ import { AdminUser } from '../auth/entity/admin-user.entity';
 import { Session } from '../session/entity/session.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
+import { staffDisplayName } from '../../global/util/staff-name.util';
 
 export type AuditResult = 'success' | 'denied' | 'error';
 
@@ -125,7 +126,7 @@ export class AuditService {
 
     if (userIds.length > 0) {
       const users = await this.userRepo.find({ where: { id: In(userIds) }, select: ['id', 'name', 'email'] });
-      for (const u of users) names.set(`user:${u.id}`, u.name || u.email);
+      for (const u of users) names.set(`user:${u.id}`, staffDisplayName(u) ?? u.email);
     }
     if (adminIds.length > 0) {
       // admin_users has no display name — the address is the only identifier.

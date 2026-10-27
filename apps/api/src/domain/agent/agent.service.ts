@@ -51,6 +51,7 @@ import {
   isAutoReplyMode,
   resolveAutoReply,
 } from '../messenger/auto-reply.util';
+import { staffDisplayName } from '../../global/util/staff-name.util';
 
 /**
  * Sandbox threads are not customer conversations (AN-260826 D-2/D-6).
@@ -1368,9 +1369,10 @@ export class AgentService {
       ),
     ];
     if (ids.length === 0) return map;
-    const users = await this.userRepo.find({ where: { id: In(ids) } });
+    const users = await this.userRepo.find({ where: { id: In(ids) }, select: ['id', 'name', 'email'] });
     for (const u of users) {
-      if (u.name) map.set(String(u.id), u.name);
+      const name = staffDisplayName(u);
+      if (name) map.set(String(u.id), name);
     }
     return map;
   }
@@ -1383,8 +1385,8 @@ export class AgentService {
 
   /** Single agent's display name (for the just-sent message response). */
   async agentName(userId: number): Promise<string | null> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    return user?.name ?? null;
+    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'name', 'email'] });
+    return staffDisplayName(user);
   }
 
   /**

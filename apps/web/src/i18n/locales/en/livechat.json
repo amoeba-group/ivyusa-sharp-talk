@@ -621,5 +621,10 @@
     "updateError": "Couldn't update the callback request",
     "handled": "{{name}} · {{at}}",
     "empty": "No callback requests"
+  },
+  "bubble": {
+    "autoReply": "Auto-reply",
+    "systemNotice": "Automated notice",
+    "newBelow": "New messages"
   }
 }

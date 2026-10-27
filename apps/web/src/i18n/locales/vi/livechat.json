@@ -621,5 +621,10 @@
     "updateError": "Không thể cập nhật yêu cầu liên hệ lại",
     "handled": "{{name}} · {{at}}",
     "empty": "Không có yêu cầu liên hệ lại"
+  },
+  "bubble": {
+    "autoReply": "Trả lời tự động",
+    "systemNotice": "Thông báo tự động",
+    "newBelow": "Tin nhắn mới"
   }
 }

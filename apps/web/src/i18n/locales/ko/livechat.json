@@ -621,5 +621,10 @@
     "updateError": "콜백 요청 상태를 바꾸지 못했습니다",
     "handled": "{{name}} · {{at}}",
     "empty": "콜백 요청이 없습니다"
+  },
+  "bubble": {
+    "autoReply": "자동응답",
+    "systemNotice": "자동 안내",
+    "newBelow": "새 메시지"
   }
 }

@@ -15,6 +15,7 @@ import { RedisService } from '../../infrastructure/cache/redis.service';
 import { toDateKey } from '../../global/util/date-range.util';
 import { classifyOutcome } from '../../global/util/resolution.util';
 import { AuditLog } from '../audit/entity/audit-log.entity';
+import { staffDisplayName } from '../../global/util/staff-name.util';
 
 export interface DashboardKpis {
   activeChats: number;
@@ -568,7 +569,7 @@ export class AnalyticsService {
     const unique = [...new Set(ids.filter((i): i is number => i != null))];
     if (unique.length === 0) return new Map();
     const rows = await this.userRepo.find({ where: { id: In(unique) }, select: ['id', 'name', 'email'] });
-    return new Map(rows.map((r) => [String(r.id), r.name || r.email]));
+    return new Map(rows.map((r) => [String(r.id), staffDisplayName(r) ?? r.email]));
   }
 
   /** conversation id → message count in one GROUP BY query (PERF-7). */

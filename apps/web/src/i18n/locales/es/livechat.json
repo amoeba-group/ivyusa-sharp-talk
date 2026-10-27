@@ -621,5 +621,10 @@
     "updateError": "No se pudo actualizar la solicitud de contacto",
     "handled": "{{name}} · {{at}}",
     "empty": "No hay solicitudes de contacto"
+  },
+  "bubble": {
+    "autoReply": "Respuesta automática",
+    "systemNotice": "Aviso automático",
+    "newBelow": "Mensajes nuevos"
   }
 }

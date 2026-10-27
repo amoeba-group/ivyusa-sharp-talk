@@ -621,5 +621,10 @@
     "updateError": "折り返し依頼の状態を変更できませんでした",
     "handled": "{{name}} · {{at}}",
     "empty": "折り返し依頼はありません"
+  },
+  "bubble": {
+    "autoReply": "自動応答",
+    "systemNotice": "自動案内",
+    "newBelow": "新着メッセージ"
   }
 }

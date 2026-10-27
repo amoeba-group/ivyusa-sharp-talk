@@ -1,11 +1,12 @@
 import { stripLiteMarkdown } from '../../../../../packages/types/src/common/markdown-lite';
 import { MessageBody } from '../../components/RichText';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Send,
-  Sparkles,
   User,
+  ArrowDown,
+  Megaphone,
   UserPlus,
   Search,
   Loader2,
@@ -419,6 +420,50 @@ export function LiveChatPage() {
     if (!scrollTarget) return;
     document.getElementById(`msg-${scrollTarget}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }, [scrollTarget, messages.length]);
+
+  // Open at the latest message (PLN-261027 D4). The thread follows new
+  // messages only while the agent is already at the bottom; reading further up
+  // keeps the place and offers a "new messages" button instead. A search hit
+  // (scrollTarget) and "load older" both own the position, so neither moves it.
+  const threadRef = useRef<HTMLDivElement>(null);
+  const atBottomRef = useRef(true);
+  const openedRef = useRef<string | null>(null);
+  const tailRef = useRef<string | null>(null);
+  const [newBelow, setNewBelow] = useState(false);
+  const scrollToBottom = () => {
+    const el = threadRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+  useEffect(() => {
+    openedRef.current = null;
+    tailRef.current = null;
+    atBottomRef.current = true;
+    setNewBelow(false);
+  }, [selected]);
+  const tail = convo?.messages?.[convo.messages.length - 1];
+  const tailId = tail?.id ?? null;
+  useLayoutEffect(() => {
+    if (!selected || !tailId) return;
+    const first = openedRef.current !== selected;
+    const grew = tailRef.current !== tailId;
+    openedRef.current = selected;
+    tailRef.current = tailId;
+    if (scrollTarget || (first && findOpen)) return;
+    // An agent's own reply always comes into view, wherever they were reading.
+    if (first || (grew && (atBottomRef.current || tail?.senderType === 'agent'))) scrollToBottom();
+    else if (grew) setNewBelow(true);
+  }, [selected, tailId]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Images and attachment previews finish loading after the jump and push the
+  // last message back out of view; `load` does not bubble, so listen in capture.
+  useEffect(() => {
+    const el = threadRef.current;
+    if (!el) return;
+    const onLoad = () => {
+      if (atBottomRef.current && !scrollTarget) scrollToBottom();
+    };
+    el.addEventListener('load', onLoad, true);
+    return () => el.removeEventListener('load', onLoad, true);
+  }, [selected, scrollTarget]);
 
   const { accept, end, send, handBack } = useConversationActions(selected);
   const [handBackOpen, setHandBackOpen] = useState(false);
@@ -1148,15 +1193,22 @@ export function LiveChatPage() {
                 onOpenConversation={(id) => setSelected(id)}
               />
 
+              <div className="relative flex min-h-0 flex-1 flex-col">
               <div
+                ref={threadRef}
                 role="log"
                 aria-live="polite"
                 aria-relevant="additions"
                 aria-busy={convoLoading}
                 aria-label={t('messageThread')}
                 className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
-                // A fixed menu would float away from its message on scroll.
-                onScroll={() => trMenu && setTrMenu(null)}
+                onScroll={(e) => {
+                  // A fixed menu would float away from its message on scroll.
+                  if (trMenu) setTrMenu(null);
+                  const el = e.currentTarget;
+                  atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+                  if (atBottomRef.current && newBelow) setNewBelow(false);
+                }}
               >
                 {convoLoading && (
                   <Loader2 className="mx-auto h-5 w-5 animate-spin text-gray-400" />
@@ -1174,7 +1226,8 @@ export function LiveChatPage() {
                   </div>
                 )}
                 {messages.map((m, i) => {
-                  const outbound = m.senderType === 'agent' || m.senderType === 'ai';
+                  // Everything the customer was sent sits on the reply side (PLN-261027 D2·D3).
+                  const outbound = m.senderType !== 'user';
                   const day = dayKey(m.createdAt);
                   const showDay = day && day !== dayKey(messages[i - 1]?.createdAt);
                   // Merged room (PLN-261023): a divider where the transcript
@@ -1231,15 +1284,24 @@ export function LiveChatPage() {
                           m.senderType === 'agent'
                             ? 'bg-primary-500 text-white'
                             : m.senderType === 'ai'
-                              ? 'bg-primary-500/10 text-primary-700'
+                              ? 'border border-emerald-200 bg-emerald-50 text-gray-800'
                               : m.senderType === 'system'
-                                ? 'bg-gray-100 text-gray-500'
+                                ? 'border border-dashed border-gray-300 bg-gray-50 text-gray-600'
                                 : 'bg-gray-100 text-gray-700',
                         )}
                       >
                         {m.senderType === 'ai' && (
-                          <span className="mb-0.5 flex items-center gap-1 text-xs font-medium">
-                            <Sparkles className="h-3 w-3" /> AI
+                          <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700">
+                            <Bot className="h-3 w-3" /> {t('bubble.autoReply')}
+                            {/* The AI agent is per conversation; a merged room mixes conversations. */}
+                            {convo?.aiAgentName && (!m.conversationId || m.conversationId === selected) && (
+                              <span className="font-normal text-emerald-600">· {convo.aiAgentName}</span>
+                            )}
+                          </span>
+                        )}
+                        {m.senderType === 'system' && (
+                          <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-gray-500">
+                            <Megaphone className="h-3 w-3" /> {t('bubble.systemNotice')}
                           </span>
                         )}
                         {m.senderType === 'agent' && (
@@ -1401,6 +1463,19 @@ export function LiveChatPage() {
                 {convo && messages.length === 0 && !convoLoading && (
                   <p className="text-center text-sm text-gray-400">{t('noMessages')}</p>
                 )}
+              </div>
+              {newBelow && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    scrollToBottom();
+                    setNewBelow(false);
+                  }}
+                  className="absolute bottom-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-primary-600 px-3 py-1 text-xs font-medium text-white shadow-md hover:bg-primary-700"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" /> {t('bubble.newBelow')}
+                </button>
+              )}
               </div>
 
               {convo?.pendingDraft && (
