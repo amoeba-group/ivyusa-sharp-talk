@@ -626,5 +626,26 @@
     "autoReply": "Trả lời tự động",
     "systemNotice": "Thông báo tự động",
     "newBelow": "Tin nhắn mới"
+  },
+  "handlers": {
+    "title": "Lịch sử xử lý",
+    "current": "hiện tại",
+    "aiOnly": "AI xử lý, không phân công nhân viên",
+    "started": "Bắt đầu hội thoại",
+    "startedAi": "Bắt đầu hội thoại · 🤖 {{name}}",
+    "requested": "Yêu cầu nhân viên ({{reason}})",
+    "assigned": "Phân công cho {{name}}",
+    "assignedAuto": "Tự động phân công cho {{name}}",
+    "transferred": "Chuyển {{from}} → {{to}}",
+    "returned": "{{name}} → trả lại AI",
+    "ended": "Kết thúc hội thoại",
+    "endedBy": "Kết thúc hội thoại · {{name}}",
+    "by": "bởi {{name}}",
+    "reason": {
+      "user_request": "khách yêu cầu",
+      "low_confidence": "AI không chắc chắn",
+      "moderation_blocked": "câu trả lời bị chặn",
+      "other": "khác"
+    }
   }
 }

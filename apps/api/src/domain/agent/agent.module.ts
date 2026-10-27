@@ -44,6 +44,7 @@ import { UserJobLabel } from '../user/entity/user-job-label.entity';
 import { IssueModule } from '../issue/issue.module';
 import { AttachmentModule } from '../attachment/attachment.module';
 import { MergedRoomModule } from '../merged-room/merged-room.module';
+import { ConversationHandlersService } from './conversation-handlers.service';
 
 @Module({
   imports: [
@@ -109,6 +110,7 @@ import { MergedRoomModule } from '../merged-room/merged-room.module';
     BriefingService,
     ChatCommentService,
     ChatGroupService,
+    ConversationHandlersService,
   ],
   exports: [AgentService, AgentAlertService],
 })

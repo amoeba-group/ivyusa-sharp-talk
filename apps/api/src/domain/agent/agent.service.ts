@@ -1142,16 +1142,29 @@ export class AgentService {
         throw new BusinessException(ERROR_CODE.AGENT_AT_CAPACITY, HttpStatus.CONFLICT);
       }
     }
-    await this.assignmentRepo.save(
-      this.assignmentRepo.create({
-        tenantId,
-        conversationId,
-        agentId,
-        assignedBy: agentId,
-        type: 'manual',
-        status: 'active',
-      }),
-    );
+    // Taking over closes whoever still held it (PLN-261027 D6) — otherwise two
+    // active rows overlap and the handling history cannot tell who had it.
+    // Accepting a conversation already held is a no-op for the trail.
+    const held = await this.assignmentRepo.find({ where: { tenantId, conversationId, status: 'active' } });
+    const others = held.filter((a) => Number(a.agentId) !== Number(agentId));
+    if (others.length) {
+      await this.assignmentRepo.update(
+        { id: In(others.map((a) => a.id)) },
+        { status: 'transferred', releasedAt: new Date() },
+      );
+    }
+    if (others.length === held.length) {
+      await this.assignmentRepo.save(
+        this.assignmentRepo.create({
+          tenantId,
+          conversationId,
+          agentId,
+          assignedBy: agentId,
+          type: 'manual',
+          status: 'active',
+        }),
+      );
+    }
     await this.convRepo.update(
       { id: conversationId },
       { status: CONVERSATION_STATUS.AGENT, agentId },

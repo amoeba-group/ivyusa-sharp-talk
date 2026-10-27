@@ -63,6 +63,7 @@ import {
 import { useUsers } from '@/domain/users/users.hooks';
 import { makeCan } from '@/lib/rbac';
 import { BriefingCard } from './BriefingCard';
+import { HandlerHistoryCard } from './HandlerHistoryCard';
 import { JourneyPanel } from '../journey/JourneyPanel';
 import { JourneyCard } from '../journey/JourneyCard';
 import { CommentCard } from './CommentCard';
@@ -1658,8 +1659,16 @@ export function LiveChatPage() {
               <JourneyPanel groupId={selectedGroup} />
             </>
           ) : (
-            /* On-demand briefing + translation (REQ-260824 R3). */
-            <BriefingCard conversationId={selected} />
+            <>
+              {/* Who handled it, in order (PLN-261027 S2). */}
+              <HandlerHistoryCard
+                conversationId={selected}
+                version={`${convo?.status ?? ''}|${convo?.assignedTo ?? ''}`}
+                aiAgentName={convo?.aiAgentName}
+              />
+              {/* On-demand briefing + translation (REQ-260824 R3). */}
+              <BriefingCard conversationId={selected} />
+            </>
           )}
 
           {/* Internal notes on the thread / its session (REQ-260824 R4). */}

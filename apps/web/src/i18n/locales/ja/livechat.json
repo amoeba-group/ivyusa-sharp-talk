@@ -626,5 +626,26 @@
     "autoReply": "自動応答",
     "systemNotice": "自動案内",
     "newBelow": "新着メッセージ"
+  },
+  "handlers": {
+    "title": "対応履歴",
+    "current": "現在の担当",
+    "aiOnly": "担当者の割り当てなしでAIが対応しました",
+    "started": "会話開始",
+    "startedAi": "会話開始 · 🤖 {{name}}",
+    "requested": "担当者を要請（{{reason}}）",
+    "assigned": "{{name}}に割り当て",
+    "assignedAuto": "{{name}}に自動割り当て",
+    "transferred": "{{from}} → {{to}} に移管",
+    "returned": "{{name}} → AIに戻す",
+    "ended": "会話終了",
+    "endedBy": "会話終了 · {{name}}",
+    "by": "割り当て: {{name}}",
+    "reason": {
+      "user_request": "顧客の要請",
+      "low_confidence": "AIの信頼度が低い",
+      "moderation_blocked": "回答ブロック",
+      "other": "その他"
+    }
   }
 }

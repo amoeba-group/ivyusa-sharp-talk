@@ -334,6 +334,23 @@ export const useRelatedSessions = (conversationId: string | null) => {
 };
 
 /** The merge dialog's candidates (PLN-261023) — this conversation's customer's sessions. */
+/**
+ * Handling history (PLN-261027 S2). `version` (status + owner from the 5s
+ * conversation poll) re-reads it when an accept, transfer or hand-back lands,
+ * without a poll of its own.
+ */
+export const useConversationHandlers = (conversationId: string | null, version: string) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'handlers', conversationId, version],
+    queryFn: () => liveChatService.handlers(conversationId as string),
+    enabled: !!conversationId,
+    staleTime: 30_000,
+    // Keep the card while a new version loads, but never show another conversation's.
+    placeholderData: (prev, prevQuery) => (prevQuery?.queryKey[3] === conversationId ? prev : undefined),
+  });
+};
+
 export const useMergeCandidates = (conversationId: string | null) => {
   const tenantKey = useTenantKey();
   return useQuery({

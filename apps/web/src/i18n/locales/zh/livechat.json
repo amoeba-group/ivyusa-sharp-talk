@@ -626,5 +626,26 @@
     "autoReply": "自动回复",
     "systemNotice": "自动通知",
     "newBelow": "新消息"
+  },
+  "handlers": {
+    "title": "处理记录",
+    "current": "当前负责",
+    "aiOnly": "由 AI 处理，未分配客服",
+    "started": "会话开始",
+    "startedAi": "会话开始 · 🤖 {{name}}",
+    "requested": "请求人工客服（{{reason}}）",
+    "assigned": "分配给 {{name}}",
+    "assignedAuto": "自动分配给 {{name}}",
+    "transferred": "{{from}} → {{to}} 转交",
+    "returned": "{{name}} → 交回 AI",
+    "ended": "会话结束",
+    "endedBy": "会话结束 · {{name}}",
+    "by": "分配人：{{name}}",
+    "reason": {
+      "user_request": "客户请求",
+      "low_confidence": "AI 置信度低",
+      "moderation_blocked": "回答被拦截",
+      "other": "其他"
+    }
   }
 }

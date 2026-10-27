@@ -626,5 +626,26 @@
     "autoReply": "Auto-reply",
     "systemNotice": "Automated notice",
     "newBelow": "New messages"
+  },
+  "handlers": {
+    "title": "Handling history",
+    "current": "current",
+    "aiOnly": "Handled by the AI with no agent assigned",
+    "started": "Conversation started",
+    "startedAi": "Conversation started · 🤖 {{name}}",
+    "requested": "Agent requested ({{reason}})",
+    "assigned": "Assigned to {{name}}",
+    "assignedAuto": "Auto-assigned to {{name}}",
+    "transferred": "Transferred {{from}} → {{to}}",
+    "returned": "{{name}} → handed back to AI",
+    "ended": "Conversation ended",
+    "endedBy": "Conversation ended · {{name}}",
+    "by": "by {{name}}",
+    "reason": {
+      "user_request": "customer asked",
+      "low_confidence": "low AI confidence",
+      "moderation_blocked": "answer blocked",
+      "other": "other"
+    }
   }
 }

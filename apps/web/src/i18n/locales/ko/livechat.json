@@ -626,5 +626,26 @@
     "autoReply": "자동응답",
     "systemNotice": "자동 안내",
     "newBelow": "새 메시지"
+  },
+  "handlers": {
+    "title": "상담 담당 이력",
+    "current": "현재 담당",
+    "aiOnly": "상담원 배정 없이 AI가 응대했습니다",
+    "started": "대화 시작",
+    "startedAi": "대화 시작 · 🤖 {{name}} 응대",
+    "requested": "상담원 연결 요청 ({{reason}})",
+    "assigned": "{{name}} 배정",
+    "assignedAuto": "{{name}} 자동 배정",
+    "transferred": "{{from}} → {{to}} 이관",
+    "returned": "{{name}} → AI로 반환",
+    "ended": "대화 종료",
+    "endedBy": "대화 종료 · {{name}}",
+    "by": "배정: {{name}}",
+    "reason": {
+      "user_request": "고객 요청",
+      "low_confidence": "AI 답변 신뢰도 낮음",
+      "moderation_blocked": "답변 차단",
+      "other": "기타"
+    }
   }
 }

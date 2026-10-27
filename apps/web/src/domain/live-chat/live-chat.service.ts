@@ -385,6 +385,22 @@ export interface AiAgentOption {
   isDefault: boolean;
 }
 
+export interface HandlerEvent {
+  at: string;
+  kind: 'started' | 'handoff_request' | 'assigned' | 'transferred' | 'returned_to_ai' | 'ended';
+  agentId: string | null;
+  agentName: string | null;
+  fromName: string | null;
+  byName: string | null;
+  assignType: string | null;
+  reason: string | null;
+}
+
+export interface ConversationHandlers {
+  events: HandlerEvent[];
+  handlers: Array<{ agentId: string; name: string | null; firstAt: string; lastAt: string; current: boolean }>;
+}
+
 export const liveChatService = {
   sessions: (q?: string, status?: string, channel?: string, aiAgentId?: string) =>
     apiGet<AgentSession[]>('/agent/sessions', {
@@ -496,6 +512,9 @@ export const liveChatService = {
   end: (id: string) => apiPost<ConversationDetail>(`/agent/conversations/${id}/end`),
   // Session groups: timeline/project (REQ-260824-Session-Grouping).
   groups: () => apiGet<ChatGroupSummary[]>('/agent/groups'),
+  // Who handled this conversation, in order (PLN-261027 S2).
+  handlers: (conversationId: string) =>
+    apiGet<ConversationHandlers>(`/agent/conversations/${conversationId}/handlers`),
   // Same-customer merged room (PLN-261023-LiveChat-Merge-Same-Customer-Sessions).
   mergeCandidates: (conversationId: string) =>
     apiGet<MergeCandidates>(`/agent/conversations/${conversationId}/merge-candidates`),

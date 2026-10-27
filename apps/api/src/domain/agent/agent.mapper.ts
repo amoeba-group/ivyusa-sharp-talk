@@ -1,4 +1,5 @@
 import type { MergeCandidateView, MergedRoomView } from '../merged-room/merged-room.service';
+import type { HandlerEvent, HandlerSummary } from './conversation-handlers.service';
 import type { AnswerRating } from './entity/answer-rating.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
@@ -313,6 +314,29 @@ export function toMergeCandidatesResponse(r: { sessionId: number; room: MergedRo
       inRoom: s.inRoom,
       excluded: s.excluded,
       otherRoom: s.otherRoom,
+    })),
+  };
+}
+
+/** Who handled a conversation, in order (PLN-261027 S2). */
+export function toConversationHandlersResponse(view: { events: HandlerEvent[]; handlers: HandlerSummary[] }) {
+  return {
+    events: view.events.map((e) => ({
+      at: e.at.toISOString(),
+      kind: e.kind,
+      agentId: e.agentId != null ? String(e.agentId) : null,
+      agentName: e.agentName,
+      fromName: e.fromName,
+      byName: e.byName,
+      assignType: e.assignType,
+      reason: e.reason,
+    })),
+    handlers: view.handlers.map((h) => ({
+      agentId: String(h.agentId),
+      name: h.name,
+      firstAt: h.firstAt.toISOString(),
+      lastAt: h.lastAt.toISOString(),
+      current: h.current,
     })),
   };
 }

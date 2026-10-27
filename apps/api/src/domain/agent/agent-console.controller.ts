@@ -72,6 +72,7 @@ import {
   toSessionResponse,
   toIdentityResponse,
   toMergeCandidatesResponse,
+  toConversationHandlersResponse,
   toMergedRoomResponse,
   toRatingResponse,
   toStatResponse,
@@ -88,6 +89,7 @@ import {
 import { MergedRoomService } from '../merged-room/merged-room.service';
 import { AnswerRatingService } from './answer-rating.service';
 import { CompanyService } from '../company/company.service';
+import { ConversationHandlersService } from './conversation-handlers.service';
 
 function tenantOf(user: Principal): number {
   return user.actorType === 'user' ? user.tenantId : 0;
@@ -111,6 +113,7 @@ export class AgentConsoleController {
     private readonly companyService: CompanyService,
     private readonly mergedRooms: MergedRoomService,
     private readonly alertCenter: AlertCenterService,
+    private readonly handlers: ConversationHandlersService,
   ) {}
 
   // ---- answer accuracy ratings (PLN-261015 D7) ----
@@ -199,6 +202,15 @@ export class AgentConsoleController {
     const room = await this.mergedRooms.roomOfSession(tenantOf(user), related.sessionId);
     const merged = new Set(room?.sessions.map((s) => s.sessionId) ?? []);
     return toRelatedSessionsResponse({ ...related, sessions: related.sessions.filter((s) => !merged.has(s.sessionId)) });
+  }
+
+  // ---- who handled this conversation (PLN-261027 S2) ----
+
+  @Get('conversations/:id/handlers')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Handling history: AI start, handoff requests, assignments, transfers, hand-backs, end' })
+  async conversationHandlers(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return toConversationHandlersResponse(await this.handlers.history(id, tenantOf(user)));
   }
 
   // ---- merged room over the same customer's sessions (PLN-261023) ----
