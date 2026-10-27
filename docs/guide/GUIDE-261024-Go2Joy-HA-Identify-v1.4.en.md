@@ -8,17 +8,18 @@
 |---|---|
 | To | Go2Joy Hotel Admin (HA) dev team (backend, FE) · Go2Joy PM |
 | From | SharpTalk (Amoeba) |
-| Date / version | 2026-10-24 · **v1.4** (v1.3 2026-10-22 · v1.0 PDF 2026-10-20 are obsolete) |
+| Date / version | 2026-10-24 · **v1.4** · doc revision 2026-10-27 (wire format unchanged; see "Doc revision 10/27") · v1.3 2026-10-22 and v1.0 PDF 2026-10-20 are obsolete |
 | Environments | HA UAT `https://go2joy-ha-uat.go2joy.io` ↔ SharpTalk staging `https://shoptalk.amoeba.site` · Production is the Go2Joy server `https://sharptalk.go2joy.vn` (install pending) |
-| Related docs | [Work request](GUIDE-261023-Go2Joy-Work-Request.en.md) (WR numbers, schedule) · [v1.3](GUIDE-261022-Go2Joy-HA-Identify-v1.3.md) (previous spec) |
+| Related docs | [Work request](GUIDE-261023-Go2Joy-Work-Request.en.md) (WR numbers, schedule) · v1.3 (previous spec, obsolete) |
 | Sample code | `scripts/go2joy/php/sharptalk_identity.php` · `vectors.php` (runs the test vectors) |
-| Shared page | https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8 (KO/EN, tickable checklist) |
 
 ---
 
 ## ✅ What HA must do — checklist
 
 **This checklist is the core of this document.** An item is done when its check passes.
+
+> **Progress (HA UAT checked 10/27)**: done **B5 · B6 (UAT)**. Everything else has not started yet. B4 is partial (`logout` is called on the sign-out button and on token expiry; sign-out in another tab is not handled). B3: `identify` is called once at start-up, not on hotel change.
 
 ### A. HA backend (WR-01 · WR-02) — Tue 10/27
 - [ ] **A1. Keep the signing key (embed secret) only in HA server environment variables.** Do not put it in FE, the browser, the app, logs or documents. SharpTalk sends the staging value over a secure channel (on the day WR-02 is decided).
@@ -34,7 +35,7 @@
 - [ ] **A7. `role` = the HA role code** (a value that does not depend on the UI language). Send SharpTalk the **code table** (code · Vietnamese/English display name).
 - [ ] **A8. When "All hotels" is selected**, leave out `hotel_id` · `hotel_name` · `province_sn` and sign only `role`.
 - [ ] **A9. Follow the normalization order**: **NFC → collapse whitespace (incl. NBSP) → trim → 120 chars (`mb_substr`)**. Requires the PHP `intl`·`mbstring` extensions.
-- [ ] **A10. Leave out empty values entirely (drop the field)**. This applies to attributes and to `name` · `email` · `phone` (an empty `email` returns 400).
+- [ ] **A10. Leave out empty values entirely (drop the field)**. This applies to attributes and to `name` · `email` · `phone`. **Also drop an email that is not a valid address**: an empty or malformed email returns 400 and the whole sign-in fails (the staff member stays a guest). The same happens for `userId` over 120 chars, `name` over 200 or `phone` over 40.
 - [ ] **A11. `hash = hex(HMAC-SHA256(secret, signing string))`**. The signing string uses the format in 5.1 (keys in alphabetical order).
 - [ ] **A12. Test vectors T1 ~ T6 all match** (5.4). Send the results to SharpTalk.
 - [ ] **A13. Return the response package over HTTPS only to the signed-in session. Do not log it.**
@@ -44,20 +45,21 @@
 - [ ] **B2. Take the A2 response and pass it to `SharpTalk.identify(response)` unchanged** (do not add or change keys).
 - [ ] **B3. Call again on**: sign-in confirmed · page reload · **hotel selection change (incl. All hotels)** · HA language change.
 - [ ] **B4. Call `SharpTalk.logout()` on**: sign-out button · **automatic sign-out on session/token expiry** · right before another account signs in · sign-out in another tab (`storage` event etc.).
-- [ ] **B5. `locale`**: same as now, `localStorage.lang` → `vi`/`en`. Call `setLocale` when it changes.
-- [ ] **B6. Allow the SharpTalk domain in CSP (`script-src` · `frame-src` · `connect-src`) and CORS.**
+- [x] **B5. `locale`**: same as now, `localStorage.lang` → `vi`/`en`. Call `setLocale` when it changes. *(checked 10/27: done)*
+- [x] **B6. Allow the SharpTalk domain in CSP (`script-src` · `frame-src` · `connect-src`) and CORS.** *(checked 10/27: done on UAT — no CSP restriction, the widget loads normally. Production is D3)*
 - [ ] **B7. Put the 3 SharpTalk domain uses** (`embed.js` src · `widgetUrl` · `ivy:event` origin check) **behind one environment setting** (so you change it once when moving to production).
-  Check (all of B): DevTools › Network `POST …/public/embed/identify` **200** (`consentState: "granted"`), and the page receives `ivy:event` `identified {ok: true}`.
+  Check (all of B): DevTools › Network `POST …/public/embed/identify` **200 with `"authenticated": true`**, and the console shows the session as **"verified"** (not "Unverified").
+  **Not proof on its own**: while staging still runs the temporary unsigned mode (§7), a wrong signature ALSO returns 200, `"consentState": "granted"` and `identified {ok: true}`.
 
 ### C. Joint UAT check (WR-05) — 10/29 ~ 10/30
-- [ ] **C1. All items in the section 8 checklist pass** (together with SharpTalk).
+- [ ] **C1. All items in the section 8 checklist pass** (together with SharpTalk). §8 is the only UAT list; it runs after SharpTalk ends the temporary unsigned mode (§7).
 - [ ] **C2. Test accounts**: 1 `Quản lý` (multiple hotels) + 1 `Lễ tân` (1 hotel), including hotels in the north and the south (WR-14).
 
 ### D. Production deploy (WR-06) — before production UAT
 - [ ] **D1. Apply the production embed secret.** It differs from staging (SharpTalk sends it over a secure channel).
 - [ ] **D2. Switch to the production domain**: `https://sharptalk.go2joy.vn/widget/embed.js` · `widgetUrl` · origin check.
 - [ ] **D3. Apply production CSP and CORS. Share the HA deploy schedule in advance.**
-  Check: identify returns 200 on production HA. A package made with the staging secret returns 401 on production.
+  Check: identify returns 200 with `"authenticated": true` on production HA. A package made with the staging secret returns 401 on production.
 
 ---
 
@@ -78,7 +80,19 @@
 - If both HA and SharpTalk keep a region table, they drift apart. The single source is the Province Feed of the Go2Joy Partner API.
 - Province names and role display names change with the HA language (vi/en), so the signed values could differ. Numbers and codes do not change.
 
-**Transition period**: For now, SharpTalk still accepts the v1.3 format (`province` · `region` keys). If `province_sn` is also sent, **the values set from `province_sn` take priority**. When HA has moved to v1.4 and passed UAT, we will end support for the v1.3 keys and announce the date.
+**Transition period**: For now, SharpTalk still accepts the v1.3 format (`province` · `region` keys). If `province_sn` is also sent, **the values set from `province_sn` take priority**. Support for the v1.3 keys ends in a separate release after HA passes UAT on v1.4; the date is announced in advance.
+
+### Doc revision 10/27 (no change to what HA sends)
+| # | Where | Change |
+|---|---|---|
+| 1 | B check · §5.5 · §7 · §8 | `ok: true` is not proof while staging accepts unsigned sign-ins. Proof = `"authenticated": true` + console "verified". SharpTalk ends the temporary mode as soon as a verified identify is seen on HA UAT, **before** the joint UAT |
+| 2 | §1 region table · §8 | No province is in region 3 (Central) today; central-coast provinces are region 5, Thừa Thiên Huế is region 4. UAT uses the 4 regions that exist |
+| 3 | §1 Continuity · §6 | Per-hotel continuity described exactly: the widget shows each staff member's own conversations plus a count of the hotel's |
+| 4 | A10 · §5.5 | 400 also for a malformed email and over-long `userId` / `name` / `phone`; the whole sign-in fails |
+| 5 | §7 | Status updated: v1.4 support is done on staging (10/24) |
+| 6 | §8 | One UAT list for HA and SharpTalk (merged with work request §6.1) |
+| 7 | B5 · B6 | Done on HA UAT (10/27) |
+
 
 ## 1. What SharpTalk does
 | Step | Details |
@@ -86,7 +100,7 @@
 | Verify | Builds the signing string from the received values as-is and compares the HMAC. On mismatch: 401 E5048 (stays guest) |
 | Province · region | `province_sn` → fills **province name and region** from the Go2Joy province list (80 entries, Partner API Province Feed, refreshed daily). A number not in the list is saved without a region and goes to the default assignee |
 | Register | Hotel = business customer (`hotel_id`), staff = contact (`userId`), role recorded |
-| Continuity | Continues previous conversations per hotel account (after session end, on another PC, with another staff member) |
+| Continuity | Continues per hotel account: the AI sees the hotel's previous conversation and the same agent is preferred for 24 h. In the widget each staff member sees their own earlier conversations plus a count of the hotel's (work request WR-18) |
 | Routing | Consult category chosen by the customer × hotel region → team × work label (rules managed by Go2Joy in the console) |
 
 **Region table** (Province Feed `region`)
@@ -95,7 +109,7 @@
 |---|---|---|
 | 1 | `south` | South |
 | 2 | `north` | North |
-| 3 | `central` | Central |
+| 3 | `central` | Central — **no province in the current feed**. Central-coast provinces (Đà Nẵng, Quảng Nam, Bình Định, Khánh Hòa, Gia Lai …) are 5, Thừa Thiên Huế is 4 |
 | 4 | `north_center` | North Central |
 | 5 | `south_center` | South Center |
 | 10 | `region_10` | Not documented (17 cities of Manila). To be fixed after the reply to work request WR-27 |
@@ -261,36 +275,42 @@ The test secret is `test-secret-do-not-use` (not a real secret). The hashes belo
 | Result | Meaning | Action |
 |---|---|---|
 | 200 | Verified. Session is "verified", business customer and contact linked | — |
-| 401 · E5048 | Signature mismatch: string·secret·environment mismatch, unknown key, over 120 chars or line break, NFC/whitespace difference, non-numeric `province_sn` | Compare with section 4, rerun 5.4 |
-| 400 | Format error (empty email etc.) | Leave out empty fields |
+| 401 · E5048 | Signature mismatch: string·secret·environment mismatch, unknown key, over 120 chars or line break, NFC/whitespace difference, non-numeric `province_sn`. **On staging, until the temporary mode ends (§7), a mismatch on a session that is not yet verified is accepted as "Unverified" (200) instead** | Compare with section 4, rerun 5.4 |
+| 400 | Format error: empty or malformed email, `userId` over 120 chars, `name` over 200, `phone` over 40. The whole sign-in fails | Drop empty or invalid fields |
 | 404 | No chat session | Widget handles it automatically. Reload |
 
 ## 6. Security
 - Keep the secret only in HA server environment variables. Staging and production secrets differ (SharpTalk sends them over a secure channel).
-- Anyone holding a signed package can chat as that staff member and see that hotel's previous conversations. Do not log it, and do not skip sign-out handling (B4).
+- Anyone holding a signed package can chat as that staff member, see that staff member's earlier conversations, and get answers that use the hotel's previous conversation. Do not log it, and do not skip sign-out handling (B4).
+- The AI provider receives the staff display name, hotel name, province, region and role (to greet and answer in context). Email, phone and the user id are not sent.
 - Whether to add a signature expiry (`ts`) is decided in work request WR-03 (if added, it ships together as v1.5).
 - Shared PCs (front desk): automatic sign-out and account switching in B4 are especially important.
 
 ## 7. SharpTalk status
 | Item | Status |
 |---|---|
-| v1.4 support (`province_sn` → province name/region, v1.3 in parallel) | Staging deploy (target 10/27) |
+| v1.4 support (`province_sn` → province name/region, v1.3 in parallel) | **Done on staging (10/24)** |
 | Go2Joy province list, 80 entries (indexed by number) | Loaded on staging · production loaded at install |
-| Temporary unsigned sign-in (for staging UAT) | Ends after A and B are done |
+| Temporary unsigned sign-in (staging only, for UAT) | Ends **as soon as a verified identify is seen on HA UAT** (A and B done), **before** the joint UAT — so the 401 rows of §8 can pass. Until then a wrong signature is also accepted (as "Unverified") |
 | Role code display names | After the A7 code table is received |
 
-## 8. UAT checklist (WR-05)
-| Check | Expected |
-|---|---|
-| Widget while not signed in | Guest, consent notice shown (same as now) |
-| HA sign-in → widget | identify **200**, `identified {ok: true}`, no consent notice, staff name in greeting, "verified" in console |
-| Console › Customers › Business customers | 1 hotel (name · province · region, calculated by SharpTalk), staff and role code under contacts |
-| HA language vi ↔ en | Signed values unchanged → same conversation continues, only the reply language changes |
-| Change hotel selection | Business customer and conversation switch to the new hotel |
-| "All hotels" → connect to agent | 200, no hotel, default assignee |
-| Connect to agent from hotels in each region (north · north_center · south_center · south) → choose consult category | Team routing follows console rules, assignee shown in alarm center |
-| Hotel name with many tone marks (incl. decomposed input) | 200 |
-| Staff with empty email | 200 without the email field |
-| Sign-out · session expiry · another account signs in | Guest (or the new account), previous staff conversations not visible |
-| Change one signed value without re-signing | 401, guest. `name` · `email` · `phone` are not signed, so changing them still gives 200 |
-| Add a key outside the list (e.g. `district`) and sign | 401 (unknown keys are left out of the signature calculation) |
+## 8. UAT checklist (WR-05) — the only UAT list
+
+Used by HA and SharpTalk together (work request §6.1 points here). Run it **after SharpTalk ends the temporary unsigned mode** (§7).
+
+| Check | Where | Expected |
+|---|---|---|
+| Widget while not signed in | HA UAT | Guest, consent notice shown (same as now) |
+| HA sign-in → widget | HA UAT · console live chat | identify **200** with `"authenticated": true` and `consentState: "granted"`, no consent notice, staff name in greeting, console shows "verified" |
+| Business customer | Console › Customers | 1 hotel (name · province · region, calculated by SharpTalk — filled only by a signed sign-in), staff and role code under contacts, room types as that hotel's products |
+| HA language vi ↔ en | HA UAT | Signed values unchanged → same conversation continues, only the reply language changes |
+| Change hotel selection | HA UAT · console › Customers | Business customer and conversation switch to the new hotel |
+| "All hotels" → connect to agent | HA UAT · console › Alarm center | 200, no hotel, default assignee (work request WR-13) |
+| Connect to agent from hotels in the 4 regions present in the feed (north · north_center · south_center · south) × consult category bs / cs | HA UAT · console › Agent handoff · Alarm center | Team × label per the console rules (work request WR-10), assignee shown in the alarm center |
+| Skip the consult category | HA UAT · console › Alarm center | Default assignee (WR-13) |
+| Assignment check | Console › Settings › Agent handoff | No "0 active" warning |
+| Hotel name with many tone marks (incl. decomposed input) | HA UAT · console › Customers | 200 |
+| Staff with empty email | HA UAT · console › Customers | 200 without the email field |
+| Sign-out · session expiry · another account signs in | HA UAT | Guest (or the new account), previous staff conversations not visible |
+| Change one signed value without re-signing | HA UAT · console › Work log | 401 E5048, `ok: false`, guest. `name` · `email` · `phone` are not signed, so changing them still gives 200 |
+| Add a key outside the list (e.g. `district`) and sign | HA UAT · console › Work log | 401 (unknown keys are left out of the signature calculation) |

@@ -1,423 +1,303 @@
 # SharpTalk × Go2Joy — Work Request (tasks for Go2Joy)
 
-> Work request listing what Go2Joy needs to do, by owner (2026-10-24 · v1.3). HA developers: read the checklist at the top together with the [HA integration spec v1.4](ha-identify.en.html). For printing or sending: [PDF](work-request.en.pdf)
+> Work request listing what Go2Joy needs to do, by owner (2026-10-27 · v1.4). HA developers: read the checklist at the top together with the [HA integration spec v1.4](ha-identify.en.html). For printing or sending: [PDF](work-request.en.pdf)
 
-| Item |  |
-|----|----|
+| Item | |
+|---|---|
 | To | Go2Joy PM · HA dev team (backend · FE) · Go2Joy dev (Partner API) · Infra · Operations (CS) · Legal |
 | From | SharpTalk (Amoeba) |
-| Date / version | 2026-10-24 · **v1.3** (replaces v1.2, v1.1 and v1.0) |
-| Based on | ① HA integration guide **v1.3** + the changes in §1 of this request → [**guide v1.4**](https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8) (released 10/24) ② Integration requests & checklist (G numbers, 2026-10-22) ③ Go2Joy Support Assistant API overview and the public Partner API docs (`dev.go2joy.vn/api`, checked 10/23)<br>**The v1.0 PDF (10/20) is withdrawn.** Its userId format, region values and test vectors T1 · T2 no longer apply. |
+| Date / version | 2026-10-27 · **v1.4** (replaces v1.3 of 10/24) |
+| Based on | ① [HA sign-in integration spec v1.4](GUIDE-261024-Go2Joy-HA-Identify-v1.4.en.md) (doc revision 10/27, wire format unchanged) ② Integration requests & checklist (G numbers, 2026-10-22) ③ Go2Joy Support Assistant API document and public Partner API docs (checked 10/23, re-checked 10/27: no change) ④ Internal review of WR v1.3 + spec v1.4 (10/26) and staging / HA UAT checks (10/26 – 10/27) |
 | Reply | Per-task completion report, or the reply table in §8 — daily check-in channel (WR-40) |
 
+## ✅ What HA (Go2Joy) must do — checklist
 
+Spec v1.4 is final (approved 10/24). How to check each item, plus sample code, is in the checklist at the top of the [HA integration spec v1.4](GUIDE-261024-Go2Joy-HA-Identify-v1.4.en.md).
 
-**✅ What HA (Go2Joy) must do — checklist** `v1.3`
-
-Spec v1.4 is final (approved 10/24); guide v1.4 and the test vectors are released. How to check each item, plus sample code, is in the checklist at the top of [HA integration guide v1.4](https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8).
-
-- **Backend (WR-01 · 02, Tue 10/27)**: ☐ secret only in a server environment variable ☐ endpoint for signed-in sessions only ☐ values from the session and DB ☐ `userId = "ha:" + userSn` ☐ only 4 attributes `hotel_id · hotel_name · province_sn · role` ☐ `province_sn` = Go2Joy provinceSn ☐ role code + **send the code list** ☐ "all hotels" → `role` only ☐ NFC → collapse whitespace → trim → 120 chars ☐ drop empty values ☐ HMAC-SHA256 ☐ **test vectors T1 – T6 match, results sent back** ☐ never log the package
-- **FE (WR-04, Wed 10/28)**: ☐ remove browser assembly and `hash: "testing"` ☐ pass the server response to `identify` unchanged ☐ re-identify on sign-in, reload, hotel change, language change ☐ `logout` on sign-out, session expiry, account switch, sign-out in another tab ☐ keep `locale` ☐ allow CSP and CORS ☐ one setting for the SharpTalk domain
-- **UAT (WR-05, 10/29 – 30)**: ☐ pass the guide's §8 checklist ☐ north and south test accounts
+- **Backend (WR-01 · 02, due Tue 10/27)**: ☐ secret only in a server environment variable ☐ endpoint for signed-in sessions only ☐ values from the session and DB ☐ `userId = "ha:" + userSn` ☐ only 4 attributes `hotel_id · hotel_name · province_sn · role` ☐ `province_sn` = Go2Joy provinceSn ☐ role code + **send the code list** ☐ "all hotels" → `role` only ☐ NFC → collapse whitespace → trim → 120 chars ☐ drop empty values and an email that is not a valid address ☐ HMAC-SHA256 ☐ **test vectors T1 – T6 match, results sent back** ☐ never log the package
+- **FE (WR-04, due Wed 10/28)**: ☐ remove browser assembly and `hash: "testing"` ☐ pass the server response to `identify` unchanged ☐ re-identify on sign-in, reload, **hotel change**, language change ☐ `logout` on sign-out, session expiry, account switch, sign-out in another tab ☑ keep `locale` (done 10/27) ☑ CSP and CORS on UAT (done 10/27) ☐ one setting for the SharpTalk domain
+- **UAT (WR-05, 10/29 – 30)**: ☐ pass the spec's **§8 checklist (the only UAT list)** ☐ north and south test accounts
 - **Production (WR-06)**: ☐ production secret ☐ production domain `sharptalk.go2joy.vn` ☐ production CSP, CORS, release schedule shared
 
+## Changes in v1.4 (10/27)
 
-
-**Changes in v1.2 (10/24)**
-
-- SharpTalk releases of 10/23 – 10/24 (§2.1): consult categories (the customer picks Business Support or Customer Services in the widget; choice × hotel region decides the team), alarm center, personal alert settings and assignment check (simulator), conversations of the same customer or hotel merged, AI notice text with a terms link, retry on an empty AI answer
-- go2joy staging routing set-up added (§2.3): 4 teams, 11 agents (8 have not accepted the invitation), 4 rules. **The South team has no active agent**, so southern hotels never reach it
-- Task updates: WR-10 confirm rules · WR-11 accept invitations · WR-12 consult category definitions and Vietnamese names (replaces Sales keywords) · WR-13 assignee for skipped categories and unmatched enquiries · WR-15 **done** · WR-31 please confirm · WR-19a new
-- HA UAT re-checked 10/24: D1 – D9 unchanged
-
+- **Do not trust `ok: true` alone (WR-04, S-06).** While staging accepts unsigned sign-ins for UAT, a wrong signature also returns 200, `consentState: "granted"` and `identified {ok: true}`. Proof of a correct signature is `"authenticated": true` in the identify response and "verified" (not "Unverified") in the console. SharpTalk turns the temporary mode off **as soon as a verified identify is seen on HA UAT, before the joint UAT**, so the 401 checks can pass.
+- **No province is in region 3 (Central).** Đà Nẵng, Quảng Nam, Bình Định, Khánh Hòa, Gia Lai are region 5 (South Center) and Thừa Thiên Huế is region 4 (North Central) in the Province Feed. WR-10 and the UAT now use the 4 regions that exist.
+- **One UAT checklist**: spec §8. §6.1 here points to it.
+- **The AI provider receives the staff display name** (with hotel name, province, region and role), so it can greet and answer in context. Email, phone and the user id are not sent. Corrected for WR-30.
+- **Why the South team still has no active agent (WR-11)**: invited agents who sign in with the temporary password stay "invited" and are not assigned; only setting a password through the invitation link makes them "active". Several Go2Joy agents (South team included) already work in the console this way. SharpTalk fixes this (S-13); until then, use the invitation link.
+- Staging figures updated (§2.3): 12 accounts, 3 active, and **all 3 active accounts are Amoeba / test accounts** — no enquiry has been assigned to a Go2Joy agent yet. 11 of 12 accounts are master.
+- New SharpTalk work: S-13 (invited → active on first sign-in), S-14 (hyphenated province name stored as a wrong region, e.g. Bà Rịa - Vũng Tàu), S-15 (duplicate sign-in rows in the work log), S-11 now includes the privacy policy URL, S-07 now registers the HA production origin.
+- Deadlines of 10/26 have passed: WR-02, WR-23 (filing) and WR-40 are overdue. New WR-40a: confirm the dates (10/31 is a Saturday).
+- HA UAT re-checked 10/26 – 10/27: D1 – D6 unchanged; D7 (locale) and CSP / CORS done; D8 partial; D9 (hotel change) not called.
 
 ## 0. Summary
 
-- SharpTalk's phase-1 features (signature verification, hotel = business customer, conversation continuity, region routing, hotel profile and room types) are **deployed and working on staging**.
-- Checking HA UAT on 10/23: **the widget is embedded but the identity is not signed** (`hash: "testing"`). HA followed the v1.0 PDF; the spec changes since v1.3 are not in yet (§2.2). Only staging temporarily accepts unsigned sign-ins; **production rejects them.**
-- `v1.1` The identity package gets simpler. **HA no longer sends the region; SharpTalk derives it** from the Partner API Province Feed `region`. Province and role are sent as **language-independent codes** instead of display names. Less work on the HA server, and the region table lives in one place, the Go2Joy Partner API.
-- `v1.2` Go2Joy operations have already entered most of the routing set-up in the console (§2.3). What remains is **accepting invitations** (the South team above all) and **category names and the default assignee**.
-- **Staging open on 10/31** needs: WR-01 · 02 · 04 · 05 · 10 – 14 · 40.
-- **Production open** additionally needs WR-06 (HA production deploy) · WR-20 – 23 · WR-30 · 31. The earliest production open is **Tue 11/10**: 7 working days after the production server (WR-20) and the Partner API production certification (WR-23, about one week) must both be done.
+- SharpTalk's phase-1 features (signature verification, hotel = business customer, conversation continuity, consult category × region routing, alerts, hotel profile and room types) are **deployed and working on staging**. Spec v1.4 support is on staging since 10/24.
+- **HA UAT is still unsigned** (re-checked 10/27): the package is built in the browser with `hash: "testing"`, the login ID as `userId`, 5 unknown keys, and a province name as `region`.
+- **No enquiry has reached a Go2Joy agent yet.** The South team has no active agent (WR-11 · S-13), there is no default assignee (WR-13), and the only active accounts belong to Amoeba. Southern and central hotels, skipped categories and "all hotels" enquiries alert everyone.
+- **Staging open on 10/31 (Saturday — please confirm, WR-40a)** needs: WR-01 · 02 · 04 · 05 · 10 – 14 · 40.
+- **Production open** additionally needs WR-06 · WR-20 – 23 · WR-30 · 31. Earliest **11/10 – 11/11**, counted from the Partner API production credential (WR-23, about one week after filing) plus installation (4 working days) and production UAT (3 working days).
 
-## 1. Integration spec history `v1.1`
+## 1. Integration spec history
 
-Parts of HA were built from the v1.0 PDF, so the differences between versions are in one table. **The v1.4 column is the final spec.** SharpTalk released guide v1.4 and the new test vectors on 10/24 (S-01 done).
+Parts of HA were built from the v1.0 PDF, so the differences between versions are in one table. **The v1.4 column is the final spec.** SharpTalk released spec v1.4 and its test vectors on 10/24 (S-01) and accepts v1.4 on staging (S-02).
 
+| Item | v1.0 (10/20 PDF, withdrawn) | v1.3 | **v1.4** |
+|---|---|---|---|
+| `userId` | Login ID (`go2joysupport`) | `"ha:" + userSn` | Same as v1.3 |
+| Signed attribute keys | 5: `hotel_id` · `hotel_name` · `province` · `region` · `role` | 5 (same) | **4**: `hotel_id` · `hotel_name` · `province_sn` · `role` |
+| Province | `province` = province name (`Hồ Chí Minh`) | Same | `province_sn` = Go2Joy `provinceSn` (Province Feed `sn`, e.g. Hồ Chí Minh = `"1"`) |
+| Region | Derived by HA, 3 values | Derived by HA, 5 codes | **Not sent.** SharpTalk derives it from Province Feed `region` |
+| Role | Display name (`Lễ tân`) | Same | **HA role code** (independent of UI language); code list returned in WR-01 |
+| Normalisation | trim · 120 chars | + NFC | Fixed order: **NFC → collapse whitespace → trim → 120 chars (`mb_substr`)** |
+| "All hotels" selected | Not specified | Re-identify only | Drop the 3 hotel keys, sign `role` only → default assignee (WR-13) |
+| Empty values | Empty attributes and email dropped | Same | Empty `name` · `email` · `phone` are dropped as fields too (empty or malformed email → 400, the whole sign-in fails) |
+| Test vectors | T1 · T2 (old userId) | T1 – T5 | **T1 – T6** (T6 = decomposed Unicode input). Earlier vectors are not used |
 
-<table>
-<thead>
-<tr>
-<th>Item</th>
-<th>v1.0 (10/20 PDF)</th>
-<th>v1.3</th>
-<th>v1.4 (this request)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>userId</code></td>
-<td>Login ID (<code>go2joysupport</code>)</td>
-<td><code>"ha:" + userSn</code></td>
-<td>Same as v1.3</td>
-</tr>
-<tr>
-<td>Signed attribute keys</td>
-<td>5: <code>hotel_id</code> · <code>hotel_name</code> · <code>province</code> · <code>region</code> · <code>role</code></td>
-<td>5 (same)</td>
-<td><strong>4</strong>: <code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code> · <code>role</code></td>
-</tr>
-<tr>
-<td>Province</td>
-<td><code>province</code> = province name (<code>Hồ Chí Minh</code>)</td>
-<td>Same</td>
-<td><code>province_sn</code> = Go2Joy <code>provinceSn</code> (Province Feed <code>sn</code>, e.g. Hồ Chí Minh = <code>"1"</code>)</td>
-</tr>
-<tr>
-<td>Region</td>
-<td>Derived by HA, 3 values (north · central · south)</td>
-<td>Derived by HA, 5 codes</td>
-<td><strong>Not sent.</strong> SharpTalk derives it from Province Feed <code>region</code> (1 – 5)</td>
-</tr>
-<tr>
-<td>Role</td>
-<td>Display name (<code>Lễ tân</code>)</td>
-<td>Same</td>
-<td><strong>HA role code</strong> (independent of UI language); code list returned in WR-01</td>
-</tr>
-<tr>
-<td>Normalisation</td>
-<td>Collapse whitespace · trim · 120 chars</td>
-<td>+ NFC</td>
-<td>Fixed order: <strong>NFC → collapse whitespace → trim → 120 chars (<code>mb_substr</code>)</strong></td>
-</tr>
-<tr>
-<td>"All hotels" selected</td>
-<td>Not specified</td>
-<td>Re-identify only</td>
-<td>Drop the 3 hotel keys (<code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code>), sign <code>role</code> only → fallback agent (WR-13)</td>
-</tr>
-<tr>
-<td>Empty values</td>
-<td>Empty attributes and email dropped</td>
-<td>Same</td>
-<td>Empty <code>name</code> · <code>email</code> · <code>phone</code> are dropped as fields too (empty or malformed email → 400)</td>
-</tr>
-<tr>
-<td>Test vectors</td>
-<td>T1 · T2 (old userId)</td>
-<td>T1 – T5</td>
-<td><strong>T1 – T6</strong> (T6 = decomposed Unicode input). Earlier vectors are not used</td>
-</tr>
-<tr>
-<td>Transition</td>
-<td colspan="3">For a while SharpTalk also verifies the v1.3 shape (<code>province</code> · <code>region</code> keys); routing prefers v1.4 values. This ends once HA is on v1.4 (S-02).</td>
-</tr>
-</tbody>
-</table>
+**Transition**: for a while SharpTalk also accepts the v1.3 keys (`province` · `region`); routing prefers v1.4 values. This ends in a separate release after HA passes UAT on v1.4; the date is announced in advance.
 
+How SharpTalk derives the region: Province Feed `region` `1` → `south`, `2` → `north`, `4` → `north_center`, `5` → `south_center`. `3` → `central` exists in the documentation but **no province uses it today**. The undocumented `10` (17 Manila cities) is stored as `region_10` until WR-27 is answered.
 
-### 1.1 v1.4 identity package
-
-
-| Field | Signed | Value | Source in HA (e.g.) | UAT example |
-|----|----|----|----|----|
-| `userId` | Yes | `"ha:" + userSn` | Staff number in the HA DB | `ha:<userSn>` |
-| `attributes.hotel_id` | Yes | Selected hotel `hotelSn` (string) | `profile.hotelSn` | `"1721"` |
-| `attributes.hotel_name` | Yes | Hotel name | `hotelViewList[].name` | `A In Hotel Del Luna` |
-| `attributes.province_sn` | Yes | The hotel's `provinceSn` (string) | HA DB hotel → provinceSn | `"1"` |
-| `attributes.role` | Yes | HA role code | Role key in the HA DB | Returned in WR-01 |
-| `name` · `email` · `phone` | No | Display only; drop the field when empty | `profile.fullName` etc. | `G2J SUPPORT` |
-
-
-``` tl
-Signing string (keys in alphabetical order, separated by \n)
-ha:<userSn>
-hotel_id=1721
-hotel_name=A In Hotel Del Luna
-province_sn=1
-role=<HA role code>
-
-hash = hex( HMAC-SHA256( key = SHARPTALK_EMBED_SECRET, message = signing string (UTF-8) ) )
-```
-
-How SharpTalk derives the region: Province Feed `region` `1` → `south`, `2` → `north`, `3` → `central`, `4` → `north_center`, `5` → `south_center`. The undocumented `10` (Manila) is settled after WR-27.
-
-## 2. Status (2026-10-24) `v1.2`
+## 2. Status (2026-10-27)
 
 ### 2.1 Ready on the SharpTalk side (staging)
 
-
 | Feature | Status |
-|----|----|
-| Signed identify verification, HA terms recorded as widget consent (no consent banner), staff name in the first greeting | Done |
+|---|---|
+| Signed identify verification (v1.4 and v1.3), HA terms recorded as widget consent (no consent banner), staff name in the first greeting | Done |
 | Hotel = business customer, staff = contact, B2B / B2C split, conversation continuity per hotel account | Done |
-| **Consult categories**: on "talk to an agent" or an AI handoff the widget asks what the enquiry is about (skippable); choice × hotel region → team × job label | Done (10/24) — rules and roster partly entered (§2.3) |
-| **Alarm center**: header 🔔 with assignee, rule, category, hotel, region; acknowledge vs dismiss; personal settings (all / mine / off, sound, desktop notifications, mail) | Done (10/24) |
-| **Assignment check** (simulator) and rule warnings: enter category, region, province → matching rule, assignees, reasons for skips; warnings for zero active agents and misused job labels | Done (10/24) |
-| Several sessions of the same customer or hotel merged into one room; later sessions added automatically | Done (10/23) |
-| AI notice line under the widget (per language) with a terms link; show / hide the header language and settings buttons | Done (10/23) |
-| One retry and handoff on an empty AI answer, client IP spoofing blocked, transcript search | Done (10/23) |
-| Replies and buttons in the selected language (vi / en), live-chat title "staff / hotel" | Done |
-| Hotel info and room types from the Partner API → company profile and per-hotel products; province → region table refreshed automatically (80 provinces) | Done — running on the staging credential |
-| Stopgap: province name → region (HA currently sends a province name as region) | Deployed 10/23 |
-| Names in plain text on console lists; masked toward external AI and logs | Done |
+| Consult categories: on "talk to an agent" or an AI handoff the widget asks what the enquiry is about (skippable); choice × hotel region → team × job label | Done (10/24) |
+| Alarm center: assignee, rule, category, hotel, region; acknowledge vs dismiss; personal settings | Done (10/24) |
+| Assignment check (simulator) and rule warnings | Done (10/24) |
+| Several sessions of the same customer or hotel merged into one room | Done (10/23) |
+| AI notice line under the widget with a terms link; header button visibility | Done (10/23) |
+| Satisfaction request and automatic close after an answer; "agent is late" notice and callback request | Done (10/27) |
+| Replies and buttons in the selected language (vi / en), live-chat title "staff / hotel", transcript search | Done |
+| Partner API: hotel info and room types → company profile and per-hotel products; province index (80 provinces, number → name and region) refreshed daily | Done — staging credential |
+| Stopgap for current HA data: province name sent as `region` → region from the index | Done (10/23) — **hyphenated names fail** (S-14) |
+| Names in plain text on console lists and masked in logs. **The AI provider receives the staff display name, hotel name, province, region and role** (to greet and answer in context); email, phone and the user id are not sent | Done |
 
+### 2.2 HA UAT findings (10/23, re-checked 10/26 and 10/27)
 
-### 2.2 HA UAT findings
+Read from the embed code on the HA UAT page (`window.sharptalkSignIn`) and SharpTalk staging logs.
 
-Checked from the embed code on HA UAT (`go2joy-ha-uat.go2joy.io`, `window.sharptalkSignIn`) and SharpTalk staging logs. "Basis" is the document HA followed. `v1.2` **Re-checked 10/24: no change** (`hash: "testing"`, login ID, 5 extra keys, a province name in `region`).
+| # | Item | HA today | v1.4 | Status |
+|---|---|---|---|---|
+| D1 | Signature | Package built in the browser, `hash: "testing"` | HA server signs with HMAC-SHA256 | Not started |
+| D2 | `userId` | Login ID (`go2joysupport`) | `"ha:" + userSn` | Not started |
+| D3 | Attribute keys | 5 + `hotel_code` · `hotel_group_id` · `user_id` · `user_sn` · `district` | Only the 4 | Not started |
+| D4 | Region | Province name in `region` | Not sent | Not started (SharpTalk stopgap) |
+| D5 | Province / role values | Display names (`Hồ Chí Minh`, `Lễ tân`) | `province_sn` · role code | Not started |
+| D6 | Normalisation | Not applicable (built in the FE) | NFC → whitespace → trim → 120 | Not started |
+| D7 | `locale` | `localStorage.lang` → `vi` / `en`, `setLocale` on change | Same | **Done** |
+| D8 | Sign-out | `logout` on the sign-out button and on token expiry | + account switch, other tab (`storage` event) | Partial |
+| D9 | Hotel change | `identify` is called once at start-up | Re-identify on every change, including "all hotels" | Not done |
+| — | CSP / CORS | No restriction on UAT, the widget loads | Allow the SharpTalk domain | **Done on UAT** (production is WR-06) |
 
-
-| \# | Item | HA today | Basis | v1.4 | Effect |
-|----|----|----|----|----|----|
-| D1 | Signature | Package built in the browser, `hash: "testing"` | — (server signing since v1.0) | **HA server** signs with HMAC-SHA256 and returns it to the FE | 401 in production |
-| D2 | `userId` | Login ID | Built to v1.0 | `"ha:" + userSn` (changed in v1.3) | Conversations break when a login ID changes; may collide with booking-customer IDs |
-| D3 | Attribute keys | 5 + `hotel_code` · `hotel_group_id` · `user_id` · `user_sn` · `district` | — | Only the 4 | Once signed, unknown keys cause 401 |
-| D4 | Region | Province name in `region` | v1.0: 3 values, v1.3: 5 codes | Not sent (SharpTalk derives it) | SharpTalk stopgap in place |
-| D5 | Province / role values | Display names (`Hồ Chí Minh`, `Lễ tân`) | v1.0 · v1.3 | `province_sn` · role code | Switching the HA language can change signed values and break routing and continuity |
-| D6 | Normalisation | Not applicable (built in the FE) | v1.0 PHP sample has no NFC | NFC required (`intl` extension) | 401 when Vietnamese diacritics arrive decomposed |
-| D7 | `locale` | `localStorage.lang` → `vi` / `en`, `setLocale` on change | Same | Same | OK |
-| D8 | Sign-out | `sharptalkSignOut()` → `logout` (button) | Same | Also on session expiry and account switch | A previous staff identity can linger on shared PCs |
-| D9 | Hotel change | Re-identify not confirmed; no "all hotels" rule | — | Re-identify on every change; "all hotels" per §1 | Confirm in UAT (WR-04) |
-
-
-### 2.3 go2joy staging routing set-up (read 10/24) `v1.2`
+### 2.3 go2joy staging routing set-up (read 10/27)
 
 Values Go2Joy operations entered in the console. Settings › Agent handoff › **Assignment check** shows the same result for a given category and region.
 
-
 | Item | Now |
-|----|----|
+|---|---|
 | Consult categories (shown to customers) | `bs` Business Support · `cs` Customer Services — **no Vietnamese names** (Vietnamese screens show English) |
 | Teams | North · North Center · South · South Center |
-| 11 agents | 3 active (North 1, North Center 2) · **8 invited, not accepted** (North 2, North Center 2, South 3, South Center 1) |
-| Job labels | `cs` · `sa` (also consult · accounting · operations) |
-
-
+| 12 accounts | **3 active — all Amoeba / test accounts** (North 1, North Center 2) · **9 invited** (North 3, North Center 1, South 4, South Center 1), including all 6 @go2joy.vn accounts |
+| Ranks | 11 of 12 accounts are master (full tenant rights) |
+| Job labels | `cs` · `sa` (also consult · accounting · operations). The one active North agent holds both `sa` and `cs` |
+| Default assignee | **None** |
 
 | Rule | Category | Hotel region | Target | Result now |
-|----|----|----|----|----|
-| BS_North_SA | bs | north · north_center | North team × sa | Assigned (1 active sa) |
-| CS_North_CS | cs | north · north_center | North team × cs | Assigned (1 active cs) |
+|---|---|---|---|---|
+| BS_North_SA | bs | north · north_center | North team × sa | Assigned (1 active — an Amoeba account) |
+| CS_North_CS | cs | north · north_center | North team × cs | Assigned (same person) |
 | CS_South | cs | south · south_center | South team × cs | **Skipped — 0 active** |
 | BS_South_SA | bs | south · south_center | South team × sa | **Skipped — 0 active** |
 
-
-- **The North Center and South Center teams** are not the target of any rule; north-central hotels also go to the North team. There is no rule for the `central` region.
-- A customer who **skips** the category, or an enquiry no rule matches, goes to the default assignee (or an "everyone — no rule matched" alert).
+- **The North Center and South Center teams** are not the target of any rule; north-central hotels also go to the North team.
+- **No province is in region 3 (Central).** Central-coast hotels (Đà Nẵng, Quảng Nam, Bình Định, Khánh Hòa, Gia Lai …) follow the South rules (region 5); Thừa Thiên Huế follows the North rules (region 4).
+- A customer who **skips** the category, an enquiry no rule matches, Manila (`region_10`) and "all hotels" go to the default assignee — and with none set, to an "everyone — no rule matched" alert.
+- Real enquiries #906 and #907 (MAI VILLA HÀ NỘI, 10/26) were assigned to the Amoeba account on the North team.
+- 4 of 7 hotel profiles have no province or region yet (1721, 4495, 726, 4162). Unsigned sign-ins do not update company profiles; a signed v1.4 sign-in fills them. Routing is not affected (it uses the session's region).
 - Rule region conditions use the region SharpTalk derives, so the rules need no change after the move to v1.4.
 
 ## 3. Work items
 
-**P0-S** 10/31 staging open · **P0** production open · **P1** production quality · **P2** phase 2 and later. Due dates are SharpTalk's proposal; if one does not work, write a feasible date in the reply table (§8).
+**P0-S** 10/31 staging open · **P0** production open · **P1** production quality · **P2** phase 2 and later. Due dates are SharpTalk's proposal; if one does not work, write a feasible date in the reply table (§8). **Overdue** = the proposed date has passed.
 
 ### 3.1 HA dev team — backend
 
-
-| WR | Task | Detail | Done when | Prio | Due (proposed) | Ref |
-|----|----|----|----|----|----|----|
-| WR-01 | **Signing endpoint** `v1.1` | An API called with the login session (e.g. `GET /api/v1/staff/sharptalkIdentity`) builds and signs the package on the server.<br>① `userId = "ha:" + userSn`<br>② 4 attributes: `hotel_id` · `hotel_name` · `province_sn` · `role` (role code). No `region`<br>③ "All hotels": drop the 3 hotel keys, sign `role` only<br>④ Normalise in this order: `Normalizer::normalize($v, Normalizer::FORM_C)` → collapse whitespace → trim → `mb_substr(…, 0, 120)`. Needs the PHP `intl` extension<br>⑤ Drop empty values, in attributes and in `name` · `email` · `phone`<br>⑥ `hash = hex(HMAC-SHA256(embed secret, signing string))`<br>⑦ Read values from the HA session and DB, never from the browser | Guide v1.4 test vectors **T1 – T6** match + **HA role code list** (code · vi/en label) sent back | P0-S | Tue 10/27 | G10 · D1 – D6 · D9 |
-| WR-02 | **Signing key decision** `v1.1` | **Option A (recommended)**: the embed secret SharpTalk issues, kept only in an HA server environment variable. SharpTalk sends the staging secret over a secure channel the same day.<br>**Option B**: reuse the Go2Joy client secret. SharpTalk must add input for a partner-supplied secret (S-04), and a leak would also expose Partner API access.<br>If there is no decision by 10/26, staging opens with option A and the choice is made again before production (same spec and code; only the secret value changes). The secret never goes into the FE, the browser, logs or documents. | Decision + staging secret in place | P0-S | Decide by Mon 10/26 | G12 |
-| WR-03 | Signature expiry (`ts`) | Whether to add a signing time to stop package reuse. A 5-minute expiry like the Partner API's means both sides change the spec together. | Yes / no | P1 | 11/06 | G16 |
-
+| WR | Task | Detail | Done when | Prio | Due (proposed) | Status | Ref |
+|---|---|---|---|---|---|---|---|
+| WR-01 | **Signing endpoint** | An API called with the login session (e.g. `GET /api/v1/staff/sharptalkIdentity`) builds and signs the package on the server.<br>① `userId = "ha:" + userSn`<br>② 4 attributes: `hotel_id` · `hotel_name` · `province_sn` · `role` (role code). No `region`<br>③ "All hotels": drop the 3 hotel keys, sign `role` only<br>④ Normalise in this order: NFC → collapse whitespace → trim → `mb_substr(…, 0, 120)` (PHP `intl`)<br>⑤ Drop empty values, in attributes and in `name` · `email` · `phone`. Also drop an email that is not a valid address — a malformed email, a `userId` over 120 chars, a name over 200 or a phone over 40 returns 400 and the whole sign-in fails<br>⑥ `hash = hex(HMAC-SHA256(embed secret, signing string))`<br>⑦ Read values from the HA session and DB, never from the browser | Spec v1.4 test vectors **T1 – T6** match + **HA role code list** (code · vi/en label) sent back | P0-S | Tue 10/27 | Not started | G10 · D1 – D6 |
+| WR-02 | **Signing key decision** | **Option A (recommended)**: the embed secret SharpTalk issues, kept only in an HA server environment variable; SharpTalk sends the staging secret over a secure channel the same day (S-03).<br>**Option B**: reuse the Go2Joy client secret; SharpTalk must add input for a partner-supplied secret (S-04), and a leak would also expose Partner API access.<br>**No decision yet: staging proceeds with option A**; the choice can be revisited before production (same spec and code, only the secret value changes). | Decision + staging secret in place | P0-S | Mon 10/26 | **Overdue** | G12 |
+| WR-03 | Signature expiry (`ts`) | Whether to add a signing time to stop package reuse. A 5-minute expiry like the Partner API's means both sides change the spec together | Yes / no | P1 | 11/06 | Open | G16 |
 
 ### 3.2 HA dev team — FE and deployment
 
-
-| WR | Task | Detail | Done when | Prio | Due (proposed) | Ref |
-|----|----|----|----|----|----|----|
-| WR-04 | **Fix the embed** `v1.1` | ① `sharptalkSignIn` passes the WR-01 response to `identify` **unchanged** (no assembling or editing in the browser)<br>② Call it when sign-in is confirmed · on page reload · **whenever the selected hotel changes (including "all hotels")** · when the HA language changes<br>③ Call `logout` on the sign-out button · on **automatic sign-out from session or token expiry** · just before signing in as another account · when another tab signs out (e.g. the `storage` event)<br>④ Remove `hash: "testing"` from the initial `SHARPTALK_WIDGET_CONFIG.user`<br>⑤ Allow the SharpTalk domain in CSP (`script-src` · `frame-src` · `connect-src`) and CORS<br>⑥ Put the 3 SharpTalk domain uses (`embed.js` src · `widgetUrl` · `ivy:event` origin check) behind one environment setting (switched to production in WR-06) | Network shows `POST …/public/embed/identify` **200** (`consentState: "granted"`) and the page receives `ivy:event` `identified {ok: true}` | P0-S | Wed 10/28 | G11 · D1 · D8 · D9 |
-| WR-05 | Joint UAT | Run the §6.1 checklist together with SharpTalk | Signed-off result table | P0-S | 10/29 – 10/30 | G13 |
-| WR-06 | **HA production deploy** `v1.1 new` | ① Deploy WR-01 · WR-04 to HA production<br>② Set the production embed secret in the production environment. It differs from staging; SharpTalk sends it over a secure channel (S-08)<br>③ Switch to the production SharpTalk domain: `https://sharptalk.go2joy.vn/widget/embed.js` · `widgetUrl` · origin check<br>④ Production CSP and CORS<br>⑤ Share the HA release schedule with SharpTalk in advance | identify 200 on production HA; a package signed with the staging secret gets 401 in production | P0 | Before production UAT (WR-20 handover + 4 working days) | G11 · G1 |
-
+| WR | Task | Detail | Done when | Prio | Due (proposed) | Status | Ref |
+|---|---|---|---|---|---|---|---|
+| WR-04 | **Fix the embed** | ① Pass the WR-01 response to `identify` **unchanged** (no assembling or editing in the browser); remove `hash: "testing"`<br>② Call it when sign-in is confirmed · on page reload · **whenever the selected hotel changes (including "all hotels")** — today it is called once at start-up · when the HA language changes<br>③ Call `logout` on the sign-out button and token expiry (done) · just before signing in as another account · when another tab signs out (`storage` event) — missing<br>④ `locale` (done 10/27)<br>⑤ CSP and CORS (done on UAT 10/27)<br>⑥ Put the 3 SharpTalk domain uses (`embed.js` src · `widgetUrl` · `ivy:event` origin check) behind one environment setting | identify **200 with `"authenticated": true`**, and the console shows the session as "verified" (not "Unverified"). `ok: true` alone is not proof while staging still accepts unsigned sign-ins | P0-S | Wed 10/28 | Partial (④ ⑤) | G11 · D1 · D8 · D9 |
+| WR-05 | Joint UAT | Run the **spec §8 checklist** (the only UAT list) together with SharpTalk, **after S-06** | Signed-off result table | P0-S | 10/29 – 10/30 | Open | G13 |
+| WR-06 | **HA production deploy** | ① Deploy WR-01 · WR-04 to HA production<br>② Production embed secret (different from staging; S-08)<br>③ Production SharpTalk domain: `https://sharptalk.go2joy.vn/widget/embed.js` · `widgetUrl` · origin check<br>④ Production CSP and CORS<br>⑤ Share the HA release schedule in advance | identify 200 with `"authenticated": true` on production HA; a package signed with the staging secret gets 401 | P0 | Before production UAT | Open | G11 · G1 |
 
 ### 3.3 Go2Joy operations (CS)
 
-
-| WR | Task | Detail | Done when | Prio | Due (proposed) | Ref |
-|----|----|----|----|----|----|----|
-| WR-10 | **Confirm the routing rules** `v1.1` `v1.2`<br>\[Partial\] | Go2Joy has **5 regions** in the Partner API (1 South · 2 North · 3 Central · 4 North Central · 5 South Center). Please check the 4 rules in §2.3.<br>① Should the **North Center and South Center teams** receive enquiries? If yes, split the rules by region or add them as targets<br>② The team for the `central` region (Da Nang etc.); today no rule covers it, so it goes to the default assignee<br>③ To split by province instead, list the exception provinces<br>④ The Philippines (region `10`) is phase 2 | Confirmation (or edit in the console and tell us); no warnings in the assignment check | P0-S | 10/27 | G20 |
-| WR-11 | **Accept invitations, complete the roster** `v1.2`<br>\[Partial\] | The 8 invited agents must sign in once (accept the invitation) before they can be assigned. **The South team has no active agent**, so southern hotels never reach it. Send name · email · team · job label (cs / sa) · rank for anyone missing | At least one active agent per team (no "0 active" warning in the assignment check) | P0-S | 10/27 | G21 |
-| WR-12 | **Define the consult categories and name them** `v1.2`<br>\[Partial\] | Instead of Sales keywords, **the customer picks in the widget**. Say when to pick Business Support and when Customer Services (1 – 2 lines each), and give the **Vietnamese display names**, shown as-is on the widget card. Decide whether to split further (e.g. settlement / contract) | Definitions and Vietnamese names (or enter them in the console's category manager) | P0-S | 10/27 | G22 |
-| WR-13 | **Hours, absence order, default assignee** `v1.2` | Working hours per team (HCM time zone), order when nobody is available (proposal: backup agent → team queue → offline message). The **default assignee** for enquiries with no region (**"all hotels" selected**, no hotel selected, unmapped province), **customers who skip the category**, and enquiries no rule matches | Reply → SharpTalk enters the rules and shares a preview | P0-S | 10/27 | G23 |
-| WR-14 | **UAT test accounts** | One `Quản lý` (several hotels) + one `Lễ tân` (one hotel), covering hotels in at least two regions **including north and south**, and at least one hotel name with Vietnamese diacritics. `v1.2` \[Partial\] UAT runs only on the southern Lá Hotel Quận 10 account today | Accounts sent over a secure channel | P0-S | 10/27 | G13 |
-| WR-15 | Reconnect the Notion knowledge source<br>\[Done\] | `v1.2` The 3 sources (HA guide, FAQ, hotel registration guide) were reconnected on 10/22 and sync normally | — | P0 | 10/30 | G30 |
-| WR-16 | Knowledge conflict decisions | The 78 items classified on 10/15 (3 real corrections, 3 duplicate policy documents, 32 copied FAQs): which side to keep | Decision table | P1 | 11/06 | G31 |
-| WR-17 | Golden set review | Confirm the answers of the 44 `#Talk-4-Hotel` questions (the regression baseline for engine changes and tuning) | Review result | P1 | 11/06 | G32 |
-| WR-18 | Widget visibility and resume window | Current defaults: the widget shows the user's own conversations + "n earlier enquiries from this hotel"; the same agent is preferred for 24 hours (a chosen category takes the rules first) | Keep / change | P1 | 11/06 | G14 · G15 |
-| WR-19 | Zalo OA · ZNS templates | To send agent alerts over Zalo too | Approved OA and templates | P1 | TBD | G24 |
-| WR-19a | Agent alert settings `v1.2` | Each agent sets, under 🔔 › Settings in the console: alert scope (all / mine only), sound, **allow desktop notifications**, mail. Browser notification permission is what makes an alert visible while the console tab is in the background | Set for every agent | P1 | 10/30 | New |
-
+| WR | Task | Detail | Done when | Prio | Due (proposed) | Status | Ref |
+|---|---|---|---|---|---|---|---|
+| WR-10 | **Confirm the routing rules** | Check the 4 rules in §2.3.<br>① Should the **North Center and South Center teams** receive enquiries? If yes, split the rules by region or add them as targets<br>② Central-coast provinces (Đà Nẵng, Quảng Nam, Bình Định, Khánh Hòa, Gia Lai …) are region 5 "South Center" in the Province Feed and Thừa Thiên Huế is region 4 "North Central"; no province is in region 3. With the current rules they go to the South / North teams — confirm this is intended, or list exception provinces<br>③ The one active North agent holds both `sa` and `cs` — confirm<br>④ The Philippines (`region_10`) is phase 2 | Written confirmation (or edit in the console and tell us); no warnings in the assignment check | P0-S | 10/27 | Partial | G20 |
+| WR-11 | **Activate agents, complete the roster, set ranks** | **Each invited agent sets a password through the invitation link** (signing in with the temporary password keeps the account "invited" and unassigned — SharpTalk fixes this in S-13; after that, signing in once is enough). At least one active Go2Joy agent per team, South and South Center above all. Send each person's rank: 11 of 12 accounts are master (full rights). Send name · email · team · job label (cs / sa) for anyone missing | Every team has an active **@go2joy.vn** agent; no "0 active" warning; ranks set | P0-S | 10/27 | Partial | G21 |
+| WR-12 | **Define the consult categories and name them** | When to pick Business Support and when Customer Services (1 – 2 lines each), and the **Vietnamese display names** (shown as-is on the widget card). Whether to split further (e.g. settlement / contract) | Vietnamese names show in the Vietnamese widget | P0-S | 10/27 | Partial | G22 |
+| WR-13 | **Hours, absence order, default assignee** | Working hours per team (HCM time zone), order when nobody is available (proposal: backup agent → team queue → offline message). The **default assignee** — today none, so these alert everyone: skipped category, southern / central hotels while South has 0 active, Manila, "all hotels" | Assignment check "category skipped" → default assignee | P0-S | 10/27 | Open | G23 |
+| WR-14 | **UAT test accounts** | One `Quản lý` (several hotels, used to test hotel change — D9) + one `Lễ tân` (one hotel), covering **north and south** hotels and at least one hotel name with Vietnamese diacritics | Accounts sent over a secure channel | P0-S | 10/27 | Partial (one southern account) | G13 |
+| WR-15 | Reconnect the Notion knowledge source | The 3 sources were reconnected on 10/22 and sync normally | — | P0 | — | **Done** | G30 |
+| WR-16 | Knowledge conflict decisions | The 78 items classified on 10/15: which side to keep | Decision table | P1 | 11/06 | Open | G31 |
+| WR-17 | Golden set review | Confirm the answers of the 44 `#Talk-4-Hotel` questions | Review result | P1 | 11/06 | Open | G32 |
+| WR-18 | Widget visibility and resume window | Current defaults: the widget shows the user's own conversations + "n earlier enquiries from this hotel"; the AI sees the hotel's previous conversation; the same agent is preferred for 24 hours (a chosen category takes the rules first) | Keep / change | P1 | 11/06 | Confirm | G14 · G15 |
+| WR-19 | Zalo OA · ZNS templates | To send agent alerts over Zalo too | Approved OA and templates | P1 | TBD | Open | G24 |
+| WR-19a | Agent alert settings | Each agent sets, under 🔔 › Settings: alert scope, sound, **allow desktop notifications**, mail | Set for every agent | P1 | 10/30 | Open | — |
 
 ### 3.4 Infrastructure · Partner API go-live
 
-
-| WR | Task | Detail | Done when | Prio | Due (proposed) | Ref |
-|----|----|----|----|----|----|----|
-| WR-20 | **Production server + SSH + DNS + TLS** `v1.1` | `sharptalk.go2joy.vn` (no DNS record as of 10/23), Vietnam region. Pilot 4 vCPU / 8 GB / 80 GB; production 8 vCPU / 16 GB / 200 GB or more. Daily backup storage. **Static public IP** (for the WR-23 allow-list) and **NTP time sync** (the Partner API `timestamp` expires after 5 minutes) | SSH access and static IP delivered, DNS resolves | P0 | 10/30 | G1 |
-| WR-21 | **Production AI API keys (Go2Joy account and billing)** | Answer LLM (Anthropic Claude recommended) and embeddings (Voyage). Monthly limit and the person who receives exhaustion alerts | Keys delivered over a secure channel | P0 | 10/30 | G2 |
-| WR-22 | Mail sender account | SMTP for agent alert mails | Account delivered | P1 | 10/30 | G3 |
-| WR-23 | **Partner API production certification, credential and IP allow-list** `v1.1` | The public go-live procedure is: certification request (about one week) → 3 test bookings (hourly · overnight · daily) → production clientId · secret → 3 more bookings for a final check. **SharpTalk uses no booking API**, so we ask for an exemption from the booking tests and an alternative check (a lookup-API connection test). Allow the SharpTalk production static IP on `https://partner.go2joy.vn` (about 500 requests/minute). This turns on hotel info, room and region-table refresh in production | Request filed → exemption answered → credential delivered, connection test passes | P0 | File 10/26 · credential by 11/02 | G18 |
-
+| WR | Task | Detail | Done when | Prio | Due (proposed) | Status | Ref |
+|---|---|---|---|---|---|---|---|
+| WR-20 | **Production server + SSH + DNS + TLS** | `sharptalk.go2joy.vn` (no DNS record as of 10/27), Vietnam region. Pilot 4 vCPU / 8 GB / 80 GB; production 8 vCPU / 16 GB / 200 GB or more. Daily backup storage. **Static public IP** (WR-23 allow-list) and **NTP time sync** (the Partner API `timestamp` expires after 5 minutes) | SSH access and static IP delivered, DNS resolves | P0 | 10/30 | Open | G1 |
+| WR-21 | **Production AI API keys (Go2Joy account and billing)** | Answer LLM (Anthropic Claude recommended) and embeddings (Voyage). Monthly limit and who receives exhaustion alerts | Keys delivered over a secure channel | P0 | 10/30 | Open | G2 |
+| WR-22 | Mail sender account | SMTP for agent alert mails | Account delivered | P1 | 10/30 | Open | G3 |
+| WR-23 | **Partner API production certification, credential and IP allow-list** | Go-live procedure in the document: certification request (about one week) → 3 test bookings → production clientId · secret → 3 more bookings. **SharpTalk uses no booking API**, so we ask for an exemption and a lookup-API connection test instead. Allow the SharpTalk production static IP on `https://partner.go2joy.vn` (about 500 requests/minute) | Request filed → exemption answered → credential delivered, connection test passes | P0 | File 10/26 · credential by 11/02 | **Filing overdue** | G18 |
 
 ### 3.5 Go2Joy dev — Partner API questions
 
-Where the public Partner API docs (checked 10/23) and staging measurements (10/21 – 10/23) differ. Replies only; Go2Joy decides whether anything needs fixing.
-
+Where the Support Assistant API document (unchanged 10/23 – 10/27) and staging measurements differ. Replies only; Go2Joy decides whether anything needs fixing.
 
 | WR | Question | Docs / observed | Prio | Ref |
-|----|----|----|----|----|
+|---|---|---|---|---|
 | WR-24 | Partner staging vs HA UAT database | Hotel 4118: 21 rooms in Partner / 7 in HA, different prices and hours. Is production one database? | P1 | G19 ① |
-| WR-25 | Room status codes | The docs define `status` as 1 Available · 2 Locked only, but we observe 1 · 4 · 5. Meaning of 4 and 5; the codes for "pending approval" and "draft" | P1 | G19 ② |
-| WR-26 | Room count | Per the docs, `numOfRoom` 2147483647 means "cannot be determined", and every value we see is this. Is there a field for each hotel's total number of rooms? | P1 | G19 ③ ⑥ |
-| WR-27 | Region `10` `v1.1` | The documented enum is 1 – 5, but the Province Feed returns 17 Manila cities with `10`. Name and meaning, and the list of region values to expect. Directly affects SharpTalk's region derivation (§1.1) | P1 | G19 ⑤ |
-| WR-28 | Hourly lookup error | Room Type List with `bookingType=1` returns `code 0` (internal server error). The docs require `startTime` · `endTime` for hourly, so SharpTalk re-checks its own request first (S-09) and asks only if it still happens | P2 | G19 ⑦ |
-| WR-29 | Hotel Feed coverage and behaviour | The docs make `provinceSn` · `districtSn` required and `hotelSnList` optional. Does it include every HA hotel (4118 is missing)? Is returning everything, ignoring the filter, when no hotel matches intended? | P2 | G18 · G34 |
-| — | Support Assistant API document errata | Hotel Info path `getHotelnfo` (the public docs say `/api/v2/hotel/getHotelInfo`); Room Type Feed v1 path shows a v2 response example | P2 | G19 ⑧ |
-
+| WR-25 | Room status codes | The docs define `status` 1 Available · 2 Locked, but we observe 1 · 4 · 5 | P1 | G19 ② |
+| WR-26 | Room count | `numOfRoom` is always 2147483647 ("cannot be determined"). Is there a field for a hotel's total number of rooms? | P1 | G19 ③ ⑥ |
+| WR-27 | Region `10` and region `3` | The documented enum is 1 – 5, but the feed returns 17 Manila cities with `10`, and no province with `3`. Name and meaning of `10`; will any province get `3`? | P1 | G19 ⑤ |
+| WR-28 | Hourly lookup error | Room Type List with `bookingType=1` returns `code 0`. SharpTalk re-checks its own request with `startTime` · `endTime` first (S-09) | P2 | G19 ⑦ |
+| WR-29 | Hotel Feed coverage and behaviour | Does it include every HA hotel (4118 is missing)? Is returning everything when no hotel matches intended? | P2 | G18 · G34 |
+| — | Document errata | Hotel Info path `getHotelnfo` (should be `getHotelInfo`); Room Type Feed v1 path shows a v2 response example; does the go-live booking test apply to a lookup-only partner? | P2 | G19 ⑧ |
 
 ### 3.6 Legal
 
-
-| WR | Task | Detail | Done when | Prio | Due (proposed) | Ref |
-|----|----|----|----|----|----|----|
-| WR-30 | **Privacy / PDPL review** | Cross-border transfer notice (processors Anthropic · Voyage, processing regions), whether a transfer impact assessment is needed, masking scope, conversation retention (draft 180 days), breach notification procedure | Written reply | P0 | 10/30 | G4 |
-| WR-31 | **Confirm the terms URL, version and AI notice** `v1.2`<br>\[Please confirm\] | For signed-in HA users the HA terms acceptance is recorded as widget consent and the consent banner is skipped. What SharpTalk set on staging: terms `https://go2joy.vn/vi-vn/policy?tab=terms-of-use`; notice under the widget VI "Được tạo bởi AI, áp dụng **điều khoản dịch vụ**" / EN "Created by AI; apply **terms of service**" (the bold part links to the terms). Is it the right document, which **version**, and is the text approved? | Confirmation including the version | P0 | 10/30 | G5 |
-
+| WR | Task | Detail | Done when | Prio | Due (proposed) | Status | Ref |
+|---|---|---|---|---|---|---|---|
+| WR-30 | **Privacy / PDPL review** | Cross-border transfer notice (processors Anthropic · Voyage, processing regions), whether a transfer impact assessment is needed, masking scope, conversation retention (draft 180 days), breach notification procedure. **Review on the basis that the AI provider receives the staff display name, hotel name, province, region and role** (§2.1) | Written reply | P0 | 10/30 | Open | G4 |
+| WR-31 | **Terms URL and version, AI notice, privacy policy URL** | Set on staging: terms `https://go2joy.vn/vi-vn/policy?tab=terms-of-use`; notice VI "Được tạo bởi AI, áp dụng **điều khoản dịch vụ**" / EN "Created by AI; apply **terms of service**". Missing: the **terms version** and a **privacy policy URL** (the consent notice has no policy link today) | Confirmation with version + privacy policy URL | P0 | 10/30 | Confirm | G5 |
 
 ### 3.7 PM
 
+| WR | Task | Detail | Prio | Due (proposed) | Status | Ref |
+|---|---|---|---|---|---|---|
+| WR-40 | **Owners and channel** | Owners for PM, HA backend / FE, infra, Partner API, operations (CS lead), legal, and the daily check-in channel | P0-S | 10/26 | **Overdue** | G6 |
+| WR-40a | **Confirm the dates** | 10/31 is a Saturday — confirm a Saturday staging open. Production earliest 11/10 – 11/11 (§5) | P0-S | 10/28 | Open | — |
+| WR-41 | Phase-2 schedule | B2C before / after booking, booking-completed webhook, app / web embed, HA menu (iframe · SSO), reception agents, point billing, Zalo conversations, contract terms | P2 | November | Open | G40 – G47 · G7 |
+| WR-42 | Business name and address needed? | SharpTalk can read the **hotel address** from Hotel Feed (except hotels missing from it, WR-29). A **registered business name** would be a signed key in a phase-2 spec (v1.5); do not send it before then | P2 | With WR-41 | Open | — |
 
-| WR | Task | Detail | Prio | Due (proposed) | Ref |
-|----|----|----|----|----|----|
-| WR-40 | **Owners and channel** | Owners for PM, HA backend / FE, infra, Partner API, operations (CS lead), legal, and the daily check-in channel | P0-S | 10/26 | G6 |
-| WR-41 | Phase-2 schedule | B2C before / after booking, booking-completed webhook, Go2Joy app / web embed, HA menu (iframe · SSO), reception-agent operations, point billing, Zalo conversations, service-contract terms | P2 | November | G40 – G47 · G7 |
-| WR-42 | Business name and address needed? `v1.1 new` | Left open in v1.0. SharpTalk can fetch the **hotel address** itself from Hotel Feed `address`, so HA does not need to send it (except hotels missing from the feed, WR-29). If the **registered business name** is needed in the console, adding a signed key is agreed as a phase-2 spec (v1.5). Do not send it before then (unknown keys cause 401) | P2 | With WR-41 | v1.0 §8 |
+## 4. SharpTalk work
 
-
-## 4. SharpTalk work `v1.1`
-
-
-| \# | Work | Starts when | Time / due | Prio |
-|----|----|----|----|----|
-| S-01 | Release guide v1.4: §1 spec, change history, PHP sample (with NFC), new test vectors T1 – T6 `v1.3`<br>\[Done\] 10/24 — [shared page](https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8) · repo `GUIDE-261024-Go2Joy-HA-Identify-v1.4` · T1 – T6 cross-checked with PHP 8.3 + intl | — | Mon 10/26 | P0-S |
-| S-02 | Accept v1.4: `province_sn` and role codes, derive the region from the Province Feed, accept v1.3 keys during the transition `v1.3`<br>\[Done\] 10/24 on staging — 80 province numbers indexed; measured (number → province and region, the number wins over differing v1.3 values, unknown number → default assignee) | — | Tue 10/27 on staging | P0-S |
-| S-03 | Send the staging embed secret over a secure channel | WR-02 option A | Same day | P0-S |
-| S-04 | Input for a partner-supplied secret (small change) | WR-02 option B | Schedule after the decision | Conditional |
-| S-05 | `v1.2` Invite missing agents, complete the rules (North Center, South Center, central), Vietnamese category names, default assignee and hours (or review what Go2Joy entered) → share the assignment-check result | WR-10 – 13 | Same day – half a day | P0-S |
-| S-06 | After verification, end the temporary unsigned mode. The province-name region stopgap stays during the transition | WR-01 · 04 · 05 | Same day | P0-S |
-| S-07 | Install SharpTalk on the Go2Joy server (VN profile), move the go2joy tenant, knowledge, region table and rules, re-index, connect the Partner API. Sync stays within the production limit (about 500/minute) | WR-20 · 21 · 22 · 23 | 4 days | P0 |
-| S-08 | Send the production embed secret over a secure channel (different from staging) | WR-20 | Before WR-06 | P0 |
-| S-09 | Re-check the hourly lookup request (with `startTime` · `endTime`) | — | 10/27 | P2 |
-| S-10 | **Zero-downtime secret rotation**: accept the old and new secret together during a rotation window, then retire the old one. Add the procedure to the guide | — | 11/06 | P1 |
-| S-11 | Enter the terms version (URL and notice text already set on staging; moved with the production install) | WR-31 | Same day | P0 |
-| S-12 | Clean up knowledge conflicts (Notion re-sync confirmed) | WR-16 | 1 – 2 days | P1 |
-
+| # | Work | Starts when | Due | Status | Prio |
+|---|---|---|---|---|---|
+| S-01 | Spec v1.4: change history, PHP sample (with NFC), test vectors T1 – T6 (cross-checked with PHP 8.3 + intl). Doc revision 10/27 | — | 10/26 | **Done** 10/24 · revised 10/27 | P0-S |
+| S-02 | Accept v1.4: `province_sn` → name and region from the province index (80), role codes, v1.3 keys in parallel | — | 10/27 | **Done** 10/24 on staging | P0-S |
+| S-03 | Send the staging embed secret over a secure channel | WR-02 (option A by default) | Same day | Waiting for an HA backend owner (WR-40) | P0-S |
+| S-04 | Input for a partner-supplied secret | WR-02 option B | After the decision | Conditional | — |
+| S-05 | Enter rules, Vietnamese category names, default assignee and hours from Go2Joy's reply; remove the Amoeba / test accounts from go2joy routing once Go2Joy agents are active; share the assignment-check result | WR-10 – 13 | Same day | Waiting | P0-S |
+| S-06 | **End the temporary unsigned mode** on staging and set host terms trust back to "signed" | **A verified identify seen on HA UAT** (WR-01 · WR-04) — **before** WR-05 | ≤ 10/28 | Waiting | P0-S |
+| S-07 | Install SharpTalk on the Go2Joy server (VN profile), move the go2joy tenant, knowledge, province index, rules, categories and notice text, re-index, connect the Partner API (within ~500/minute), and **register the HA production origin in the tenant's allowed embed origins** | WR-20 · 21 · 22 · 23 | 4 working days | Waiting | P0 |
+| S-08 | Send the production embed secret (different from staging) | WR-20 | Before WR-06 | Waiting | P0 |
+| S-09 | Re-check the hourly lookup request (`startTime` · `endTime`) before asking WR-28 | — | 10/27 | Open | P2 |
+| S-10 | Zero-downtime secret rotation (old and new accepted during a window) + procedure in the spec | — | 11/06 | Open | P1 |
+| S-11 | Enter the terms version and the privacy policy URL | WR-31 | Same day | Waiting | P0 |
+| S-12 | Clean up knowledge conflicts | WR-16 | 1 – 2 days | Waiting | P1 |
+| S-13 | **Invited → active on first sign-in** (an invited agent who signs in with the temporary password becomes assignable) | — | 10/28 | Open | P0-S |
+| S-14 | **Hyphenated province names in the stopgap** (Bà Rịa - Vũng Tàu was stored as region `bà_rịa_vũng_tàu`, so hotel 4162 matched no rule); keep a wrong region from being stored as signed | — | 10/28 | Open | P0-S |
+| S-15 | Duplicate sign-in rows in the work log when two identify calls for the same session arrive together | — | 11/06 | Open | P1 |
+| S-16 | Spec v1.4 / WR in ko · en · vi + PDF on /manual/go2joy | — | 10/27 | **Done** (this version) | P0-S |
 
 ## 5. Timeline and dependencies
 
-``` tl
-Mon 10/26  WR-02 signing key decision · WR-40 owners · WR-23 Partner production certification filed
-           SharpTalk: S-01 guide v1.4 and test vectors
-Tue 10/27  WR-01 signing endpoint + T1–T6 · role code list · WR-10–14 teams, roster, criteria, accounts
-           SharpTalk: S-02 accept v1.4 · S-03 secret · S-05 accounts and rules
-Wed 10/28  WR-04 FE embed fix → identify 200
-10/29–30   WR-05 joint UAT · WR-19a agent alert settings · WR-20/21/22 production prerequisites
-Sat 10/31  Staging open (HA UAT → SharpTalk staging, real agents answer)
+```
+Mon 10/26  (overdue) WR-02 key decision · WR-40 owners · WR-23 filing
+Tue 10/27  WR-01 signing endpoint + T1–T6 + role code list · WR-10–14 rules, activation, categories, default assignee, accounts
+           SharpTalk: S-16 docs v1.4 · S-09
+Wed 10/28  WR-04 FE fix → identify 200 with "authenticated": true, console "verified"
+           SharpTalk: S-06 right after that · S-13 · S-14
+10/29–30   WR-05 joint UAT on spec §8 (after S-06) · WR-19a alert settings · WR-20/21/22
+Sat 10/31  Staging open (to confirm, WR-40a)
 
 Production open = the day all three are done
-  ① WR-20 server handover + S-07 install 4 days + production UAT 3 days (needs WR-30 · 31)
-  ② WR-23 Partner production credential (certification about one week)
-  ③ WR-06 HA production deploy (needs S-08 production secret)
-  → If every proposed date holds, the earliest production open is Tue 11/10
+  ① WR-23 filed → credential about one week later
+  ② then S-07 install (4 working days, needs WR-20 · 21 · 22) → production UAT (3 working days, needs WR-30 · 31)
+  ③ WR-06 HA production deploy (needs S-08)
+  → earliest 11/10 – 11/11, later by every day WR-23 filing slips
 ```
 
-- The 10/22 prerequisite deadline has passed, so **10/31 is a staging open, not a production open** (PLN-261015 decision).
-- If WR-01 or WR-04 is late, staging can only open with the temporary unsigned mode. In that case we recommend not starting real agent service.
-- WR-23 certification takes about a week and is on the critical path; it must be filed on 10/26 for 11/10 to hold.
-- `v1.2` If WR-11 is late, southern hotels reach only the default assignee.
+- If WR-01 or WR-04 is late, staging can only open with the temporary unsigned mode. We recommend not starting real agent service in that case.
+- If WR-11 and WR-13 are late, southern and central hotels keep alerting everyone.
 
 ## 6. Done criteria
 
-### 6.1 Staging open (WR-05 checklist)
+### 6.1 Staging open
 
-
-| Check | Expected |
-|----|----|
-| Open the widget while signed out | As today: guest, consent banner shown |
-| Sign in to HA → open the widget | identify **200**, `identified {ok: true}`, no consent banner, staff name in the greeting, "verified" in the console live chat |
-| Console › Customers › Business | One hotel (name · province · region, the region derived by SharpTalk), the signed-in staff and role as a contact, room types as that hotel's products |
-| Switch HA language vi ↔ en | Signed values stay the same, so the conversation continues; only reply and button language changes |
-| Change the selected hotel | Business customer and conversation switch to the new hotel |
-| Select "all hotels" → talk to an agent | identify 200, no hotel, routed to the WR-13 fallback agent |
-| "Talk to an agent" from hotels in all 5 regions (north · north_center · central · south_center · south) → pick category bs and cs each `v1.2` | Assigned to team × label by the WR-10 rules; the alarm center shows assignee and rule; assignees alerted |
-| Skip the category `v1.2` | Assigned to the WR-13 default assignee |
-| Console Settings › Agent handoff › Assignment check `v1.2` | No rule warnings (no "0 active" left) |
-| Hotel name with diacritics (including decomposed input) | 200 (NFC confirmed) |
-| Staff account with an empty email | The email field is dropped; 200 |
-| Widget after sign-out · session expiry · signing in as another account | Guest (or the new account); the previous staff member's name and conversations are not visible |
-| Edit one **signed value** (`userId` or an attribute) without re-signing | 401 E5048, `ok: false`, guest. `name` · `email` · `phone` are not signed, so editing them still gives 200, as designed |
-
-
-Once these pass, SharpTalk turns off the temporary unsigned mode on staging (S-06).
+**The joint UAT uses one list: [spec v1.4 §8](GUIDE-261024-Go2Joy-HA-Identify-v1.4.en.md).** It runs after S-06, so the 401 rows can pass.
 
 ### 6.2 Production open
 
-
 | Check | Expected |
-|----|----|
-| Sign in to production HA → widget (`sharptalk.go2joy.vn`) | identify 200 (production secret); the key §6.1 checks pass again |
+|---|---|
+| Sign in to production HA → widget (`sharptalk.go2joy.vn`) | identify 200 with `"authenticated": true` (production secret); the key spec §8 rows pass again |
 | Send a package signed with the staging secret to production | 401 (environments are separate) |
-| Partner API production connection | Hotel info · rooms · region table refresh succeeds; no error 6 (signature) or 8 (IP) |
-| Terms and notice | Consent records carry the HA terms URL and version from WR-31 |
+| HA production origin | Registered in the tenant's allowed embed origins; the widget works with origin enforcement on |
+| Partner API production connection | Hotel info · rooms · province index refresh succeeds; no error 6 (signature) or 8 (IP) |
+| Terms and notice | Consent records carry the terms URL and version; the consent notice links the privacy policy |
 
-
-## 7. Reference — Partner API essentials (public docs, 10/23)
-
+## 7. Reference — Partner API essentials (public docs, checked 10/27)
 
 | Item | Docs | Used by SharpTalk for |
-|----|----|----|
+|---|---|---|
 | Environments | Staging `staging-partner.go2joy.vn` (about 250/minute) · production `partner.go2joy.vn` (about 500/minute) | Sync rate limit |
-| Auth | `Authorization` = hex(HMAC-SHA256(client secret, URL + "\|" + JSON body)); body has `clientId` · `timestamp` (expires in 5 minutes); IP allow-list | WR-20 NTP · static IP |
+| Auth | `Authorization` = hex(HMAC-SHA256(client secret, URL + "\|" + JSON body sorted by key)); body has `clientId` · `timestamp` (expires in 5 minutes); IP allow-list | WR-20 NTP · static IP |
 | Language | `Localization` header `vi` / `en` (default en) | Lookups in the widget's language |
-| Regions | Province Feed `region`: 1 South · 2 North · 3 Central · 4 North Central · 5 South Center | §1.1 derivation table |
-| Hotel → province | Hotel Feed `provinceSn` · `address`; Hotel Info has no province | Why HA sends `province_sn` (hotels missing from the feed) |
-| Error codes | Body `code` 0 server error · 1 success · 2 failure; error 6 invalid signature · 8 unauthorized (IP) · 12 too many attempts | Production monitoring alerts |
-
+| Regions | Province Feed `region`: 1 South · 2 North · 3 Central · 4 North Central · 5 South Center (+ `10` undocumented). No province uses 3 today | §1 derivation |
+| Feeds | Province (80) · District (per province) · Hotel (address, province, district, rating, images — HA hotels partly missing) · Room Type (bed, size, facilities, views, images) | Province index, hotel profile, room products |
+| Hotel APIs | Hotel Info (hours, cancellation, no province) · Hotel List and Room Type List (live price, flash sale, lock status; rooms left always "unknown") | Hotel profile; live availability is a later step |
+| Error codes | Body `code` 0 server error · 1 success · 2 failure; error 4 parameter · 6 signature · 8 unauthorized (IP / client) · 10 permission · 11 not found · 12 too many attempts | Production monitoring |
 
 ## 8. Reply table
 
 Fill in and send to the daily check-in channel.
 
-
 | WR | Prio | Owner | Feasible date | Status (in progress / done / on hold) | Note |
-|----|----|----|----|----|----|
-| WR-01 | P0-S |  |  |  |  |
-| WR-02 | P0-S |  |  |  | Option A / B |
-| WR-03 | P1 |  |  |  |  |
-| WR-04 | P0-S |  |  |  |  |
-| WR-05 | P0-S |  |  |  |  |
-| WR-06 | P0 |  |  |  |  |
-| WR-10 | P0-S |  |  |  |  |
-| WR-11 | P0-S |  |  |  |  |
-| WR-12 | P0-S |  |  |  |  |
-| WR-13 | P0-S |  |  |  |  |
-| WR-14 | P0-S |  |  |  |  |
-| WR-15 | P0 |  |  | Done |  |
-| WR-16 | P1 |  |  |  |  |
-| WR-17 | P1 |  |  |  |  |
-| WR-18 | P1 |  |  |  | Keep / change |
-| WR-19 | P1 |  |  |  |  |
-| WR-19a | P1 |  |  |  |  |
-| WR-20 | P0 |  |  |  |  |
-| WR-21 | P0 |  |  |  |  |
-| WR-22 | P1 |  |  |  |  |
-| WR-23 | P0 |  |  |  | Booking-test exemption? |
-| WR-24 – 29 | P1 / P2 |  |  |  |  |
-| WR-30 | P0 |  |  |  |  |
-| WR-31 | P0 |  |  |  |  |
-| WR-40 | P0-S |  |  |  |  |
-| WR-41 | P2 |  |  |  |  |
-| WR-42 | P2 |  |  |  | Needed / not needed |
-
+|---|---|---|---|---|---|
+| WR-01 | P0-S | | | | |
+| WR-02 | P0-S | | | | Option A / B (A if no reply) |
+| WR-03 | P1 | | | | |
+| WR-04 | P0-S | | | | |
+| WR-05 | P0-S | | | | |
+| WR-06 | P0 | | | | |
+| WR-10 | P0-S | | | | |
+| WR-11 | P0-S | | | | |
+| WR-12 | P0-S | | | | |
+| WR-13 | P0-S | | | | |
+| WR-14 | P0-S | | | | |
+| WR-15 | P0 | | | Done | |
+| WR-16 | P1 | | | | |
+| WR-17 | P1 | | | | |
+| WR-18 | P1 | | | | Keep / change |
+| WR-19 | P1 | | | | |
+| WR-19a | P1 | | | | |
+| WR-20 | P0 | | | | |
+| WR-21 | P0 | | | | |
+| WR-22 | P1 | | | | |
+| WR-23 | P0 | | | | Booking-test exemption? |
+| WR-24 – 29 | P1 / P2 | | | | |
+| WR-30 | P0 | | | | |
+| WR-31 | P0 | | | | |
+| WR-40 | P0-S | | | | |
+| WR-40a | P0-S | | | | Saturday 10/31? |
+| WR-41 | P2 | | | | |
+| WR-42 | P2 | | | | Needed / not needed |

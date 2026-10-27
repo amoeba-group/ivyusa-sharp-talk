@@ -100,13 +100,13 @@ figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; 
 <body>
 <header class="masthead"><div class="wrap">
   <nav class="topnav"><a href="./">← Go2Joy 문서 목록</a><span class="chips" aria-label="문서"><a class="chip" href="work-request.ko.html">작업요청서</a><a class="chip" href="ha-identify.ko.html" aria-current="page">HA 연동 v1.4</a><a class="chip" href="integration.ko.html">요청 사항·체크리스트</a><a class="chip" href="plan.ko.html">프로젝트 계획서</a><a class="chip" href="kb-conflicts.ko.html">지식 충돌 분류</a><a class="chip" href="notion-setup.ko.html">노션 연동 설정</a></span><span class="chips" aria-label="언어"><a class="chip" href="ha-identify.ko.html" aria-current="page" hreflang="ko">한국어</a><a class="chip" href="ha-identify.en.html" hreflang="en">English</a><a class="chip" href="ha-identify.vi.html" hreflang="vi">Tiếng Việt</a><a class="chip" href="ha-identify.ko.pdf" download>PDF</a></span></nav>
-  <p class="eyebrow">Go2Joy 전용 문서 · 2026-10-24</p>
+  <p class="eyebrow">Go2Joy 전용 문서 · 2026-10-27</p>
   <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
   <p class="domain">HA 로그인 사용자 연동 규격 v1.4</p>
 </div></header>
 <main class="wrap doc"><h1 id="hotel-admin-로그인-사용자-연동--규격-v14">Hotel Admin 로그인 사용자 연동 — 규격 v1.4</h1>
 <blockquote class="lead">
-<p>Go2Joy HA 개발팀이 구현할 로그인 사용자 연동 규격 v1.4입니다(2026-10-24). 맨 앞 체크리스트를 모두 통과하면 완료입니다. 일정·담당은 <a href="work-request.ko.html">작업요청서</a>. 인쇄·전달용: <a href="ha-identify.ko.pdf">PDF</a></p>
+<p>Go2Joy HA 개발팀이 구현할 로그인 사용자 연동 규격 v1.4입니다(2026-10-24, 문서 개정 10/27). 맨 앞 체크리스트를 모두 통과하면 완료입니다. 일정·담당은 <a href="work-request.ko.html">작업요청서</a>. 인쇄·전달용: <a href="ha-identify.ko.pdf">PDF</a></p>
 </blockquote>
 <blockquote>
 <p>HA 직원이 로그인한 상태로 위젯을 열면 <strong>HA 서버가 직원·호텔 정보를 서명</strong>하고, HA FE가 그 패키지를 <strong>그대로</strong> 위젯에 넘깁니다.
@@ -127,7 +127,7 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 </tr>
 <tr>
 <td>일자 / 버전</td>
-<td>2026-10-24 · <strong>v1.4</strong> (v1.3 2026-10-22 · v1.0 PDF 2026-10-20은 폐기)</td>
+<td>2026-10-24 · <strong>v1.4</strong> · 문서 개정 2026-10-27(전달 형식 변경 없음, "문서 개정 10/27" 참고) · v1.3 2026-10-22 · v1.0 PDF 2026-10-20은 폐기</td>
 </tr>
 <tr>
 <td>환경</td>
@@ -135,7 +135,7 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 </tr>
 <tr>
 <td>함께 보는 문서</td>
-<td><a href="work-request.ko.html">작업요청서</a>(WR 번호·일정) · <span class="docref">v1.3</span>(이전 규격)</td>
+<td><a href="work-request.ko.html">작업요청서</a>(WR 번호·일정) · v1.3 (이전 규격, 폐기)</td>
 </tr>
 <tr>
 <td>예제 코드</td>
@@ -146,7 +146,7 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <h2 id="ha가-해야-할-일--체크리스트">✅ HA가 해야 할 일 — 체크리스트</h2>
 <p><strong>이 표가 이 문서의 핵심입니다.</strong> 각 줄의 확인 방법까지 통과하면 완료입니다.</p>
 <blockquote>
-<p><strong>진행 현황 (10/27 HA UAT 확인)</strong>: 완료 <strong>B5 · B6(UAT)</strong>. 나머지는 아직 시작 전입니다. B4는 일부만(로그아웃 버튼·토큰 만료 시 <code>logout</code> 호출, 다른 탭 로그아웃 처리는 없음).</p>
+<p><strong>진행 현황 (10/27 HA UAT 확인)</strong>: 완료 <strong>B5 · B6(UAT)</strong>. 나머지는 아직 시작 전입니다. B4는 일부만(로그아웃 버튼·토큰 만료 시 <code>logout</code> 호출, 다른 탭 로그아웃 처리는 없음). B3: <code>identify</code>는 시작 시 한 번만 호출되고 호텔 변경 시에는 호출되지 않습니다.</p>
 </blockquote>
 <h3 id="a-ha-백엔드-wr-01--wr-02--1027화">A. HA 백엔드 (WR-01 · WR-02) — 10/27(화)</h3>
 <ul>
@@ -165,7 +165,7 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <li><input disabled="" type="checkbox"> <strong>A7. <code>role</code> = HA 역할 코드</strong>(화면 언어와 무관한 값). <strong>코드표</strong>(코드 · 베트남어/영어 표시명)를 SharpTalk에 회신.</li>
 <li><input disabled="" type="checkbox"> <strong>A8. "전체 호텔"을 고른 경우</strong> <code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code>을 빼고 <code>role</code>만 서명.</li>
 <li><input disabled="" type="checkbox"> <strong>A9. 정규화 순서를 지킨다</strong>: <strong>NFC → 공백 정리(NBSP 포함) → trim → 120자(<code>mb_substr</code>)</strong>. PHP <code>intl</code>·<code>mbstring</code> 확장 필요.</li>
-<li><input disabled="" type="checkbox"> <strong>A10. 빈 값은 필드째 뺀다</strong> — attributes와 <code>name</code> · <code>email</code> · <code>phone</code> 모두(빈 <code>email</code>은 400).</li>
+<li><input disabled="" type="checkbox"> <strong>A10. 빈 값은 필드째 뺀다</strong> — attributes와 <code>name</code> · <code>email</code> · <code>phone</code> 모두. <strong>주소 형식이 아닌 email도 뺀다</strong> — 빈 email이나 형식이 틀린 email은 400이 되고 로그인 전체가 실패한다(직원은 게스트로 남음). <code>userId</code> 120자 초과, <code>name</code> 200자 초과, <code>phone</code> 40자 초과도 마찬가지다.</li>
 <li><input disabled="" type="checkbox"> <strong>A11. <code>hash = hex(HMAC-SHA256(secret, 서명 문자열))</code></strong>, 서명 문자열은 5.1 형식(키 알파벳 순).</li>
 <li><input disabled="" type="checkbox"> <strong>A12. 테스트 벡터 T1 ~ T6이 모두 일치</strong>(5.4) — 결과를 SharpTalk에 회신.</li>
 <li><input disabled="" type="checkbox"> <strong>A13. 응답 패키지는 HTTPS로 로그인 세션에만 반환하고 로그에 남기지 않는다.</strong></li>
@@ -179,11 +179,12 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <li><input checked="" disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong> — 지금처럼 <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>, 바뀌면 <code>setLocale</code>. <em>(10/27 확인: 완료)</em></li>
 <li><input checked="" disabled="" type="checkbox"> <strong>B6. CSP(<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>)·CORS에 SharpTalk 도메인 허용.</strong> <em>(10/27 확인: UAT 완료 — CSP 제한 없음, 위젯 정상 로드. 운영은 D3)</em></li>
 <li><input disabled="" type="checkbox"> <strong>B7. SharpTalk 도메인 3곳</strong>(<code>embed.js</code> src · <code>widgetUrl</code> · <code>ivy:event</code> origin 검사)을 <strong>환경 설정값 하나</strong>로 묶는다(운영 전환 시 한 번에 교체).
-확인(B 전체): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200</strong>(<code>consentState: "granted"</code>), 페이지에 <code>ivy:event</code> <code>identified {ok: true}</code>.</li>
+확인(B 전체): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200, <code>"authenticated": true</code></strong>, 콘솔에서 세션이 <strong>"검증됨"</strong>("미검증" 아님).
+<strong>이것만으로는 증거가 아니다</strong>: 스테이징이 서명 없는 로그인 임시 허용(7절)을 유지하는 동안에는 서명이 틀려도 200, <code>"consentState": "granted"</code>, <code>identified {ok: true}</code>가 나온다.</li>
 </ul>
 <h3 id="c-uat-공동-점검-wr-05--1029--1030">C. UAT 공동 점검 (WR-05) — 10/29 ~ 10/30</h3>
 <ul>
-<li><input disabled="" type="checkbox"> <strong>C1. 8절 체크리스트 전 항목 통과</strong>(SharpTalk과 함께).</li>
+<li><input disabled="" type="checkbox"> <strong>C1. 8절 체크리스트 전 항목 통과</strong>(SharpTalk과 함께). 8절이 유일한 UAT 목록이며, SharpTalk이 서명 없는 로그인 임시 허용(7절)을 끝낸 뒤 진행한다.</li>
 <li><input disabled="" type="checkbox"> <strong>C2. 테스트 계정</strong> <code>Quản lý</code>(여러 호텔) 1개 + <code>Lễ tân</code>(호텔 1개) 1개, 북부·남부 호텔 포함(WR-14).</li>
 </ul>
 <h3 id="d-운영-배포-wr-06--운영-uat-전">D. 운영 배포 (WR-06) — 운영 UAT 전</h3>
@@ -191,7 +192,7 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <li><input disabled="" type="checkbox"> <strong>D1. 운영 embed secret 적용</strong> — 스테이징과 다른 값(SharpTalk 보안 채널 전달).</li>
 <li><input disabled="" type="checkbox"> <strong>D2. 운영 도메인으로 교체</strong>: <code>https://sharptalk.go2joy.vn/widget/embed.js</code> · <code>widgetUrl</code> · origin 검사.</li>
 <li><input disabled="" type="checkbox"> <strong>D3. 운영 CSP·CORS 반영, HA 배포 일정 사전 공유.</strong>
-확인: 운영 HA에서 identify 200, 스테이징 secret으로 만든 패키지는 운영에서 401.</li>
+확인: 운영 HA에서 identify 200, <code>"authenticated": true</code>. 스테이징 secret으로 만든 패키지는 운영에서 401.</li>
 </ul>
 <hr>
 <h2 id="v14-변경-사항">v1.4 변경 사항</h2>
@@ -261,7 +262,49 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <li>권역표를 HA와 SharpTalk 양쪽에 두면 어긋납니다. Go2Joy Partner API의 Province Feed 한 곳을 기준으로 합니다.</li>
 <li>성 이름·역할 표시명은 HA 언어(vi/en)에 따라 바뀌어 서명 값이 달라질 수 있습니다. 번호와 코드는 바뀌지 않습니다.</li>
 </ul>
-<p><strong>전환 기간</strong>: SharpTalk은 v1.3 형식(<code>province</code> · <code>region</code> 키)도 당분간 검증 통과시킵니다. <code>province_sn</code>이 함께 오면 <strong><code>province_sn</code>으로 정한 값이 우선</strong>입니다. HA가 v1.4로 전환해 UAT를 통과하면 v1.3 키 허용을 끝내고 날짜를 알립니다.</p>
+<p><strong>전환 기간</strong>: SharpTalk은 v1.3 형식(<code>province</code> · <code>region</code> 키)도 당분간 검증 통과시킵니다. <code>province_sn</code>이 함께 오면 <strong><code>province_sn</code>으로 정한 값이 우선</strong>입니다. v1.3 키 허용은 HA가 v1.4로 UAT를 통과한 뒤 별도 릴리스에서 끝내며, 날짜는 미리 알립니다.</p>
+<h3 id="문서-개정-1027-ha가-보내는-내용은-변경-없음">문서 개정 10/27 (HA가 보내는 내용은 변경 없음)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>위치</th>
+<th>변경</th>
+</tr>
+</thead><tbody><tr>
+<td>1</td>
+<td>B 확인 · 5.5 · 7절 · 8절</td>
+<td>스테이징이 서명 없는 로그인을 받는 동안 <code>ok: true</code>는 증거가 아닙니다. 증거 = <code>"authenticated": true</code> + 콘솔 "검증됨". SharpTalk은 HA UAT에서 검증된 identify가 확인되는 즉시, 공동 UAT <strong>전에</strong> 임시 허용을 끝냅니다</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1절 권역표 · 8절</td>
+<td>현재 권역 3(Central)에 속한 성은 없습니다. 중부 해안 성은 권역 5, Thừa Thiên Huế는 권역 4입니다. UAT는 실제로 있는 4개 권역으로 진행합니다</td>
+</tr>
+<tr>
+<td>3</td>
+<td>1절 연속성 · 6절</td>
+<td>호텔 단위 연속성을 정확히 기술: 위젯에는 직원 본인의 대화와 호텔 대화 건수가 보입니다</td>
+</tr>
+<tr>
+<td>4</td>
+<td>A10 · 5.5</td>
+<td>형식이 틀린 email, 길이 초과 <code>userId</code> / <code>name</code> / <code>phone</code>도 400이며 로그인 전체가 실패합니다</td>
+</tr>
+<tr>
+<td>5</td>
+<td>7절</td>
+<td>상태 갱신: v1.4 수신은 스테이징 완료(10/24)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>8절</td>
+<td>HA·SharpTalk 공용 UAT 목록 하나로 통합(작업요청서 6.1과 병합)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>B5 · B6</td>
+<td>HA UAT에서 완료(10/27)</td>
+</tr>
+</tbody></table></div>
 <h2 id="1-sharptalk이-하는-일">1. SharpTalk이 하는 일</h2>
 <div class="scroll"><table><thead><tr>
 <th>단계</th>
@@ -281,7 +324,7 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 </tr>
 <tr>
 <td>연속성</td>
-<td>호텔 계정 단위로 이전 대화를 이음(세션 종료·다른 PC·다른 직원)</td>
+<td>호텔 계정 단위로 이음: AI가 호텔의 이전 대화를 참고하고 24시간 동안 같은 상담원을 우선 배정. 위젯에서는 직원마다 본인의 이전 대화와 호텔 대화 건수가 보임(작업요청서 WR-18)</td>
 </tr>
 <tr>
 <td>배정</td>
@@ -307,7 +350,7 @@ SharpTalk은 서명을 검증한 뒤 호텔을 기업고객으로, 직원을 연
 <tr>
 <td>3</td>
 <td><code>central</code></td>
-<td>Central</td>
+<td>Central — <strong>현재 피드에 해당 성 없음</strong>. 중부 해안 성(Đà Nẵng, Quảng Nam, Bình Định, Khánh Hòa, Gia Lai …)은 5, Thừa Thiên Huế는 4</td>
 </tr>
 <tr>
 <td>4</td>
@@ -547,13 +590,13 @@ window.addEventListener('message', (e) =&gt; {
 </tr>
 <tr>
 <td>401 · E5048</td>
-<td>서명 불일치: 문자열·secret·환경 불일치, 모르는 키, 120자 초과·줄바꿈, NFC/공백 차이, 숫자가 아닌 <code>province_sn</code></td>
+<td>서명 불일치: 문자열·secret·환경 불일치, 모르는 키, 120자 초과·줄바꿈, NFC/공백 차이, 숫자가 아닌 <code>province_sn</code>. <strong>스테이징에서는 임시 허용이 끝날 때까지(7절) 아직 검증되지 않은 세션의 불일치를 401 대신 "미검증"(200)으로 받아들임</strong></td>
 <td>4절과 비교, 5.4 재실행</td>
 </tr>
 <tr>
 <td>400</td>
-<td>형식 오류(빈 email 등)</td>
-<td>빈 필드 제외</td>
+<td>형식 오류: 빈 email·형식이 틀린 email, <code>userId</code> 120자 초과, <code>name</code> 200자 초과, <code>phone</code> 40자 초과. 로그인 전체가 실패</td>
+<td>빈 필드·잘못된 필드 제외</td>
 </tr>
 <tr>
 <td>404</td>
@@ -564,7 +607,8 @@ window.addEventListener('message', (e) =&gt; {
 <h2 id="6-보안">6. 보안</h2>
 <ul>
 <li>secret은 HA 서버 환경변수에만. 스테이징·운영 secret은 다릅니다(SharpTalk이 보안 채널로 전달).</li>
-<li>서명 패키지를 가진 사람은 그 직원으로 채팅하고 그 호텔의 이전 대화를 볼 수 있습니다. 로그에 남기지 말고, 로그아웃 처리(B4)를 빠뜨리지 마십시오.</li>
+<li>서명 패키지를 가진 사람은 그 직원으로 채팅하고, 그 직원의 이전 대화를 보고, 호텔의 이전 대화를 참고한 답변을 받을 수 있습니다. 로그에 남기지 말고, 로그아웃 처리(B4)를 빠뜨리지 마십시오.</li>
+<li>AI 제공자에게는 직원 표시 이름·호텔 이름·성·권역·역할이 전달됩니다(맥락에 맞는 인사·답변용). email·전화번호·사용자 ID는 보내지 않습니다.</li>
 <li>서명 유효기간(<code>ts</code>) 적용 여부는 작업요청서 WR-03에서 결정합니다(적용하면 v1.5로 함께 변경).</li>
 <li>공용 PC(프런트 데스크): B4의 자동 로그아웃·계정 전환 처리가 특히 중요합니다.</li>
 </ul>
@@ -575,72 +619,96 @@ window.addEventListener('message', (e) =&gt; {
 </tr>
 </thead><tbody><tr>
 <td>v1.4 수신(<code>province_sn</code> → 성 이름·권역, v1.3 병행)</td>
-<td>스테이징 배포(10/27 목표)</td>
+<td><strong>스테이징 완료(10/24)</strong></td>
 </tr>
 <tr>
 <td>Go2Joy 성 목록 80개(번호 색인)</td>
 <td>스테이징 입력 · 운영은 설치 시 투입</td>
 </tr>
 <tr>
-<td>서명 없는 로그인 임시 허용(스테이징 UAT용)</td>
-<td>A·B 완료 후 종료</td>
+<td>서명 없는 로그인 임시 허용(스테이징 전용, UAT용)</td>
+<td><strong>HA UAT에서 검증된 identify가 확인되는 즉시</strong>(A·B 완료), 공동 UAT <strong>전에</strong> 종료 — 8절의 401 항목이 통과할 수 있도록. 그때까지는 틀린 서명도 ("미검증"으로) 받아들임</td>
 </tr>
 <tr>
 <td>역할 코드 표시 이름</td>
 <td>A7 코드표 수령 후</td>
 </tr>
 </tbody></table></div>
-<h2 id="8-uat-체크리스트-wr-05">8. UAT 체크리스트 (WR-05)</h2>
+<h2 id="8-uat-체크리스트-wr-05--유일한-uat-목록">8. UAT 체크리스트 (WR-05) — 유일한 UAT 목록</h2>
+<p>HA와 SharpTalk이 함께 사용합니다(작업요청서 6.1이 이 표를 가리킵니다). <strong>SharpTalk이 서명 없는 로그인 임시 허용을 끝낸 뒤</strong>(7절) 진행합니다.</p>
 <div class="scroll"><table><thead><tr>
 <th>점검</th>
+<th>위치</th>
 <th>기대</th>
 </tr>
 </thead><tbody><tr>
 <td>미로그인 상태에서 위젯</td>
+<td>HA UAT</td>
 <td>게스트, 동의 안내 표시(현재와 같음)</td>
 </tr>
 <tr>
 <td>HA 로그인 → 위젯</td>
-<td>identify <strong>200</strong>, <code>identified {ok: true}</code>, 동의 안내 없음, 인사말에 직원 이름, 콘솔 "검증됨"</td>
+<td>HA UAT · 콘솔 라이브챗</td>
+<td>identify <strong>200</strong>, <code>"authenticated": true</code>, <code>consentState: "granted"</code>, 동의 안내 없음, 인사말에 직원 이름, 콘솔 "검증됨"</td>
 </tr>
 <tr>
-<td>콘솔 › 고객 › 기업고객</td>
-<td>호텔 1건(이름 · 성 · 권역 — SharpTalk 산출), 연락처에 직원·역할 코드</td>
+<td>기업고객</td>
+<td>콘솔 › 고객</td>
+<td>호텔 1건(이름 · 성 · 권역 — SharpTalk 산출, 서명 로그인으로만 채워짐), 연락처에 직원·역할 코드, 객실 유형이 그 호텔의 상품으로 등록</td>
 </tr>
 <tr>
 <td>HA 언어 vi ↔ en</td>
+<td>HA UAT</td>
 <td>서명 값 그대로 → 같은 대화가 이어지고 응답 언어만 바뀜</td>
 </tr>
 <tr>
 <td>호텔 선택 변경</td>
+<td>HA UAT · 콘솔 › 고객</td>
 <td>새 호텔로 기업고객·대화 전환</td>
 </tr>
 <tr>
 <td>"전체 호텔" → 상담원 연결</td>
-<td>200, 호텔 없음, 기본 담당자</td>
+<td>HA UAT · 콘솔 › 알람센터</td>
+<td>200, 호텔 없음, 기본 담당자(작업요청서 WR-13)</td>
 </tr>
 <tr>
-<td>권역별 호텔(north · north_center · south_center · south)에서 상담원 연결 → 상담카테고리 선택</td>
-<td>콘솔 규칙대로 팀 배정, 알람센터에 배정자 표시</td>
+<td>피드에 있는 4개 권역(north · north_center · south_center · south)의 호텔에서 상담원 연결 × 상담카테고리 bs / cs</td>
+<td>HA UAT · 콘솔 › 상담원 연결 · 알람센터</td>
+<td>콘솔 규칙대로 팀 × 라벨(작업요청서 WR-10), 알람센터에 배정자 표시</td>
+</tr>
+<tr>
+<td>상담카테고리 건너뛰기</td>
+<td>HA UAT · 콘솔 › 알람센터</td>
+<td>기본 담당자(WR-13)</td>
+</tr>
+<tr>
+<td>배정 확인</td>
+<td>콘솔 › 설정 › 상담원 연결</td>
+<td>"활성 0명" 경고 없음</td>
 </tr>
 <tr>
 <td>성조가 많은 호텔명(분해형 입력 포함)</td>
+<td>HA UAT · 콘솔 › 고객</td>
 <td>200</td>
 </tr>
 <tr>
 <td>email 빈 직원</td>
+<td>HA UAT · 콘솔 › 고객</td>
 <td>email 필드 없이 200</td>
 </tr>
 <tr>
 <td>로그아웃 · 세션 만료 · 다른 계정 로그인</td>
+<td>HA UAT</td>
 <td>게스트(또는 새 계정), 이전 직원 대화 안 보임</td>
 </tr>
 <tr>
 <td>서명 대상 값 하나를 재서명 없이 수정</td>
-<td>401, 게스트. <code>name</code> · <code>email</code> · <code>phone</code>은 서명 대상이 아니라 바꿔도 200</td>
+<td>HA UAT · 콘솔 › 작업 로그</td>
+<td>401 E5048, <code>ok: false</code>, 게스트. <code>name</code> · <code>email</code> · <code>phone</code>은 서명 대상이 아니라 바꿔도 200</td>
 </tr>
 <tr>
 <td>목록 밖 키(예: <code>district</code>)를 넣고 서명</td>
+<td>HA UAT · 콘솔 › 작업 로그</td>
 <td>401(모르는 키는 서명 계산에서 빠짐)</td>
 </tr>
 </tbody></table></div>

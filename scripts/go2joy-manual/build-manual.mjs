@@ -1,6 +1,7 @@
 // Go2Joy manual pages (apps/web/public/manual/go2joy): {doc}.{lang}.md -> {doc}.{lang}.html + index.html.
 // Mermaid is rendered to inline SVG at build time, so the published pages need no script.
 //   npm i --no-save marked@12 playwright  (once)
+//   node scripts/go2joy-manual/sync-from-guide.mjs   (work-request / ha-identify sources from docs/guide)
 //   node scripts/go2joy-manual/build-manual.mjs apps/web/public/manual/go2joy apps/web/public/manual/go2joy
 //   EXE=<chromium path> is optional (defaults to the playwright browser).
 //   ONLY=work-request,ha-identify limits the rebuild to those documents.
@@ -16,14 +17,14 @@ const LANGS = ['ko', 'en', 'vi'];
 const LANG_NAME = { ko: '한국어', en: 'English', vi: 'Tiếng Việt' };
 const DOCS = {
   'work-request': {
-    date: '2026-10-24',
+    date: '2026-10-27',
     pdf: true,
     ko: { title: '작업요청서 — Go2Joy 수행 작업', short: '작업요청서', desc: 'HA 체크리스트, 연동 규격 v1.4, HA UAT 점검 결과, 스테이징 배정 설정 현황, 담당별 작업(WR)·상태·기한·완료 기준, SharpTalk 작업, 일정, 회신표' },
     en: { title: 'Work Request — tasks for Go2Joy', short: 'Work request', desc: 'HA checklist, integration spec v1.4, HA UAT findings, staging routing set-up, tasks by owner (WR) with status, due date and done criteria, SharpTalk work, timeline, reply table' },
     vi: { title: 'Yêu cầu công việc — việc Go2Joy cần làm', short: 'Yêu cầu công việc', desc: 'Checklist HA, đặc tả tích hợp v1.4, kết quả kiểm tra HA UAT, cấu hình phân công trên staging, công việc theo bộ phận (WR) kèm trạng thái, hạn và tiêu chí hoàn thành, công việc của SharpTalk, lịch trình, bảng phản hồi' },
   },
   'ha-identify': {
-    date: '2026-10-24',
+    date: '2026-10-27',
     pdf: true,
     ko: { title: 'HA 로그인 사용자 연동 규격 v1.4', short: 'HA 연동 v1.4', desc: 'HA 개발팀 체크리스트(백엔드·FE·UAT·운영), province_sn·역할 코드, PHP·JS 예제, 테스트 벡터 T1~T6, UAT 체크리스트' },
     en: { title: 'HA sign-in integration spec v1.4', short: 'HA integration v1.4', desc: 'Checklist for the HA dev team (backend, FE, UAT, production), province_sn and role codes, PHP and JS samples, test vectors T1–T6, UAT checklist' },

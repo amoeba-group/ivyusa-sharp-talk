@@ -100,13 +100,13 @@ figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; 
 <body>
 <header class="masthead"><div class="wrap">
   <nav class="topnav"><a href="./">← Go2Joy documents</a><span class="chips" aria-label="Documents"><a class="chip" href="work-request.en.html">Work request</a><a class="chip" href="ha-identify.en.html" aria-current="page">HA integration v1.4</a><a class="chip" href="integration.en.html">Requests &amp; checklist</a><a class="chip" href="plan.en.html">Project plan</a><a class="chip" href="kb-conflicts.en.html">Knowledge conflict triage</a><a class="chip" href="notion-setup.en.html">Notion setup</a></span><span class="chips" aria-label="Language"><a class="chip" href="ha-identify.ko.html" hreflang="ko">한국어</a><a class="chip" href="ha-identify.en.html" aria-current="page" hreflang="en">English</a><a class="chip" href="ha-identify.vi.html" hreflang="vi">Tiếng Việt</a><a class="chip" href="ha-identify.en.pdf" download>PDF</a></span></nav>
-  <p class="eyebrow">Documents for Go2Joy · 2026-10-24</p>
+  <p class="eyebrow">Documents for Go2Joy · 2026-10-27</p>
   <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
   <p class="domain">HA sign-in integration spec v1.4</p>
 </div></header>
 <main class="wrap doc"><h1 id="hotel-admin-sign-in-integration--spec-v14">Hotel Admin sign-in integration — spec v1.4</h1>
 <blockquote class="lead">
-<p>Sign-in integration spec v1.4 for the Go2Joy HA dev team (2026-10-24). Done means every item in the checklist at the top passes. Schedule and owners: <a href="work-request.en.html">work request</a>. For printing or sending: <a href="ha-identify.en.pdf">PDF</a></p>
+<p>Sign-in integration spec v1.4 for the Go2Joy HA dev team (2026-10-24, doc revision 10/27). Done means every item in the checklist at the top passes. Schedule and owners: <a href="work-request.en.html">work request</a>. For printing or sending: <a href="ha-identify.en.pdf">PDF</a></p>
 </blockquote>
 <blockquote>
 <p>When an HA staff member opens the widget while signed in, <strong>the HA server signs the staff and hotel data</strong>, and HA FE passes that package to the widget <strong>unchanged</strong>.
@@ -127,7 +127,7 @@ SharpTalk verifies the signature, registers the hotel as a business customer and
 </tr>
 <tr>
 <td>Date / version</td>
-<td>2026-10-24 · <strong>v1.4</strong> (v1.3 2026-10-22 · v1.0 PDF 2026-10-20 are obsolete)</td>
+<td>2026-10-24 · <strong>v1.4</strong> · doc revision 2026-10-27 (wire format unchanged; see "Doc revision 10/27") · v1.3 2026-10-22 and v1.0 PDF 2026-10-20 are obsolete</td>
 </tr>
 <tr>
 <td>Environments</td>
@@ -135,7 +135,7 @@ SharpTalk verifies the signature, registers the hotel as a business customer and
 </tr>
 <tr>
 <td>Related docs</td>
-<td><a href="work-request.en.html">Work request</a> (WR numbers, schedule) · <span class="docref">v1.3</span> (previous spec)</td>
+<td><a href="work-request.en.html">Work request</a> (WR numbers, schedule) · v1.3 (previous spec, obsolete)</td>
 </tr>
 <tr>
 <td>Sample code</td>
@@ -146,7 +146,7 @@ SharpTalk verifies the signature, registers the hotel as a business customer and
 <h2 id="what-ha-must-do--checklist">✅ What HA must do — checklist</h2>
 <p><strong>This checklist is the core of this document.</strong> An item is done when its check passes.</p>
 <blockquote>
-<p><strong>Progress (HA UAT checked 10/27)</strong>: done <strong>B5 · B6 (UAT)</strong>. Everything else has not started yet. B4 is partial (<code>logout</code> is called on the sign-out button and on token expiry; sign-out in another tab is not handled).</p>
+<p><strong>Progress (HA UAT checked 10/27)</strong>: done <strong>B5 · B6 (UAT)</strong>. Everything else has not started yet. B4 is partial (<code>logout</code> is called on the sign-out button and on token expiry; sign-out in another tab is not handled). B3: <code>identify</code> is called once at start-up, not on hotel change.</p>
 </blockquote>
 <h3 id="a-ha-backend-wr-01--wr-02--tue-1027">A. HA backend (WR-01 · WR-02) — Tue 10/27</h3>
 <ul>
@@ -165,7 +165,7 @@ Check: a call without sign-in returns 401.</li>
 <li><input disabled="" type="checkbox"> <strong>A7. <code>role</code> = the HA role code</strong> (a value that does not depend on the UI language). Send SharpTalk the <strong>code table</strong> (code · Vietnamese/English display name).</li>
 <li><input disabled="" type="checkbox"> <strong>A8. When "All hotels" is selected</strong>, leave out <code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code> and sign only <code>role</code>.</li>
 <li><input disabled="" type="checkbox"> <strong>A9. Follow the normalization order</strong>: <strong>NFC → collapse whitespace (incl. NBSP) → trim → 120 chars (<code>mb_substr</code>)</strong>. Requires the PHP <code>intl</code>·<code>mbstring</code> extensions.</li>
-<li><input disabled="" type="checkbox"> <strong>A10. Leave out empty values entirely (drop the field)</strong>. This applies to attributes and to <code>name</code> · <code>email</code> · <code>phone</code> (an empty <code>email</code> returns 400).</li>
+<li><input disabled="" type="checkbox"> <strong>A10. Leave out empty values entirely (drop the field)</strong>. This applies to attributes and to <code>name</code> · <code>email</code> · <code>phone</code>. <strong>Also drop an email that is not a valid address</strong>: an empty or malformed email returns 400 and the whole sign-in fails (the staff member stays a guest). The same happens for <code>userId</code> over 120 chars, <code>name</code> over 200 or <code>phone</code> over 40.</li>
 <li><input disabled="" type="checkbox"> <strong>A11. <code>hash = hex(HMAC-SHA256(secret, signing string))</code></strong>. The signing string uses the format in 5.1 (keys in alphabetical order).</li>
 <li><input disabled="" type="checkbox"> <strong>A12. Test vectors T1 ~ T6 all match</strong> (5.4). Send the results to SharpTalk.</li>
 <li><input disabled="" type="checkbox"> <strong>A13. Return the response package over HTTPS only to the signed-in session. Do not log it.</strong></li>
@@ -179,11 +179,12 @@ Check: a call without sign-in returns 401.</li>
 <li><input checked="" disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong>: same as now, <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>. Call <code>setLocale</code> when it changes. <em>(checked 10/27: done)</em></li>
 <li><input checked="" disabled="" type="checkbox"> <strong>B6. Allow the SharpTalk domain in CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) and CORS.</strong> <em>(checked 10/27: done on UAT — no CSP restriction, the widget loads normally. Production is D3)</em></li>
 <li><input disabled="" type="checkbox"> <strong>B7. Put the 3 SharpTalk domain uses</strong> (<code>embed.js</code> src · <code>widgetUrl</code> · <code>ivy:event</code> origin check) <strong>behind one environment setting</strong> (so you change it once when moving to production).
-Check (all of B): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200</strong> (<code>consentState: "granted"</code>), and the page receives <code>ivy:event</code> <code>identified {ok: true}</code>.</li>
+Check (all of B): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200 with <code>"authenticated": true</code></strong>, and the console shows the session as <strong>"verified"</strong> (not "Unverified").
+<strong>Not proof on its own</strong>: while staging still runs the temporary unsigned mode (§7), a wrong signature ALSO returns 200, <code>"consentState": "granted"</code> and <code>identified {ok: true}</code>.</li>
 </ul>
 <h3 id="c-joint-uat-check-wr-05--1029--1030">C. Joint UAT check (WR-05) — 10/29 ~ 10/30</h3>
 <ul>
-<li><input disabled="" type="checkbox"> <strong>C1. All items in the section 8 checklist pass</strong> (together with SharpTalk).</li>
+<li><input disabled="" type="checkbox"> <strong>C1. All items in the section 8 checklist pass</strong> (together with SharpTalk). §8 is the only UAT list; it runs after SharpTalk ends the temporary unsigned mode (§7).</li>
 <li><input disabled="" type="checkbox"> <strong>C2. Test accounts</strong>: 1 <code>Quản lý</code> (multiple hotels) + 1 <code>Lễ tân</code> (1 hotel), including hotels in the north and the south (WR-14).</li>
 </ul>
 <h3 id="d-production-deploy-wr-06--before-production-uat">D. Production deploy (WR-06) — before production UAT</h3>
@@ -191,7 +192,7 @@ Check (all of B): DevTools › Network <code>POST …/public/embed/identify</cod
 <li><input disabled="" type="checkbox"> <strong>D1. Apply the production embed secret.</strong> It differs from staging (SharpTalk sends it over a secure channel).</li>
 <li><input disabled="" type="checkbox"> <strong>D2. Switch to the production domain</strong>: <code>https://sharptalk.go2joy.vn/widget/embed.js</code> · <code>widgetUrl</code> · origin check.</li>
 <li><input disabled="" type="checkbox"> <strong>D3. Apply production CSP and CORS. Share the HA deploy schedule in advance.</strong>
-Check: identify returns 200 on production HA. A package made with the staging secret returns 401 on production.</li>
+Check: identify returns 200 with <code>"authenticated": true</code> on production HA. A package made with the staging secret returns 401 on production.</li>
 </ul>
 <hr>
 <h2 id="v14-changes">v1.4 changes</h2>
@@ -261,7 +262,49 @@ Check: identify returns 200 on production HA. A package made with the staging se
 <li>If both HA and SharpTalk keep a region table, they drift apart. The single source is the Province Feed of the Go2Joy Partner API.</li>
 <li>Province names and role display names change with the HA language (vi/en), so the signed values could differ. Numbers and codes do not change.</li>
 </ul>
-<p><strong>Transition period</strong>: For now, SharpTalk still accepts the v1.3 format (<code>province</code> · <code>region</code> keys). If <code>province_sn</code> is also sent, <strong>the values set from <code>province_sn</code> take priority</strong>. When HA has moved to v1.4 and passed UAT, we will end support for the v1.3 keys and announce the date.</p>
+<p><strong>Transition period</strong>: For now, SharpTalk still accepts the v1.3 format (<code>province</code> · <code>region</code> keys). If <code>province_sn</code> is also sent, <strong>the values set from <code>province_sn</code> take priority</strong>. Support for the v1.3 keys ends in a separate release after HA passes UAT on v1.4; the date is announced in advance.</p>
+<h3 id="doc-revision-1027-no-change-to-what-ha-sends">Doc revision 10/27 (no change to what HA sends)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Where</th>
+<th>Change</th>
+</tr>
+</thead><tbody><tr>
+<td>1</td>
+<td>B check · §5.5 · §7 · §8</td>
+<td><code>ok: true</code> is not proof while staging accepts unsigned sign-ins. Proof = <code>"authenticated": true</code> + console "verified". SharpTalk ends the temporary mode as soon as a verified identify is seen on HA UAT, <strong>before</strong> the joint UAT</td>
+</tr>
+<tr>
+<td>2</td>
+<td>§1 region table · §8</td>
+<td>No province is in region 3 (Central) today; central-coast provinces are region 5, Thừa Thiên Huế is region 4. UAT uses the 4 regions that exist</td>
+</tr>
+<tr>
+<td>3</td>
+<td>§1 Continuity · §6</td>
+<td>Per-hotel continuity described exactly: the widget shows each staff member's own conversations plus a count of the hotel's</td>
+</tr>
+<tr>
+<td>4</td>
+<td>A10 · §5.5</td>
+<td>400 also for a malformed email and over-long <code>userId</code> / <code>name</code> / <code>phone</code>; the whole sign-in fails</td>
+</tr>
+<tr>
+<td>5</td>
+<td>§7</td>
+<td>Status updated: v1.4 support is done on staging (10/24)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>§8</td>
+<td>One UAT list for HA and SharpTalk (merged with work request §6.1)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>B5 · B6</td>
+<td>Done on HA UAT (10/27)</td>
+</tr>
+</tbody></table></div>
 <h2 id="1-what-sharptalk-does">1. What SharpTalk does</h2>
 <div class="scroll"><table><thead><tr>
 <th>Step</th>
@@ -281,7 +324,7 @@ Check: identify returns 200 on production HA. A package made with the staging se
 </tr>
 <tr>
 <td>Continuity</td>
-<td>Continues previous conversations per hotel account (after session end, on another PC, with another staff member)</td>
+<td>Continues per hotel account: the AI sees the hotel's previous conversation and the same agent is preferred for 24 h. In the widget each staff member sees their own earlier conversations plus a count of the hotel's (work request WR-18)</td>
 </tr>
 <tr>
 <td>Routing</td>
@@ -307,7 +350,7 @@ Check: identify returns 200 on production HA. A package made with the staging se
 <tr>
 <td>3</td>
 <td><code>central</code></td>
-<td>Central</td>
+<td>Central — <strong>no province in the current feed</strong>. Central-coast provinces (Đà Nẵng, Quảng Nam, Bình Định, Khánh Hòa, Gia Lai …) are 5, Thừa Thiên Huế is 4</td>
 </tr>
 <tr>
 <td>4</td>
@@ -547,13 +590,13 @@ window.addEventListener('message', (e) =&gt; {
 </tr>
 <tr>
 <td>401 · E5048</td>
-<td>Signature mismatch: string·secret·environment mismatch, unknown key, over 120 chars or line break, NFC/whitespace difference, non-numeric <code>province_sn</code></td>
+<td>Signature mismatch: string·secret·environment mismatch, unknown key, over 120 chars or line break, NFC/whitespace difference, non-numeric <code>province_sn</code>. <strong>On staging, until the temporary mode ends (§7), a mismatch on a session that is not yet verified is accepted as "Unverified" (200) instead</strong></td>
 <td>Compare with section 4, rerun 5.4</td>
 </tr>
 <tr>
 <td>400</td>
-<td>Format error (empty email etc.)</td>
-<td>Leave out empty fields</td>
+<td>Format error: empty or malformed email, <code>userId</code> over 120 chars, <code>name</code> over 200, <code>phone</code> over 40. The whole sign-in fails</td>
+<td>Drop empty or invalid fields</td>
 </tr>
 <tr>
 <td>404</td>
@@ -564,7 +607,8 @@ window.addEventListener('message', (e) =&gt; {
 <h2 id="6-security">6. Security</h2>
 <ul>
 <li>Keep the secret only in HA server environment variables. Staging and production secrets differ (SharpTalk sends them over a secure channel).</li>
-<li>Anyone holding a signed package can chat as that staff member and see that hotel's previous conversations. Do not log it, and do not skip sign-out handling (B4).</li>
+<li>Anyone holding a signed package can chat as that staff member, see that staff member's earlier conversations, and get answers that use the hotel's previous conversation. Do not log it, and do not skip sign-out handling (B4).</li>
+<li>The AI provider receives the staff display name, hotel name, province, region and role (to greet and answer in context). Email, phone and the user id are not sent.</li>
 <li>Whether to add a signature expiry (<code>ts</code>) is decided in work request WR-03 (if added, it ships together as v1.5).</li>
 <li>Shared PCs (front desk): automatic sign-out and account switching in B4 are especially important.</li>
 </ul>
@@ -575,72 +619,96 @@ window.addEventListener('message', (e) =&gt; {
 </tr>
 </thead><tbody><tr>
 <td>v1.4 support (<code>province_sn</code> → province name/region, v1.3 in parallel)</td>
-<td>Staging deploy (target 10/27)</td>
+<td><strong>Done on staging (10/24)</strong></td>
 </tr>
 <tr>
 <td>Go2Joy province list, 80 entries (indexed by number)</td>
 <td>Loaded on staging · production loaded at install</td>
 </tr>
 <tr>
-<td>Temporary unsigned sign-in (for staging UAT)</td>
-<td>Ends after A and B are done</td>
+<td>Temporary unsigned sign-in (staging only, for UAT)</td>
+<td>Ends <strong>as soon as a verified identify is seen on HA UAT</strong> (A and B done), <strong>before</strong> the joint UAT — so the 401 rows of §8 can pass. Until then a wrong signature is also accepted (as "Unverified")</td>
 </tr>
 <tr>
 <td>Role code display names</td>
 <td>After the A7 code table is received</td>
 </tr>
 </tbody></table></div>
-<h2 id="8-uat-checklist-wr-05">8. UAT checklist (WR-05)</h2>
+<h2 id="8-uat-checklist-wr-05--the-only-uat-list">8. UAT checklist (WR-05) — the only UAT list</h2>
+<p>Used by HA and SharpTalk together (work request §6.1 points here). Run it <strong>after SharpTalk ends the temporary unsigned mode</strong> (§7).</p>
 <div class="scroll"><table><thead><tr>
 <th>Check</th>
+<th>Where</th>
 <th>Expected</th>
 </tr>
 </thead><tbody><tr>
 <td>Widget while not signed in</td>
+<td>HA UAT</td>
 <td>Guest, consent notice shown (same as now)</td>
 </tr>
 <tr>
 <td>HA sign-in → widget</td>
-<td>identify <strong>200</strong>, <code>identified {ok: true}</code>, no consent notice, staff name in greeting, "verified" in console</td>
+<td>HA UAT · console live chat</td>
+<td>identify <strong>200</strong> with <code>"authenticated": true</code> and <code>consentState: "granted"</code>, no consent notice, staff name in greeting, console shows "verified"</td>
 </tr>
 <tr>
-<td>Console › Customers › Business customers</td>
-<td>1 hotel (name · province · region, calculated by SharpTalk), staff and role code under contacts</td>
+<td>Business customer</td>
+<td>Console › Customers</td>
+<td>1 hotel (name · province · region, calculated by SharpTalk — filled only by a signed sign-in), staff and role code under contacts, room types as that hotel's products</td>
 </tr>
 <tr>
 <td>HA language vi ↔ en</td>
+<td>HA UAT</td>
 <td>Signed values unchanged → same conversation continues, only the reply language changes</td>
 </tr>
 <tr>
 <td>Change hotel selection</td>
+<td>HA UAT · console › Customers</td>
 <td>Business customer and conversation switch to the new hotel</td>
 </tr>
 <tr>
 <td>"All hotels" → connect to agent</td>
-<td>200, no hotel, default assignee</td>
+<td>HA UAT · console › Alarm center</td>
+<td>200, no hotel, default assignee (work request WR-13)</td>
 </tr>
 <tr>
-<td>Connect to agent from hotels in each region (north · north_center · south_center · south) → choose consult category</td>
-<td>Team routing follows console rules, assignee shown in alarm center</td>
+<td>Connect to agent from hotels in the 4 regions present in the feed (north · north_center · south_center · south) × consult category bs / cs</td>
+<td>HA UAT · console › Agent handoff · Alarm center</td>
+<td>Team × label per the console rules (work request WR-10), assignee shown in the alarm center</td>
+</tr>
+<tr>
+<td>Skip the consult category</td>
+<td>HA UAT · console › Alarm center</td>
+<td>Default assignee (WR-13)</td>
+</tr>
+<tr>
+<td>Assignment check</td>
+<td>Console › Settings › Agent handoff</td>
+<td>No "0 active" warning</td>
 </tr>
 <tr>
 <td>Hotel name with many tone marks (incl. decomposed input)</td>
+<td>HA UAT · console › Customers</td>
 <td>200</td>
 </tr>
 <tr>
 <td>Staff with empty email</td>
+<td>HA UAT · console › Customers</td>
 <td>200 without the email field</td>
 </tr>
 <tr>
 <td>Sign-out · session expiry · another account signs in</td>
+<td>HA UAT</td>
 <td>Guest (or the new account), previous staff conversations not visible</td>
 </tr>
 <tr>
 <td>Change one signed value without re-signing</td>
-<td>401, guest. <code>name</code> · <code>email</code> · <code>phone</code> are not signed, so changing them still gives 200</td>
+<td>HA UAT · console › Work log</td>
+<td>401 E5048, <code>ok: false</code>, guest. <code>name</code> · <code>email</code> · <code>phone</code> are not signed, so changing them still gives 200</td>
 </tr>
 <tr>
 <td>Add a key outside the list (e.g. <code>district</code>) and sign</td>
+<td>HA UAT · console › Work log</td>
 <td>401 (unknown keys are left out of the signature calculation)</td>
 </tr>
 </tbody></table></div>

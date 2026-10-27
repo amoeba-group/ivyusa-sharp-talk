@@ -100,13 +100,13 @@ figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; 
 <body>
 <header class="masthead"><div class="wrap">
   <nav class="topnav"><a href="./">← Tài liệu Go2Joy</a><span class="chips" aria-label="Tài liệu"><a class="chip" href="work-request.vi.html">Yêu cầu công việc</a><a class="chip" href="ha-identify.vi.html" aria-current="page">Tích hợp HA v1.4</a><a class="chip" href="integration.vi.html">Yêu cầu &amp; checklist</a><a class="chip" href="plan.vi.html">Kế hoạch dự án</a><a class="chip" href="kb-conflicts.vi.html">Phân loại xung đột tri thức</a><a class="chip" href="notion-setup.vi.html">Kết nối Notion</a></span><span class="chips" aria-label="Ngôn ngữ"><a class="chip" href="ha-identify.ko.html" hreflang="ko">한국어</a><a class="chip" href="ha-identify.en.html" hreflang="en">English</a><a class="chip" href="ha-identify.vi.html" aria-current="page" hreflang="vi">Tiếng Việt</a><a class="chip" href="ha-identify.vi.pdf" download>PDF</a></span></nav>
-  <p class="eyebrow">Tài liệu dành cho Go2Joy · 2026-10-24</p>
+  <p class="eyebrow">Tài liệu dành cho Go2Joy · 2026-10-27</p>
   <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
   <p class="domain">Đặc tả tích hợp đăng nhập HA v1.4</p>
 </div></header>
 <main class="wrap doc"><h1 id="tích-hợp-đăng-nhập-hotel-admin--đặc-tả-v14">Tích hợp đăng nhập Hotel Admin — đặc tả v1.4</h1>
 <blockquote class="lead">
-<p>Đặc tả tích hợp người dùng đăng nhập v1.4 dành cho đội phát triển HA của Go2Joy (2026-10-24). Hoàn thành khi mọi mục trong checklist ở đầu tài liệu đều đạt. Lịch trình và người phụ trách: <a href="work-request.vi.html">yêu cầu công việc</a>. Để in hoặc gửi: <a href="ha-identify.vi.pdf">PDF</a></p>
+<p>Đặc tả tích hợp người dùng đăng nhập v1.4 dành cho đội phát triển HA của Go2Joy (2026-10-24, sửa tài liệu 10/27). Hoàn thành khi mọi mục trong checklist ở đầu tài liệu đều đạt. Lịch trình và người phụ trách: <a href="work-request.vi.html">yêu cầu công việc</a>. Để in hoặc gửi: <a href="ha-identify.vi.pdf">PDF</a></p>
 </blockquote>
 <blockquote>
 <p>Khi nhân viên HA mở widget trong lúc đang đăng nhập, <strong>HA server ký dữ liệu nhân viên và khách sạn</strong>, và HA FE chuyển gói dữ liệu đó cho widget <strong>nguyên trạng</strong>.
@@ -127,7 +127,7 @@ SharpTalk xác minh chữ ký, đăng ký khách sạn là khách hàng doanh ng
 </tr>
 <tr>
 <td>Ngày / phiên bản</td>
-<td>2026-10-24 · <strong>v1.4</strong> (v1.3 2026-10-22 · v1.0 PDF 2026-10-20 đã hết hiệu lực)</td>
+<td>2026-10-24 · <strong>v1.4</strong> · sửa đổi tài liệu 2026-10-27 (định dạng truyền không đổi; xem "Sửa đổi tài liệu 10/27") · v1.3 2026-10-22 và v1.0 PDF 2026-10-20 đã hết hiệu lực</td>
 </tr>
 <tr>
 <td>Môi trường</td>
@@ -135,7 +135,7 @@ SharpTalk xác minh chữ ký, đăng ký khách sạn là khách hàng doanh ng
 </tr>
 <tr>
 <td>Tài liệu liên quan</td>
-<td><a href="work-request.vi.html">Yêu cầu công việc</a> (số WR, lịch trình) · <span class="docref">v1.3</span> (đặc tả trước)</td>
+<td><a href="work-request.vi.html">Yêu cầu công việc</a> (số WR, lịch trình) · v1.3 (đặc tả trước, đã bỏ)</td>
 </tr>
 <tr>
 <td>Mã mẫu</td>
@@ -146,7 +146,7 @@ SharpTalk xác minh chữ ký, đăng ký khách sạn là khách hàng doanh ng
 <h2 id="việc-ha-cần-làm--checklist">✅ Việc HA cần làm — checklist</h2>
 <p><strong>Checklist này là phần cốt lõi của tài liệu.</strong> Một mục được xem là xong khi phần kiểm tra của mục đó đạt.</p>
 <blockquote>
-<p><strong>Tiến độ (kiểm tra HA UAT 10/27)</strong>: đã xong <strong>B5 · B6 (UAT)</strong>. Các mục còn lại chưa bắt đầu. B4 mới xong một phần (đã gọi <code>logout</code> khi bấm nút đăng xuất và khi token hết hạn; chưa xử lý đăng xuất ở tab khác).</p>
+<p><strong>Tiến độ (kiểm tra trên HA UAT ngày 10/27)</strong>: đã xong <strong>B5 · B6 (UAT)</strong>. Các mục còn lại chưa bắt đầu. B4 mới xong một phần (<code>logout</code> được gọi khi bấm nút đăng xuất và khi token hết hạn; chưa xử lý đăng xuất ở tab khác). B3: <code>identify</code> chỉ được gọi một lần khi khởi động, không gọi khi đổi khách sạn.</p>
 </blockquote>
 <h3 id="a-ha-backend-wr-01--wr-02--thứ-ba-1027">A. HA backend (WR-01 · WR-02) — Thứ Ba 10/27</h3>
 <ul>
@@ -165,7 +165,7 @@ Kiểm tra: gọi khi chưa đăng nhập trả về 401.</li>
 <li><input disabled="" type="checkbox"> <strong>A7. <code>role</code> = mã vai trò HA</strong> (giá trị không phụ thuộc ngôn ngữ giao diện). Gửi cho SharpTalk <strong>bảng mã</strong> (mã · tên hiển thị tiếng Việt/tiếng Anh).</li>
 <li><input disabled="" type="checkbox"> <strong>A8. Khi chọn "Tất cả khách sạn"</strong>, bỏ <code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code> và chỉ ký <code>role</code>.</li>
 <li><input disabled="" type="checkbox"> <strong>A9. Tuân theo thứ tự chuẩn hóa</strong>: <strong>NFC → gộp khoảng trắng (kể cả NBSP) → trim → 120 ký tự (<code>mb_substr</code>)</strong>. Cần extension PHP <code>intl</code>·<code>mbstring</code>.</li>
-<li><input disabled="" type="checkbox"> <strong>A10. Bỏ hẳn giá trị rỗng (loại bỏ field)</strong>. Áp dụng cho các thuộc tính và cho <code>name</code> · <code>email</code> · <code>phone</code> (<code>email</code> rỗng trả về 400).</li>
+<li><input disabled="" type="checkbox"> <strong>A10. Bỏ hẳn giá trị rỗng (loại bỏ field)</strong>. Áp dụng cho các thuộc tính và cho <code>name</code> · <code>email</code> · <code>phone</code>. <strong>Cũng bỏ email không phải địa chỉ hợp lệ</strong>: email rỗng hoặc sai định dạng trả về 400 và toàn bộ việc đăng nhập thất bại (nhân viên vẫn là khách vãng lai). Tương tự với <code>userId</code> quá 120 ký tự, <code>name</code> quá 200 hoặc <code>phone</code> quá 40.</li>
 <li><input disabled="" type="checkbox"> <strong>A11. <code>hash = hex(HMAC-SHA256(secret, chuỗi ký))</code></strong>. Chuỗi ký dùng định dạng ở mục 5.1 (key theo thứ tự bảng chữ cái).</li>
 <li><input disabled="" type="checkbox"> <strong>A12. Test vector T1 ~ T6 đều khớp</strong> (5.4). Gửi kết quả cho SharpTalk.</li>
 <li><input disabled="" type="checkbox"> <strong>A13. Chỉ trả gói phản hồi qua HTTPS cho phiên đã đăng nhập. Không ghi log gói này.</strong></li>
@@ -177,13 +177,14 @@ Kiểm tra: gọi khi chưa đăng nhập trả về 401.</li>
 <li><input disabled="" type="checkbox"> <strong>B3. Gọi lại khi</strong>: xác nhận đăng nhập · tải lại trang · <strong>đổi khách sạn đang chọn (kể cả Tất cả khách sạn)</strong> · đổi ngôn ngữ HA.</li>
 <li><input disabled="" type="checkbox"> <strong>B4. Gọi <code>SharpTalk.logout()</code> khi</strong>: bấm nút đăng xuất · <strong>tự động đăng xuất do hết hạn phiên/token</strong> · ngay trước khi tài khoản khác đăng nhập · đăng xuất ở tab khác (sự kiện <code>storage</code> v.v.).</li>
 <li><input checked="" disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong>: giữ như hiện tại, <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>. Gọi <code>setLocale</code> khi giá trị thay đổi. <em>(kiểm tra 10/27: đã xong)</em></li>
-<li><input checked="" disabled="" type="checkbox"> <strong>B6. Cho phép domain SharpTalk trong CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) và CORS.</strong> <em>(kiểm tra 10/27: xong trên UAT — không có CSP chặn, widget tải bình thường. Production thuộc D3)</em></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>B6. Cho phép domain SharpTalk trong CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) và CORS.</strong> <em>(kiểm tra 10/27: đã xong trên UAT — không có giới hạn CSP, widget tải bình thường. Production thuộc D3)</em></li>
 <li><input disabled="" type="checkbox"> <strong>B7. Đặt 3 chỗ dùng domain SharpTalk</strong> (src của <code>embed.js</code> · <code>widgetUrl</code> · kiểm tra origin của <code>ivy:event</code>) <strong>sau một thiết lập môi trường duy nhất</strong> (để chỉ cần đổi một lần khi chuyển sang production).
-Kiểm tra (toàn bộ B): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200</strong> (<code>consentState: "granted"</code>), và trang nhận được <code>ivy:event</code> <code>identified {ok: true}</code>.</li>
+Kiểm tra (toàn bộ B): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200 với <code>"authenticated": true</code></strong>, và console hiển thị phiên là <strong>"đã xác minh"</strong> (không phải "Chưa xác minh").
+<strong>Riêng điều này chưa phải bằng chứng</strong>: khi staging còn chạy chế độ tạm thời cho đăng nhập không ký (§7), chữ ký sai CŨNG trả về 200, <code>"consentState": "granted"</code> và <code>identified {ok: true}</code>.</li>
 </ul>
 <h3 id="c-kiểm-tra-uat-chung-wr-05--1029--1030">C. Kiểm tra UAT chung (WR-05) — 10/29 ~ 10/30</h3>
 <ul>
-<li><input disabled="" type="checkbox"> <strong>C1. Tất cả mục trong checklist mục 8 đều đạt</strong> (cùng với SharpTalk).</li>
+<li><input disabled="" type="checkbox"> <strong>C1. Tất cả mục trong checklist mục 8 đều đạt</strong> (cùng với SharpTalk). §8 là danh sách UAT duy nhất; chạy sau khi SharpTalk kết thúc chế độ tạm thời cho đăng nhập không ký (§7).</li>
 <li><input disabled="" type="checkbox"> <strong>C2. Tài khoản test</strong>: 1 <code>Quản lý</code> (nhiều khách sạn) + 1 <code>Lễ tân</code> (1 khách sạn), bao gồm khách sạn ở miền Bắc và miền Nam (WR-14).</li>
 </ul>
 <h3 id="d-triển-khai-production-wr-06--trước-uat-production">D. Triển khai production (WR-06) — trước UAT production</h3>
@@ -191,7 +192,7 @@ Kiểm tra (toàn bộ B): DevTools › Network <code>POST …/public/embed/iden
 <li><input disabled="" type="checkbox"> <strong>D1. Áp dụng embed secret production.</strong> Khác với staging (SharpTalk gửi qua kênh bảo mật).</li>
 <li><input disabled="" type="checkbox"> <strong>D2. Chuyển sang domain production</strong>: <code>https://sharptalk.go2joy.vn/widget/embed.js</code> · <code>widgetUrl</code> · kiểm tra origin.</li>
 <li><input disabled="" type="checkbox"> <strong>D3. Áp dụng CSP và CORS production. Chia sẻ trước lịch triển khai HA.</strong>
-Kiểm tra: identify trả về 200 trên HA production. Gói tạo bằng secret staging trả về 401 trên production.</li>
+Kiểm tra: identify trả về 200 với <code>"authenticated": true</code> trên HA production. Gói tạo bằng secret staging trả về 401 trên production.</li>
 </ul>
 <hr>
 <h2 id="thay-đổi-trong-v14">Thay đổi trong v1.4</h2>
@@ -261,7 +262,49 @@ Kiểm tra: identify trả về 200 trên HA production. Gói tạo bằng secre
 <li>Nếu cả HA và SharpTalk đều giữ bảng khu vực riêng, hai bảng sẽ lệch nhau. Nguồn duy nhất là Province Feed của Go2Joy Partner API.</li>
 <li>Tên tỉnh/thành và tên hiển thị vai trò thay đổi theo ngôn ngữ HA (vi/en), nên giá trị được ký có thể khác nhau. Số và mã thì không thay đổi.</li>
 </ul>
-<p><strong>Giai đoạn chuyển tiếp</strong>: Hiện tại SharpTalk vẫn chấp nhận định dạng v1.3 (key <code>province</code> · <code>region</code>). Nếu <code>province_sn</code> cũng được gửi, <strong>giá trị xác định từ <code>province_sn</code> được ưu tiên</strong>. Khi HA đã chuyển sang v1.4 và qua UAT, chúng tôi sẽ ngừng hỗ trợ key v1.3 và thông báo ngày cụ thể.</p>
+<p><strong>Giai đoạn chuyển tiếp</strong>: Hiện tại SharpTalk vẫn chấp nhận định dạng v1.3 (key <code>province</code> · <code>region</code>). Nếu <code>province_sn</code> cũng được gửi, <strong>giá trị xác định từ <code>province_sn</code> được ưu tiên</strong>. Việc ngừng hỗ trợ key v1.3 sẽ thực hiện trong một bản phát hành riêng sau khi HA qua UAT với v1.4; ngày cụ thể sẽ được thông báo trước.</p>
+<h3 id="sửa-đổi-tài-liệu-1027-không-thay-đổi-nội-dung-ha-gửi">Sửa đổi tài liệu 10/27 (không thay đổi nội dung HA gửi)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Vị trí</th>
+<th>Thay đổi</th>
+</tr>
+</thead><tbody><tr>
+<td>1</td>
+<td>Kiểm tra B · §5.5 · §7 · §8</td>
+<td><code>ok: true</code> không phải bằng chứng khi staging còn chấp nhận đăng nhập không ký. Bằng chứng = <code>"authenticated": true</code> + console "đã xác minh". SharpTalk kết thúc chế độ tạm thời ngay khi thấy một identify đã xác minh trên HA UAT, <strong>trước</strong> UAT chung</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Bảng khu vực §1 · §8</td>
+<td>Hiện không có tỉnh/thành nào thuộc khu vực 3 (Miền Trung); các tỉnh duyên hải miền Trung là khu vực 5, Thừa Thiên Huế là khu vực 4. UAT dùng 4 khu vực đang có</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Tính liên tục §1 · §6</td>
+<td>Mô tả chính xác tính liên tục theo khách sạn: widget hiển thị hội thoại của chính nhân viên đó kèm số lượng hội thoại của khách sạn</td>
+</tr>
+<tr>
+<td>4</td>
+<td>A10 · §5.5</td>
+<td>400 cũng xảy ra với email sai định dạng và <code>userId</code> / <code>name</code> / <code>phone</code> quá dài; toàn bộ việc đăng nhập thất bại</td>
+</tr>
+<tr>
+<td>5</td>
+<td>§7</td>
+<td>Cập nhật trạng thái: hỗ trợ v1.4 đã xong trên staging (10/24)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>§8</td>
+<td>Một danh sách UAT chung cho HA và SharpTalk (gộp với mục 6.1 của yêu cầu công việc)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>B5 · B6</td>
+<td>Đã xong trên HA UAT (10/27)</td>
+</tr>
+</tbody></table></div>
 <h2 id="1-sharptalk-làm-gì">1. SharpTalk làm gì</h2>
 <div class="scroll"><table><thead><tr>
 <th>Bước</th>
@@ -281,7 +324,7 @@ Kiểm tra: identify trả về 200 trên HA production. Gói tạo bằng secre
 </tr>
 <tr>
 <td>Tính liên tục</td>
-<td>Tiếp nối hội thoại trước theo từng tài khoản khách sạn (sau khi kết thúc phiên, trên PC khác, với nhân viên khác)</td>
+<td>Tiếp nối theo từng tài khoản khách sạn: AI xem hội thoại trước của khách sạn và ưu tiên cùng nhân viên tư vấn trong 24 giờ. Trong widget, mỗi nhân viên thấy các hội thoại trước của chính mình kèm số lượng hội thoại của khách sạn (yêu cầu công việc WR-18)</td>
 </tr>
 <tr>
 <td>Phân tuyến</td>
@@ -307,7 +350,7 @@ Kiểm tra: identify trả về 200 trên HA production. Gói tạo bằng secre
 <tr>
 <td>3</td>
 <td><code>central</code></td>
-<td>Miền Trung</td>
+<td>Miền Trung — <strong>feed hiện tại không có tỉnh/thành nào</strong>. Các tỉnh duyên hải miền Trung (Đà Nẵng, Quảng Nam, Bình Định, Khánh Hòa, Gia Lai …) là 5, Thừa Thiên Huế là 4</td>
 </tr>
 <tr>
 <td>4</td>
@@ -547,13 +590,13 @@ window.addEventListener('message', (e) =&gt; {
 </tr>
 <tr>
 <td>401 · E5048</td>
-<td>Chữ ký không khớp: chuỗi·secret·môi trường không khớp, key không xác định, quá 120 ký tự hoặc có xuống dòng, khác biệt NFC/khoảng trắng, <code>province_sn</code> không phải số</td>
+<td>Chữ ký không khớp: chuỗi·secret·môi trường không khớp, key không xác định, quá 120 ký tự hoặc có xuống dòng, khác biệt NFC/khoảng trắng, <code>province_sn</code> không phải số. <strong>Trên staging, cho đến khi chế độ tạm thời kết thúc (§7), chữ ký không khớp trên phiên chưa xác minh sẽ được chấp nhận ở trạng thái "Chưa xác minh" (200) thay vì 401</strong></td>
 <td>Đối chiếu với mục 4, chạy lại 5.4</td>
 </tr>
 <tr>
 <td>400</td>
-<td>Lỗi định dạng (email rỗng v.v.)</td>
-<td>Bỏ các field rỗng</td>
+<td>Lỗi định dạng: email rỗng hoặc sai định dạng, <code>userId</code> quá 120 ký tự, <code>name</code> quá 200, <code>phone</code> quá 40. Toàn bộ việc đăng nhập thất bại</td>
+<td>Bỏ các field rỗng hoặc không hợp lệ</td>
 </tr>
 <tr>
 <td>404</td>
@@ -564,7 +607,8 @@ window.addEventListener('message', (e) =&gt; {
 <h2 id="6-bảo-mật">6. Bảo mật</h2>
 <ul>
 <li>Chỉ lưu secret trong biến môi trường của HA server. Secret staging và production khác nhau (SharpTalk gửi qua kênh bảo mật).</li>
-<li>Bất kỳ ai có gói đã ký đều có thể chat với tư cách nhân viên đó và xem các hội thoại trước của khách sạn đó. Không ghi log gói này và không bỏ qua xử lý đăng xuất (B4).</li>
+<li>Bất kỳ ai có gói đã ký đều có thể chat với tư cách nhân viên đó, xem các hội thoại trước của nhân viên đó và nhận câu trả lời có dùng hội thoại trước của khách sạn. Không ghi log gói này và không bỏ qua xử lý đăng xuất (B4).</li>
+<li>Nhà cung cấp AI nhận tên hiển thị của nhân viên, tên khách sạn, tỉnh/thành, khu vực và vai trò (để chào và trả lời đúng ngữ cảnh). Email, số điện thoại và user id không được gửi.</li>
 <li>Việc có thêm thời hạn chữ ký (<code>ts</code>) hay không sẽ được quyết định trong yêu cầu công việc WR-03 (nếu thêm, sẽ phát hành cùng với v1.5).</li>
 <li>PC dùng chung (quầy lễ tân): tự động đăng xuất và chuyển tài khoản ở B4 đặc biệt quan trọng.</li>
 </ul>
@@ -575,72 +619,96 @@ window.addEventListener('message', (e) =&gt; {
 </tr>
 </thead><tbody><tr>
 <td>Hỗ trợ v1.4 (<code>province_sn</code> → tên tỉnh/thành/khu vực, song song với v1.3)</td>
-<td>Triển khai staging (mục tiêu 10/27)</td>
+<td><strong>Đã xong trên staging (10/24)</strong></td>
 </tr>
 <tr>
 <td>Danh sách tỉnh/thành Go2Joy, 80 mục (đánh chỉ mục theo số)</td>
 <td>Đã nạp trên staging · production nạp khi cài đặt</td>
 </tr>
 <tr>
-<td>Đăng nhập tạm không ký (cho UAT staging)</td>
-<td>Kết thúc sau khi A và B hoàn tất</td>
+<td>Đăng nhập tạm không ký (chỉ trên staging, cho UAT)</td>
+<td>Kết thúc <strong>ngay khi thấy một identify đã xác minh trên HA UAT</strong> (A và B xong), <strong>trước</strong> UAT chung — để các dòng 401 của §8 có thể đạt. Đến lúc đó, chữ ký sai vẫn được chấp nhận (ở trạng thái "Chưa xác minh")</td>
 </tr>
 <tr>
 <td>Tên hiển thị mã vai trò</td>
 <td>Sau khi nhận bảng mã A7</td>
 </tr>
 </tbody></table></div>
-<h2 id="8-checklist-uat-wr-05">8. Checklist UAT (WR-05)</h2>
+<h2 id="8-checklist-uat-wr-05--danh-sách-uat-duy-nhất">8. Checklist UAT (WR-05) — danh sách UAT duy nhất</h2>
+<p>HA và SharpTalk dùng chung (mục 6.1 của yêu cầu công việc trỏ đến đây). Chạy <strong>sau khi SharpTalk kết thúc chế độ tạm thời cho đăng nhập không ký</strong> (§7).</p>
 <div class="scroll"><table><thead><tr>
 <th>Kiểm tra</th>
+<th>Ở đâu</th>
 <th>Kỳ vọng</th>
 </tr>
 </thead><tbody><tr>
 <td>Widget khi chưa đăng nhập</td>
+<td>HA UAT</td>
 <td>Khách vãng lai, hiển thị thông báo đồng ý (như hiện tại)</td>
 </tr>
 <tr>
 <td>Đăng nhập HA → widget</td>
-<td>identify <strong>200</strong>, <code>identified {ok: true}</code>, không có thông báo đồng ý, tên nhân viên trong lời chào, "đã xác minh" trong console</td>
+<td>HA UAT · console live chat</td>
+<td>identify <strong>200</strong> với <code>"authenticated": true</code> và <code>consentState: "granted"</code>, không có thông báo đồng ý, tên nhân viên trong lời chào, console hiển thị "đã xác minh"</td>
 </tr>
 <tr>
-<td>Console › Khách hàng › Khách hàng doanh nghiệp</td>
-<td>1 khách sạn (tên · tỉnh/thành · khu vực, do SharpTalk tính), nhân viên và mã vai trò trong mục người liên hệ</td>
+<td>Khách hàng doanh nghiệp</td>
+<td>Console › Khách hàng</td>
+<td>1 khách sạn (tên · tỉnh/thành · khu vực, do SharpTalk tính — chỉ được điền qua đăng nhập có ký), nhân viên và mã vai trò trong mục người liên hệ, các loại phòng là sản phẩm của khách sạn đó</td>
 </tr>
 <tr>
 <td>Ngôn ngữ HA vi ↔ en</td>
+<td>HA UAT</td>
 <td>Giá trị được ký không đổi → tiếp tục cùng hội thoại, chỉ ngôn ngữ trả lời thay đổi</td>
 </tr>
 <tr>
 <td>Đổi khách sạn đang chọn</td>
+<td>HA UAT · console › Khách hàng</td>
 <td>Khách hàng doanh nghiệp và hội thoại chuyển sang khách sạn mới</td>
 </tr>
 <tr>
 <td>"Tất cả khách sạn" → kết nối với nhân viên tư vấn</td>
-<td>200, không có khách sạn, người phụ trách mặc định</td>
+<td>HA UAT · console › Trung tâm thông báo</td>
+<td>200, không có khách sạn, người phụ trách mặc định (yêu cầu công việc WR-13)</td>
 </tr>
 <tr>
-<td>Kết nối với nhân viên tư vấn từ khách sạn ở từng khu vực (north · north_center · south_center · south) → chọn danh mục tư vấn</td>
-<td>Phân tuyến đội theo quy tắc trong console, người phụ trách hiển thị trong trung tâm thông báo</td>
+<td>Kết nối với nhân viên tư vấn từ khách sạn ở 4 khu vực có trong feed (north · north_center · south_center · south) × danh mục tư vấn bs / cs</td>
+<td>HA UAT · console › Kết nối nhân viên tư vấn · Trung tâm thông báo</td>
+<td>Đội × nhãn theo quy tắc trong console (yêu cầu công việc WR-10), người phụ trách hiển thị trong trung tâm thông báo</td>
+</tr>
+<tr>
+<td>Bỏ qua danh mục tư vấn</td>
+<td>HA UAT · console › Trung tâm thông báo</td>
+<td>Người phụ trách mặc định (WR-13)</td>
+</tr>
+<tr>
+<td>Kiểm tra phân công</td>
+<td>Console › Cài đặt › Kết nối nhân viên tư vấn</td>
+<td>Không có cảnh báo "0 người hoạt động"</td>
 </tr>
 <tr>
 <td>Tên khách sạn có nhiều dấu thanh (kể cả nhập dạng tách rời)</td>
+<td>HA UAT · console › Khách hàng</td>
 <td>200</td>
 </tr>
 <tr>
 <td>Nhân viên có email rỗng</td>
+<td>HA UAT · console › Khách hàng</td>
 <td>200, không có field email</td>
 </tr>
 <tr>
 <td>Đăng xuất · hết hạn phiên · tài khoản khác đăng nhập</td>
+<td>HA UAT</td>
 <td>Khách vãng lai (hoặc tài khoản mới), không thấy hội thoại của nhân viên trước</td>
 </tr>
 <tr>
 <td>Đổi một giá trị được ký mà không ký lại</td>
-<td>401, khách vãng lai. <code>name</code> · <code>email</code> · <code>phone</code> không được ký nên đổi chúng vẫn trả về 200</td>
+<td>HA UAT · console › Nhật ký công việc</td>
+<td>401 E5048, <code>ok: false</code>, khách vãng lai. <code>name</code> · <code>email</code> · <code>phone</code> không được ký nên đổi chúng vẫn trả về 200</td>
 </tr>
 <tr>
 <td>Thêm key ngoài danh sách (ví dụ <code>district</code>) rồi ký</td>
+<td>HA UAT · console › Nhật ký công việc</td>
 <td>401 (key không xác định bị loại khỏi phép tính chữ ký)</td>
 </tr>
 </tbody></table></div>
