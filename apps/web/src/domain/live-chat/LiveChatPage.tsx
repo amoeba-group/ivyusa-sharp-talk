@@ -383,12 +383,18 @@ export function LiveChatPage() {
       return (from == null || at > Date.parse(from)) && (to == null || at <= Date.parse(to));
     });
 
+  // Where the reader was before older messages are prepended (FIX-261027): the
+  // page grows above them, so without this the view jumps to the oldest message
+  // loaded instead of staying on the one they were reading.
+  const olderAnchorRef = useRef<{ height: number; top: number } | null>(null);
   const loadOlder = async () => {
     const oldest = messages[0]?.id;
     if (!selected || !oldest || loadingOlder) return;
     setLoadingOlder(true);
     try {
       const res = await liveChatService.conversation(selected, oldest);
+      const el = threadRef.current;
+      olderAnchorRef.current = el ? { height: el.scrollHeight, top: el.scrollTop } : null;
       setOlder((prev) => [...res.messages, ...prev]);
       setOlderHasMore(!!res.hasMore);
     } catch (e) {
@@ -439,6 +445,16 @@ export function LiveChatPage() {
   // (scrollTarget) and "load older" both own the position, so neither moves it.
   const threadRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
+  // Keep the message that was at the top in place after "load older": shift by
+  // exactly what was added above, so the message just before it (the previous
+  // session's last turn, in a merged room) is right there when scrolling up.
+  useLayoutEffect(() => {
+    const anchor = olderAnchorRef.current;
+    const el = threadRef.current;
+    if (!anchor || !el) return;
+    olderAnchorRef.current = null;
+    el.scrollTop = el.scrollHeight - anchor.height + anchor.top;
+  }, [older]);
   const openedRef = useRef<string | null>(null);
   const tailRef = useRef<string | null>(null);
   const [newBelow, setNewBelow] = useState(false);
