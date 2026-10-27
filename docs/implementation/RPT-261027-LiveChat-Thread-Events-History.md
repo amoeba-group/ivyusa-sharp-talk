@@ -25,8 +25,11 @@ TCR 참조. api 276개 묶음 2,743건, api·web tsc, i18n:check, CI 통과. 로
 | 환경 | 마이그레이션 | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | 없음 | ✅ 10/27 main `3d7546b9` → `deploy-staging.sh` | API healthy, 부팅 1회, ERROR 0, 신규 라우트 `history` 401, 번들에 새 말풍선·이벤트 카드·모달 포함 |
-| 프로덕션 | 없음 | ⏳ 승인 대기 | — |
+| 프로덕션 | 없음(`check-migrations` OK) | ✅ 10/27 14:53 KST `production` ff `b4989cec..cdb21bba`(#765 문서, #767 RPT, #768 FIX 동승), 직전 전체 백업 `~/backups/sharptalk-production/20261027-1453-pre-261027-thread-events/db_sharptalk.sql` → `deploy-self-hosted.sh`(applied 115) | api/web/widget 재생성, healthy, 부팅 1회, ERROR 0, health 200, 신규 라우트 `history` 401, 번들에 새 말풍선·더보기 위치 보정 포함 |
 
 ## 미검증·후속
-- 스테이징 실데이터 화면은 육안으로 확인하지 않았다(콘솔은 새로고침 필요).
+- 스테이징·프로덕션 실데이터 화면은 육안으로 확인하지 않았다(콘솔은 새로고침 필요).
 - `audit_logs.target`에 인덱스가 없어 모달의 세션 통합 조회는 테이블 스캔이다. 모달을 열 때만 실행되므로 현재 규모에서는 허용했고, 감사 로그가 커지면 `(tenant_id, target)` 인덱스를 검토한다.
+
+## 후속
+- FIX-261027-LiveChat-Load-Older-Anchor(#768): '이전 대화 더보기' 후 보던 메시지 위치 유지. 같은 배포로 스테이징·프로덕션에 반영했다.
