@@ -39,10 +39,10 @@ TCR 참조. api 276개 묶음 2,740건, api·web tsc, i18n:check, CI 5건 통과
 | 환경 | 마이그레이션 | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | ✅ 10/27 선적용(백업 `~/backups/pre-261027-customer-memo-links-staging.sql`: customers·orders_cache). `customers.memo` 추가, `customer_platform_links` 생성 + 백필(cafe24 545·identify 13·shopify 10·haravan 1) | ✅ main `407b3163` → `deploy-staging.sh` | API healthy, `successfully started` 1회, ERROR·Unknown column 0, health 200, 신규 라우트 `handlers`·`customers/:id/detail` 401, 웹 번들 반영 |
-| 프로덕션 | ⏳ 승인 대기 | ⏳ | — |
+| 프로덕션 | ✅ 10/27 14:09 KST 선적용(전체 백업 `~/backups/sharptalk-production/20261027-1409-pre-261027-customer-memo-links/db_sharptalk.sql`, 3.2MB). 프로덕션 고객 0행이라 백필 0건 | ✅ `production` ff `31ffa9f4..b4989cec`(#756·#757·#758 문서·매뉴얼 동승) → `deploy-self-hosted.sh`(applied 115, check-migrations OK) | api/web/widget 재생성, healthy, 부팅 1회, ERROR·Unknown column 0, health 200, 신규 라우트 401, 번들 반영 |
 
 ## 미검증·후속
-- 스테이징 실데이터 화면은 육안으로 확인하지 않았다(콘솔 로그인 정보 없음). 열어 둔 콘솔은 **새로고침**해야 새 화면이 보인다.
+- 스테이징·프로덕션 실데이터 화면은 육안으로 확인하지 않았다(콘솔 로그인 정보 없음). 열어 둔 콘솔은 **새로고침**해야 새 화면이 보인다.
 - 상담원 이름: 이메일 앞부분은 임시 대체값이다. 사용자 관리에서 상담원 이름을 입력하도록 안내하는 것을 권한다.
 - 백필된 플랫폼 표시명은 다음 동기화나 로그인 때 채워진다.
 - UTM·referrer는 수집하지 않는다(landing_path는 쿼리를 제거). 유입 분석이 더 필요하면 별도 요구로 다룬다.
