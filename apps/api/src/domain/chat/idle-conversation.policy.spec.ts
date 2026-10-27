@@ -76,6 +76,16 @@ describe('IdleConversationService.sweepPolicy', () => {
     expect(h.audits[0].metadata).toEqual({ reason: 'before_policy' });
   });
 
+  it('asks a thread that went quiet just before the switch-on — it was still live', async () => {
+    // Staging go2joy 10/27: AI answered 71 s before the policy was saved.
+    const since = new Date(Date.now() - 2 * MIN).toISOString();
+    const h = build({ quiet: [{ lastAt: new Date(Date.now() - 3 * MIN - 11_000), lastSender: SENDER_TYPE.AI }] });
+    const r = await h.svc.sweepPolicy(4, { ...policy, since });
+
+    expect(r).toEqual({ prompted: 1, closed: 0, silentlyClosed: 0 });
+    expect(h.saved[0]).toMatchObject({ body: CHAT_CLOSE_DEFAULT_COPY.csatPrompt.VI });
+  });
+
   it('closes with the closing line once the rating request went unanswered', async () => {
     const prompted = { id: 7, tenantId: 4, sessionId: 9, status: CONVERSATION_STATUS.AGENT, idlePromptAt: new Date(Date.now() - 4 * MIN) };
     const h = build({ due: [prompted] });

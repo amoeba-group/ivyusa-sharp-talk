@@ -358,12 +358,19 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
 
     // 2. Answered, then silence → rating request.
     const quietBefore = new Date(now.getTime() - policy.csatAfterMin * 60_000);
-    const since = policy.since ? new Date(policy.since) : null;
+    // Abandoned before the switch-on = would already have been closed by the
+    // policy's own clock at that moment. A thread that went quiet a minute
+    // before is still live and gets the normal request (staging go2joy, 10/27:
+    // a partner's chat answered 71 s before switch-on was ended without a word).
+    const abandonedBefore = policy.since
+      ? new Date(Date.parse(policy.since) - (policy.csatAfterMin + policy.closeAfterMin) * 60_000)
+      : null;
     const staleBefore = new Date(now.getTime() - STALE_AFTER_DAYS * 86_400_000);
     for (const q of await this.quietCandidates(tenantId, quietBefore)) {
       const conversation = q.conversation;
-      if (q.lastAt < staleBefore || (since && q.lastAt < since)) {
-        await this.close(conversation, false, policy, since && q.lastAt < since ? 'before_policy' : 'stale');
+      const beforePolicy = !!abandonedBefore && q.lastAt < abandonedBefore;
+      if (q.lastAt < staleBefore || beforePolicy) {
+        await this.close(conversation, false, policy, beforePolicy ? 'before_policy' : 'stale');
         out.silentlyClosed += 1;
         continue;
       }
