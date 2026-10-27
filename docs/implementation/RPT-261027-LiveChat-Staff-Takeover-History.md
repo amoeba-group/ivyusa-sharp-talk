@@ -28,8 +28,8 @@ TCR 참조. api 277개 묶음 2,758건, api·web tsc, i18n:check, CI 통과. 로
 | 환경 | 마이그레이션 | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | 없음 | ✅ 10/27 main `164e5665` → `deploy-staging.sh` | API healthy, 부팅 1회, ERROR 0, 신규 라우트 `ai-pause`·`ai-resume` 401, 번들 반영 |
-| 프로덕션 | 없음 | ⏳ 승인 대기 | — |
+| 프로덕션 | 없음 | ✅ 10/27 17:33 KST 전체 백업 `~/backups/sharptalk-production/20261027-1733-pre-261027-takeover-close-feedback/db_sharptalk.sql` → `production` ff `6a1ed92d..0d750a0e`(#773·#775 함께) → `deploy-self-hosted.sh`(applied 116, check-migrations OK) | api/web/widget 재생성, healthy, 부팅 1회, ERROR 0, health 200, `ai-pause`·`ai-resume` 401, 콘솔 번들 반영 |
 
 ## 미검증·후속
-- 스테이징 실데이터 화면(방 1 전체 히스토리의 대응·호출·확인 표시)은 육안으로 확인하지 않았다. 콘솔은 새로고침이 필요하다.
+- 스테이징·프로덕션 실데이터 화면(방 1 전체 히스토리의 대응·호출·확인 표시)은 육안으로 확인하지 않았다. 콘솔은 새로고침이 필요하다.
 - 자동응답 끔은 세션 단위 설정이다. 넘기지 않고 대화가 끝나면 그 세션은 끔 상태로 남는다(헤더 자동응답 설정에 '끔'으로 보임).

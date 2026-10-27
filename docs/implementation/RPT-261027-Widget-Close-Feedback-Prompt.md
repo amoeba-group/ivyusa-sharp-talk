@@ -26,8 +26,8 @@ TCR 참조. api 277개 묶음 2,759건, 위젯 node --test 59건, tsc 3종, i18n
 | 환경 | 마이그레이션 | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | ✅ 10/27 선적용(`close_feedback_prompt` 추가, 전 테넌트 1) | ✅ main `d955b1c1` → `deploy-staging.sh` | API healthy, 부팅 1회, ERROR·Unknown column 0, 위젯 번들에 `closeFeedback` 포함 |
-| 프로덕션 | ⏳ 승인 대기 | ⏳ | — |
+| 프로덕션 | ✅ 배포 전 선적용(`close_feedback_prompt` 추가, 테넌트 1개 = 1) | ✅ 10/27 17:33 KST 전체 백업 `~/backups/sharptalk-production/20261027-1733-pre-261027-takeover-close-feedback/db_sharptalk.sql` → `production` ff `6a1ed92d..0d750a0e`(#773·#775 함께) → `deploy-self-hosted.sh`(applied 116, check-migrations OK) | api/web/widget 재생성, healthy, 부팅 1회, ERROR·Unknown column 0, 위젯 번들에 `closeFeedback` 포함 |
 
 ## 미검증·후속
-- 스테이징 실제 상점 화면에서의 클릭 확인은 하지 않았다(열린 위젯은 새로고침해야 새 코드).
+- 스테이징·프로덕션 실제 상점 화면에서의 클릭 확인은 하지 않았다(열린 위젯은 새로고침해야 새 코드).
 - 이 기능이 켜지면 안내가 뜬 X 닫기는 상담을 종료한다. 상담원 응대 중 고객이 닫아도 종료된다(대기열 제외). 원하지 않는 테넌트는 콘솔에서 끈다.
