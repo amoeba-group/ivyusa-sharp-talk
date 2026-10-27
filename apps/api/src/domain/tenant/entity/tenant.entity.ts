@@ -120,6 +120,13 @@ export class Tenant {
   csatMode: string;
 
   /**
+   * Widget header × asks for feedback before closing an ongoing conversation
+   * (PLN-261027-Widget-Close-Feedback-Prompt D5). 1 = on (default).
+   */
+  @Column({ name: 'close_feedback_prompt', type: 'tinyint', width: 1, default: 1 })
+  closeFeedbackPrompt: number;
+
+  /**
    * Rating request → auto close (PLN-261026-Chat-Auto-Close D1). NULL = the
    * old platform rule (30 min of silence → "anything else?" → close, agent
    * threads only), so no existing tenant changes behaviour.

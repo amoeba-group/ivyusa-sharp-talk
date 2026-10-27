@@ -233,6 +233,11 @@ export class UpdateWidgetSettingsRequest {
   @IsIn(CSAT_MODE_VALUES as unknown as string[])
   csat_mode?: string;
 
+  // Feedback prompt on the widget's × (PLN-261027-Widget-Close-Feedback-Prompt).
+  @IsOptional()
+  @IsBoolean()
+  close_feedback_prompt?: boolean;
+
   // IANA timezone (e.g. 'Asia/Seoul'); drives the default widget language. Empty
   // string / null clears it. Optional so a login-mode-only update leaves it intact.
   @IsOptional()

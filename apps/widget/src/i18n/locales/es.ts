@@ -399,6 +399,15 @@ export const es: Translation = {
     close: 'Cerrar',
   },
 
+  // Feedback prompt on the header × (PLN-261027-Widget-Close-Feedback-Prompt).
+  closeFeedback: {
+    title: 'Opinión',
+    message: 'Dejar su opinión sobre esta conversación nos ayuda a mejorar el servicio.',
+    give: 'Dejar opinión',
+    justClose: 'Solo cerrar',
+    never: 'No volver a mostrar',
+  },
+
   a11y: {
     supportWidget: 'Widget de soporte',
     openSupport: 'Abrir soporte',

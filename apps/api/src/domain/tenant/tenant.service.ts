@@ -495,6 +495,7 @@ export class TenantService {
     if (dto.tab_position !== undefined) tenant.widgetTabPosition = dto.tab_position;
     if (dto.commerce_enabled !== undefined) tenant.commerceEnabled = dto.commerce_enabled ? 1 : 0;
     if (dto.csat_mode !== undefined) tenant.csatMode = dto.csat_mode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING;
+    if (dto.close_feedback_prompt !== undefined) tenant.closeFeedbackPrompt = dto.close_feedback_prompt ? 1 : 0;
     if (dto.timezone !== undefined) tenant.timezone = dto.timezone?.trim() || null;
     if (dto.default_language !== undefined) tenant.defaultLanguage = dto.default_language?.trim().toLowerCase() || null;
     if (dto.widget_languages !== undefined) {

@@ -114,7 +114,9 @@
     "csatModeSurvey": "Khảo sát — đã giải quyết? + đánh giá + lý do khi không hài lòng",
     "csatModeHint": "Hiện khi cuộc trò chuyện kết thúc. Khảo sát hỏi thêm \"đã giải quyết chưa?\" (tính vào tỷ lệ giải quyết) và hỏi lý do khi chấm 1–2.",
     "disclosureLine": "Dòng thông báo AI",
-    "disclosureLineHint": "Dòng thông báo AI phía trên hoặc dưới khung chat. Chữ trong [ngoặc vuông] sẽ liên kết tới điều khoản dịch vụ (Thông báo quyền riêng tư → URL điều khoản). Để trống = dòng mặc định."
+    "disclosureLineHint": "Dòng thông báo AI phía trên hoặc dưới khung chat. Chữ trong [ngoặc vuông] sẽ liên kết tới điều khoản dịch vụ (Thông báo quyền riêng tư → URL điều khoản). Để trống = dòng mặc định.",
+    "closeFeedbackPrompt": "Mời góp ý khi đóng",
+    "closeFeedbackPromptHint": "Khi khách bấm × trong lúc trò chuyện, widget mời góp ý. Đóng sẽ kết thúc hội thoại (không hỏi khi đang chờ nhân viên)."
   },
   "shopify": {
     "title": "Kết nối Shopify",

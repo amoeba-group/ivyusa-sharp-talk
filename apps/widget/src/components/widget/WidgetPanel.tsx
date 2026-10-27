@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { Settings, X } from 'lucide-react';
+import { Settings, X, MessageSquareHeart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { isAppMode, postToHost } from '../../lib/host-bridge';
@@ -26,6 +26,83 @@ const PANELS: Partial<Record<TabKey, () => ReactElement>> = {
   chat: () => <ChatTab />,
 };
 
+/** "Don't show again" for the close-feedback prompt, per shop in this browser (PLN-261027 D4). */
+function closeFeedbackKey(): string {
+  const shop = new URLSearchParams(window.location.search).get('shop') ?? 'default';
+  return `ivy.closeFeedback.off.${shop}`;
+}
+function closeFeedbackOptedOut(): boolean {
+  try {
+    return localStorage.getItem(closeFeedbackKey()) === '1';
+  } catch {
+    return false;
+  }
+}
+function optOutOfCloseFeedback(): void {
+  try {
+    localStorage.setItem(closeFeedbackKey(), '1');
+  } catch {
+    /* blocked storage: the prompt simply comes back next time */
+  }
+}
+
+/** The bottom sheet the × opens over an ongoing conversation (PLN-261027 W1). */
+function CloseFeedbackSheet({
+  busy,
+  onFeedback,
+  onClose,
+  onNever,
+  onCancel,
+}: {
+  busy: boolean;
+  onFeedback: () => void;
+  onClose: () => void;
+  onNever: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="fixed inset-0 z-30 flex items-end bg-black/30" onClick={onCancel} role="presentation">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('closeFeedback.title')}
+        className="w-full rounded-t-st-lg bg-white p-4 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="mb-3 flex items-start gap-2 text-sm text-gray-800">
+          <MessageSquareHeart className="mt-0.5 h-5 w-5 shrink-0 text-primary-500" aria-hidden />
+          {t('closeFeedback.message')}
+        </p>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onFeedback}
+          className="mb-2 w-full rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-60"
+        >
+          {t('closeFeedback.give')}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onClose}
+          className="mb-2 w-full rounded-st-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+        >
+          {t('closeFeedback.justClose')}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onNever}
+          className="w-full text-center text-xs text-gray-500 underline-offset-2 hover:underline disabled:opacity-60"
+        >
+          {t('closeFeedback.never')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function WidgetPanel() {
   const { t } = useTranslation();
   const activeTab = useWidgetStore((s) => s.activeTab);
@@ -34,9 +111,34 @@ export function WidgetPanel() {
    * In a host app the widget IS the screen: closing the panel would leave the
    * WebView showing nothing. Ask the host to dismiss it instead (PLN-260820).
    */
-  const dismiss = () => {
+  const closePanel = () => {
     if (isAppMode()) postToHost({ type: 'ivy:close-request' });
     else setPanelOpen(false);
+  };
+  // Feedback prompt on the × (PLN-261027-Widget-Close-Feedback-Prompt): an
+  // ongoing conversation asks once before it is closed — unless the tenant
+  // turned it off or this browser said "don't show again".
+  const closeFeedbackPrompt = useWidgetStore((s) => s.closeFeedbackPrompt);
+  const closeGuard = useWidgetStore((s) => s.closeGuard);
+  const setActiveTab = useWidgetStore((s) => s.setActiveTab);
+  const [askFeedback, setAskFeedback] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const dismiss = () => {
+    if (closeFeedbackPrompt && closeGuard?.ask && !closeFeedbackOptedOut()) setAskFeedback(true);
+    else closePanel();
+  };
+  const finish = async (then: 'feedback' | 'close' | 'never') => {
+    if (finishing) return;
+    setFinishing(true);
+    try {
+      if (then === 'never') optOutOfCloseFeedback();
+      await closeGuard?.end();
+      setAskFeedback(false);
+      if (then === 'feedback') setActiveTab('chat');
+      else closePanel();
+    } finally {
+      setFinishing(false);
+    }
   };
   // Store-held so other surfaces (e.g. the consent banner's "privacy choices"
   // link) can open the settings/preferences area too.
@@ -188,6 +290,16 @@ export function WidgetPanel() {
           )}
         </div>
       </header>
+
+      {askFeedback && (
+        <CloseFeedbackSheet
+          busy={finishing}
+          onFeedback={() => void finish('feedback')}
+          onClose={() => void finish('close')}
+          onNever={() => void finish('never')}
+          onCancel={() => setAskFeedback(false)}
+        />
+      )}
 
       {/* Tab bar position is a tenant setting (PLN-260817-Widget-Tab-Config). */}
       {!showSettings && tabPosition === 'top' && <TopTabs />}

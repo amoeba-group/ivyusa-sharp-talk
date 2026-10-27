@@ -84,6 +84,8 @@ export interface PrivacyNoticeInfo {
   /** Tenant switched on account conversation threads (PLN-261022 stage 2). */
   threadContinuity?: boolean;
   csatMode: CsatMode;
+  /** Ask for feedback when the × closes an ongoing conversation (PLN-261027). */
+  closeFeedbackPrompt: boolean;
   termsUrl: string | null;
   /** Languages the widget offers, lowercase codes in display order (PLN-261019-Widget-Language-Follow-Selection). */
   languages: string[];
@@ -710,6 +712,7 @@ export class SessionService {
       threadContinuity: Number(tenant?.threadContinuity ?? 0) === 1,
       // Satisfaction card kind + the terms link for the bottom disclosure line (PLN-261019).
       csatMode: tenant?.csatMode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING,
+      closeFeedbackPrompt: Number(tenant?.closeFeedbackPrompt ?? 1) !== 0,
       termsUrl: tenant?.termsUrl ?? null,
       languages: offeredLanguageCodes(tenant?.widgetLanguages),
     };

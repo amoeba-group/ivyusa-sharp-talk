@@ -395,6 +395,15 @@ export const zh: Translation = {
     close: '关闭',
   },
 
+  // Feedback prompt on the header × (PLN-261027-Widget-Close-Feedback-Prompt).
+  closeFeedback: {
+    title: '反馈',
+    message: '留下本次咨询的反馈有助于我们改进服务。',
+    give: '留下反馈',
+    justClose: '直接关闭',
+    never: '不再显示',
+  },
+
   a11y: {
     supportWidget: '客服小组件',
     openSupport: '打开客服',

@@ -408,6 +408,15 @@ export const ja: Translation = {
     close: '閉じる',
   },
 
+  // Feedback prompt on the header × (PLN-261027-Widget-Close-Feedback-Prompt).
+  closeFeedback: {
+    title: 'フィードバック',
+    message: '相談のフィードバックをいただくと、サービス改善に役立ちます。',
+    give: 'フィードバックを送る',
+    justClose: 'そのまま閉じる',
+    never: '今後表示しない',
+  },
+
   a11y: {
     supportWidget: 'サポートウィジェット',
     openSupport: 'サポートを開く',

@@ -852,7 +852,11 @@ export function WidgetTabsCard() {
   const [csatPicked, setCsatPicked] = useState<'rating' | 'survey' | null>(null);
   const csatMode = csatPicked ?? data?.csatMode ?? 'rating';
   const csatChanged = csatPicked != null && csatPicked !== (data?.csatMode ?? 'rating');
-  const dirty = data != null && (tabsChanged || positionChanged || commerceChanged || csatChanged);
+  // Feedback prompt on the widget's × (PLN-261027): default on.
+  const [closePromptPicked, setClosePromptPicked] = useState<boolean | null>(null);
+  const closeFeedbackPrompt = closePromptPicked ?? data?.closeFeedbackPrompt ?? true;
+  const closePromptChanged = closePromptPicked != null && closePromptPicked !== (data?.closeFeedbackPrompt ?? true);
+  const dirty = data != null && (tabsChanged || positionChanged || commerceChanged || csatChanged || closePromptChanged);
 
   return (
     <Card title={t('widgetTabs.title')}>
@@ -937,6 +941,18 @@ export function WidgetTabsCard() {
         </div>
         <p className="mb-4 text-xs text-gray-400">{t('widgetBehavior.csatModeHint')}</p>
 
+        {/* Ask for feedback when the shopper closes the widget mid-conversation (PLN-261027). */}
+        <label className="mb-1 flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={closeFeedbackPrompt}
+            disabled={isLoading}
+            onChange={(e) => setClosePromptPicked(e.target.checked)}
+          />
+          {t('widgetBehavior.closeFeedbackPrompt')}
+        </label>
+        <p className="mb-4 text-xs text-gray-400">{t('widgetBehavior.closeFeedbackPromptHint')}</p>
+
         <Button
           onClick={() =>
             save.mutate(
@@ -946,8 +962,14 @@ export function WidgetTabsCard() {
                 ...(positionChanged ? { tabPosition } : {}),
                 ...(commerceChanged ? { commerceEnabled } : {}),
                 ...(csatChanged ? { csatMode } : {}),
+                ...(closePromptChanged ? { closeFeedbackPrompt } : {}),
               },
-              { onSuccess: () => setCsatPicked(null) },
+              {
+                onSuccess: () => {
+                  setCsatPicked(null);
+                  setClosePromptPicked(null);
+                },
+              },
             )
           }
           disabled={!dirty || save.isPending}

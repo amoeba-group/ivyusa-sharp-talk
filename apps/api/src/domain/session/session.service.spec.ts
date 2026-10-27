@@ -123,6 +123,12 @@ describe('SessionService consent (PLN-Privacy-Control-Gap Stage 1-2)', () => {
       await expect(svc.effectiveNoticeVersion(null)).resolves.toBe(CONSENT_NOTICE_VERSION);
     });
 
+    it('passes the tenant switching the close-feedback prompt off (PLN-261027)', async () => {
+      tenant!.closeFeedbackPrompt = 0;
+      await expect(svc.privacyNotice(1)).resolves.toMatchObject({ closeFeedbackPrompt: false });
+      tenant!.closeFeedbackPrompt = 1;
+    });
+
     it('uses the tenant override and exposes the policy URL', async () => {
       tenant!.consentNoticeVersion = 'v9';
       tenant!.privacyPolicyUrl = 'https://shop.example/privacy';
@@ -135,6 +141,8 @@ describe('SessionService consent (PLN-Privacy-Control-Gap Stage 1-2)', () => {
         widgetTabPosition: 'top',
         commerceEnabled: true,
         csatMode: 'rating',
+        // Feedback prompt on the widget × — on unless the tenant turned it off (PLN-261027).
+        closeFeedbackPrompt: true,
         termsUrl: null,
         // Every registered language until the tenant narrows the list (PLN-261019).
         languages: ['en', 'es', 'ko', 'vi', 'ja', 'zh'],

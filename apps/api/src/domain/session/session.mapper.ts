@@ -31,6 +31,7 @@ export class SessionMapper {
       consentAt: s.consentAt ? new Date(s.consentAt).toISOString() : null,
       widgetLoginMode: notice.widgetLoginMode,
       csatMode: notice.csatMode,
+      closeFeedbackPrompt: notice.closeFeedbackPrompt,
       termsUrl: notice.termsUrl,
       widgetTabs: notice.widgetTabs,
       widgetTabPosition: notice.widgetTabPosition,

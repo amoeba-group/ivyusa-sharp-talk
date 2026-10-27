@@ -210,6 +210,8 @@ export function adoptTenantConfig(res: SessionResponse): void {
   // Deployment-level: where inference runs, named in the AI disclosure (G7).
   s.setAiProcessingRegion((res.aiProcessingRegion || 'US').toUpperCase());
   s.setCsatMode(res.csatMode === 'survey' ? 'survey' : 'rating');
+  // Absent on an older API = on (PLN-261027).
+  s.setCloseFeedbackPrompt(res.closeFeedbackPrompt !== false);
   s.setTermsUrl(res.termsUrl ?? null);
   // Header buttons (PLN-261023-Widget-Header-Buttons). Absent (older API) = all shown.
   const controls = {

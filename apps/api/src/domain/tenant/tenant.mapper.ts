@@ -146,6 +146,7 @@ export class TenantMapper {
           : WIDGET_TAB_POSITION.TOP,
       commerceEnabled: Number(t.commerceEnabled ?? 1) !== 0,
       csatMode: t.csatMode === 'survey' ? 'survey' : 'rating',
+      closeFeedbackPrompt: Number(t.closeFeedbackPrompt ?? 1) !== 0,
       timezone: t.timezone ?? null,
       defaultLanguage: t.defaultLanguage ?? null,
       widgetLanguages: t.widgetLanguages?.length ? t.widgetLanguages : null,

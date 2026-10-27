@@ -59,6 +59,13 @@ interface WidgetState {
   aiProcessingRegion: string;
   /** Which satisfaction card a finished chat shows (PLN-261019). */
   csatMode: 'rating' | 'survey';
+  /** Ask for feedback when the × closes an ongoing conversation (PLN-261027, tenant setting). */
+  closeFeedbackPrompt: boolean;
+  /**
+   * Set by the chat tab while it is mounted: whether closing should ask for
+   * feedback now, and how to end the conversation (PLN-261027 D1/D3).
+   */
+  closeGuard: { ask: boolean; end: () => Promise<void> } | null;
   /** Terms link for the bottom disclosure line; null → the privacy policy URL. */
   termsUrl: string | null;
   /** Loader could not find the configured trigger element, so the floating launcher stands in (FIX-260916). */
@@ -139,6 +146,8 @@ interface WidgetState {
   setHeaderControls: (c: HeaderControls) => void;
   setAiProcessingRegion: (r: string) => void;
   setCsatMode: (m: 'rating' | 'survey') => void;
+  setCloseFeedbackPrompt: (on: boolean) => void;
+  setCloseGuard: (g: { ask: boolean; end: () => Promise<void> } | null) => void;
   setTermsUrl: (u: string | null) => void;
   setTriggerUnavailable: (v: boolean) => void;
   setTeaserVisible: (v: boolean) => void;
@@ -179,6 +188,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   language: initialLanguage(),
   aiProcessingRegion: 'US',
   csatMode: 'rating',
+  closeFeedbackPrompt: true,
+  closeGuard: null,
   termsUrl: null,
   triggerUnavailable: false,
   teaserVisible: false,
@@ -220,6 +231,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setHeaderControls: (c) => set({ headerControls: c }),
   setAiProcessingRegion: (r) => set({ aiProcessingRegion: r }),
   setCsatMode: (m) => set({ csatMode: m }),
+  setCloseFeedbackPrompt: (on) => set({ closeFeedbackPrompt: on }),
+  setCloseGuard: (g) => set({ closeGuard: g }),
   setTermsUrl: (u) => set({ termsUrl: u }),
   setTriggerUnavailable: (v) => set({ triggerUnavailable: v }),
   setTeaserVisible: (v) => set({ teaserVisible: v }),

@@ -68,6 +68,8 @@ export interface SessionResponse {
   sessionToken: string;
   /** Which satisfaction card to show (PLN-261019); absent on an older API = rating. */
   csatMode?: 'rating' | 'survey';
+  /** Ask for feedback when the × closes an ongoing conversation (PLN-261027); absent = on. */
+  closeFeedbackPrompt?: boolean;
   /** Terms link for the bottom disclosure line; null → privacyPolicyUrl. */
   termsUrl?: string | null;
   language: string;

@@ -399,6 +399,15 @@ export const ko: Translation = {
     close: '닫기',
   },
 
+  // Feedback prompt on the header × (PLN-261027-Widget-Close-Feedback-Prompt).
+  closeFeedback: {
+    title: '상담 피드백',
+    message: '상담피드백을 남기시면 서비스 개선에 도움이 됩니다.',
+    give: '피드백 남기기',
+    justClose: '그냥 닫기',
+    never: '앞으로 안 보기',
+  },
+
   a11y: {
     supportWidget: '고객 지원 위젯',
     openSupport: '고객 지원 열기',

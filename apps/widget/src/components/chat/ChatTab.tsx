@@ -129,6 +129,16 @@ export function ChatTab() {
    */
   const [ratedIn, setRatedIn] = useState<string | null>(null);
   const showCsat = !!conversationId && (canRate || ratedIn === conversationId);
+  // Tell the header × whether closing should ask for feedback (PLN-261027 D1):
+  // an ongoing conversation (not the agent queue) the shopper wrote in and has
+  // not rated. `end` is how the prompt's buttons finish it.
+  const setCloseGuard = useWidgetStore((s) => s.setCloseGuard);
+  const wroteHere = messages.some((m) => m.senderType === 'user');
+  const askOnClose = (status === 'ai_active' || status === 'agent') && wroteHere && ratedIn !== conversationId;
+  useEffect(() => {
+    setCloseGuard({ ask: askOnClose, end: endChat });
+  }, [askOnClose, endChat, setCloseGuard]);
+  useEffect(() => () => setCloseGuard(null), [setCloseGuard]);
   async function rateHere(rating: number, survey?: Parameters<typeof rate>[1]) {
     // Latch before the request: `rate` clears canRate as soon as it resolves.
     const id = conversationId;

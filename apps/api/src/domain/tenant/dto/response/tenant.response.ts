@@ -114,6 +114,8 @@ export interface WidgetSettingsResponse {
   commerceEnabled: boolean;
   /** rating | survey (PLN-261019). */
   csatMode: string;
+  /** Feedback prompt on the widget's × (PLN-261027). */
+  closeFeedbackPrompt: boolean;
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;

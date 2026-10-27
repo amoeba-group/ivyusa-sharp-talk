@@ -121,6 +121,8 @@ export interface WidgetSettings {
   commerceEnabled: boolean;
   /** rating | survey (PLN-261019). */
   csatMode: 'rating' | 'survey';
+  /** Feedback prompt on the widget's × (PLN-261027). */
+  closeFeedbackPrompt?: boolean;
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;
@@ -451,9 +453,11 @@ export const settingsService = {
     commerceEnabled?: boolean,
     csatMode?: 'rating' | 'survey',
     widgetLanguages?: string[] | null,
+    closeFeedbackPrompt?: boolean,
   ) =>
     apiPatch<WidgetSettings>('/tenants/widget-settings', {
       login_mode: loginMode,
+      ...(closeFeedbackPrompt !== undefined ? { close_feedback_prompt: closeFeedbackPrompt } : {}),
       ...(widgetLanguages !== undefined ? { widget_languages: widgetLanguages } : {}),
       ...(commerceEnabled !== undefined ? { commerce_enabled: commerceEnabled } : {}),
       ...(csatMode !== undefined ? { csat_mode: csatMode } : {}),

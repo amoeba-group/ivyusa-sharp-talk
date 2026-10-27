@@ -398,6 +398,15 @@ export const en = {
     close: 'Close',
   },
 
+  // Feedback prompt on the header × (PLN-261027-Widget-Close-Feedback-Prompt).
+  closeFeedback: {
+    title: 'Feedback',
+    message: 'Leaving feedback on this chat helps us improve our service.',
+    give: 'Leave feedback',
+    justClose: 'Just close',
+    never: "Don't show this again",
+  },
+
   a11y: {
     supportWidget: 'Support widget',
     openSupport: 'Open support',

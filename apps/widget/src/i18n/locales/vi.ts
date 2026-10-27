@@ -408,6 +408,15 @@ export const vi: Translation = {
     close: 'Đóng',
   },
 
+  // Feedback prompt on the header × (PLN-261027-Widget-Close-Feedback-Prompt).
+  closeFeedback: {
+    title: 'Góp ý',
+    message: 'Để lại góp ý về cuộc trò chuyện giúp chúng tôi cải thiện dịch vụ.',
+    give: 'Gửi góp ý',
+    justClose: 'Chỉ đóng',
+    never: 'Không hiện lại',
+  },
+
   a11y: {
     supportWidget: 'Khung hỗ trợ',
     openSupport: 'Mở hỗ trợ',

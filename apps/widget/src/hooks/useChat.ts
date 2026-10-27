@@ -231,6 +231,9 @@ export function useChat(sessionToken: string | null) {
     try {
       await endChatApi(sessionToken);
       setStatus('ended');
+      // An ended conversation can be rated at once (24h window) — show the card
+      // without waiting for the next poll (PLN-261027 close feedback).
+      setCanRate(true);
     } catch {
       append({
         id: `err-${Date.now()}`,
