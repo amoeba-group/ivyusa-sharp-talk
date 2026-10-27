@@ -79,17 +79,19 @@ export function ChatCloseCard() {
 
   const minutesRow = (key: 'csatAfterMin' | 'closeAfterMin', invalid: boolean) => (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="w-64 text-sm text-gray-700">{t(`chatClose.${key}`)}</span>
-      <Input
-        type="number"
-        min={CHAT_CLOSE_MIN}
-        max={CHAT_CLOSE_MAX}
-        value={current[key]}
-        disabled={isLoading}
-        aria-invalid={invalid}
-        onChange={(e) => patch({ [key]: e.target.value } as Partial<Draft>)}
-        className="w-20"
-      />
+      <span className="text-sm text-gray-700 sm:w-64 sm:shrink-0">{t(`chatClose.${key}`)}</span>
+      {/* Input is w-full by design; the width lives on a wrapper, as elsewhere in settings. */}
+      <div className="w-24">
+        <Input
+          type="number"
+          min={CHAT_CLOSE_MIN}
+          max={CHAT_CLOSE_MAX}
+          value={current[key]}
+          disabled={isLoading}
+          aria-invalid={invalid}
+          onChange={(e) => patch({ [key]: e.target.value } as Partial<Draft>)}
+        />
+      </div>
       <span className="text-sm text-gray-500">{t(`chatClose.${key}Suffix`)}</span>
     </div>
   );
