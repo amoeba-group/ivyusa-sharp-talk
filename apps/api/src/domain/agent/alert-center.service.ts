@@ -8,7 +8,7 @@ import { User } from '../user/entity/user.entity';
 import { Session } from '../session/entity/session.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
-import { canAckAlarm } from './agent-alert.service';
+import { ALERT_STATUS_EXPIRED, canAckAlarm } from './agent-alert.service';
 
 /** One alarm as the console shows it: the per-agent rows of one escalation, folded. */
 export interface AlarmView {
@@ -17,7 +17,8 @@ export interface AlarmView {
   conversationId: string;
   reason: string;
   preview: string | null;
-  status: 'new' | 'acked';
+  /** expired = nobody accepted before the queue timeout; the AI took the thread back (PLN-261026). */
+  status: 'new' | 'acked' | 'expired';
   createdAt: Date;
   ruleName: string | null;
   consultCategory: string | null;
@@ -36,7 +37,7 @@ export interface AlarmView {
 
 export interface AlarmCenterFilter {
   scope?: 'all' | 'mine' | 'broadcast';
-  status?: 'new' | 'acked' | 'all';
+  status?: 'new' | 'acked' | 'expired' | 'all';
   days?: number;
   category?: string;
 }
@@ -100,7 +101,7 @@ export class AlertCenterService {
     let views = await this.views(tenantId, userId, rows);
     if (filter.scope === 'mine') views = views.filter((v) => v.assignedToMe);
     else if (filter.scope === 'broadcast') views = views.filter((v) => v.broadcast);
-    if (filter.status === 'new' || filter.status === 'acked') views = views.filter((v) => v.status === filter.status);
+    if (filter.status && filter.status !== 'all') views = views.filter((v) => v.status === filter.status);
     const start = (page - 1) * size;
     return { items: views.slice(start, start + size), total: views.length };
   }
@@ -199,7 +200,11 @@ export class AlertCenterService {
           conversationId: String(first.conversationId),
           reason: first.reason,
           preview: first.preview,
-          status: g.some((r) => r.status === 'new') ? 'new' : 'acked',
+          status: g.some((r) => r.status === 'new')
+            ? 'new'
+            : g.every((r) => r.status === ALERT_STATUS_EXPIRED)
+              ? 'expired'
+              : 'acked',
           createdAt: first.createdAt,
           ruleName: first.ruleName ?? null,
           consultCategory: first.consultCategory ?? null,

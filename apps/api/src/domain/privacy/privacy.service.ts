@@ -1,4 +1,5 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { CallbackRequest } from '../callback/entity/callback-request.entity';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { SESSION_IDENTITY } from '@sharptalk/types';
@@ -86,6 +87,8 @@ export class PrivacyService {
     private readonly attachments?: AttachmentService,
     /** Merged rooms keyed on the customer (PLN-261023). */
     private readonly mergedRooms?: MergedRoomService,
+    /** Callback requests carry a contact copy (PLN-261026); deleted with the person. */
+    @Optional() @InjectRepository(CallbackRequest) private readonly callbackRepo?: Repository<CallbackRequest>,
   ) {}
 
   // ---- session resolution (widget DSAR/CCPA) ----
@@ -552,6 +555,12 @@ export class PrivacyService {
       await this.propagateErasureToShopify(customer);
     }
 
+    // Callback contacts are a copy of the person's email/phone (PLN-261026):
+    // deleted outright, by customer and by the person's conversations below.
+    await this.callbackRepo
+      ?.delete({ customerId })
+      .catch((e: Error) => this.logger.warn(`callback erasure failed: ${e.message}`));
+
     // Redact chat messages reachable from the customer's sessions.
     const sessions = await this.sessionRepo.find({ where: { customerId } });
     const sessionIds = sessions.map((s) => s.id);
@@ -587,6 +596,9 @@ export class PrivacyService {
             .deleteByConversationIds(conversationIds.map((id) => Number(id)))
             .catch((e: Error) => this.logger.warn(`attachment erasure failed: ${e.message}`));
         }
+        await this.callbackRepo
+          ?.delete({ conversationId: In(conversationIds) })
+          .catch((e: Error) => this.logger.warn(`callback erasure failed: ${e.message}`));
         await this.messageRepo.update(
           { conversationId: In(conversationIds) },
           { body: REDACTED },

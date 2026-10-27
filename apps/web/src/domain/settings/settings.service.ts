@@ -309,6 +309,17 @@ export interface WidgetAccessDraft {
   controls: WidgetHeaderControls;
 }
 
+/** Rating request → auto close (PLN-261026-Chat-Auto-Close). Copy keyed by session language. */
+export type ChatCloseCopy = Partial<Record<string, string>>;
+export interface ChatClosePolicySettings {
+  enabled: boolean;
+  csatAfterMin: number;
+  closeAfterMin: number;
+  csatPrompt: ChatCloseCopy;
+  closingNotice: ChatCloseCopy;
+  thanksNotice: ChatCloseCopy;
+}
+
 export interface EmbedSettings {
   /** What is stored; null when never configured. */
   origins: string[] | null;
@@ -337,6 +348,17 @@ export const settingsService = {
       controls: body.controls,
     }),
   rotateWidgetAccessKey: () => apiPost<{ key: string }>('/tenants/widget-access/key', {}),
+  // Rating request → auto close (PLN-261026). Sent whole; blank lines = built-in copy.
+  chatClosePolicy: () => apiGet<ChatClosePolicySettings>('/tenants/chat-close-policy'),
+  saveChatClosePolicy: (body: ChatClosePolicySettings) =>
+    apiPut<ChatClosePolicySettings>('/tenants/chat-close-policy', {
+      enabled: body.enabled,
+      csat_after_min: body.csatAfterMin,
+      close_after_min: body.closeAfterMin,
+      csat_prompt: body.csatPrompt,
+      closing_notice: body.closingNotice,
+      thanks_notice: body.thanksNotice,
+    }),
   widgetSettings: () => apiGet<WidgetSettings>('/tenants/widget-settings'),
   storefront: () => apiGet<Storefront>('/tenants/storefront'),
   notificationChannels: () => apiGet<NotificationChannels>('/tenants/notification-channels'),

@@ -993,5 +993,28 @@
     "openWidgetSettings": "ウィジェット設定を開く",
     "emptyHintMarketing": "下の「プラットフォームを追加」から利用中のサービスを選んでください。",
     "openSite": "サイトを開く"
+  },
+  "chatClose": {
+    "title": "チャット終了条件",
+    "enable": "使用する",
+    "hint": "AIまたは担当者が回答した後、お客様からの追加の質問がなければ満足度の評価をお願いし、チャットを終了します。",
+    "csatAfterMin": "回答後にお客様の返信がない場合",
+    "csatAfterMinSuffix": "分後に満足度を依頼",
+    "closeAfterMin": "満足度の依頼後",
+    "closeAfterMinSuffix": "分後に終了案内を送って終了",
+    "minutesRange": "{{min}}〜{{max}}の整数（分）を入力してください。",
+    "copyTitle": "文言",
+    "csatPrompt": "満足度の依頼",
+    "closingNotice": "終了案内",
+    "thanksNotice": "評価後のあいさつ",
+    "copyHint": "空欄の場合は既定の文言（薄く表示）を使用します。",
+    "noteWaitingPrefix": "※ 担当者への接続待ちのチャットは",
+    "noteWaitingLink": "担当者接続設定 ›",
+    "noteWaitingSuffix": "の遅延案内に従います。",
+    "noteExcluded": "※ メール返信を約束したチャットとメッセンジャーのチャットは対象外です。",
+    "noteOff": "※ オフの場合は従来のルール（30分無応答で確認後に終了、担当者対応のチャットのみ）に従います。",
+    "saved": "チャット終了条件を保存しました。",
+    "saveError": "チャット終了条件を保存できませんでした。",
+    "errorRange": "時間は1〜60分の範囲で指定してください。"
   }
 }

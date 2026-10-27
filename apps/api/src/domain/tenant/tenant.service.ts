@@ -19,6 +19,8 @@ import {
   CSAT_MODE,
   LANGUAGE_CODES,
   offeredLanguageCodes,
+  normalizeChatClosePolicy,
+  readChatClosePolicy,
 } from '@sharptalk/types';
 
 /** Real categories the policy may mention ('all' is a query filter, not a kind). */
@@ -47,6 +49,7 @@ import {
   UpdatePrivacyNoticeRequest,
   UpdateStorefrontRequest,
   UpdateKnowledgeSettingsRequest,
+  UpdateChatClosePolicyRequest,
   UpdateTenantCustomCssRequest,
   UpdateWidgetSettingsRequest,
   UpdateWidgetAccessRequest,
@@ -776,6 +779,47 @@ export class TenantService {
    * usage-guides section renders; guide documents and their citations are not
    * touched, so turning it off is reversible and audited like any setting.
    */
+  /**
+   * Rating request → auto close (PLN-261026 D1). Disabling clears the column so
+   * the old platform rule applies again. `chat_close_policy_since` is stamped
+   * in the JSON on every enable: conversations that went quiet before it are
+   * closed silently instead of all receiving a rating request at once.
+   */
+  async updateChatClosePolicy(
+    tenantId: number,
+    actorId: number,
+    dto: UpdateChatClosePolicyRequest,
+  ): Promise<Tenant> {
+    const tenant = await this.findById(tenantId);
+    if (!dto.enabled) {
+      tenant.chatClosePolicy = null;
+    } else {
+      const policy = normalizeChatClosePolicy({
+        csatAfterMin: dto.csat_after_min,
+        closeAfterMin: dto.close_after_min,
+        csatPrompt: dto.csat_prompt,
+        closingNotice: dto.closing_notice,
+        thanksNotice: dto.thanks_notice,
+      });
+      if (!policy) {
+        this.logger.warn(`chat close policy rejected: minutes out of range (tenant ${tenantId})`);
+        throw new BusinessException(ERROR_CODE.CHAT_CLOSE_POLICY_INVALID, HttpStatus.BAD_REQUEST);
+      }
+      const previous = readChatClosePolicy(tenant.chatClosePolicy);
+      tenant.chatClosePolicy = { ...policy, since: previous?.since ?? new Date().toISOString() };
+    }
+    const saved = await this.tenantRepo.save(tenant);
+    const p = readChatClosePolicy(saved.chatClosePolicy);
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId,
+      action: 'tenant.chat_close_policy_updated',
+      target: p ? `csat:${p.csatAfterMin}m close:${p.closeAfterMin}m` : 'off',
+    });
+    return saved;
+  }
+
   async updateKnowledgeSettings(
     tenantId: number,
     actorId: number,

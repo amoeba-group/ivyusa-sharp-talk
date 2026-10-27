@@ -314,6 +314,30 @@
       "off": "끔",
       "minutes": "분 후",
       "leads": "함께 알릴 리드"
+    },
+    "queueTimeout": {
+      "title": "연결 지연 안내",
+      "hint": "수락 없이 이 시간이 지나면 고객에게 안내하고 AI가 다시 응대합니다.",
+      "after": "수락 없이",
+      "minutes": "분 지나면 고객에게 안내",
+      "rangeError": "{{min}}~{{max}} 사이의 분(정수)을 입력하세요.",
+      "reminderError": "재알림 시간({{minutes}}분)보다 길어야 합니다. 그렇지 않으면 재알림이 울리지 않습니다.",
+      "reminderHint": "위 재알림 시간보다 길어야 합니다.",
+      "notice": "안내 문구",
+      "noticeHint": "비워 두면 기본 문구(흐리게 표시)를 사용합니다.",
+      "offHoursPrefix": "업무시간 외 요청은 즉시",
+      "offHoursLink": "업무시간 외 안내 문구 ›",
+      "offHoursSuffix": "를 보냅니다."
+    },
+    "callback": {
+      "title": "상담원 콜백 요청",
+      "hint": "지연·업무시간 외 안내 뒤 고객이 연락처를 남기면 상담원이 나중에 연락합니다.",
+      "channels": "받을 연락처",
+      "channel": {
+        "email": "이메일",
+        "phone": "전화번호"
+      },
+      "channelsRequired": "연락처 종류를 하나 이상 선택하세요."
     }
   },
   "coach": {

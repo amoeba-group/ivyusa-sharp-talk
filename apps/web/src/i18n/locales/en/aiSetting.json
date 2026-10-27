@@ -314,6 +314,30 @@
       "off": "Off",
       "minutes": "minutes",
       "leads": "Also page"
+    },
+    "queueTimeout": {
+      "title": "Connection delay notice",
+      "hint": "If no agent accepts within this time, the customer is told and the AI takes over again.",
+      "after": "No acceptance after",
+      "minutes": "minutes → notify the customer",
+      "rangeError": "Enter whole minutes between {{min}} and {{max}}.",
+      "reminderError": "Must be longer than the reminder ({{minutes}} min) — otherwise the reminder never fires.",
+      "reminderHint": "Must be longer than the reminder time above.",
+      "notice": "Notice",
+      "noticeHint": "Leave blank to use the built-in message (shown greyed out).",
+      "offHoursPrefix": "Requests outside business hours get the",
+      "offHoursLink": "off-hours notice ›",
+      "offHoursSuffix": "immediately."
+    },
+    "callback": {
+      "title": "Agent callback request",
+      "hint": "After the delay or off-hours notice, the customer can leave a contact and an agent gets back to them later.",
+      "channels": "Contact to collect",
+      "channel": {
+        "email": "Email",
+        "phone": "Phone number"
+      },
+      "channelsRequired": "Pick at least one contact type."
     }
   },
   "coach": {

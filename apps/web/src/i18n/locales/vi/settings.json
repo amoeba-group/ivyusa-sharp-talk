@@ -993,5 +993,28 @@
     "openWidgetSettings": "Mở cài đặt widget",
     "emptyHintMarketing": "Chọn dịch vụ bạn đang dùng ở mục \"Thêm nền tảng\" bên dưới.",
     "openSite": "Mở trang"
+  },
+  "chatClose": {
+    "title": "Điều kiện kết thúc chat",
+    "enable": "Bật",
+    "hint": "Khi AI hoặc nhân viên đã trả lời và khách không hỏi thêm, widget sẽ xin đánh giá rồi kết thúc cuộc trò chuyện.",
+    "csatAfterMin": "Khách không phản hồi sau câu trả lời — xin đánh giá sau",
+    "csatAfterMinSuffix": "phút",
+    "closeAfterMin": "Sau khi xin đánh giá — gửi thông báo kết thúc và đóng sau",
+    "closeAfterMinSuffix": "phút",
+    "minutesRange": "Nhập số phút nguyên từ {{min}} đến {{max}}.",
+    "copyTitle": "Nội dung",
+    "csatPrompt": "Xin đánh giá",
+    "closingNotice": "Thông báo kết thúc",
+    "thanksNotice": "Sau khi đánh giá",
+    "copyHint": "Để trống để dùng nội dung mặc định (hiển thị mờ).",
+    "noteWaitingPrefix": "※ Cuộc trò chuyện đang chờ nhân viên tuân theo thông báo chậm trễ trong",
+    "noteWaitingLink": "Cài đặt chuyển nhân viên ›",
+    "noteWaitingSuffix": ".",
+    "noteExcluded": "※ Không áp dụng cho cuộc trò chuyện đã hẹn trả lời qua email và cuộc trò chuyện qua messenger.",
+    "noteOff": "※ Tắt = quy tắc cũ (im lặng 30 phút thì xác nhận rồi đóng — chỉ cuộc trò chuyện với nhân viên).",
+    "saved": "Đã lưu điều kiện kết thúc chat.",
+    "saveError": "Không thể lưu điều kiện kết thúc chat.",
+    "errorRange": "Số phút phải từ 1 đến 60."
   }
 }

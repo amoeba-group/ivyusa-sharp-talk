@@ -5,7 +5,10 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsIn,
+  IsInt,
   IsObject,
+  Max,
+  Min,
   IsOptional,
   IsString,
   IsUrl,
@@ -27,6 +30,8 @@ import {
   WidgetTabPosition,
   LANGUAGE_CODES,
   CSAT_MODE_VALUES,
+  CHAT_CLOSE_MAX,
+  CHAT_CLOSE_MIN,
 } from '@sharptalk/types';
 import { TENANT_SLUG_PATTERN } from '../../../../global/constant/reserved-slug.constant';
 
@@ -181,6 +186,20 @@ export class UpdateStorefrontRequest {
 /** Knowledge-page options (PLN-260910): the usage-guides section switch. */
 export class UpdateKnowledgeSettingsRequest {
   @IsBoolean() usage_guides_enabled: boolean;
+}
+
+/**
+ * Rating request → auto close (PLN-261026 D1). `enabled=false` clears the
+ * policy (the old platform rule applies again); copy bags are keyed by session
+ * language (EN/KO/…) and blank lines fall back to the built-in text.
+ */
+export class UpdateChatClosePolicyRequest {
+  @IsBoolean() enabled: boolean;
+  @Type(() => Number) @IsInt() @Min(CHAT_CLOSE_MIN) @Max(CHAT_CLOSE_MAX) csat_after_min: number;
+  @Type(() => Number) @IsInt() @Min(CHAT_CLOSE_MIN) @Max(CHAT_CLOSE_MAX) close_after_min: number;
+  @IsOptional() @IsObject() csat_prompt?: Record<string, string>;
+  @IsOptional() @IsObject() closing_notice?: Record<string, string>;
+  @IsOptional() @IsObject() thanks_notice?: Record<string, string>;
 }
 
 export class UpdateWidgetSettingsRequest {

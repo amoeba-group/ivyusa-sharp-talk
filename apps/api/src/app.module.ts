@@ -61,6 +61,7 @@ import { HaravanModule } from './domain/haravan/haravan.module';
 import { WooModule } from './domain/woocommerce/woocommerce.module';
 import { ShopifyProxyModule } from './domain/shopify-proxy/shopify-proxy.module';
 import { RoutingCategoryModule } from './domain/routing-category/routing-category.module';
+import { CallbackModule } from './domain/callback/callback.module';
 
 @Module({
   imports: [
@@ -128,6 +129,7 @@ import { RoutingCategoryModule } from './domain/routing-category/routing-categor
     PrivacyModule,
     HealthModule,
     RoutingCategoryModule,
+    CallbackModule, // callback requests (PLN-261026)
   ],
   providers: [
     // Throttle first (cheap, before auth work), then authenticate.

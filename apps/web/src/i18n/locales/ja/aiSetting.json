@@ -314,6 +314,30 @@
       "off": "オフ",
       "minutes": "分後",
       "leads": "追加で通知"
+    },
+    "queueTimeout": {
+      "title": "接続遅延のご案内",
+      "hint": "この時間内に担当者が受け付けない場合、お客様にご案内し、AIが再び対応します。",
+      "after": "受付がないまま",
+      "minutes": "分経過したらお客様に案内",
+      "rangeError": "{{min}}〜{{max}}の整数（分）を入力してください。",
+      "reminderError": "再通知の時間（{{minutes}}分）より長くしてください。短いと再通知が届きません。",
+      "reminderHint": "上の再通知の時間より長くしてください。",
+      "notice": "案内文",
+      "noticeHint": "空欄の場合は既定の文言（薄く表示）を使用します。",
+      "offHoursPrefix": "営業時間外のリクエストには直ちに",
+      "offHoursLink": "営業時間外の案内文 ›",
+      "offHoursSuffix": "を送ります。"
+    },
+    "callback": {
+      "title": "担当者からの折り返し依頼",
+      "hint": "遅延・営業時間外の案内の後、お客様が連絡先を残すと担当者が後ほど連絡します。",
+      "channels": "受け付ける連絡先",
+      "channel": {
+        "email": "メール",
+        "phone": "電話番号"
+      },
+      "channelsRequired": "連絡先の種類を1つ以上選択してください。"
     }
   },
   "coach": {

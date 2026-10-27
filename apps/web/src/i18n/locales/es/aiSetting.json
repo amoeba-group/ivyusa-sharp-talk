@@ -314,6 +314,30 @@
       "off": "Desactivado",
       "minutes": "minutos",
       "leads": "Avisar también a"
+    },
+    "queueTimeout": {
+      "title": "Aviso de demora en la conexión",
+      "hint": "Si ningún agente acepta en este tiempo, se avisa al cliente y la IA vuelve a atenderlo.",
+      "after": "Sin aceptación tras",
+      "minutes": "minutos → avisar al cliente",
+      "rangeError": "Introduce minutos enteros entre {{min}} y {{max}}.",
+      "reminderError": "Debe ser mayor que el recordatorio ({{minutes}} min); si no, el recordatorio nunca se enviaría.",
+      "reminderHint": "Debe ser mayor que el tiempo del recordatorio de arriba.",
+      "notice": "Aviso",
+      "noticeHint": "Déjalo en blanco para usar el mensaje predeterminado (en gris).",
+      "offHoursPrefix": "Las solicitudes fuera del horario reciben de inmediato el",
+      "offHoursLink": "aviso fuera de horario ›",
+      "offHoursSuffix": "."
+    },
+    "callback": {
+      "title": "Solicitud de devolución de contacto",
+      "hint": "Tras el aviso de demora o fuera de horario, el cliente puede dejar un contacto y un agente le contactará más tarde.",
+      "channels": "Contacto a recoger",
+      "channel": {
+        "email": "Correo electrónico",
+        "phone": "Teléfono"
+      },
+      "channelsRequired": "Elige al menos un tipo de contacto."
     }
   },
   "coach": {

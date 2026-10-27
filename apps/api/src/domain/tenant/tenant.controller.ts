@@ -34,6 +34,7 @@ import {
   UpdateShopifySettingsRequest,
   UpdateStorefrontRequest,
   UpdateKnowledgeSettingsRequest,
+  UpdateChatClosePolicyRequest,
   UpdateTenantCustomCssRequest,
   UpdateNotificationChannelsRequest,
   UpdateWidgetAccessRequest,
@@ -120,6 +121,26 @@ export class TenantController {
   async getWidgetSettings(@CurrentUser() user: Principal) {
     const tenant = await this.tenantService.findById(this.tenantId(user));
     return TenantMapper.toWidgetSettings(tenant);
+  }
+
+  // Declared before ':uuid' so 'chat-close-policy' is not captured as a UUID.
+  @Get('chat-close-policy')
+  @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR)
+  @ApiOperation({ summary: 'Rating request → auto close policy (PLN-261026)' })
+  async getChatClosePolicy(@CurrentUser() user: Principal) {
+    return TenantMapper.toChatClosePolicy(await this.tenantService.findById(this.tenantId(user)));
+  }
+
+  @Put('chat-close-policy')
+  @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR)
+  @ApiOperation({ summary: 'Set the rating request → auto close policy (PLN-261026)' })
+  async updateChatClosePolicy(@CurrentUser() user: Principal, @Body() body: UpdateChatClosePolicyRequest) {
+    // @RequireRank guarantees a tenant user at runtime; narrow for TS.
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    const tenant = await this.tenantService.updateChatClosePolicy(user.tenantId, user.userId, body);
+    return TenantMapper.toChatClosePolicy(tenant);
   }
 
   // Declared before ':uuid' so 'storefront' is not captured as a UUID.

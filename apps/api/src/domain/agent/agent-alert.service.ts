@@ -37,6 +37,9 @@ interface EscalationPayload {
   consultCategory?: string;
 }
 
+/** Alarm left unaccepted past the queue timeout; the AI took the thread back (PLN-261026 D3). */
+export const ALERT_STATUS_EXPIRED = 'expired';
+
 /** Can this user stop the page for an alarm? Its assignee, or anyone for a broadcast (PLN-261024 D2). */
 export function canAckAlarm(rows: Array<{ targetUserId: number | null }>, userId: number): boolean {
   return rows.some((r) => r.targetUserId == null || String(r.targetUserId) === String(userId));
@@ -48,6 +51,7 @@ const REASON_LABEL: Record<string, string> = {
   moderation_blocked: 'AI reply blocked by moderation',
   user_request: 'Customer asked for a human agent',
   policy: 'Policy deny-list — forced human handling',
+  callback_request: 'Customer requested a callback',
 };
 
 /**

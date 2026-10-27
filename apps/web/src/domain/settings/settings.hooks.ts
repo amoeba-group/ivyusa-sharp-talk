@@ -10,6 +10,7 @@ import type {
 import type { SaveTenantEngineBody, UsageGroupBy } from './settings.service';
 import { settingsService } from './settings.service';
 import type {
+  ChatClosePolicySettings,
   SaveShopifyBody,
   UpdateCredentialBody,
   WidgetAccessDraft,
@@ -567,6 +568,33 @@ export function useSaveWidgetAccess() {
       // Server-side validation (bad CIDR, empty rule set, inverted window)
       // speaks through the error code — show it rather than a generic failure.
       toast.error(e.message || t('widgetAccess.saveError'), { sticky: true });
+    },
+  });
+}
+
+/** Rating request → auto close policy (PLN-261026-Chat-Auto-Close). */
+export function useChatClosePolicy() {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['chat-close-policy', tenantKey],
+    queryFn: settingsService.chatClosePolicy,
+  });
+}
+
+export function useSaveChatClosePolicy() {
+  const { t } = useTranslation('settings');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (body: ChatClosePolicySettings) => settingsService.saveChatClosePolicy(body),
+    onSuccess: (saved) => {
+      qc.setQueryData(['chat-close-policy', tenantKey], saved);
+      toast.success(t('chatClose.saved'));
+    },
+    onError: (e: Error & { code?: string }) => {
+      toast.error(e.code === 'E5151' ? t('chatClose.errorRange') : e.message || t('chatClose.saveError'), {
+        sticky: true,
+      });
     },
   });
 }

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useCategoryName } from '../routing-categories/routing-categories.hooks';
 import type { AgentAlert } from '../live-chat/live-chat.service';
 
@@ -12,10 +13,26 @@ export function reasonKey(reason: string): string {
       return 'alarmReasonModeration';
     case 'category_selected':
       return 'alarmReasonCategory';
+    case 'callback_request':
+      return 'alarmReasonCallback';
     default:
       return 'alarmReasonUserRequest';
   }
 }
+
+/** A callback alarm asks for a call back, not for someone to take a waiting chat (PLN-261026 D7). */
+export const isCallbackAlarm = (a: Pick<AgentAlert, 'reason'>) => a.reason === 'callback_request';
+
+/** Headline of an alarm — "needs an agent" vs "asked for a callback". */
+export const alarmBodyKey = (a: Pick<AgentAlert, 'reason'>) => (isCallbackAlarm(a) ? 'alarmBodyCallback' : 'alarmBody');
+
+/** Status line of an alarm (bell / center): unacked, acked by whom, or expired to the AI. */
+export const alarmStatusText = (t: TFunction, a: AgentAlert) =>
+  a.status === 'expired'
+    ? t('alarmCenter.statusExpired')
+    : a.status === 'new'
+      ? t('alarmCenter.statusNew')
+      : t('alarmCenter.statusAcked', { name: a.ackedBy?.name ?? '—' });
 
 /**
  * Text helpers for an alarm (PLN-261024 D1): who it is addressed to, and the

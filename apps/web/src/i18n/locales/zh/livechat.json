@@ -44,6 +44,9 @@
   "alarmReasonCategory": "客户选择了咨询类别，已重新转接给对应的客服组。",
   "alarmOpen": "打开会话",
   "alarmDismiss": "忽略",
+  "alarmReasonCallback": "客户请求客服回电联系。",
+  "alarmBodyCallback": "对话 #{{id}} 的客户请求回电联系。",
+  "alarmOpenCallback": "查看回电请求",
   "listSearchPlaceholder": "按客户姓名或邮箱搜索",
   "listSearchScope": "仅匹配近期客户",
   "createdShort": "开始于",
@@ -544,6 +547,8 @@
     "statusAcked": "{{name}} 已确认",
     "statusAckedShort": "已确认",
     "statusAll": "全部状态",
+    "statusExpired": "已超时 — 转回 AI 应答",
+    "statusExpiredShort": "已超时",
     "ack": "确认",
     "scope_all": "全部",
     "scope_mine": "分配给我",
@@ -582,6 +587,39 @@
       "emailHint": "发给全部的提醒仍会发送到运营邮箱。",
       "saved": "已保存提醒设置",
       "saveError": "无法保存提醒设置"
-    }
+    },
+    "tab_alarms": "提醒",
+    "tab_callbacks": "回电请求"
+  },
+  "callback": {
+    "hint": "客服将通过客户留下的联系方式联系客户。点击［查看］会记录在审计日志中。",
+    "banner": "客户请求回电联系",
+    "status_requested": "已请求",
+    "status_done": "已处理",
+    "status_canceled": "已取消",
+    "status_all": "全部",
+    "channel_email": "邮箱",
+    "channel_phone": "电话",
+    "source_member": "会员资料联系方式",
+    "source_entered": "客户自行填写",
+    "col": {
+      "contact": "联系方式"
+    },
+    "reveal": "查看",
+    "revealHint": "显示完整联系方式（会记录在审计日志中）",
+    "hide": "隐藏",
+    "copy": "复制",
+    "copied": "已复制联系方式",
+    "copyError": "无法复制联系方式",
+    "revealError": "无法加载联系方式",
+    "markDone": "标记已处理",
+    "cancel": "取消",
+    "reopen": "重新打开",
+    "doneToast": "已将回电请求标记为已处理",
+    "canceledToast": "已取消回电请求",
+    "reopenedToast": "已重新打开回电请求",
+    "updateError": "无法更新回电请求状态",
+    "handled": "{{name}} · {{at}}",
+    "empty": "暂无回电请求"
   }
 }

@@ -993,5 +993,28 @@
     "openWidgetSettings": "Open widget settings",
     "emptyHintMarketing": "Pick the service you use under \"Add a platform\" below.",
     "openSite": "Open site"
+  },
+  "chatClose": {
+    "title": "Chat close conditions",
+    "enable": "On",
+    "hint": "When the AI or an agent has answered and the customer asks nothing more, the widget asks for a rating and then ends the chat.",
+    "csatAfterMin": "No reply from the customer after an answer — ask for a rating after",
+    "csatAfterMinSuffix": "minutes",
+    "closeAfterMin": "After the rating request — send the closing notice and end after",
+    "closeAfterMinSuffix": "minutes",
+    "minutesRange": "Enter whole minutes between {{min}} and {{max}}.",
+    "copyTitle": "Messages",
+    "csatPrompt": "Rating request",
+    "closingNotice": "Closing notice",
+    "thanksNotice": "After rating",
+    "copyHint": "Leave blank to use the built-in message (shown greyed out).",
+    "noteWaitingPrefix": "※ Conversations waiting for an agent follow the delay notice in",
+    "noteWaitingLink": "Handoff settings ›",
+    "noteWaitingSuffix": ".",
+    "noteExcluded": "※ Conversations promised an email reply and messenger conversations are not affected.",
+    "noteOff": "※ Off = the previous rule (after 30 minutes of silence, confirm and close — agent conversations only).",
+    "saved": "Chat close conditions saved.",
+    "saveError": "Could not save the chat close conditions.",
+    "errorRange": "Minutes must be between 1 and 60."
   }
 }

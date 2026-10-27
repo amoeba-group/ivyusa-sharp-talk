@@ -11,7 +11,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { makeCan } from '@/lib/rbac';
 import { useAlertSettings, useReadAlert } from '../alerts/alerts.hooks';
 import { playChime, showDesktop } from '../alerts/alarm-signal';
-import { reasonKey, useAlarmText } from '../alerts/alarm-format';
+import { alarmBodyKey, isCallbackAlarm, reasonKey, useAlarmText } from '../alerts/alarm-format';
 
 /**
  * Global escalation alarm modal (FR-S3, PLAN-Scenario-Handoff-Alert §3.5).
@@ -22,6 +22,8 @@ import { reasonKey, useAlarmText } from '../alerts/alarm-format';
  * "Open chat" goes to the conversation and — for its assignee, or anyone on a
  * broadcast — stops the page (D2).
  */
+const CALLBACK_TAB = '/live-chat/alerts?tab=callbacks';
+
 export function EscalationAlarm() {
   const { t } = useTranslation('livechat');
   const navigate = useNavigate();
@@ -62,8 +64,8 @@ export function EscalationAlarm() {
     if (settings?.sound !== false) playChime();
     if (settings?.desktop) {
       const a = fresh[0];
-      showDesktop(t('alarmTitle'), `${t('alarmBody', { id: a.conversationId })} — ${t(reasonKey(a.reason))}`, `alarm-${a.id}`, () =>
-        navigate(`/live-chat?c=${a.conversationId}`),
+      showDesktop(t('alarmTitle'), `${t(alarmBodyKey(a), { id: a.conversationId })} — ${t(reasonKey(a.reason))}`, `alarm-${a.id}`, () =>
+        navigate(isCallbackAlarm(a) ? CALLBACK_TAB : `/live-chat?c=${a.conversationId}`),
       );
     }
   }, [alerts, candidates, popup, settings, navigate, t]);
@@ -71,8 +73,12 @@ export function EscalationAlarm() {
   // Don't interrupt an agent who is already in the conversation being alerted.
   const alreadyViewing =
     !!current &&
-    location.pathname.endsWith('/live-chat') &&
-    new URLSearchParams(location.search).get('c') === String(current.conversationId);
+    ((location.pathname.endsWith('/live-chat') &&
+      new URLSearchParams(location.search).get('c') === String(current.conversationId)) ||
+      // …or already on the callback tab, for a callback alarm.
+      (isCallbackAlarm(current) &&
+        location.pathname.endsWith('/live-chat/alerts') &&
+        new URLSearchParams(location.search).get('tab') === 'callbacks'));
 
   useEffect(() => {
     if (alreadyViewing && current) {
@@ -84,6 +90,7 @@ export function EscalationAlarm() {
 
   if (!canHandle || !current || alreadyViewing) return null;
 
+  const callback = isCallbackAlarm(current);
   const dismiss = () => {
     setDismissed((prev) => new Set(prev).add(current.id));
     read.mutate(current.id);
@@ -93,7 +100,9 @@ export function EscalationAlarm() {
     setDismissed((prev) => new Set(prev).add(current.id));
     // ack also marks it read; the server only stops the page for its assignee (D2).
     ack.mutate(current.id);
-    navigate(`/live-chat?c=${current.conversationId}`);
+    // A callback is worked from the callback tab (contact reveal, done/cancel),
+    // not by taking a waiting chat — the AI is still answering (PLN-261026 D6/D7).
+    navigate(callback ? CALLBACK_TAB : `/live-chat?c=${current.conversationId}`);
   };
 
   const line = facts(current);
@@ -112,12 +121,12 @@ export function EscalationAlarm() {
           <Button variant="secondary" onClick={dismiss}>
             {t('alarmDismiss')}
           </Button>
-          <Button onClick={open}>{t('alarmOpen')}</Button>
+          <Button onClick={open}>{t(callback ? 'alarmOpenCallback' : 'alarmOpen')}</Button>
         </div>
       }
     >
       <div className="space-y-2 text-sm text-gray-700">
-        <p>{t('alarmBody', { id: current.conversationId })}</p>
+        <p>{t(alarmBodyKey(current), { id: current.conversationId })}</p>
         {line && <p className="text-gray-600">{line}</p>}
         <p className="flex flex-wrap items-center gap-2">
           {current.broadcast && !current.assignees?.length ? (

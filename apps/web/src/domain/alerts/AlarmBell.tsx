@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { makeCan } from '@/lib/rbac';
 import { useAgentAlerts } from '../live-chat/live-chat.hooks';
 import { useAlarmCenter, useReadAlert } from './alerts.hooks';
-import { reasonKey, useAlarmText } from './alarm-format';
+import { alarmStatusText, reasonKey, useAlarmText } from './alarm-format';
 import { AlertSettingsModal } from './AlertSettingsModal';
 
 /**
@@ -94,10 +94,7 @@ export function AlarmBell() {
                       {[facts(a), t('alarmCenter.assignee', { name: assignee(a) })].filter(Boolean).join(' · ')}
                     </span>
                     <span className="block text-[11px] text-gray-400">
-                      {when(a.createdAt)} ·{' '}
-                      {a.status === 'new'
-                        ? t('alarmCenter.statusNew')
-                        : t('alarmCenter.statusAcked', { name: a.ackedBy?.name ?? '—' })}
+                      {when(a.createdAt)} · {alarmStatusText(t, a)}
                     </span>
                   </span>
                 </button>

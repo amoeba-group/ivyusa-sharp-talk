@@ -314,6 +314,30 @@
       "off": "Tắt",
       "minutes": "phút",
       "leads": "Báo thêm"
+    },
+    "queueTimeout": {
+      "title": "Thông báo kết nối chậm",
+      "hint": "Nếu không có nhân viên nhận trong thời gian này, khách sẽ được thông báo và AI tiếp tục hỗ trợ.",
+      "after": "Không ai nhận sau",
+      "minutes": "phút → thông báo cho khách",
+      "rangeError": "Nhập số phút nguyên từ {{min}} đến {{max}}.",
+      "reminderError": "Phải dài hơn thời gian nhắc lại ({{minutes}} phút), nếu không sẽ không có nhắc lại.",
+      "reminderHint": "Phải dài hơn thời gian nhắc lại ở trên.",
+      "notice": "Nội dung thông báo",
+      "noticeHint": "Để trống để dùng nội dung mặc định (hiển thị mờ).",
+      "offHoursPrefix": "Yêu cầu ngoài giờ làm việc sẽ nhận ngay",
+      "offHoursLink": "thông báo ngoài giờ ›",
+      "offHoursSuffix": "."
+    },
+    "callback": {
+      "title": "Yêu cầu nhân viên gọi lại",
+      "hint": "Sau thông báo chậm trễ hoặc ngoài giờ, khách có thể để lại thông tin liên hệ và nhân viên sẽ liên hệ sau.",
+      "channels": "Thông tin liên hệ nhận",
+      "channel": {
+        "email": "Email",
+        "phone": "Số điện thoại"
+      },
+      "channelsRequired": "Chọn ít nhất một loại liên hệ."
     }
   },
   "coach": {

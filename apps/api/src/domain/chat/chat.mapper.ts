@@ -71,6 +71,8 @@ export class ChatMapper {
     messages: Message[],
     senderNames?: Map<string, string>,
     attachments?: Map<string, MessageAttachment[]>,
+    /** The close policy asked this open thread for a rating (PLN-261026 A1). */
+    ratingRequested = false,
   ): ConversationResponse {
     const endedAt = conversation.endedAt?.getTime() ?? null;
     return {
@@ -81,8 +83,7 @@ export class ChatMapper {
       // the API would refuse is worse than showing none.
       canRate:
         conversation.csatRating == null &&
-        endedAt != null &&
-        Date.now() - endedAt < CSAT_WINDOW_MS,
+        (ratingRequested || (endedAt != null && Date.now() - endedAt < CSAT_WINDOW_MS)),
       messages: messages.map((m) =>
         ChatMapper.toMessageResponse(
           m,

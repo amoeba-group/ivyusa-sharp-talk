@@ -87,6 +87,16 @@ export interface StorefrontResponse {
   storefrontUrl: string | null;
 }
 
+/** Rating request → auto close (PLN-261026). Minutes are defaults when disabled. */
+export interface ChatClosePolicyResponse {
+  enabled: boolean;
+  csatAfterMin: number;
+  closeAfterMin: number;
+  csatPrompt: Record<string, string>;
+  closingNotice: Record<string, string>;
+  thanksNotice: Record<string, string>;
+}
+
 export interface KnowledgeSettingsResponse {
   usageGuidesEnabled: boolean;
 }

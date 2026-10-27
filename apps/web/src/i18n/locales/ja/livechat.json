@@ -44,6 +44,9 @@
   "alarmReasonCategory": "顧客が相談カテゴリを選び、その担当グループにつなぎ直しました。",
   "alarmOpen": "チャットを開く",
   "alarmDismiss": "閉じる",
+  "alarmReasonCallback": "お客様がオペレーターからの折り返し連絡を希望しました。",
+  "alarmBodyCallback": "会話 #{{id}} のお客様が折り返し連絡を依頼しました。",
+  "alarmOpenCallback": "折り返し依頼を見る",
   "listSearchPlaceholder": "顧客名またはメールアドレスで検索",
   "listSearchScope": "最近の顧客のみが対象です",
   "createdShort": "開始",
@@ -544,6 +547,8 @@
     "statusAcked": "{{name}} が確認",
     "statusAckedShort": "確認済み",
     "statusAll": "すべての状態",
+    "statusExpired": "タイムアウト — AI 応対に切り替え",
+    "statusExpiredShort": "タイムアウト",
     "ack": "確認する",
     "scope_all": "すべて",
     "scope_mine": "自分の割り当て",
@@ -582,6 +587,39 @@
       "emailHint": "全員宛てアラームの運用メールボックスへの送信は変わりません。",
       "saved": "アラーム設定を保存しました",
       "saveError": "アラーム設定を保存できませんでした"
-    }
+    },
+    "tab_alarms": "アラーム",
+    "tab_callbacks": "折り返し依頼"
+  },
+  "callback": {
+    "hint": "お客様が残した連絡先にオペレーターが連絡します。［表示］を押すと閲覧記録が残ります。",
+    "banner": "お客様が折り返し連絡を依頼しました",
+    "status_requested": "依頼中",
+    "status_done": "対応済み",
+    "status_canceled": "取消",
+    "status_all": "すべて",
+    "channel_email": "メール",
+    "channel_phone": "電話",
+    "source_member": "会員情報の連絡先",
+    "source_entered": "お客様が入力",
+    "col": {
+      "contact": "連絡先"
+    },
+    "reveal": "表示",
+    "revealHint": "連絡先をすべて表示します（閲覧記録が残ります）",
+    "hide": "隠す",
+    "copy": "コピー",
+    "copied": "連絡先をコピーしました",
+    "copyError": "連絡先をコピーできませんでした",
+    "revealError": "連絡先を読み込めませんでした",
+    "markDone": "対応済みにする",
+    "cancel": "取消",
+    "reopen": "再オープン",
+    "doneToast": "折り返し依頼を対応済みにしました",
+    "canceledToast": "折り返し依頼を取り消しました",
+    "reopenedToast": "折り返し依頼を再オープンしました",
+    "updateError": "折り返し依頼の状態を変更できませんでした",
+    "handled": "{{name}} · {{at}}",
+    "empty": "折り返し依頼はありません"
   }
 }

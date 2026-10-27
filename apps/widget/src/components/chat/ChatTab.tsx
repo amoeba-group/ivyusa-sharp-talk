@@ -20,6 +20,7 @@ import { EarlierConversations } from './EarlierConversations';
 import { TypingBubble } from './TypingBubble';
 import { CsatCard } from './CsatCard';
 import { ContactEmailCard } from './ContactEmailCard';
+import { CallbackCard } from './CallbackCard';
 import { ConsultCategoryCard } from './ConsultCategoryCard';
 import { ConsentBanner } from './ConsentBanner';
 import { ScenarioMenu, type SubAction } from './ScenarioMenu';
@@ -29,8 +30,10 @@ import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import { replyChips } from './reply-chips';
 import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
+// Deep import: a value import from `@sharptalk/types` breaks the browser build (CJS `export *`).
+import { CALLBACK_CHIP_ID } from '../../../../../packages/types/src/common/chat-close';
 
-type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | 'consultCategory' | null;
+type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
 
 
 export function ChatTab() {
@@ -117,6 +120,26 @@ export function ChatTab() {
   // End-chat confirm row (요구 3, PLN-260808 Track B).
   const [endConfirm, setEndConfirm] = useState(false);
   const chatLive = status === 'ai_active' || status === 'waiting' || status === 'agent';
+  /**
+   * Satisfaction card (PLN-261026 S3). The server now also opens rating while
+   * the conversation is still live (the tenant's close policy asked for it), so
+   * the card follows `canRate` alone. Once the shopper rated, `canRate` drops
+   * and the server ends the thread — the card stays for that conversation so
+   * its thanks state survives the status flip instead of vanishing mid-read.
+   */
+  const [ratedIn, setRatedIn] = useState<string | null>(null);
+  const showCsat = !!conversationId && (canRate || ratedIn === conversationId);
+  async function rateHere(rating: number, survey?: Parameters<typeof rate>[1]) {
+    // Latch before the request: `rate` clears canRate as soon as it resolves.
+    const id = conversationId;
+    setRatedIn(id);
+    try {
+      await rate(rating, survey);
+    } catch (e) {
+      setRatedIn(null);
+      throw e;
+    }
+  }
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Tenant-configured greetings (session/ensure); fall back to the built-in
@@ -377,6 +400,11 @@ export function ChatTab() {
   /** Scenario follow-up chip clicks: control actions or another script. */
   function handleQuickReply(id: string, label: string) {
     switch (id) {
+      case CALLBACK_CHIP_ID:
+        // Queue-delay / off-hours notice (PLN-261026 B4): a form, not a script.
+        setShowEscalate(false);
+        setInline('callback');
+        return;
       case 'agent_connect':
         setShowEscalate(false);
         analytics.escalate();
@@ -585,10 +613,13 @@ export function ChatTab() {
           </div>
         )}
 
-        {/* Satisfaction (PLN-260810 P3). The server decides whether the window
-            is still open, so the card cannot outlive what the API accepts. */}
-        {status === 'ended' && canRate && conversationId && (
-          <CsatCard conversationId={conversationId} mode={csatMode} onRate={rate} />
+        {/* Satisfaction (PLN-260810 P3, PLN-261026 S3). The server decides
+            whether rating is open — after the end, or while live when the close
+            policy asked — so the card cannot outlive what the API accepts. One
+            slot for both cases: the ended mark above slides in without
+            remounting the card, so its thanks state is kept. */}
+        {showCsat && conversationId && (
+          <CsatCard key={conversationId} conversationId={conversationId} mode={csatMode} onRate={rateHere} />
         )}
 
         {waitMode && <TypingBubble mode={waitMode} />}
@@ -620,6 +651,14 @@ export function ChatTab() {
               setInline(null);
               setAfterAuth(null);
             }}
+          />
+        )}
+        {inline === 'callback' && (
+          <CallbackCard
+            sessionToken={sessionToken}
+            conversationId={conversationId}
+            privacyPolicyUrl={consent?.privacyPolicyUrl}
+            onClose={() => setInline(null)}
           />
         )}
         {inline === 'contactEmail' && (

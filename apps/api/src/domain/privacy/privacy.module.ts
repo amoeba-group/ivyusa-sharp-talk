@@ -1,3 +1,4 @@
+import { CallbackRequest } from '../callback/entity/callback-request.entity';
 import { MergedRoomModule } from '../merged-room/merged-room.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -70,6 +71,7 @@ import { AgentAlert } from '../agent/entity/agent-alert.entity';
       Tenant,
       ModerationLog,
       AgentAlert,
+      CallbackRequest,
     ]),
     AuditModule,
     ErasureSuppressionModule,

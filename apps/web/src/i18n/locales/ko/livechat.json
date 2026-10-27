@@ -44,6 +44,9 @@
   "alarmReasonCategory": "고객이 상담카테고리를 골라 해당 담당 그룹으로 다시 연결되었습니다.",
   "alarmOpen": "상담 열기",
   "alarmDismiss": "닫기",
+  "alarmReasonCallback": "고객이 상담원 콜백(연락)을 요청했습니다.",
+  "alarmBodyCallback": "대화 #{{id}} 고객이 상담원 콜백을 요청했습니다.",
+  "alarmOpenCallback": "콜백 요청 보기",
   "listSearchPlaceholder": "고객명 또는 이메일 검색",
   "listSearchScope": "최근 고객 범위에서 검색됩니다",
   "createdShort": "개설",
@@ -544,6 +547,8 @@
     "statusAcked": "확인 {{name}}",
     "statusAckedShort": "확인됨",
     "statusAll": "전체 상태",
+    "statusExpired": "시간 초과 — AI 응대로 전환",
+    "statusExpiredShort": "시간 초과",
     "ack": "확인 처리",
     "scope_all": "전체",
     "scope_mine": "내 배정",
@@ -582,6 +587,39 @@
       "emailHint": "전원 대상 알람의 운영 메일함 발송은 그대로 유지됩니다.",
       "saved": "알람 설정을 저장했습니다",
       "saveError": "알람 설정을 저장하지 못했습니다"
-    }
+    },
+    "tab_alarms": "알람",
+    "tab_callbacks": "콜백 요청"
+  },
+  "callback": {
+    "hint": "고객이 남긴 연락처로 상담원이 연락합니다. [보기]를 누르면 열람 기록이 남습니다.",
+    "banner": "고객이 콜백을 요청했습니다",
+    "status_requested": "요청됨",
+    "status_done": "처리 완료",
+    "status_canceled": "취소",
+    "status_all": "전체",
+    "channel_email": "이메일",
+    "channel_phone": "전화",
+    "source_member": "회원정보 연락처",
+    "source_entered": "고객 직접 입력",
+    "col": {
+      "contact": "연락처"
+    },
+    "reveal": "보기",
+    "revealHint": "전체 연락처를 표시합니다 (열람 기록이 남습니다)",
+    "hide": "가리기",
+    "copy": "복사",
+    "copied": "연락처를 복사했습니다",
+    "copyError": "연락처를 복사하지 못했습니다",
+    "revealError": "연락처를 불러오지 못했습니다",
+    "markDone": "처리 완료",
+    "cancel": "취소",
+    "reopen": "다시 열기",
+    "doneToast": "콜백 요청을 처리 완료로 표시했습니다",
+    "canceledToast": "콜백 요청을 취소했습니다",
+    "reopenedToast": "콜백 요청을 다시 열었습니다",
+    "updateError": "콜백 요청 상태를 바꾸지 못했습니다",
+    "handled": "{{name}} · {{at}}",
+    "empty": "콜백 요청이 없습니다"
   }
 }

@@ -1,13 +1,16 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, LessThan, MoreThan, Repository } from 'typeorm';
-import { CONVERSATION_STATUS, SENDER_TYPE, localized } from '@sharptalk/types';
-import type { LocalizedText } from '@sharptalk/types';
+import { In, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
+import { CHAT_CLOSE_DEFAULT_COPY, CONVERSATION_STATUS, SENDER_TYPE, localized, readChatClosePolicy } from '@sharptalk/types';
+import type { ChatClosePolicy, LocalizedText } from '@sharptalk/types';
 import { Conversation } from './entity/conversation.entity';
 import { Message } from './entity/message.entity';
 import { Session } from '../session/entity/session.entity';
 import { Assignment } from '../agent/entity/assignment.entity';
+import { Tenant } from '../tenant/entity/tenant.entity';
 import { AuditService } from '../audit/audit.service';
+import { ModerationService } from '../moderation/moderation.service';
+import { endConversation, sayLine } from './chat-close.util';
 import { envNumber } from '../../global/util/env-number.util';
 import { isCliContext } from '../../global/util/cli-context.util';
 
@@ -72,6 +75,11 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
     @InjectRepository(Session) private readonly sessionRepo: Repository<Session>,
     @InjectRepository(Assignment) private readonly assignmentRepo: Repository<Assignment>,
     private readonly audit: AuditService,
+    // Tenant close policies (PLN-261026). Appended and optional so the
+    // positional doubles in the existing specs keep building — without them
+    // every tenant follows the platform rule, exactly as before.
+    @InjectRepository(Tenant) private readonly tenantRepo?: Repository<Tenant>,
+    private readonly moderation?: ModerationService,
   ) {}
 
   onModuleInit(): void {
@@ -106,10 +114,18 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
     if (this.running) return idle;
     this.running = true;
     try {
-      idle.closed = await this.closeDue();
-      const asked = await this.promptIdle();
+      const policies = await this.policies();
+      const policyTenants = [...policies.keys()];
+      idle.closed = await this.closeDue(policyTenants);
+      const asked = await this.promptIdle(policyTenants);
       idle.prompted = asked.prompted;
       idle.silentlyClosed = asked.silentlyClosed;
+      for (const [tenantId, policy] of policies) {
+        const r = await this.sweepPolicy(tenantId, policy);
+        idle.prompted += r.prompted;
+        idle.closed += r.closed;
+        idle.silentlyClosed += r.silentlyClosed;
+      }
       if (idle.prompted || idle.closed || idle.silentlyClosed) {
         this.logger.log(
           `idle sweep: asked ${idle.prompted}, closed ${idle.closed}, ` +
@@ -126,10 +142,9 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Threads that were asked and did not answer inside the grace period. */
-  private async closeDue(): Promise<number> {
+  private async closeDue(policyTenants: number[] = []): Promise<number> {
     const due = await this.convRepo.find({
-      where: this.sweepable({
-        status: this.openStatuses(),
+      where: this.legacyScope(policyTenants, {
         idlePromptAt: LessThan(new Date(Date.now() - CLOSE_AFTER_SEC * 1000)),
         // Also excluded here, not just in the ask pass: a thread can be asked
         // and only then slip off hours, and closing it would cancel the email
@@ -161,11 +176,10 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Threads nobody has touched for long enough to ask about. */
-  private async promptIdle(): Promise<{ prompted: number; silentlyClosed: number }> {
+  private async promptIdle(policyTenants: number[] = []): Promise<{ prompted: number; silentlyClosed: number }> {
     const quietSince = new Date(Date.now() - PROMPT_AFTER_MIN * 60_000);
     const candidates = await this.convRepo.find({
-      where: this.sweepable({
-        status: this.openStatuses(),
+      where: this.legacyScope(policyTenants, {
         idlePromptAt: IsNull(),
         // An off-hours thread is waiting on a promised email reply; closing it
         // would cancel an answer the customer was told to expect.
@@ -208,19 +222,28 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
    * they are closed silently, since a satisfaction question about a
    * conversation from six weeks ago is noise.
    */
-  private async close(conversation: Conversation, withClosing: boolean): Promise<void> {
+  private async close(
+    conversation: Conversation,
+    withClosing: boolean,
+    policy?: ChatClosePolicy,
+    reason = 'idle',
+  ): Promise<void> {
     if (withClosing) {
-      await this.say(conversation, CLOSING_COPY, await this.languageOf(conversation));
+      const language = await this.languageOf(conversation);
+      if (policy) {
+        await sayLine(
+          { msgRepo: this.msgRepo, moderation: this.moderation },
+          conversation,
+          policy.closingNotice,
+          CHAT_CLOSE_DEFAULT_COPY.closingNotice,
+          language,
+        );
+      } else {
+        await this.say(conversation, CLOSING_COPY, language);
+      }
     }
-    await this.convRepo.update(
-      { id: conversation.id },
-      { status: CONVERSATION_STATUS.ENDED, endedAt: new Date(), idlePromptAt: null },
-    );
-    await this.assignmentRepo.update(
-      { conversationId: conversation.id, status: 'active' },
-      { status: 'released', releasedAt: new Date() },
-    );
-    await this.record(conversation, 'chat.idle_closed');
+    await endConversation({ convRepo: this.convRepo, assignmentRepo: this.assignmentRepo }, Number(conversation.id));
+    await this.record(conversation, 'chat.idle_closed', { reason });
   }
 
   private async say(
@@ -245,9 +268,10 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
     return session?.language ?? 'EN';
   }
 
-  private async record(conversation: Conversation, action: string): Promise<void> {
+  private async record(conversation: Conversation, action: string, metadata?: Record<string, unknown>): Promise<void> {
     await this.audit
       .write({
+        ...(metadata ? { metadata } : {}),
         tenantId: conversation.tenantId,
         // Nobody clicked anything — attributing this to a person would put a
         // machine's decision under someone's name in the audit trail.
@@ -261,6 +285,141 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
 
   private openStatuses() {
     return In([CONVERSATION_STATUS.AGENT, CONVERSATION_STATUS.WAITING]);
+  }
+
+  /**
+   * The platform rule's reach. A tenant with its own policy keeps only its
+   * WAITING threads here (a shopper queued for a person is not asked to rate
+   * anything); its AI and agent threads belong to `sweepPolicy`.
+   */
+  private legacyScope<T extends Record<string, unknown>>(policyTenants: number[], where: T) {
+    if (!policyTenants.length) return this.sweepable({ ...where, status: this.openStatuses() });
+    return [
+      ...this.sweepable({ ...where, status: this.openStatuses(), tenantId: IsNull() }),
+      ...this.sweepable({ ...where, status: this.openStatuses(), tenantId: Not(In(policyTenants)) }),
+      ...this.sweepable({ ...where, status: CONVERSATION_STATUS.WAITING, tenantId: In(policyTenants) }),
+    ];
+  }
+
+  /** Tenants with a close policy (PLN-261026). A read failure means "none" — the platform rule. */
+  private async policies(): Promise<Map<number, ChatClosePolicy>> {
+    const map = new Map<number, ChatClosePolicy>();
+    if (!this.tenantRepo) return map;
+    try {
+      const rows = await this.tenantRepo.find({
+        where: { chatClosePolicy: Not(IsNull()) },
+        select: { id: true, chatClosePolicy: true },
+      });
+      for (const row of rows) {
+        const policy = readChatClosePolicy(row.chatClosePolicy);
+        if (policy) map.set(Number(row.id), policy);
+      }
+    } catch (e) {
+      this.logger.warn(`close policies unreadable: ${(e as Error).message}`);
+    }
+    return map;
+  }
+
+  /**
+   * One tenant's policy pass (PLN-261026 A1/A2): AI or agent answered and the
+   * shopper went quiet → rating request; still quiet → closing line, end.
+   * Threads that went quiet before the policy was switched on are closed
+   * silently — switching it on must not message every abandoned thread.
+   */
+  async sweepPolicy(
+    tenantId: number,
+    policy: ChatClosePolicy,
+    now = new Date(),
+  ): Promise<{ prompted: number; closed: number; silentlyClosed: number }> {
+    const out = { prompted: 0, closed: 0, silentlyClosed: 0 };
+    const policyStatuses = In([CONVERSATION_STATUS.AI_ACTIVE, CONVERSATION_STATUS.AGENT]);
+
+    // 1. Rated nothing within the wait → closing line, end.
+    const due = await this.convRepo.find({
+      where: this.sweepable({
+        tenantId,
+        status: policyStatuses,
+        idlePromptAt: LessThan(new Date(now.getTime() - policy.closeAfterMin * 60_000)),
+        replyChannel: IsNull(),
+      }),
+      take: BATCH,
+    });
+    for (const conversation of due) {
+      const answered = await this.msgRepo.count({
+        where: { conversationId: conversation.id, senderType: SENDER_TYPE.USER, createdAt: this.after(conversation.idlePromptAt!) },
+      });
+      if (answered > 0) {
+        await this.convRepo.update({ id: conversation.id }, { idlePromptAt: null });
+        continue;
+      }
+      await this.close(conversation, true, policy, 'csat_timeout');
+      out.closed += 1;
+    }
+
+    // 2. Answered, then silence → rating request.
+    const quietBefore = new Date(now.getTime() - policy.csatAfterMin * 60_000);
+    const since = policy.since ? new Date(policy.since) : null;
+    const staleBefore = new Date(now.getTime() - STALE_AFTER_DAYS * 86_400_000);
+    for (const q of await this.quietCandidates(tenantId, quietBefore)) {
+      const conversation = q.conversation;
+      if (q.lastAt < staleBefore || (since && q.lastAt < since)) {
+        await this.close(conversation, false, policy, since && q.lastAt < since ? 'before_policy' : 'stale');
+        out.silentlyClosed += 1;
+        continue;
+      }
+      // The shopper spoke last: they are owed an answer, not a rating request.
+      if (q.lastSender === SENDER_TYPE.USER) continue;
+      const language = await this.languageOf(conversation);
+      await sayLine(
+        { msgRepo: this.msgRepo, moderation: this.moderation },
+        conversation,
+        policy.csatPrompt,
+        CHAT_CLOSE_DEFAULT_COPY.csatPrompt,
+        language,
+        { csatPrompt: true },
+      );
+      await this.convRepo.update({ id: conversation.id }, { idlePromptAt: new Date() });
+      await this.record(conversation, 'chat.csat_prompted');
+      out.prompted += 1;
+      if (out.prompted >= BATCH) break;
+    }
+    return out;
+  }
+
+  /**
+   * Open AI/agent widget threads of a tenant whose newest message is older than
+   * `before`, with that message's sender — one query, so a tenant with hundreds
+   * of open threads costs one round trip per sweep, not one per thread.
+   */
+  async quietCandidates(
+    tenantId: number,
+    before: Date,
+  ): Promise<Array<{ conversation: Conversation; lastAt: Date; lastSender: string }>> {
+    const rows = await this.convRepo
+      .createQueryBuilder('c')
+      .innerJoin(Message, 'm', 'm.id = (SELECT MAX(m2.id) FROM messages m2 WHERE m2.conversation_id = c.id)')
+      .select(['c.id AS id', 'c.tenant_id AS tenantId', 'c.session_id AS sessionId', 'c.status AS status'])
+      .addSelect('m.created_at', 'lastAt')
+      .addSelect('m.sender_type', 'lastSender')
+      .where('c.tenant_id = :tenantId', { tenantId })
+      .andWhere('c.status IN (:...statuses)', { statuses: [CONVERSATION_STATUS.AI_ACTIVE, CONVERSATION_STATUS.AGENT] })
+      .andWhere('c.idle_prompt_at IS NULL')
+      .andWhere('c.reply_channel IS NULL')
+      .andWhere("(c.channel IS NULL OR c.channel = :widget)", { widget: CONVERSATION_CHANNEL_WIDGET })
+      .andWhere('m.created_at < :before', { before })
+      .orderBy('c.id', 'ASC')
+      .limit(BATCH * 4)
+      .getRawMany<{ id: string; tenantId: string; sessionId: string; status: string; lastAt: Date | string; lastSender: string }>();
+    return rows.map((r) => ({
+      conversation: {
+        id: Number(r.id),
+        tenantId: Number(r.tenantId),
+        sessionId: Number(r.sessionId),
+        status: r.status,
+      } as Conversation,
+      lastAt: new Date(r.lastAt),
+      lastSender: r.lastSender,
+    }));
   }
 
   /**

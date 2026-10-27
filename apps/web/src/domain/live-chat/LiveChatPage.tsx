@@ -67,6 +67,7 @@ import { JourneyCard } from '../journey/JourneyCard';
 import { CommentCard } from './CommentCard';
 import { GroupCreateModal } from './GroupCreateModal';
 import { RelatedSessionsBanner } from './RelatedSessionsBanner';
+import { CallbackBanner } from './CallbackBanner';
 import { MergeRoomControl } from './MergeRoomControl';
 import { useCategoryName } from '../routing-categories/routing-categories.hooks';
 import { GroupRoom } from './GroupRoom';
@@ -1036,6 +1037,8 @@ export function LiveChatPage() {
                   {/* Same-customer merged room (PLN-261023). */}
                   <MergeRoomControl conversationId={selected} room={convo?.mergedRoom} onOpenConversation={setSelected} />
                 </div>
+                {/* Open callback request (PLN-261026 D6) — nothing when there is none. */}
+                <CallbackBanner conversationId={selected} />
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"

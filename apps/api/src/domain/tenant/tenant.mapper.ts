@@ -15,6 +15,8 @@ import {
   WIDGET_TABS_DEFAULT,
   normalizeWidgetTabs,
   DEFAULT_BRAND,
+  CHAT_CLOSE_DEFAULTS,
+  readChatClosePolicy,
 } from '@sharptalk/types';
 import {
   CredentialResponse,
@@ -24,6 +26,7 @@ import {
   TenantResponse,
   StorefrontResponse,
   KnowledgeSettingsResponse,
+  ChatClosePolicyResponse,
   NotificationChannelsResponse,
   WidgetThemeResponse,
   WidgetSettingsResponse,
@@ -110,6 +113,18 @@ export class TenantMapper {
       appliedAt: d.appliedAt ?? null,
       createdAt: d.createdAt,
       updatedAt: d.updatedAt,
+    };
+  }
+
+  static toChatClosePolicy(t: Tenant): ChatClosePolicyResponse {
+    const p = readChatClosePolicy(t.chatClosePolicy);
+    return {
+      enabled: !!p,
+      csatAfterMin: p?.csatAfterMin ?? CHAT_CLOSE_DEFAULTS.csatAfterMin,
+      closeAfterMin: p?.closeAfterMin ?? CHAT_CLOSE_DEFAULTS.closeAfterMin,
+      csatPrompt: (p?.csatPrompt ?? {}) as Record<string, string>,
+      closingNotice: (p?.closingNotice ?? {}) as Record<string, string>,
+      thanksNotice: (p?.thanksNotice ?? {}) as Record<string, string>,
     };
   }
 

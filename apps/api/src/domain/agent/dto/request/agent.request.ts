@@ -99,7 +99,7 @@ export class ListAlertsQuery {
 /** GET /agent/alerts/center — alarm history (PLN-261024 alarm center). */
 export class AlarmCenterQuery {
   @IsOptional() @IsIn(['all', 'mine', 'broadcast']) scope?: 'all' | 'mine' | 'broadcast';
-  @IsOptional() @IsIn(['new', 'acked', 'all']) status?: 'new' | 'acked' | 'all';
+  @IsOptional() @IsIn(['new', 'acked', 'expired', 'all']) status?: 'new' | 'acked' | 'expired' | 'all';
   @IsOptional() @IsString() @Matches(/^\d{1,2}$/) days?: string;
   @IsOptional() @IsString() @MaxLength(64) category?: string;
   @IsOptional() @IsString() page?: string;

@@ -314,6 +314,30 @@
       "off": "关闭",
       "minutes": "分钟后",
       "leads": "同时通知"
+    },
+    "queueTimeout": {
+      "title": "转接延迟提示",
+      "hint": "超过此时间仍无客服接入时，将通知客户并由 AI 继续接待。",
+      "after": "无人接入超过",
+      "minutes": "分钟 → 通知客户",
+      "rangeError": "请输入 {{min}}–{{max}} 之间的整数分钟。",
+      "reminderError": "必须长于再次提醒时间（{{minutes}} 分钟），否则再次提醒不会触发。",
+      "reminderHint": "必须长于上方的再次提醒时间。",
+      "notice": "提示文案",
+      "noticeHint": "留空则使用默认文案（灰色显示）。",
+      "offHoursPrefix": "非工作时间的请求会立即收到",
+      "offHoursLink": "非工作时间提示文案 ›",
+      "offHoursSuffix": "。"
+    },
+    "callback": {
+      "title": "客服回电请求",
+      "hint": "在延迟或非工作时间提示后，客户可留下联系方式，客服稍后联系。",
+      "channels": "收集的联系方式",
+      "channel": {
+        "email": "邮箱",
+        "phone": "电话号码"
+      },
+      "channelsRequired": "请至少选择一种联系方式。"
     }
   },
   "coach": {

@@ -331,6 +331,19 @@ export class HandoffRouterService {
     }
   }
 
+  /**
+   * Off hours with callback requests on (PLN-261026 D4): the shopper is told at
+   * once, the AI keeps the thread, and the callback chip is offered — nobody is
+   * paged. Returns the notice, or null to route as usual (on shift, no hours
+   * configured, or callbacks off — then the off-hours email route stands).
+   */
+  async offHoursCallbackNotice(tenantId: number | null, language: string): Promise<string | null> {
+    const config = await this.aiConfig.getHandoffConfig(tenantId);
+    if (!config?.callback?.enabled || !config.businessHours) return null;
+    if (this.withinBusinessHours(config.businessHours)) return null;
+    return this.notice(config, language);
+  }
+
   private notice(config: HandoffConfig, language: string): string {
     return (
       localized(config.offHours?.notice, language).trim() ||

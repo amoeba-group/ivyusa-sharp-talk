@@ -327,6 +327,19 @@ export const ERROR_CODE = {
     message: 'No readable policy text was found on the selected pages',
   },
 
+  // E5151-E5155 — rating request / auto close, callback requests (PLN-261026-Chat-Auto-Close).
+  // Skips E5114-E5150: claimed by unmerged branches at the time of allocation.
+  /** Minutes out of range (1–60) in the chat close policy, or queue timeout ≤ reminder. */
+  CHAT_CLOSE_POLICY_INVALID: { code: 'E5151', message: 'Invalid chat close policy' },
+  /** The tenant has not switched callback requests on (or not this contact kind). */
+  CALLBACK_DISABLED: { code: 'E5152', message: 'Callback requests are not enabled' },
+  /** Email or phone number could not be read. */
+  CALLBACK_CONTACT_INVALID: { code: 'E5153', message: 'Invalid callback contact' },
+  /** "Use my member contact" on a session with no verified member contact on file. */
+  CALLBACK_MEMBER_CONTACT_MISSING: { code: 'E5154', message: 'No member contact on file' },
+  /** Unknown id, or another tenant's request. */
+  CALLBACK_NOT_FOUND: { code: 'E5155', message: 'Callback request not found' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

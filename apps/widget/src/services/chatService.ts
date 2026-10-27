@@ -119,3 +119,39 @@ export function sendScenario(
     text: text || undefined,
   });
 }
+
+/** Callback request (PLN-261026 B4–B6). Contacts arrive already masked. */
+export type CallbackChannelValue = 'email' | 'phone';
+
+export interface CallbackOptions {
+  enabled: boolean;
+  channels: CallbackChannelValue[];
+  /** Masked contacts on the verified member's profile; empty for guests. */
+  member: Array<{ channel: CallbackChannelValue; masked: string }>;
+}
+
+export interface CallbackCreated {
+  id: string | number;
+  channel: CallbackChannelValue;
+  contactMasked: string;
+  body?: string;
+}
+
+export function getCallbackOptions(sessionToken: string): Promise<CallbackOptions> {
+  // Token travels in X-Session-Token (via the api-client interceptor), not the URL.
+  return apiClient.get<CallbackOptions>('/callback/options', { session_token: sessionToken });
+}
+
+export function requestCallback(
+  sessionToken: string,
+  conversationId: string,
+  input:
+    | { source: 'member'; channel?: CallbackChannelValue }
+    | { source: 'entered'; channel: CallbackChannelValue; contact: string },
+): Promise<CallbackCreated> {
+  return apiClient.post<CallbackCreated>('/callback', {
+    session_token: sessionToken,
+    conversation_id: Number(conversationId),
+    ...input,
+  });
+}

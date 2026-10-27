@@ -44,6 +44,9 @@
   "alarmReasonCategory": "Khách đã chọn danh mục tư vấn — đã chuyển tới nhóm phụ trách.",
   "alarmOpen": "Mở hội thoại",
   "alarmDismiss": "Bỏ qua",
+  "alarmReasonCallback": "Khách hàng yêu cầu nhân viên liên hệ lại.",
+  "alarmBodyCallback": "Khách hàng trong cuộc trò chuyện #{{id}} đã yêu cầu được liên hệ lại.",
+  "alarmOpenCallback": "Xem yêu cầu liên hệ lại",
   "listSearchPlaceholder": "Tìm theo tên hoặc email khách hàng",
   "listSearchScope": "Chỉ khớp với khách hàng gần đây",
   "createdShort": "Mở lúc",
@@ -544,6 +547,8 @@
     "statusAcked": "{{name}} đã xác nhận",
     "statusAckedShort": "Đã xác nhận",
     "statusAll": "Mọi trạng thái",
+    "statusExpired": "Hết thời gian — chuyển lại cho AI",
+    "statusExpiredShort": "Hết thời gian",
     "ack": "Xác nhận",
     "scope_all": "Tất cả",
     "scope_mine": "Giao cho tôi",
@@ -582,6 +587,39 @@
       "emailHint": "Email tới hộp thư vận hành cho cảnh báo gửi tất cả vẫn giữ nguyên.",
       "saved": "Đã lưu cài đặt cảnh báo",
       "saveError": "Không lưu được cài đặt cảnh báo"
-    }
+    },
+    "tab_alarms": "Cảnh báo",
+    "tab_callbacks": "Yêu cầu liên hệ lại"
+  },
+  "callback": {
+    "hint": "Nhân viên liên hệ khách hàng qua thông tin khách để lại. Mỗi lần bấm [Xem] đều được ghi nhật ký kiểm tra.",
+    "banner": "Khách hàng đã yêu cầu được liên hệ lại",
+    "status_requested": "Đã yêu cầu",
+    "status_done": "Đã xử lý",
+    "status_canceled": "Đã hủy",
+    "status_all": "Tất cả",
+    "channel_email": "Email",
+    "channel_phone": "Điện thoại",
+    "source_member": "Liên hệ trong hồ sơ thành viên",
+    "source_entered": "Khách tự nhập",
+    "col": {
+      "contact": "Liên hệ"
+    },
+    "reveal": "Xem",
+    "revealHint": "Hiển thị đầy đủ thông tin liên hệ (được ghi nhật ký kiểm tra)",
+    "hide": "Ẩn",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép thông tin liên hệ",
+    "copyError": "Không thể sao chép thông tin liên hệ",
+    "revealError": "Không thể tải thông tin liên hệ",
+    "markDone": "Đánh dấu đã xử lý",
+    "cancel": "Hủy",
+    "reopen": "Mở lại",
+    "doneToast": "Đã đánh dấu yêu cầu liên hệ lại là đã xử lý",
+    "canceledToast": "Đã hủy yêu cầu liên hệ lại",
+    "reopenedToast": "Đã mở lại yêu cầu liên hệ lại",
+    "updateError": "Không thể cập nhật yêu cầu liên hệ lại",
+    "handled": "{{name}} · {{at}}",
+    "empty": "Không có yêu cầu liên hệ lại"
   }
 }

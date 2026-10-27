@@ -132,6 +132,13 @@ export interface HandoffConfig {
   routingRules?: RoutingRule[];
   /** Unanswered-alarm reminder (PLN-261015 D4); 0/absent = off. */
   reAlert?: { afterMinutes?: number; escalateToUserIds?: number[] };
+  /**
+   * Queue timeout (PLN-261026 B1): no acceptance after this many minutes → the
+   * shopper is told and the AI takes over again. Must exceed reAlert (E5151).
+   */
+  queueTimeout?: { afterMinutes: number; notice?: Partial<Record<ScenarioLang, string>> };
+  /** Callback request (PLN-261026 B2): which contact kinds the shopper may leave. */
+  callback?: { enabled: boolean; channels: Array<'email' | 'phone'> };
   /** Province → region code, fills a signed identity's missing region (PLN-261022). */
   provinceRegions?: Record<string, string>;
   /** Kept as-is: edited elsewhere, so the console must not drop it on save. */

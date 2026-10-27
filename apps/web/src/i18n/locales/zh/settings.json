@@ -993,5 +993,28 @@
     "openWidgetSettings": "打开小部件设置",
     "emptyHintMarketing": "在下方“添加平台”中选择您正在使用的服务。",
     "openSite": "打开站点"
+  },
+  "chatClose": {
+    "title": "聊天结束条件",
+    "enable": "启用",
+    "hint": "AI 或客服回答后，如果客户没有继续提问，将请客户评价满意度并结束对话。",
+    "csatAfterMin": "回答后客户无回复，",
+    "csatAfterMinSuffix": "分钟后请求满意度评价",
+    "closeAfterMin": "请求评价后，",
+    "closeAfterMinSuffix": "分钟后发送结束提示并结束",
+    "minutesRange": "请输入 {{min}}–{{max}} 之间的整数分钟。",
+    "copyTitle": "文案",
+    "csatPrompt": "满意度请求",
+    "closingNotice": "结束提示",
+    "thanksNotice": "评价后致谢",
+    "copyHint": "留空则使用默认文案（灰色显示）。",
+    "noteWaitingPrefix": "※ 等待客服接入的对话遵循",
+    "noteWaitingLink": "客服转接设置 ›",
+    "noteWaitingSuffix": "中的延迟提示。",
+    "noteExcluded": "※ 已承诺邮件回复的对话和即时通讯渠道的对话不适用。",
+    "noteOff": "※ 关闭时沿用原规则（静默 30 分钟后确认并结束，仅限客服对话）。",
+    "saved": "聊天结束条件已保存。",
+    "saveError": "无法保存聊天结束条件。",
+    "errorRange": "分钟数须在 1 到 60 之间。"
   }
 }

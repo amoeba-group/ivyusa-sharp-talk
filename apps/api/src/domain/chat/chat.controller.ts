@@ -108,7 +108,11 @@ export class ChatController {
     const attachments = await this.attachmentService.findByMessageIds(
       messages.map((m) => Number(m.id)),
     );
-    return ChatMapper.toConversationResponse(conversation, messages, senderNames, attachments);
+    const ratingRequested = this.chatService.csatRequested(
+      conversation,
+      conversation.idlePromptAt ? await this.chatService.closePolicy(conversation.tenantId) : null,
+    );
+    return ChatMapper.toConversationResponse(conversation, messages, senderNames, attachments, ratingRequested);
   }
 
   /**

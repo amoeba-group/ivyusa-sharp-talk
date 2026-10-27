@@ -993,5 +993,28 @@
     "openWidgetSettings": "Abrir ajustes del widget",
     "emptyHintMarketing": "Elige el servicio que usas en \"Añadir plataforma\".",
     "openSite": "Abrir sitio"
+  },
+  "chatClose": {
+    "title": "Condiciones de cierre del chat",
+    "enable": "Activado",
+    "hint": "Cuando la IA o un agente ha respondido y el cliente no pregunta nada más, se le pide una valoración y se cierra la conversación.",
+    "csatAfterMin": "Sin respuesta del cliente tras una respuesta — pedir valoración a los",
+    "csatAfterMinSuffix": "minutos",
+    "closeAfterMin": "Tras pedir la valoración — enviar el aviso de cierre y cerrar a los",
+    "closeAfterMinSuffix": "minutos",
+    "minutesRange": "Introduce minutos enteros entre {{min}} y {{max}}.",
+    "copyTitle": "Mensajes",
+    "csatPrompt": "Solicitud de valoración",
+    "closingNotice": "Aviso de cierre",
+    "thanksNotice": "Tras la valoración",
+    "copyHint": "Déjalo en blanco para usar el mensaje predeterminado (en gris).",
+    "noteWaitingPrefix": "※ Las conversaciones en espera de un agente siguen el aviso de demora de",
+    "noteWaitingLink": "Ajustes de derivación ›",
+    "noteWaitingSuffix": ".",
+    "noteExcluded": "※ No afecta a las conversaciones con respuesta por correo prometida ni a las de mensajería.",
+    "noteOff": "※ Desactivado = la regla anterior (tras 30 minutos de silencio, confirmar y cerrar — solo conversaciones con agente).",
+    "saved": "Condiciones de cierre guardadas.",
+    "saveError": "No se pudieron guardar las condiciones de cierre.",
+    "errorRange": "Los minutos deben estar entre 1 y 60."
   }
 }

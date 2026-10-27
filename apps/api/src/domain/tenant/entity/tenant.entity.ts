@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { bigintTransformer } from '../../../global/util/transformers';
 import { decryptSecret, encryptSecret } from '../../../global/util/crypto.util';
-import type { PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
+import type { ChatClosePolicy, PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
 
 /**
  * The embed secret is a credential, so it never sits in the database as text.
@@ -118,6 +118,14 @@ export class Tenant {
   /** 'rating' (one-question emoji card, default) | 'survey' (resolved? + rating + reason) — PLN-261019. */
   @Column({ name: 'csat_mode', type: 'varchar', length: 8, default: 'rating' })
   csatMode: string;
+
+  /**
+   * Rating request → auto close (PLN-261026-Chat-Auto-Close D1). NULL = the
+   * old platform rule (30 min of silence → "anything else?" → close, agent
+   * threads only), so no existing tenant changes behaviour.
+   */
+  @Column({ name: 'chat_close_policy', type: 'json', nullable: true })
+  chatClosePolicy: ChatClosePolicy | null;
 
   /** Terms-of-service link for the widget's bottom disclosure line; null → privacy_policy_url (PLN-261019). */
   @Column({ name: 'terms_url', type: 'varchar', length: 512, nullable: true })

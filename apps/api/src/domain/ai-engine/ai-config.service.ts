@@ -7,7 +7,14 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { LocalizedText, ScenarioConfigResponse } from '@sharptalk/types';
-import { SESSION_LANGUAGE_CODES, languageBySession } from '@sharptalk/types';
+import {
+  CALLBACK_CHANNEL_VALUES,
+  QUEUE_TIMEOUT_MAX,
+  QUEUE_TIMEOUT_MIN,
+  SESSION_LANGUAGE_CODES,
+  languageBySession,
+  normalizeLocalizedCopy,
+} from '@sharptalk/types';
 import {
   HandoffConfig,
   ScenarioButton,
@@ -329,7 +336,7 @@ export class AiConfigService {
     if (input.scenarioOverrides !== undefined) {
       row.scenarioOverrides = this.sanitizeOverrides(input.scenarioOverrides);
     }
-    if (input.handoffConfig !== undefined) row.handoffConfig = input.handoffConfig;
+    if (input.handoffConfig !== undefined) row.handoffConfig = normalizeQueueAndCallback(input.handoffConfig);
     if (input.answerFooter !== undefined) row.answerFooter = sanitizeAnswerFooter(input.answerFooter);
     await this.configRepo.save(row);
     // Moderation caches the protected values derived from the footer.
@@ -592,4 +599,34 @@ export class AiConfigService {
         };
       });
   }
+}
+
+/**
+ * Queue timeout and callback keys of the handoff form (PLN-261026 D2). The rest
+ * of the blob is stored as sent, as before. A timeout that fires before the
+ * reminder would expire the alarms the reminder is meant to repeat, so it must
+ * be longer (400 E5151).
+ */
+export function normalizeQueueAndCallback(config: HandoffConfig | null): HandoffConfig | null {
+  if (!config) return config;
+  const out: HandoffConfig = { ...config };
+  if (config.queueTimeout != null) {
+    const minutes = Number(config.queueTimeout.afterMinutes);
+    const reminder = Number(config.reAlert?.afterMinutes) || 0;
+    if (!Number.isInteger(minutes) || minutes < QUEUE_TIMEOUT_MIN || minutes > QUEUE_TIMEOUT_MAX || minutes <= reminder) {
+      throw new BusinessException(ERROR_CODE.CHAT_CLOSE_POLICY_INVALID, HttpStatus.BAD_REQUEST);
+    }
+    const notice = normalizeLocalizedCopy(config.queueTimeout.notice);
+    out.queueTimeout = notice ? { afterMinutes: minutes, notice } : { afterMinutes: minutes };
+  }
+  if (config.callback != null) {
+    const channels = (config.callback.channels ?? []).filter((c): c is string =>
+      (CALLBACK_CHANNEL_VALUES as string[]).includes(c),
+    );
+    out.callback = {
+      enabled: config.callback.enabled === true && channels.length > 0,
+      channels: [...new Set(channels)],
+    };
+  }
+  return out;
 }

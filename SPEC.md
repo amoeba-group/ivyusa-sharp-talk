@@ -203,6 +203,9 @@ all three groups share the generic bulk import `POST knowledge/documents/import/
 `GET knowledge/documents/export?doc_group=&format=csv|xlsx` (same columns, PLN-260903);
 product additionally keeps its dedicated catalogue importer for shop-export files.
 A universal counsel starter KB ships at `web /samples/universal-counsel-guide.{csv,xlsx}`.
+`tenants.chat_close_policy` (JSON, NULL = platform idle rule) and `callback_requests`
+(contact AES-256-GCM, `requested|done|canceled`, one open per conversation) — rating request →
+auto close and callback requests (PLN-261026-Chat-Auto-Close, `sql/261026-chat-close-callback.sql`).
 
 ### 6.4 Entity Authoring Rules
 Nullable columns specify explicit `type` in `@Column`; `BIGINT` via `bigintTransformer`,
@@ -255,6 +258,12 @@ from home links · sitemap · Shopify/Cafe24 known paths; robots.txt obeyed unle
 board with `site-policy` tag + page link); outbound fetch re-checks SSRF on every redirect hop;
 E5110–E5113. Run history `knowledge/ingest/history` (+`/:jobId`) is rebuilt from audit rows
 `knowledge.ingest_started|finished|failed` + the publish row, grouped by jobId (no table; PLN-261026-Site-Ingest-History).
+**Chat close & callbacks** (PLN-261026-Chat-Auto-Close): `tenants/chat-close-policy` (GET/PUT —
+rating request after N min of shopper silence, close after M min, per-language copy), handoff_config
+`queueTimeout` (unaccepted queue → delay notice, AI takes the thread back, alarms `expired`) and
+`callback` (on/off + email/phone); widget `callback/options` + `callback` (member contact read server
+side, consent-gated), console `callback-requests` (+`/:id/contact` audited reveal, PATCH status);
+`chat/csat` also accepts an open thread the policy asked to rate (thank-you line → end). E5151–E5155.
 **Shopify**: `auth/shopify/install`+`/callback` (OAuth), `shopify/proxy/identity` (App Proxy,
 signature-verified), `webhooks/shopify/*` (native orders/fulfillments, HMAC),
 `privacy/*` (DSAR export/delete, CCPA opt-out, retention purge) + GDPR compliance webhooks

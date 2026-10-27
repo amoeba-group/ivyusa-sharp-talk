@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { WidgetThemeCard, WidgetTabsCard, WidgetBehaviorCard, InstallGuideCard } from './SettingsPage';
 import { EmbedCard } from './EmbedCard';
 import { WidgetAccessCard } from './WidgetAccessCard';
+import { ChatCloseCard } from './ChatCloseCard';
 import { DesignAssetsCard } from './DesignAssetsCard';
 import { WidgetDesignsCard } from './WidgetDesignsCard';
 
@@ -20,6 +21,8 @@ export function SettingsWidgetPage() {
       <DesignAssetsCard />
       <WidgetTabsCard />
       <WidgetBehaviorCard />
+      {/* When a quiet conversation asks for a rating and ends (PLN-261026-Chat-Auto-Close). */}
+      <ChatCloseCard />
       {/* Where the widget may be embedded, and how a host proves its visitor
           (PLN-260819). Sits next to the install guide because it is the same job. */}
       <EmbedCard />

@@ -9,9 +9,14 @@ import {
   CONVERSATION_STATUS,
   MODERATION_DECISION,
   SENDER_TYPE,
+  CALLBACK_CHIP_ID,
+  CHAT_CLOSE_DEFAULT_COPY,
+  chatCopy,
   localized,
+  readChatClosePolicy,
 } from '@sharptalk/types';
-import type { LocalizedText } from '@sharptalk/types';
+import type { ChatClosePolicy, LocalizedText } from '@sharptalk/types';
+import { endConversation, sayLine } from './chat-close.util';
 import { Conversation } from './entity/conversation.entity';
 import { CSAT_WINDOW_MS } from './chat.mapper';
 import { CSAT_COMMENT_MAX_CHARS, CSAT_REASON, CSAT_REASON_MAX_RATING } from '@sharptalk/types';
@@ -214,6 +219,11 @@ export interface HandoffOutcome {
   body: string;
   /** True off hours when we hold no email for this shopper — the widget asks. */
   needsContactEmail: boolean;
+  /**
+   * False when nobody was paged: off hours with callback requests on, the AI
+   * keeps the thread and offers the callback chip instead (PLN-261026 D4).
+   */
+  escalated: boolean;
 }
 
 /** Payload published on EVENTS.ESCALATION (consumed by AgentAlertService). */
@@ -455,14 +465,18 @@ export class ChatService {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
     }
-    // A thread still running has nothing to rate yet, and one closed long ago
-    // is being rated from a stale widget — both are refused rather than
-    // silently accepted into the averages.
+    // A thread the close policy asked to rate (PLN-261026 A3) takes the rating
+    // while still open; the thank-you line and the end follow below.
+    const policy = await this.closePolicy(conversation.tenantId);
+    const ratingRequested = this.csatRequested(conversation, policy);
+    // Otherwise: a thread still running has nothing to rate yet, and one closed
+    // long ago is being rated from a stale widget — both are refused rather
+    // than silently accepted into the averages.
     const endedAt = conversation.endedAt?.getTime();
-    if (conversation.status !== CONVERSATION_STATUS.ENDED || !endedAt) {
+    if (!ratingRequested && (conversation.status !== CONVERSATION_STATUS.ENDED || !endedAt)) {
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.CONFLICT);
     }
-    if (Date.now() - endedAt > CSAT_WINDOW_MS) {
+    if (!ratingRequested && Date.now() - endedAt! > CSAT_WINDOW_MS) {
       this.logger.warn(`csat rejected: conversation=${conversationId} outside the 24h window`);
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.CONFLICT);
     }
@@ -488,6 +502,21 @@ export class ChatService {
         csatComment: comment,
       },
     );
+    if (ratingRequested) {
+      // Rated → thank-you line → end, right away (PLN-261026 D8).
+      await sayLine(
+        { msgRepo: this.msgRepo, moderation: this.moderation },
+        conversation,
+        policy?.thanksNotice,
+        CHAT_CLOSE_DEFAULT_COPY.thanksNotice,
+        session.language,
+      );
+      await endConversation({ convRepo: this.convRepo, assignmentRepo: this.assignmentRepo }, Number(conversation.id));
+      conversation.status = CONVERSATION_STATUS.ENDED;
+      conversation.endedAt = new Date();
+      void this.issueService?.onConversationEnded(Number(conversation.id), true);
+      this.logger.log(`conversation ${conversationId} ended after an in-chat rating`);
+    }
     void this.recordCsatForAgent(conversation).catch((e: Error) =>
       this.logger.warn(`csat stat update failed: ${e.message}`),
     );
@@ -779,7 +808,7 @@ export class ChatService {
       return {
         conversationId: String(conversation.id),
         reply: { senderType: 'system', body: handoff.body },
-        escalate: true,
+        escalate: handoff.escalated,
         needsAuth: false,
         needsContactEmail: handoff.needsContactEmail,
       };
@@ -802,7 +831,7 @@ export class ChatService {
       return {
         conversationId: String(conversation.id),
         reply: { senderType: 'system', body: handoff.body },
-        escalate: true,
+        escalate: handoff.escalated,
         needsAuth: false,
         needsContactEmail: handoff.needsContactEmail,
       };
@@ -822,7 +851,7 @@ export class ChatService {
       return {
         conversationId: String(conversation.id),
         reply: { senderType: 'system', body: handoff.body },
-        escalate: true,
+        escalate: handoff.escalated,
         needsAuth: false,
         needsContactEmail: handoff.needsContactEmail,
       };
@@ -864,7 +893,7 @@ export class ChatService {
         return {
           conversationId: String(conversation.id),
           reply: { senderType: 'system', body: handoff.body },
-          escalate: true,
+          escalate: handoff.escalated,
           needsAuth: false,
           needsContactEmail: handoff.needsContactEmail,
         };
@@ -889,7 +918,7 @@ export class ChatService {
         return {
           conversationId: String(conversation.id),
           reply: { senderType: 'system', body: handoff.body },
-          escalate: true,
+          escalate: handoff.escalated,
           needsAuth: false,
           needsContactEmail: handoff.needsContactEmail,
         };
@@ -1036,7 +1065,7 @@ export class ChatService {
       return {
         conversationId: String(conversation.id),
         reply: { senderType: 'system', body: handoff.body },
-        escalate: true,
+        escalate: handoff.escalated,
         needsAuth: false,
         needsContactEmail: handoff.needsContactEmail,
       };
@@ -1059,7 +1088,7 @@ export class ChatService {
       return {
         conversationId: String(conversation.id),
         reply: { senderType: 'system', body: handoff.body },
-        escalate: true,
+        escalate: handoff.escalated,
         needsAuth: false,
         needsContactEmail: handoff.needsContactEmail,
       };
@@ -1134,7 +1163,7 @@ export class ChatService {
         // Lets the /ai-setting preview hand this exact turn to the coaching tab.
         messageId: String(aiTurn.id),
       },
-      escalate: !!denyHandoff,
+      escalate: !!denyHandoff?.escalated,
       needsAuth: false,
       ...(denyHandoff ? { needsContactEmail: denyHandoff.needsContactEmail } : {}),
     };
@@ -1372,6 +1401,10 @@ export class ChatService {
     preview: string,
     stamp?: { issueType?: string; issueLabel?: string },
   ): Promise<HandoffOutcome> {
+    if (session.channel !== 'preview') {
+      const offHours = await this.offHoursCallback(tenantId, conversationId, session.language, reason);
+      if (offHours) return { body: offHours, needsContactEmail: false, escalated: false };
+    }
     // Routing decides both who gets paged and what the customer is told:
     // outside business hours the message goes to a mailbox and the shopper is
     // told to expect an email reply instead of a live agent (PLN-AiSetting W3).
@@ -1404,7 +1437,7 @@ export class ChatService {
     // Preview sandbox: show the real handoff notice but never page the agents —
     // no WAITING flip (the bot keeps answering for iterative testing), no alert
     // fan-out, no console-queue entry.
-    if (session.channel === 'preview') return { body, needsContactEmail: false };
+    if (session.channel === 'preview') return { body, needsContactEmail: false, escalated: true };
     await this.markWaiting(conversationId);
     // Remember how this thread must be answered: an agent replying tomorrow has
     // no one in the widget to read it (see AgentService.sendMessage).
@@ -1426,7 +1459,7 @@ export class ChatService {
       consultCategory: picked ?? undefined,
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
-    return { body, needsContactEmail };
+    return { body, needsContactEmail, escalated: true };
   }
 
   /**
@@ -1485,6 +1518,8 @@ export class ChatService {
       }
     }
     if (session.channel === 'preview') return; // sandbox: never page the agents
+    // Off hours with callbacks on: told now, nobody paged (PLN-261026 D4).
+    if (await this.offHoursCallback(tenantId, conversationId, session.language, 'user_request')) return;
     const lastUser = await this.msgRepo.findOne({
       where: { conversationId, senderType: SENDER_TYPE.USER },
       order: { id: 'DESC' },
@@ -1581,6 +1616,60 @@ export class ChatService {
   }
 
   /** The caller's own conversation (SEC-L3) — 404 otherwise. */
+  /**
+   * Off hours with callback requests on (PLN-261026 D4): persist the off-hours
+   * notice with the callback chip and leave the thread with the AI. Returns the
+   * notice, or null when the normal handoff applies.
+   */
+  private async offHoursCallback(
+    tenantId: number,
+    conversationId: number,
+    language: string,
+    reason: EscalationReason,
+  ): Promise<string | null> {
+    let notice: string | null = null;
+    try {
+      notice = await this.handoffRouter.offHoursCallbackNotice(tenantId, language);
+    } catch (e) {
+      // Unreadable config: page the agents as before rather than drop the request.
+      this.logger.warn(`off-hours callback check failed: ${(e as Error).message}`);
+    }
+    if (!notice) return null;
+    await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, notice, language, {
+      reason,
+      offHours: true,
+      followUps: [{ id: CALLBACK_CHIP_ID, label: chatCopy(null, CHAT_CLOSE_DEFAULT_COPY.callbackChip, language) }],
+    });
+    this.logger.log(`off-hours callback offered (conversation ${conversationId}, ${reason})`);
+    return notice;
+  }
+
+  /** The tenant's close policy (PLN-261026), or null = the platform rule. */
+  async closePolicy(tenantId: number | null): Promise<ChatClosePolicy | null> {
+    if (tenantId == null) return null;
+    try {
+      const tenant = await this.tenantRepo.findOne({ where: { id: tenantId }, select: { id: true, chatClosePolicy: true } });
+      return readChatClosePolicy(tenant?.chatClosePolicy);
+    } catch (e) {
+      // Unreadable = the platform rule; a rating must not fail over it.
+      this.logger.warn(`close policy unreadable (tenant ${tenantId}): ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Is this open thread waiting on a rating the close policy asked for? The
+   * latch is `idle_prompt_at`; under the platform rule the same column means
+   * "anything else?", which is not a rating request — hence the policy check.
+   */
+  csatRequested(conversation: Conversation, policy: ChatClosePolicy | null): boolean {
+    return (
+      !!policy &&
+      conversation.idlePromptAt != null &&
+      (conversation.status === CONVERSATION_STATUS.AI_ACTIVE || conversation.status === CONVERSATION_STATUS.AGENT)
+    );
+  }
+
   private async ownConversation(session: Session, conversationId: number): Promise<Conversation> {
     const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
     // Number() both sides: session.id is a bare bigint PK (hydrates as a string)

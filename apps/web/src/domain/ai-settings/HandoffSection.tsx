@@ -21,6 +21,15 @@ import { DENY_MODE, ROUTING_MODE } from './ai-settings.service';
 import type { DenyMode, HandoffConfig, ScenarioLang } from './ai-settings.service';
 // Source-path import: a value import of the package entry point breaks the browser build (CJS).
 import { LANGUAGE_TIMEZONES } from '../../../../../packages/types/src/common/language';
+import {
+  CALLBACK_CHANNEL_VALUES,
+  CHAT_CLOSE_COPY_MAX,
+  CHAT_CLOSE_DEFAULT_COPY,
+  QUEUE_TIMEOUT_DEFAULT,
+  QUEUE_TIMEOUT_MAX,
+  QUEUE_TIMEOUT_MIN,
+} from '../../../../../packages/types/src/common/chat-close';
+import type { CallbackChannel } from '../../../../../packages/types/src/common/chat-close';
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 /**
@@ -87,6 +96,14 @@ export function HandoffSection() {
   // Unanswered-alarm reminder (PLN-261015 D4): '' or 0 = off.
   const [reAlertMin, setReAlertMin] = useState('');
   const [reAlertLeads, setReAlertLeads] = useState<string[]>([]);
+  // Queue timeout (PLN-261026 B1): off = key omitted on save.
+  const [queueOn, setQueueOn] = useState(false);
+  const [queueMin, setQueueMin] = useState(String(QUEUE_TIMEOUT_DEFAULT));
+  const [queueNotice, setQueueNotice] = useState<Partial<Record<ScenarioLang, string>>>({});
+  const [queueLang, setQueueLang] = useState<ScenarioLang>('KO');
+  // Callback request (PLN-261026 B2).
+  const [callbackOn, setCallbackOn] = useState(false);
+  const [callbackChannels, setCallbackChannels] = useState<CallbackChannel[]>([...CALLBACK_CHANNEL_VALUES]);
 
   useEffect(() => {
     const h = config?.handoffConfig;
@@ -121,6 +138,15 @@ export function HandoffSection() {
     if (h.sla?.urgentHours != null) setSlaUrgent(String(h.sla.urgentHours));
     setReAlertMin(h.reAlert?.afterMinutes ? String(h.reAlert.afterMinutes) : '');
     setReAlertLeads((h.reAlert?.escalateToUserIds ?? []).map(String));
+    setQueueOn(h.queueTimeout != null);
+    setQueueMin(String(h.queueTimeout?.afterMinutes ?? QUEUE_TIMEOUT_DEFAULT));
+    setQueueNotice(h.queueTimeout?.notice ?? {});
+    setCallbackOn(h.callback?.enabled === true);
+    setCallbackChannels(
+      h.callback?.channels?.length
+        ? h.callback.channels.filter((c): c is CallbackChannel => (CALLBACK_CHANNEL_VALUES as string[]).includes(c))
+        : [...CALLBACK_CHANNEL_VALUES],
+    );
     setRoutingRows(
       (h.routingRules ?? []).map((r) => ({
         name: r.name ?? '',
@@ -189,7 +215,18 @@ export function HandoffSection() {
   const toggle = <T,>(list: T[], value: T): T[] =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
+  // Queue timeout must fire after the reminder (server: E5151), within 1–30.
+  const reMinNum = Math.round(Number(reAlertMin));
+  const reminderMin = Number.isFinite(reMinNum) && reMinNum >= 1 && reMinNum <= 240 ? reMinNum : 0;
+  const queueMinNum = Number(queueMin);
+  const queueRangeError =
+    queueOn && !(Number.isInteger(queueMinNum) && queueMinNum >= QUEUE_TIMEOUT_MIN && queueMinNum <= QUEUE_TIMEOUT_MAX);
+  const queueReminderError = queueOn && !queueRangeError && queueMinNum <= reminderMin;
+  const callbackError = callbackOn && callbackChannels.length === 0;
+  const formInvalid = queueRangeError || queueReminderError || callbackError;
+
   const save = () => {
+    if (formInvalid) return;
     // Start from what is stored: fields this form does not edit (the handback
     // notice) must survive a save. Every field the form owns is set below —
     // `undefined` drops it from the JSON, which is how "turned off" is saved.
@@ -214,7 +251,22 @@ export function HandoffSection() {
       denyRules: undefined,
       routingRules: undefined,
       reAlert: undefined,
+      queueTimeout: undefined,
+      // Once configured it is kept when switched off, so the picked channels
+      // survive the next switch-on; never configured + off = no key at all.
+      callback:
+        callbackOn || config?.handoffConfig?.callback
+          ? { enabled: callbackOn, channels: callbackChannels }
+          : undefined,
     };
+    if (queueOn) {
+      const queueCopy = Object.fromEntries(
+        Object.entries(queueNotice).filter(([, v]) => v?.trim()),
+      ) as Partial<Record<ScenarioLang, string>>;
+      handoff.queueTimeout = Object.keys(queueCopy).length
+        ? { afterMinutes: queueMinNum, notice: queueCopy }
+        : { afterMinutes: queueMinNum };
+    }
     const denyRules = denyRows
       .map((r) => ({
         keywords: r.keywords
@@ -331,6 +383,103 @@ export function HandoffSection() {
             </div>
           </div>
 
+          {/* Queue timeout (PLN-261026 B1): tell the waiting shopper, hand back to the AI. */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={queueOn}
+                onChange={(e) => setQueueOn(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              <span className="font-medium">{t('handoff.queueTimeout.title')}</span>
+            </label>
+            <p className="mb-2 mt-0.5 pl-6 text-[11px] text-gray-400">{t('handoff.queueTimeout.hint')}</p>
+            {queueOn && (
+              <div className="space-y-2 pl-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-gray-500">{t('handoff.queueTimeout.after')}</span>
+                  <div className="w-24">
+                    <Input
+                      type="number"
+                      min={QUEUE_TIMEOUT_MIN}
+                      max={QUEUE_TIMEOUT_MAX}
+                      value={queueMin}
+                      aria-invalid={queueRangeError || queueReminderError}
+                      onChange={(e) => setQueueMin(e.target.value)}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500">{t('handoff.queueTimeout.minutes')}</span>
+                </div>
+                <p className={cn('text-[11px]', queueRangeError || queueReminderError ? 'text-error' : 'text-gray-400')}>
+                  {queueRangeError
+                    ? t('handoff.queueTimeout.rangeError', { min: QUEUE_TIMEOUT_MIN, max: QUEUE_TIMEOUT_MAX })
+                    : queueReminderError
+                      ? t('handoff.queueTimeout.reminderError', { minutes: reminderMin })
+                      : t('handoff.queueTimeout.reminderHint')}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <Label>{t('handoff.queueTimeout.notice')}</Label>
+                  <LanguageTabs value={queueLang} onChange={setQueueLang} filled={queueNotice} />
+                </div>
+                <textarea
+                  rows={2}
+                  maxLength={CHAT_CLOSE_COPY_MAX}
+                  value={queueNotice[queueLang] ?? ''}
+                  onChange={(e) => setQueueNotice((prev) => ({ ...prev, [queueLang]: e.target.value }))}
+                  placeholder={
+                    (CHAT_CLOSE_DEFAULT_COPY.queueDelay as Record<string, string>)[queueLang] ??
+                    CHAT_CLOSE_DEFAULT_COPY.queueDelay.EN
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
+                />
+                <p className="text-[11px] text-gray-400">{t('handoff.queueTimeout.noticeHint')}</p>
+                <p className="text-[11px] text-gray-500">
+                  {t('handoff.queueTimeout.offHoursPrefix')}{' '}
+                  <a href="#handoff-off-hours-notice" className="text-primary-600 hover:underline">
+                    {t('handoff.queueTimeout.offHoursLink')}
+                  </a>{' '}
+                  {t('handoff.queueTimeout.offHoursSuffix')}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Callback request (PLN-261026 B2): the shopper leaves a contact, an agent calls back later. */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={callbackOn}
+                onChange={(e) => setCallbackOn(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              <span className="font-medium">{t('handoff.callback.title')}</span>
+            </label>
+            <p className="mb-2 mt-0.5 pl-6 text-[11px] text-gray-400">{t('handoff.callback.hint')}</p>
+            {callbackOn && (
+              <div className="pl-6">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="text-xs text-gray-500">{t('handoff.callback.channels')}</span>
+                  {CALLBACK_CHANNEL_VALUES.map((c) => (
+                    <label key={c} className="flex items-center gap-1.5 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={callbackChannels.includes(c)}
+                        onChange={() => setCallbackChannels((prev) => toggle(prev, c))}
+                        className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                      />
+                      {t(`handoff.callback.channel.${c}`)}
+                    </label>
+                  ))}
+                </div>
+                {callbackError && (
+                  <p className="mt-1 text-[11px] text-error">{t('handoff.callback.channelsRequired')}</p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2 border-t border-gray-100 pt-3">
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
@@ -430,7 +579,7 @@ export function HandoffSection() {
             />
             {smtpWarning && <p className="text-[11px] text-warning">{t('handoff.emailWarning')}</p>}
 
-            <div className="flex items-center gap-2 pt-1">
+            <div id="handoff-off-hours-notice" className="flex scroll-mt-20 items-center gap-2 pt-1">
               <Label>{t('handoff.offHoursNotice')}</Label>
               <LanguageTabs value={lang} onChange={setLang} filled={notice} />
             </div>
@@ -560,7 +709,7 @@ export function HandoffSection() {
           </div>
 
           <div className="flex justify-end">
-            <Button size="sm" disabled={updateConfig.isPending} onClick={save}>
+            <Button size="sm" disabled={updateConfig.isPending || formInvalid} onClick={save}>
               {t('save')}
             </Button>
           </div>

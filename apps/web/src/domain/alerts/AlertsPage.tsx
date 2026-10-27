@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
@@ -16,6 +16,8 @@ import { useAlarmCenter } from './alerts.hooks';
 import type { AlarmCenterParams } from './alerts.service';
 import { reasonKey, useAlarmText } from './alarm-format';
 import { AlertSettingsModal } from './AlertSettingsModal';
+import { CallbackRequestsTab } from './CallbackRequestsTab';
+import { useCallbackRequests } from './callbacks.hooks';
 
 const PAGE_SIZE = 20;
 
@@ -25,6 +27,47 @@ const PAGE_SIZE = 20;
  * Reached from the header bell; gated like Live Chat (same path prefix).
  */
 export function AlertsPage() {
+  const { t } = useTranslation('livechat');
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'callbacks' ? 'callbacks' : 'alarms';
+  // Badge = open callback requests; size 1 is enough, the count rides on the pagination.
+  const openCallbacks = useCallbackRequests({ status: 'requested', page: 1, size: 1 });
+  const openCount = openCallbacks.data?.total ?? 0;
+  const tabBtn = (active: boolean) =>
+    active
+      ? 'inline-flex items-center gap-1.5 border-b-2 border-primary-500 px-3 py-2 text-sm font-medium text-primary-600'
+      : 'inline-flex items-center gap-1.5 border-b-2 border-transparent px-3 py-2 text-sm text-gray-500 hover:text-gray-700';
+
+  return (
+    <div className="space-y-4">
+      <PageHeader title={t('alarmCenter.title')} subtitle={t('alarmCenter.subtitle')} />
+      <div role="tablist" className="flex gap-1 border-b border-gray-200">
+        <button type="button" role="tab" aria-selected={tab === 'alarms'} className={tabBtn(tab === 'alarms')} onClick={() => setParams({}, { replace: true })}>
+          {t('alarmCenter.tab_alarms')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'callbacks'}
+          className={tabBtn(tab === 'callbacks')}
+          onClick={() => setParams({ tab: 'callbacks' }, { replace: true })}
+          data-testid="callback-tab"
+        >
+          {t('alarmCenter.tab_callbacks')}
+          {openCount > 0 && (
+            <span className="min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-[18px] text-white">
+              {openCount > 99 ? '99+' : openCount}
+            </span>
+          )}
+        </button>
+      </div>
+      {tab === 'callbacks' ? <CallbackRequestsTab /> : <AlarmList />}
+    </div>
+  );
+}
+
+/** The alarm history tab (PLN-261024). */
+function AlarmList() {
   const { t } = useTranslation('livechat');
   const navigate = useNavigate();
   const [scope, setScope] = useState<NonNullable<AlarmCenterParams['scope']>>('all');
@@ -77,7 +120,9 @@ export function AlertsPage() {
       key: 'status',
       header: t('alarmCenter.col.status'),
       render: (a) =>
-        a.status === 'new' ? (
+        a.status === 'expired' ? (
+          <Badge tone="gray">{t('alarmCenter.statusExpired')}</Badge>
+        ) : a.status === 'new' ? (
           <span className="flex items-center gap-2">
             <Badge tone="warning">{t('alarmCenter.statusNew')}</Badge>
             {a.canAck && (
@@ -103,7 +148,6 @@ export function AlertsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('alarmCenter.title')} subtitle={t('alarmCenter.subtitle')} />
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex rounded-md border border-gray-200 p-0.5">
           {(['all', 'mine', 'broadcast'] as const).map((s) => (
@@ -124,6 +168,7 @@ export function AlertsPage() {
             <option value="all">{t('alarmCenter.statusAll')}</option>
             <option value="new">{t('alarmCenter.statusNew')}</option>
             <option value="acked">{t('alarmCenter.statusAckedShort')}</option>
+            <option value="expired">{t('alarmCenter.statusExpiredShort')}</option>
           </Select>
         </div>
         <div className="w-32">

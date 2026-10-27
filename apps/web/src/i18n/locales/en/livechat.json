@@ -44,6 +44,9 @@
   "alarmReasonCategory": "The customer picked a consult category — routed to its team.",
   "alarmOpen": "Open chat",
   "alarmDismiss": "Dismiss",
+  "alarmReasonCallback": "The customer asked an agent to call them back.",
+  "alarmBodyCallback": "The customer in conversation #{{id}} requested a callback.",
+  "alarmOpenCallback": "View callback requests",
   "listSearchPlaceholder": "Search by customer name or email",
   "listSearchScope": "Matches recent customers only",
   "createdShort": "Opened",
@@ -544,6 +547,8 @@
     "statusAcked": "Acknowledged by {{name}}",
     "statusAckedShort": "Acknowledged",
     "statusAll": "Any status",
+    "statusExpired": "Timed out — handed back to AI",
+    "statusExpiredShort": "Timed out",
     "ack": "Acknowledge",
     "scope_all": "All",
     "scope_mine": "Assigned to me",
@@ -582,6 +587,39 @@
       "emailHint": "Mail to the ops mailbox for everyone-alarms is unchanged.",
       "saved": "Alarm settings saved",
       "saveError": "Could not save the alarm settings"
-    }
+    },
+    "tab_alarms": "Alarms",
+    "tab_callbacks": "Callback requests"
+  },
+  "callback": {
+    "hint": "An agent contacts the customer at the contact they left. Clicking [Show] is recorded in the audit log.",
+    "banner": "The customer requested a callback",
+    "status_requested": "Requested",
+    "status_done": "Done",
+    "status_canceled": "Canceled",
+    "status_all": "All",
+    "channel_email": "Email",
+    "channel_phone": "Phone",
+    "source_member": "Member contact",
+    "source_entered": "Entered by customer",
+    "col": {
+      "contact": "Contact"
+    },
+    "reveal": "Show",
+    "revealHint": "Show the full contact (recorded in the audit log)",
+    "hide": "Hide",
+    "copy": "Copy",
+    "copied": "Contact copied",
+    "copyError": "Couldn't copy the contact",
+    "revealError": "Couldn't load the contact",
+    "markDone": "Mark done",
+    "cancel": "Cancel",
+    "reopen": "Reopen",
+    "doneToast": "Callback request marked done",
+    "canceledToast": "Callback request canceled",
+    "reopenedToast": "Callback request reopened",
+    "updateError": "Couldn't update the callback request",
+    "handled": "{{name}} · {{at}}",
+    "empty": "No callback requests"
   }
 }

@@ -44,6 +44,9 @@
   "alarmReasonCategory": "El cliente eligió una categoría de consulta y se redirigió a su equipo.",
   "alarmOpen": "Abrir chat",
   "alarmDismiss": "Descartar",
+  "alarmReasonCallback": "El cliente pidió que un agente lo contacte.",
+  "alarmBodyCallback": "El cliente de la conversación #{{id}} solicitó que lo contacten.",
+  "alarmOpenCallback": "Ver solicitudes de contacto",
   "listSearchPlaceholder": "Buscar por nombre o email del cliente",
   "listSearchScope": "Solo coincide con clientes recientes",
   "createdShort": "Abierta",
@@ -544,6 +547,8 @@
     "statusAcked": "Confirmada por {{name}}",
     "statusAckedShort": "Confirmada",
     "statusAll": "Cualquier estado",
+    "statusExpired": "Tiempo agotado — devuelto a la IA",
+    "statusExpiredShort": "Tiempo agotado",
     "ack": "Confirmar",
     "scope_all": "Todas",
     "scope_mine": "Asignadas a mí",
@@ -582,6 +587,39 @@
       "emailHint": "El correo al buzón de operaciones para alarmas de todos no cambia.",
       "saved": "Ajustes de alarmas guardados",
       "saveError": "No se pudieron guardar los ajustes de alarmas"
-    }
+    },
+    "tab_alarms": "Alarmas",
+    "tab_callbacks": "Solicitudes de contacto"
+  },
+  "callback": {
+    "hint": "Un agente contacta al cliente con el dato que dejó. Pulsar [Ver] queda registrado en la auditoría.",
+    "banner": "El cliente solicitó que lo contacten",
+    "status_requested": "Solicitada",
+    "status_done": "Atendida",
+    "status_canceled": "Cancelada",
+    "status_all": "Todas",
+    "channel_email": "Correo",
+    "channel_phone": "Teléfono",
+    "source_member": "Contacto de la cuenta",
+    "source_entered": "Ingresado por el cliente",
+    "col": {
+      "contact": "Contacto"
+    },
+    "reveal": "Ver",
+    "revealHint": "Mostrar el contacto completo (queda registrado en la auditoría)",
+    "hide": "Ocultar",
+    "copy": "Copiar",
+    "copied": "Contacto copiado",
+    "copyError": "No se pudo copiar el contacto",
+    "revealError": "No se pudo cargar el contacto",
+    "markDone": "Marcar atendida",
+    "cancel": "Cancelar",
+    "reopen": "Reabrir",
+    "doneToast": "Solicitud de contacto marcada como atendida",
+    "canceledToast": "Solicitud de contacto cancelada",
+    "reopenedToast": "Solicitud de contacto reabierta",
+    "updateError": "No se pudo actualizar la solicitud de contacto",
+    "handled": "{{name}} · {{at}}",
+    "empty": "No hay solicitudes de contacto"
   }
 }

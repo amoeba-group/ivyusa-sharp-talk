@@ -13,7 +13,7 @@ export interface AlertSettings {
 
 export interface AlarmCenterParams {
   scope?: 'all' | 'mine' | 'broadcast';
-  status?: 'new' | 'acked' | 'all';
+  status?: 'new' | 'acked' | 'expired' | 'all';
   days?: number;
   category?: string;
   page?: number;

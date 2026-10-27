@@ -116,6 +116,19 @@ export interface HandoffConfig {
    */
   reAlert?: { afterMinutes?: number; escalateToUserIds?: number[] };
   /**
+   * Nobody accepted in time (PLN-261026 B2/B3). After `afterMinutes` of an
+   * unaccepted, unassigned waiting thread the shopper is told (`notice`, blank =
+   * built-in) and the AI takes the thread back; the open alarms expire. Absent
+   * = off — the thread waits as before.
+   */
+  queueTimeout?: { afterMinutes?: number; notice?: LocalizedText };
+  /**
+   * "Call me back" (PLN-261026 B4/B5): after the delay or off-hours notice the
+   * shopper may leave an email or phone number. Off = the old off-hours email
+   * card, and no callback chip.
+   */
+  callback?: { enabled?: boolean; channels?: string[] };
+  /**
    * Province → region code (PLN-261022 stage 1), e.g. { "Hồ Chí Minh": "south" }.
    * When a signed identify carries a province but no region, the region is filled
    * from here before the session is saved. Keys compare NFC + case-insensitively.
