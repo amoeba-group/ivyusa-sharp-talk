@@ -21,6 +21,7 @@ import { Conversation } from './entity/conversation.entity';
 import { CSAT_WINDOW_MS } from './chat.mapper';
 import { CSAT_COMMENT_MAX_CHARS, CSAT_REASON, CSAT_REASON_MAX_RATING } from '@sharptalk/types';
 import { Message } from './entity/message.entity';
+import { staffAvatars } from '../user/staff-avatar.util';
 import { DOC_GROUP } from '../knowledge/entity/kb-document.entity';
 import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
@@ -628,6 +629,11 @@ export class ChatService {
       if (u.name) map.set(String(u.id), u.name);
     }
     return map;
+  }
+
+  /** Profile icons of the replying staff (PLN-261028) — beside the names above. */
+  resolveSenderAvatars(messages: Message[]): Promise<Map<string, { uuid: string; version: number }>> {
+    return staffAvatars(this.userRepo, messages);
   }
 
   async handleUserMessage(

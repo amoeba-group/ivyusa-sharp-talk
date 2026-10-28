@@ -139,6 +139,7 @@
 261027-customer-memo.sql	column	customers	memo
 261027-customer-platform-links.sql	table	customer_platform_links	-
 261027-file-unattributed-conversations.sql	data	-	-
+261028-user-avatar.sql	column	users	avatar_asset_uuid
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

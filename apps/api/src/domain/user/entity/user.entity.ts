@@ -31,6 +31,13 @@ export class User {
   @Column({ name: 'unit_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   unitId: number | null;
 
+  /**
+   * Profile icon (`tenant_assets.uuid`, area profile / kind avatar) shown beside
+   * this person's replies in the widget and console (PLN-261028). NULL = none.
+   */
+  @Column({ name: 'avatar_asset_uuid', type: 'char', length: 36, nullable: true })
+  avatarAssetUuid: string | null;
+
   @Column({ name: 'must_change_password', type: 'tinyint', width: 1, default: 1 })
   mustChangePassword: number;
 

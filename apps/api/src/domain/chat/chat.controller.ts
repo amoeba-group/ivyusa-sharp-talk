@@ -103,6 +103,7 @@ export class ChatController {
       afterId: Number.isFinite(after) ? after : undefined,
     });
     const senderNames = await this.chatService.resolveSenderNames(messages);
+    const senderAvatars = await this.chatService.resolveSenderAvatars(messages);
     // One query for the whole page — the poll runs every few seconds, so a
     // per-message lookup here would be the widget's most expensive habit.
     const attachments = await this.attachmentService.findByMessageIds(
@@ -112,7 +113,14 @@ export class ChatController {
       conversation,
       conversation.idlePromptAt ? await this.chatService.closePolicy(conversation.tenantId) : null,
     );
-    return ChatMapper.toConversationResponse(conversation, messages, senderNames, attachments, ratingRequested);
+    return ChatMapper.toConversationResponse(
+      conversation,
+      messages,
+      senderNames,
+      attachments,
+      ratingRequested,
+      senderAvatars,
+    );
   }
 
   /**
@@ -136,8 +144,10 @@ export class ChatController {
         : Number((await this.chatService.findLatestConversation(session.id))?.id ?? 0) || null;
     const size = Math.min(5, Math.max(1, Number(limit) || 3));
     const page = await this.threadService.listForWidget(session, beforeId, size);
-    const senderNames = await this.chatService.resolveSenderNames(page.conversations.flatMap((c) => c.messages));
-    return ChatMapper.toThreadResponse(page, senderNames);
+    const all = page.conversations.flatMap((c) => c.messages);
+    const senderNames = await this.chatService.resolveSenderNames(all);
+    const senderAvatars = await this.chatService.resolveSenderAvatars(all);
+    return ChatMapper.toThreadResponse(page, senderNames, senderAvatars);
   }
 
   @Post('escalate')

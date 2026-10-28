@@ -7,5 +7,18 @@
   "workspace": "ワークスペース",
   "labels": "業務ラベル",
   "security": "セキュリティ",
-  "securityDesc": "ログインに使用するパスワードを変更します。"
+  "securityDesc": "ログインに使用するパスワードを変更します。",
+  "avatarUpload": "写真をアップロード",
+  "avatarRemove": "削除",
+  "avatarHint": "PNG・JPG・WEBP、5MBまで。正方形に切り抜かれます。",
+  "avatarSaved": "プロフィールアイコンを保存しました。",
+  "avatarRemoved": "プロフィールアイコンを削除しました。",
+  "avatarTooLarge": "5MB以下の画像のみアップロードできます。",
+  "avatarUnsupported": "PNG・JPG・WEBP画像のみアップロードできます。",
+  "displayName": "表示名",
+  "displayNamePlaceholder": "例: 山田花子",
+  "displayNameHint": "顧客チャットであなたの返信の横にこの名前とアイコンが表示されます。空欄 = ウィジェット設定の担当者名。",
+  "nameSaved": "表示名を保存しました。",
+  "save": "保存",
+  "saveError": "保存できませんでした。"
 }

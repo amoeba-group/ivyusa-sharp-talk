@@ -52,6 +52,7 @@ import {
   resolveAutoReply,
 } from '../messenger/auto-reply.util';
 import { staffDisplayName } from '../../global/util/staff-name.util';
+import { staffAvatars } from '../user/staff-avatar.util';
 import { AuditLog } from '../audit/entity/audit-log.entity';
 
 /**
@@ -1469,6 +1470,11 @@ export class AgentService {
       if (name) map.set(String(u.id), name);
     }
     return map;
+  }
+
+  /** Profile icons of the replying staff (PLN-261028), keyed like the names above. */
+  resolveSenderAvatars(messages: Message[]): Promise<Map<string, { uuid: string; version: number }>> {
+    return staffAvatars(this.userRepo, messages);
   }
 
   /** Drop the widget's token→session cache after a customer (re)binding (PERF-11). */

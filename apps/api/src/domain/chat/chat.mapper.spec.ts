@@ -95,3 +95,39 @@ describe('ChatMapper.toMessageResponse — citations', () => {
     expect(ChatMapper.toMessageResponse(msg({ citations: [null, 'x'] })).citations).toBeUndefined();
   });
 });
+
+/** The replying staff member's profile icon rides with the name (PLN-261028). */
+describe('ChatMapper — sender avatar', () => {
+  const conv = { id: 1, status: 'agent', csatRating: null, endedAt: null } as never;
+  const at = new Date('2026-10-28T00:00:00Z');
+  const messages = [
+    { id: 1, senderType: 'agent', senderId: 5, body: 'Hi, I am Hoang Anh', createdAt: at },
+    { id: 2, senderType: 'agent', senderId: 6, body: 'Hello', createdAt: at },
+    { id: 3, senderType: 'ai', senderId: null, body: 'Connecting you…', createdAt: at },
+  ] as Message[];
+
+  it('puts each agent’s own icon on their turns and null elsewhere', () => {
+    const res = ChatMapper.toConversationResponse(
+      conv,
+      messages,
+      new Map([['5', 'Hoang Anh']]),
+      undefined,
+      false,
+      new Map([['5', { uuid: 'u5', version: 1 }]]),
+    );
+    expect(res.messages.map((m) => [m.senderName, m.senderAvatar])).toEqual([
+      ['Hoang Anh', { uuid: 'u5', version: 1 }],
+      [null, null],
+      [null, null],
+    ]);
+  });
+
+  it('carries it on earlier conversations too', () => {
+    const res = ChatMapper.toThreadResponse(
+      { conversations: [{ conversation: { ...(conv as object), createdAt: at } as never, messages, own: true }], hasMore: false, colleagueCount: 0 },
+      new Map(),
+      new Map([['6', { uuid: 'u6', version: 1 }]]),
+    );
+    expect(res.conversations[0].messages[1].senderAvatar).toEqual({ uuid: 'u6', version: 1 });
+  });
+});

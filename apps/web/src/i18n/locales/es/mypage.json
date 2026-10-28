@@ -7,5 +7,18 @@
   "workspace": "Espacio de trabajo",
   "labels": "Etiquetas de trabajo",
   "security": "Seguridad",
-  "securityDesc": "Cambia la contraseña con la que inicias sesión."
+  "securityDesc": "Cambia la contraseña con la que inicias sesión.",
+  "avatarUpload": "Subir foto",
+  "avatarRemove": "Quitar",
+  "avatarHint": "PNG, JPG o WEBP de hasta 5 MB. Se recorta en cuadrado.",
+  "avatarSaved": "Icono de perfil guardado.",
+  "avatarRemoved": "Icono de perfil eliminado.",
+  "avatarTooLarge": "Solo imágenes de hasta 5 MB.",
+  "avatarUnsupported": "Solo imágenes PNG, JPG o WEBP.",
+  "displayName": "Nombre visible",
+  "displayNamePlaceholder": "p. ej. Ana García",
+  "displayNameHint": "Los clientes ven este nombre e icono junto a sus respuestas. Vacío = la etiqueta de agente de los ajustes del widget.",
+  "nameSaved": "Nombre visible guardado.",
+  "save": "Guardar",
+  "saveError": "No se pudo guardar."
 }

@@ -7,5 +7,18 @@
   "workspace": "워크스페이스",
   "labels": "업무 라벨",
   "security": "보안",
-  "securityDesc": "로그인에 사용하는 비밀번호를 변경합니다."
+  "securityDesc": "로그인에 사용하는 비밀번호를 변경합니다.",
+  "avatarUpload": "사진 올리기",
+  "avatarRemove": "삭제",
+  "avatarHint": "PNG·JPG·WEBP, 5MB 이하. 정사각형으로 맞춰집니다.",
+  "avatarSaved": "프로필 아이콘을 저장했습니다.",
+  "avatarRemoved": "프로필 아이콘을 삭제했습니다.",
+  "avatarTooLarge": "5MB 이하 이미지만 올릴 수 있습니다.",
+  "avatarUnsupported": "PNG·JPG·WEBP 이미지만 올릴 수 있습니다.",
+  "displayName": "표시 이름",
+  "displayNamePlaceholder": "예: 홍길동",
+  "displayNameHint": "고객 채팅에 이 이름과 아이콘이 표시됩니다. 비우면 위젯 설정의 상담원 호칭이 쓰입니다.",
+  "nameSaved": "표시 이름을 저장했습니다.",
+  "save": "저장",
+  "saveError": "저장하지 못했습니다."
 }

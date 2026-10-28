@@ -15,6 +15,9 @@ import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
 import { TenantModule } from '../tenant/tenant.module';
 import { RoutingCategoryModule } from '../routing-category/routing-category.module';
+import { TenantAssetModule } from '../tenant-asset/tenant-asset.module';
+import { UserProfileController } from './user-profile.controller';
+import { UserProfileService } from './user-profile.service';
 
 @Module({
   imports: [
@@ -23,9 +26,10 @@ import { RoutingCategoryModule } from '../routing-category/routing-category.modu
     AuthModule, // MfaService (mfa-reset endpoints)
     TenantModule,
     RoutingCategoryModule, // scope regions = the tenant's routing categories (PLN-261024)
+    TenantAssetModule, // profile icons (PLN-261028)
   ],
-  controllers: [UserController, JobLabelController, UnitController, AdminTenantUserController],
-  providers: [UserService],
+  controllers: [UserProfileController, UserController, JobLabelController, UnitController, AdminTenantUserController],
+  providers: [UserService, UserProfileService],
   exports: [UserService],
 })
 export class UserModule {}

@@ -7,5 +7,18 @@
   "workspace": "工作区",
   "labels": "工作标签",
   "security": "安全",
-  "securityDesc": "修改您用于登录的密码。"
+  "securityDesc": "修改您用于登录的密码。",
+  "avatarUpload": "上传照片",
+  "avatarRemove": "删除",
+  "avatarHint": "PNG、JPG 或 WEBP，不超过 5MB，将裁剪为正方形。",
+  "avatarSaved": "已保存头像。",
+  "avatarRemoved": "已删除头像。",
+  "avatarTooLarge": "仅支持不超过 5MB 的图片。",
+  "avatarUnsupported": "仅支持 PNG、JPG 或 WEBP 图片。",
+  "displayName": "显示名称",
+  "displayNamePlaceholder": "例如：张三",
+  "displayNameHint": "客户会在您的回复旁看到此名称和头像。留空 = 使用小部件设置中的客服称呼。",
+  "nameSaved": "已保存显示名称。",
+  "save": "保存",
+  "saveError": "保存失败。"
 }

@@ -40,6 +40,8 @@ interface KindSpec {
   maxBytes: number;
   /** Raster images are re-encoded through sharp and bounded in pixels. */
   image?: { maxPx: number };
+  /** Cropped to a centred square of this many px and stored as WebP (PLN-261028 D1). */
+  square?: number;
   /** Served without auth on the widget's public asset route (D-4). */
   public: boolean;
 }
@@ -68,12 +70,27 @@ export const KIND_SPECS: Record<string, KindSpec> = {
   [TENANT_ASSET_KIND.ICON]: { formats: [PNG, WEBP], maxBytes: 256 * 1024, image: { maxPx: 512 }, public: true },
   [TENANT_ASSET_KIND.IMAGE]: { formats: [PNG, JPG, WEBP], maxBytes: 2 * 1024 * 1024, image: { maxPx: 2000 }, public: true },
   [TENANT_ASSET_KIND.DOC]: { formats: [PDF, PNG, JPG], maxBytes: 10 * 1024 * 1024, public: false },
+  // A phone photo is fine as input: it leaves as a 256px WebP of a few KB.
+  [TENANT_ASSET_KIND.AVATAR]: {
+    formats: [PNG, JPG, WEBP],
+    maxBytes: 5 * 1024 * 1024,
+    image: { maxPx: 8000 },
+    square: 256,
+    public: true,
+  },
+};
+
+/** Which kinds each area accepts on upload (settings snapshots are server-made only). */
+const AREA_KINDS: Record<string, string[]> = {
+  [TENANT_ASSET_AREA.DESIGN]: [TENANT_ASSET_KIND.FONT, TENANT_ASSET_KIND.ICON, TENANT_ASSET_KIND.IMAGE, TENANT_ASSET_KIND.DOC],
+  [TENANT_ASSET_AREA.PROFILE]: [TENANT_ASSET_KIND.AVATAR],
 };
 
 /** Quota per area in MB; env-overridable so a plan tier can raise it later (PLN §7). */
 const QUOTA_DEFAULT_MB: Record<string, number> = {
   [TENANT_ASSET_AREA.DESIGN]: 50,
   [TENANT_ASSET_AREA.SETTINGS]: 20,
+  [TENANT_ASSET_AREA.PROFILE]: 20,
 };
 
 const SIGNED_TTL_SEC = 15 * 60;
@@ -185,7 +202,7 @@ export class TenantAssetService {
     actor: AssetActor,
   ): Promise<TenantAsset> {
     const spec = KIND_SPECS[input.kind];
-    if (!spec || input.area !== TENANT_ASSET_AREA.DESIGN) {
+    if (!spec || !AREA_KINDS[input.area]?.includes(input.kind)) {
       throw new BusinessException(ERROR_CODE.TENANT_ASSET_KIND_INVALID, HttpStatus.BAD_REQUEST);
     }
     if (!file?.buffer?.length) {
@@ -216,8 +233,13 @@ export class TenantAssetService {
           throw new BusinessException(ERROR_CODE.TENANT_ASSET_DIMENSIONS, HttpStatus.BAD_REQUEST);
         }
         const out = sharp(buffer).rotate();
-        const encoded =
-          format.ext === 'png' ? out.png() : format.ext === 'webp' ? out.webp() : out.jpeg({ quality: 90 });
+        const encoded = spec.square
+          ? out.resize(spec.square, spec.square, { fit: 'cover', position: 'centre' }).webp({ quality: 85 })
+          : format.ext === 'png'
+            ? out.png()
+            : format.ext === 'webp'
+              ? out.webp()
+              : out.jpeg({ quality: 90 });
         const { data, info } = await encoded.toBuffer({ resolveWithObject: true });
         buffer = data;
         width = info.width;
@@ -235,9 +257,10 @@ export class TenantAssetService {
       throw new BusinessException(ERROR_CODE.TENANT_ASSET_QUOTA, HttpStatus.BAD_REQUEST);
     }
 
+    const stored = spec.square ? WEBP : format;
     const uuid = randomUUID();
     const rel = TenantAssetService.relativeDir(tenantId, input.area);
-    const storagePath = join(rel, `${uuid}.${format.ext}`);
+    const storagePath = join(rel, `${uuid}.${stored.ext}`);
     await fs.mkdir(this.resolveInRoot(rel), { recursive: true });
     await fs.writeFile(this.resolveInRoot(storagePath), buffer);
 
@@ -248,8 +271,8 @@ export class TenantAssetService {
         area: input.area,
         kind: input.kind,
         filename: file.originalname.slice(0, 255),
-        mime: format.mime,
-        ext: format.ext,
+        mime: stored.mime,
+        ext: stored.ext,
         size: buffer.length,
         sha256: createHash('sha256').update(buffer).digest('hex'),
         width,

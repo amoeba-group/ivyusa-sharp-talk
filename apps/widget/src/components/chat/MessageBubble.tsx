@@ -34,13 +34,17 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   const isAi = message.senderType === 'ai';
   const isAgent = message.senderType === 'agent';
   const avatarRow = design?.messageStyle === 'avatar' && (isAi || isAgent);
-  const avatarRef = isAi ? design?.icons?.botAvatar : isAgent ? design?.icons?.agentAvatar : null;
+  // Agent: the person's own profile icon first, then the tenant's agent avatar
+  // (PLN-261028 D3).
+  const staffAvatar = isAgent ? message.senderAvatar ?? null : null;
+  const avatarRef = isAi ? design?.icons?.botAvatar : isAgent ? staffAvatar ?? design?.icons?.agentAvatar : null;
   // AI: the configured name, else the widget's display name. Agent: the
-  // configured generic label ("Go2Joy support"), else the person's own name.
+  // person's own display name, else the configured generic label ("Go2Joy
+  // Support") — PLN-261028 D2 put the person first.
   const senderLabel = isAi
     ? pickCopy(widgetCopy?.aiSenderName, language) ?? widgetCopy?.displayName ?? null
     : isAgent
-      ? pickCopy(widgetCopy?.agentSenderName, language) ?? message.senderName ?? null
+      ? message.senderName ?? pickCopy(widgetCopy?.agentSenderName, language) ?? null
       : null;
   return (
     <div className={`group flex ${mine ? 'justify-end' : 'justify-start'} ${avatarRow ? 'gap-2' : ''}`}>
@@ -59,8 +63,19 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         </div>
       )}
       <div className="min-w-0 max-w-[85%]">
-        {!avatarRow && message.senderType === 'agent' && message.senderName && (
-          <div className="mb-0.5 text-[11px] font-medium text-gray-500">{message.senderName}</div>
+        {!avatarRow && isAgent && message.senderName && (
+          <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
+            {/* Without the avatar-row design the icon rides on the name line (PLN-261028 D4). */}
+            {staffAvatar && (
+              <img
+                src={assetUrl(staffAvatar)}
+                alt=""
+                aria-hidden="true"
+                className="st-avatar h-5 w-5 flex-shrink-0 rounded-full object-cover"
+              />
+            )}
+            {message.senderName}
+          </div>
         )}
         {avatarRow && senderLabel && !message.body?.trim() && (
           // Attachment-only turn: no bubble to hold the name, so it sits above.

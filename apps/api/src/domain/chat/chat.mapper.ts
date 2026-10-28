@@ -52,11 +52,13 @@ export class ChatMapper {
     m: Message,
     senderName: string | null = null,
     attachments?: MessageAttachment[],
+    senderAvatar: { uuid: string; version: number } | null = null,
   ): MessageResponse {
     return {
       id: String(m.id),
       senderType: m.senderType,
       senderName,
+      senderAvatar,
       body: m.body,
       createdAt: m.createdAt.toISOString(),
       quickReplies: followUpsOf(m),
@@ -73,6 +75,8 @@ export class ChatMapper {
     attachments?: Map<string, MessageAttachment[]>,
     /** The close policy asked this open thread for a rating (PLN-261026 A1). */
     ratingRequested = false,
+    /** Staff profile icons by user id (PLN-261028). */
+    senderAvatars?: Map<string, { uuid: string; version: number }>,
   ): ConversationResponse {
     const endedAt = conversation.endedAt?.getTime() ?? null;
     return {
@@ -89,6 +93,7 @@ export class ChatMapper {
           m,
           m.senderId != null ? senderNames?.get(String(m.senderId)) ?? null : null,
           attachments?.get(String(m.id)),
+          m.senderId != null ? senderAvatars?.get(String(m.senderId)) ?? null : null,
         ),
       ),
     };
@@ -102,6 +107,7 @@ export class ChatMapper {
       colleagueCount: number;
     },
     senderNames?: Map<string, string>,
+    senderAvatars?: Map<string, { uuid: string; version: number }>,
   ): ThreadResponse {
     return {
       conversations: page.conversations.map(({ conversation, messages, own }) => ({
@@ -111,7 +117,12 @@ export class ChatMapper {
         endedAt: conversation.endedAt ? conversation.endedAt.toISOString() : null,
         own,
         messages: messages.map((m) =>
-          ChatMapper.toMessageResponse(m, m.senderId != null ? senderNames?.get(String(m.senderId)) ?? null : null),
+          ChatMapper.toMessageResponse(
+            m,
+            m.senderId != null ? senderNames?.get(String(m.senderId)) ?? null : null,
+            undefined,
+            m.senderId != null ? senderAvatars?.get(String(m.senderId)) ?? null : null,
+          ),
         ),
       })),
       hasMore: page.hasMore,

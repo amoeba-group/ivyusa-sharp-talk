@@ -6,6 +6,8 @@ import { tenantLoginPath } from '@/lib/tenant-path';
 import { useUiStore } from '@/store/ui-store';
 import { authService } from '@/domain/auth/auth.service';
 import { Badge } from '@/components/Badge';
+import { StaffAvatar } from '@/components/StaffAvatar';
+import { useMyProfile } from '@/domain/my-page/profile.hooks';
 import { useMenuAccess } from '@/lib/use-menu-access';
 import { TENANT_NAV, ADMIN_NAV, type NavItem } from './nav-config';
 import { cn } from '@/lib/cn';
@@ -13,6 +15,7 @@ import { cn } from '@/lib/cn';
 export function Sidebar() {
   const { t } = useTranslation('nav');
   const principal = useAuthStore((s) => s.principal);
+  const { data: myProfile } = useMyProfile();
   const tenantName = useAuthStore((s) => s.tenantName);
   const tenantSlug = useAuthStore((s) => s.tenantSlug);
   const clear = useAuthStore((s) => s.clear);
@@ -103,12 +106,16 @@ export function Sidebar() {
       {/* Signed-in user, pinned to the bottom: identity + My Page + Logout. */}
       <div className="border-t border-gray-100 p-3">
         {!collapsed && (
-          <div className="mb-2 px-1 leading-tight">
-            <p className="truncate text-xs font-medium text-gray-800">{principal?.email}</p>
-            <div className="mt-1">
-              <Badge tone={isAdmin ? 'primary' : 'info'}>
-                {isAdmin ? 'admin' : principal?.rank ?? 'user'}
-              </Badge>
+          <div className="mb-2 flex items-center gap-2 px-1 leading-tight">
+            {/* The face customers see beside this person's replies (PLN-261028 D6). */}
+            {!isAdmin && <StaffAvatar avatar={myProfile?.avatar} className="h-8 w-8" />}
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium text-gray-800">{myProfile?.displayName || principal?.email}</p>
+              <div className="mt-1">
+                <Badge tone={isAdmin ? 'primary' : 'info'}>
+                  {isAdmin ? 'admin' : principal?.rank ?? 'user'}
+                </Badge>
+              </div>
             </div>
           </div>
         )}

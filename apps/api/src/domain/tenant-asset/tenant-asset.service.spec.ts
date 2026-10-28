@@ -98,4 +98,37 @@ describe('TenantAssetService', () => {
     await expect(fs.stat(join(root, row.storagePath))).rejects.toBeTruthy();
     expect(audit.write).toHaveBeenLastCalledWith(expect.objectContaining({ action: 'tenant.asset_deleted' }));
   });
+  // ---- staff profile icons (PLN-261028-Agent-Profile-Avatar D1) ----------
+
+  it('stores an avatar under profile as a 256px square WebP, whatever the input shape', async () => {
+    const sharp = require('sharp');
+    const jpeg: Buffer = await sharp({
+      create: { width: 800, height: 400, channels: 3, background: { r: 200, g: 50, b: 50 } },
+    })
+      .jpeg()
+      .toBuffer();
+    const row = await svc.store(1, { area: 'profile', kind: 'avatar' }, { originalname: 'me.jpg', mimetype: 'image/jpeg', size: jpeg.length, buffer: jpeg }, actor);
+    expect(row.storagePath).toBe(join('tenants', '1', 'profile', `${row.uuid}.webp`));
+    expect(row.mime).toBe('image/webp');
+    expect([row.width, row.height]).toEqual([256, 256]);
+    const meta = await sharp(await fs.readFile(join(root, row.storagePath))).metadata();
+    expect([meta.format, meta.width, meta.height]).toEqual(['webp', 256, 256]);
+  });
+
+  it('keeps avatars out of the design area and design kinds out of profile', async () => {
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47]), Buffer.alloc(32)]);
+    await expect(
+      svc.store(1, { area: 'design', kind: 'avatar' }, { originalname: 'a.png', mimetype: 'x', size: 36, buffer: png }, actor),
+    ).rejects.toMatchObject({ errorCode: 'E5085' });
+    await expect(
+      svc.store(1, { area: 'profile', kind: 'icon' }, { originalname: 'a.png', mimetype: 'x', size: 36, buffer: png }, actor),
+    ).rejects.toMatchObject({ errorCode: 'E5085' });
+  });
+
+  it('refuses an svg posing as an avatar', async () => {
+    const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+    await expect(
+      svc.store(1, { area: 'profile', kind: 'avatar' }, { originalname: 'me.png', mimetype: 'image/png', size: svg.length, buffer: svg }, actor),
+    ).rejects.toMatchObject({ errorCode: 'E5081' });
+  });
 });

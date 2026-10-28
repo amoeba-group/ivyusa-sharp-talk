@@ -7,5 +7,18 @@
   "workspace": "Không gian làm việc",
   "labels": "Nhãn công việc",
   "security": "Bảo mật",
-  "securityDesc": "Đổi mật khẩu bạn dùng để đăng nhập."
+  "securityDesc": "Đổi mật khẩu bạn dùng để đăng nhập.",
+  "avatarUpload": "Tải ảnh lên",
+  "avatarRemove": "Xóa",
+  "avatarHint": "PNG, JPG hoặc WEBP tối đa 5MB. Ảnh được cắt thành hình vuông.",
+  "avatarSaved": "Đã lưu ảnh đại diện.",
+  "avatarRemoved": "Đã xóa ảnh đại diện.",
+  "avatarTooLarge": "Chỉ ảnh tối đa 5MB.",
+  "avatarUnsupported": "Chỉ ảnh PNG, JPG hoặc WEBP.",
+  "displayName": "Tên hiển thị",
+  "displayNamePlaceholder": "vd. Hoàng Anh",
+  "displayNameHint": "Khách hàng thấy tên và ảnh này cạnh câu trả lời của bạn. Để trống = tên gọi nhân viên trong cài đặt widget.",
+  "nameSaved": "Đã lưu tên hiển thị.",
+  "save": "Lưu",
+  "saveError": "Không lưu được."
 }

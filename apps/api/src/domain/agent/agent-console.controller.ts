@@ -335,6 +335,7 @@ export class AgentConsoleController {
       },
     );
     const names = await this.agentService.resolveSenderNames(messages);
+    const avatars = await this.agentService.resolveSenderAvatars(messages);
     const attachments = await this.attachments.findByMessageIds(messages.map((m) => Number(m.id)));
     return {
       groupId: String(id),
@@ -344,6 +345,7 @@ export class AgentConsoleController {
           conversationMeta.get(String(m.conversationId)),
           m.senderId != null ? names.get(String(m.senderId)) ?? null : null,
           attachments.get(String(m.id)),
+          m.senderId != null ? avatars.get(String(m.senderId)) ?? null : null,
         ),
       ),
       hasMore,
@@ -374,7 +376,8 @@ export class AgentConsoleController {
       { conversationId, sessionId: body.session_id, length: message.body.length },
     );
     const senderName = await this.agentService.agentName(agentId);
-    return toGroupMessageResponse(message, { sessionId: body.session_id, channel }, senderName);
+    const avatar = (await this.agentService.resolveSenderAvatars([message])).get(String(agentId)) ?? null;
+    return toGroupMessageResponse(message, { sessionId: body.session_id, channel }, senderName, undefined, avatar);
   }
 
   @Patch('groups/:id')
@@ -827,6 +830,7 @@ export class AgentConsoleController {
     // PII-access audit (PRV-H4): the agent sees the transcript + customer panel.
     await this.agentService.auditConversationView(actorIdOf(user), tenantId, id);
     const names = await this.agentService.resolveSenderNames(messages);
+    const avatars = await this.agentService.resolveSenderAvatars(messages);
     // One query for the page — the console re-fetches a conversation on every
     // poll, so a per-message lookup would multiply with the transcript length.
     const attachments = await this.attachments.findByMessageIds(messages.map((m) => Number(m.id)));
@@ -903,6 +907,7 @@ export class AgentConsoleController {
           m.senderId != null ? names.get(String(m.senderId)) ?? null : null,
           attachments.get(String(m.id)),
           ratings.get(String(m.id)),
+          m.senderId != null ? avatars.get(String(m.senderId)) ?? null : null,
         ),
       ),
       hasMore,
@@ -1117,7 +1122,8 @@ export class AgentConsoleController {
       },
     );
     const senderName = await this.agentService.agentName(agentId);
-    return toMessageResponse(saved, senderName, attachments.get(String(saved.id)));
+    const avatar = (await this.agentService.resolveSenderAvatars([saved])).get(String(agentId)) ?? null;
+    return toMessageResponse(saved, senderName, attachments.get(String(saved.id)), undefined, avatar);
   }
 
   @Post('conversations/:id/attachments')

@@ -188,6 +188,8 @@ export interface ChatMessage {
   conversationId?: string;
   senderType: MessageSenderType;
   senderName?: string | null;
+  /** The replying staff member's profile icon (PLN-261028). */
+  senderAvatar?: { uuid: string; version: number } | null;
   body: string;
   createdAt?: string;
   attachments?: ChatAttachment[];

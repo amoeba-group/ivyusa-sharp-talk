@@ -5,6 +5,8 @@ import { bigintTransformer } from '../../../global/util/transformers';
 export const TENANT_ASSET_AREA = {
   DESIGN: 'design',
   SETTINGS: 'settings',
+  /** Staff profile icons (PLN-261028) — one live file per user. */
+  PROFILE: 'profile',
 } as const;
 export type TenantAssetArea = (typeof TENANT_ASSET_AREA)[keyof typeof TENANT_ASSET_AREA];
 
@@ -15,6 +17,8 @@ export const TENANT_ASSET_KIND = {
   IMAGE: 'image',
   DOC: 'doc',
   SETTINGS_SNAPSHOT: 'settings_snapshot',
+  /** A staff profile icon: cropped square and re-encoded on upload (PLN-261028 D1). */
+  AVATAR: 'avatar',
 } as const;
 export type TenantAssetKind = (typeof TENANT_ASSET_KIND)[keyof typeof TENANT_ASSET_KIND];
 

@@ -198,6 +198,11 @@ export interface ChatMessageResponse {
   id: string;
   senderType: string;
   senderName: string | null;
+  /**
+   * The replying staff member's profile icon (PLN-261028), served at
+   * `/public/widget/asset/:uuid?v=`. Absent/null = none set.
+   */
+  senderAvatar?: { uuid: string; version: number } | null;
   body: string;
   createdAt: string;
   /** Files sent with this turn. Absent when the turn is text-only. */

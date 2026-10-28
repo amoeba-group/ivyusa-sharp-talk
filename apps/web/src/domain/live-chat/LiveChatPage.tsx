@@ -85,6 +85,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { liveChatService } from './live-chat.service';
 import type { AgentSession, ChatMessage, CustomerContext } from './live-chat.service';
 import { cn } from '@/lib/cn';
+import { StaffAvatar } from '@/components/StaffAvatar';
 // Source deep-import, not '@sharptalk/types': the package's CJS runtime exports are
 // invisible to the browser build (see BriefingCard).
 import { LANGUAGES } from '../../../../../packages/types/src/common/language';
@@ -1464,7 +1465,12 @@ export function LiveChatPage() {
                         )}
                         {m.senderType === 'agent' && (
                           <span className="mb-0.5 flex items-center gap-1 text-xs font-medium opacity-90">
-                            <User className="h-3 w-3" /> {m.senderName ?? t('agent')}
+                            {m.senderAvatar ? (
+                              <StaffAvatar avatar={m.senderAvatar} className="h-5 w-5" />
+                            ) : (
+                              <User className="h-3 w-3" />
+                            )}
+                            {m.senderName ?? t('agent')}
                           </span>
                         )}
                         <MessageBody text={m.body} raw={m.senderType === 'user'} />

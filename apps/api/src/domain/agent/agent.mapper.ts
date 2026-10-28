@@ -100,6 +100,8 @@ export function toMessageResponse(
   senderName: string | null = null,
   attachments?: MessageAttachment[],
   rating?: AnswerRating,
+  /** The replying staff member's profile icon (PLN-261028). */
+  senderAvatar: { uuid: string; version: number } | null = null,
 ) {
   return {
     id: m.id,
@@ -108,6 +110,7 @@ export function toMessageResponse(
     senderType: m.senderType,
     senderId: m.senderId,
     senderName,
+    senderAvatar,
     body: m.body,
     createdAt: m.createdAt,
     // Signed links, minted per response (PLN-260814).
@@ -196,9 +199,10 @@ export function toGroupMessageResponse(
   meta: { sessionId: number; channel: string } | undefined,
   senderName: string | null = null,
   attachments?: MessageAttachment[],
+  senderAvatar: { uuid: string; version: number } | null = null,
 ) {
   return {
-    ...toMessageResponse(m, senderName, attachments),
+    ...toMessageResponse(m, senderName, attachments, undefined, senderAvatar),
     conversationId: String(m.conversationId),
     sessionId: meta ? String(meta.sessionId) : null,
     channel: meta?.channel ?? 'widget',

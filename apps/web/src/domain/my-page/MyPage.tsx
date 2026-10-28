@@ -8,8 +8,9 @@ import { Button } from '@/components/Button';
 import { ChangePasswordModal } from '@/domain/auth/ChangePasswordModal';
 import { MfaSettings } from '@/domain/auth/MfaSettings';
 import { useAuthStore } from '@/store/auth-store';
+import { ProfileEditor } from './ProfileEditor';
 
-/** Signed-in user's profile: identity, role and password change. */
+/** Signed-in user's profile: icon and display name (PLN-261028), identity, role and password change. */
 export function MyPage() {
   const { t } = useTranslation('mypage');
   const { t: ta } = useTranslation('auth');
@@ -25,6 +26,7 @@ export function MyPage() {
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
       <Card title={t('profile')}>
+        {!isAdmin && <ProfileEditor />}
         <dl className="divide-y divide-gray-100 text-sm">
           <div className="flex items-center justify-between py-3">
             <dt className="text-gray-500">{t('email')}</dt>
