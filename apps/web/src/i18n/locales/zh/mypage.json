@@ -20,5 +20,8 @@
   "displayNameHint": "客户会在您的回复旁看到此名称和头像。留空 = 使用小部件设置中的客服称呼。",
   "nameSaved": "已保存显示名称。",
   "save": "保存",
-  "saveError": "保存失败。"
+  "saveError": "保存失败。",
+  "team": "团队",
+  "teamNone": "未指定",
+  "labelsNone": "无"
 }

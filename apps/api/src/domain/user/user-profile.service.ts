@@ -1,7 +1,11 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
+import { Unit } from './entity/unit.entity';
+import { JobLabel } from './entity/job-label.entity';
+import { UserJobLabel } from './entity/user-job-label.entity';
+import { MyOrg } from './dto/response/user-profile.response';
 import { AuditService } from '../audit/audit.service';
 import { AssetUpload, TenantAssetService } from '../tenant-asset/tenant-asset.service';
 import { TENANT_ASSET_AREA, TENANT_ASSET_KIND } from '../tenant-asset/entity/tenant-asset.entity';
@@ -20,7 +24,34 @@ export class UserProfileService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly assets: TenantAssetService,
     private readonly audit: AuditService,
+    @Optional() @InjectRepository(Unit) private readonly unitRepo?: Repository<Unit>,
+    @Optional() @InjectRepository(JobLabel) private readonly labelRepo?: Repository<JobLabel>,
+    @Optional() @InjectRepository(UserJobLabel) private readonly userLabelRepo?: Repository<UserJobLabel>,
   ) {}
+
+  /**
+   * The team and job labels assigned to this person, by their tenant-given
+   * names (PLN-261028-MyPage-Team-Labels D1). Read fresh — the token's label
+   * codes go stale the moment a master reassigns them.
+   */
+  async org(user: User): Promise<MyOrg> {
+    const unit =
+      user.unitId != null && this.unitRepo
+        ? await this.unitRepo.findOne({ where: { id: user.unitId, tenantId: user.tenantId } })
+        : null;
+    const links = this.userLabelRepo ? await this.userLabelRepo.find({ where: { userId: user.id } }) : [];
+    const labels =
+      links.length && this.labelRepo
+        ? await this.labelRepo.find({
+            where: { id: In(links.map((l) => l.jobLabelId)), tenantId: user.tenantId },
+            order: { id: 'ASC' },
+          })
+        : [];
+    return {
+      unit: unit ? { id: String(unit.id), name: unit.name } : null,
+      labels: labels.map((l) => ({ code: l.code, name: l.name })),
+    };
+  }
 
   async get(tenantId: number, userId: number): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id: userId, tenantId } });

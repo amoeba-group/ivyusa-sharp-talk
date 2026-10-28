@@ -20,5 +20,8 @@
   "displayNameHint": "Khách hàng thấy tên và ảnh này cạnh câu trả lời của bạn. Để trống = tên gọi nhân viên trong cài đặt widget.",
   "nameSaved": "Đã lưu tên hiển thị.",
   "save": "Lưu",
-  "saveError": "Không lưu được."
+  "saveError": "Không lưu được.",
+  "team": "Nhóm",
+  "teamNone": "Chưa gán",
+  "labelsNone": "Không có"
 }

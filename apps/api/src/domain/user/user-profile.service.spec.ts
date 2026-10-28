@@ -37,7 +37,7 @@ describe('UserProfileService', () => {
       { userId: 5 },
     );
     expect(userRepo.update).toHaveBeenCalledWith({ id: 5, tenantId: 2 }, { avatarAssetUuid: 'new-uuid' });
-    expect(UserProfileMapper.toMyProfile(saved).avatar).toEqual({ uuid: 'new-uuid', version: 1 });
+    expect(UserProfileMapper.toMyProfile(saved, { unit: null, labels: [] }).avatar).toEqual({ uuid: 'new-uuid', version: 1 });
     expect(assets.remove).not.toHaveBeenCalled();
     expect(audit.write).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'user.profile_updated', target: 'user:5', metadata: expect.objectContaining({ field: 'avatar' }) }),
@@ -75,6 +75,46 @@ describe('UserProfileService', () => {
   it('never reaches another tenant’s user', async () => {
     await expect(svc.setAvatar(3, 5, file)).rejects.toMatchObject({ errorCode: 'E5002' });
     expect(assets.store).not.toHaveBeenCalled();
+  });
+});
+
+/** Team and job labels on My Page, by name (PLN-261028-MyPage-Team-Labels). */
+describe('UserProfileService.org', () => {
+  const me = { id: 5, tenantId: 2, unitId: 9 } as User;
+  function make(unit: unknown, links: unknown[], labels: unknown[]) {
+    const unitRepo = { findOne: jest.fn(async () => unit) };
+    const userLabelRepo = { find: jest.fn(async () => links) };
+    const labelRepo = { find: jest.fn(async () => labels) };
+    const svc = new UserProfileService(
+      {} as never,
+      {} as never,
+      {} as never,
+      unitRepo as never,
+      labelRepo as never,
+      userLabelRepo as never,
+    );
+    return { svc, unitRepo, userLabelRepo, labelRepo };
+  }
+
+  it('returns the team and label names, scoped to the user’s tenant', async () => {
+    const { svc, unitRepo, labelRepo } = make(
+      { id: '9', name: 'CS 1팀' },
+      [{ userId: 5, jobLabelId: 3 }, { userId: 5, jobLabelId: 4 }],
+      [{ code: 'consult', name: '상담' }, { code: 'accounting', name: '회계' }],
+    );
+    expect(await svc.org(me)).toEqual({
+      unit: { id: '9', name: 'CS 1팀' },
+      labels: [{ code: 'consult', name: '상담' }, { code: 'accounting', name: '회계' }],
+    });
+    expect(unitRepo.findOne).toHaveBeenCalledWith({ where: { id: 9, tenantId: 2 } });
+    expect(labelRepo.find.mock.calls[0][0].where.tenantId).toBe(2);
+  });
+
+  it('no team, no labels → null and an empty list, without asking for labels', async () => {
+    const { svc, unitRepo, labelRepo } = make(null, [], []);
+    expect(await svc.org({ ...me, unitId: null } as User)).toEqual({ unit: null, labels: [] });
+    expect(unitRepo.findOne).not.toHaveBeenCalled();
+    expect(labelRepo.find).not.toHaveBeenCalled();
   });
 });
 

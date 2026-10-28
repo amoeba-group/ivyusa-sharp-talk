@@ -20,5 +20,8 @@
   "displayNameHint": "고객 채팅에 이 이름과 아이콘이 표시됩니다. 비우면 위젯 설정의 상담원 호칭이 쓰입니다.",
   "nameSaved": "표시 이름을 저장했습니다.",
   "save": "저장",
-  "saveError": "저장하지 못했습니다."
+  "saveError": "저장하지 못했습니다.",
+  "team": "팀",
+  "teamNone": "미지정",
+  "labelsNone": "없음"
 }

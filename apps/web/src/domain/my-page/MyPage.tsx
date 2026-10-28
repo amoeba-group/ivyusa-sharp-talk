@@ -9,6 +9,7 @@ import { ChangePasswordModal } from '@/domain/auth/ChangePasswordModal';
 import { MfaSettings } from '@/domain/auth/MfaSettings';
 import { useAuthStore } from '@/store/auth-store';
 import { ProfileEditor } from './ProfileEditor';
+import { useMyProfile } from './profile.hooks';
 
 /** Signed-in user's profile: icon and display name (PLN-261028), identity, role and password change. */
 export function MyPage() {
@@ -18,6 +19,7 @@ export function MyPage() {
   const tenantName = useAuthStore((s) => s.tenantName);
   const tenantSlug = useAuthStore((s) => s.tenantSlug);
   const [pwOpen, setPwOpen] = useState(false);
+  const { data: profile } = useMyProfile();
 
   const isAdmin = principal?.actorType === 'admin';
 
@@ -49,11 +51,29 @@ export function MyPage() {
               </dd>
             </div>
           )}
-          {!isAdmin && (principal?.labels?.length ?? 0) > 0 && (
+          {/* Team and job labels by their tenant names, read fresh — the token's
+              label codes go stale on reassignment (PLN-261028-MyPage-Team-Labels). */}
+          {!isAdmin && (
+            <div className="flex items-center justify-between py-3">
+              <dt className="text-gray-500">{t('team')}</dt>
+              <dd className={profile?.unit ? 'font-medium text-gray-900' : 'text-gray-400'}>
+                {profile?.unit?.name ?? t('teamNone')}
+              </dd>
+            </div>
+          )}
+          {!isAdmin && (
             <div className="flex items-center justify-between py-3">
               <dt className="text-gray-500">{t('labels')}</dt>
               <dd className="flex flex-wrap justify-end gap-1">
-                {principal?.labels?.map((l) => <Badge key={l}>{l}</Badge>)}
+                {profile?.labels.length ? (
+                  profile.labels.map((l) => (
+                    <Badge key={l.code}>
+                      <span title={l.code}>{l.name}</span>
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-gray-400">{t('labelsNone')}</span>
+                )}
               </dd>
             </div>
           )}

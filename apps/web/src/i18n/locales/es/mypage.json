@@ -20,5 +20,8 @@
   "displayNameHint": "Los clientes ven este nombre e icono junto a sus respuestas. Vacío = la etiqueta de agente de los ajustes del widget.",
   "nameSaved": "Nombre visible guardado.",
   "save": "Guardar",
-  "saveError": "No se pudo guardar."
+  "saveError": "No se pudo guardar.",
+  "team": "Equipo",
+  "teamNone": "Sin asignar",
+  "labelsNone": "Ninguna"
 }

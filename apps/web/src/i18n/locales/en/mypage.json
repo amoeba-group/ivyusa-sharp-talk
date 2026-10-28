@@ -20,5 +20,8 @@
   "displayNameHint": "Customers see this name and icon beside your replies. Empty = the agent label from widget settings.",
   "nameSaved": "Display name saved.",
   "save": "Save",
-  "saveError": "Could not save."
+  "saveError": "Could not save.",
+  "team": "Team",
+  "teamNone": "Not assigned",
+  "labelsNone": "None"
 }

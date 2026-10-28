@@ -11,6 +11,9 @@ export interface MyProfile {
   /** Shown to customers beside this person's replies; null = the tenant's generic label. */
   displayName: string | null;
   avatar: AvatarRef | null;
+  /** Assigned by a master in user management (PLN-261028-MyPage-Team-Labels). */
+  unit: { id: string; name: string } | null;
+  labels: Array<{ code: string; name: string }>;
 }
 
 /** Same public route the widget uses for design icons. */

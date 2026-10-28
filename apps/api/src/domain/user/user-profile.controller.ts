@@ -11,6 +11,7 @@ import { asTenantUser } from './user-principal.util';
 import { UserProfileService } from './user-profile.service';
 import { UpdateMyProfileRequest } from './dto/request/user-profile.request';
 import { UserProfileMapper } from './user-profile.mapper';
+import { User } from './entity/user.entity';
 
 /**
  * The signed-in staff member's own profile (PLN-261028-Agent-Profile-Avatar D5).
@@ -21,20 +22,23 @@ import { UserProfileMapper } from './user-profile.mapper';
 export class UserProfileController {
   constructor(private readonly profile: UserProfileService) {}
 
+  /** Every route answers with the whole profile, so the console cache stays complete. */
+  private async view(user: User) {
+    return UserProfileMapper.toMyProfile(user, await this.profile.org(user));
+  }
+
   @Get('profile')
   @ApiOperation({ summary: 'My display name and profile icon' })
   async get(@CurrentUser() user: Principal) {
     const me = asTenantUser(user);
-    return UserProfileMapper.toMyProfile(await this.profile.get(me.tenantId, Number(me.userId)));
+    return this.view(await this.profile.get(me.tenantId, Number(me.userId)));
   }
 
   @Patch('profile')
   @ApiOperation({ summary: 'Set my display name (shown to customers beside my replies)' })
   async update(@CurrentUser() user: Principal, @Body() body: UpdateMyProfileRequest) {
     const me = asTenantUser(user);
-    return UserProfileMapper.toMyProfile(
-      await this.profile.updateDisplayName(me.tenantId, Number(me.userId), body.display_name),
-    );
+    return this.view(await this.profile.updateDisplayName(me.tenantId, Number(me.userId), body.display_name));
   }
 
   @Post('avatar')
@@ -47,13 +51,13 @@ export class UserProfileController {
       ...file,
       originalname: decodeUploadName(file.originalname),
     });
-    return UserProfileMapper.toMyProfile(saved);
+    return this.view(saved);
   }
 
   @Delete('avatar')
   @ApiOperation({ summary: 'Remove my profile icon' })
   async remove(@CurrentUser() user: Principal) {
     const me = asTenantUser(user);
-    return UserProfileMapper.toMyProfile(await this.profile.clearAvatar(me.tenantId, Number(me.userId)));
+    return this.view(await this.profile.clearAvatar(me.tenantId, Number(me.userId)));
   }
 }
