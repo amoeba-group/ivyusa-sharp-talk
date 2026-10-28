@@ -31,4 +31,4 @@
 | 환경 | SQL | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | 없음 | ✅ `f715da33` | API healthy, 부팅 1회, ERROR 0, `/users/me/profile` 401, 콘솔 번들에 `teamNone` |
-| 프로덕션 | 없음 | ⏳ | 요청 시 배포. #778(SQL `261028-user-avatar.sql` 선적용 필요)과 함께 나간다 |
+| 프로덕션 | 없음 | ✅ 10/28 ff `0d750a0e..7ed33d65`(#778과 함께, 백업 20261028-1053) | api healthy, 부팅 1회, ERROR 0, `/users/me/profile` 401, 콘솔 번들에 `teamNone` |

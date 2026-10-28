@@ -53,7 +53,7 @@
 | 환경 | SQL | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | ✅ 10/28 선적용(`avatar_asset_uuid` CHAR(36) NULL) | ✅ `e5eec0a1` | API healthy, 부팅 1회, ERROR 0, 마이그레이션 검사 OK, `GET /users/me/profile`·`POST /users/me/avatar` 401, health 200, 콘솔 번들에 `avatarUpload` |
-| 프로덕션 | ⏳ | ⏳ | 요청 시 배포(SQL 선적용 → ff → deploy-self-hosted) |
+| 프로덕션 | ✅ 10/28 10:53 선적용(백업 `~/backups/sharptalk-production/20261028-1053-pre-261028-profile-avatar/`) | ✅ ff `0d750a0e..7ed33d65`(#778~#781) | api healthy, 부팅 1회, ERROR 0, 마이그레이션 검사 OK, health 200, `/users/me/profile`·`POST /users/me/avatar` 401, 콘솔·위젯 번들 반영 |
 
 ## 후속·주의
 - 스테이징 상담원 대부분은 `users.name`이 비어 있다. 상담원이 마이페이지에서 표시 이름을 정해야 위젯에 실명이 보이고, 그 전에는 공통 호칭이 그대로 나온다.
