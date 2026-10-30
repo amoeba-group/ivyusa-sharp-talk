@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
 import { useConversationDetail } from './history.hooks';
 import type { ConversationMessage } from './history.service';
+import { formatDateTime } from '@/lib/format';
 
 /**
  * Colour + label per sender, so a long thread is scannable at a glance. The
@@ -20,8 +21,7 @@ const SENDER_TONE: Record<string, { bg: string; label: string }> = {
 };
 
 function fmtTime(value: string): string {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+  return formatDateTime(value, value);
 }
 
 /**

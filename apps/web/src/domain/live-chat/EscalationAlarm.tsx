@@ -117,7 +117,7 @@ export function EscalationAlarm() {
         </span>
       }
       footer={
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={dismiss}>
             {t('alarmDismiss')}
           </Button>

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppRouter } from '@/router/AppRouter';
 import { ToastViewport } from '@/components/Toast';
+import { useThemeSync } from '@/lib/theme';
 import './i18n/i18n';
 import './index.css';
 
@@ -16,9 +17,16 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Keeps <html data-theme> in step with the user's choice and the OS. */
+function ThemeSync() {
+  useThemeSync();
+  return null;
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
+      <ThemeSync />
       <AppRouter />
       <ToastViewport />
     </QueryClientProvider>

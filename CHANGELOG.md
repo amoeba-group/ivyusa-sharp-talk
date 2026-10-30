@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/); follows Amoeba 
 
 ## [Unreleased]
 
+### Changed — 2026-10-30 Console UX refresh (talk.ivyusa.com, PLN-261030)
+- **Light / dark / system theme** across the whole console (`apps/web/theme.palette.js`: CSS-variable colour system mapped per Tailwind utility; light values unchanged). Toggle in the header and account menu; no flash on load.
+- **Navigation**: grouped sidebar with collapsible rail (remembered) and mobile drawer, breadcrumb, ⌘K / Ctrl+K / "/" menu search (menus, settings tabs, actions), account menu.
+- **Dashboard**: KPI tiles with meter, activity section (7/14/30 days) with daily widget-activity line chart (crosshair tooltip, table view) and impression → conversation funnel — dataviz palette validated in both modes.
+- **Screens**: one-line filter bars (history, products, customers, companies, work log, journey, alarm center, AI engines, statistics), transcript drawer, "on this page" bar for long screens, full-width KB documents, grouped all-menus page, split auth pages, shared date formats.
+- **Fixes**: platform admin no longer calls tenant-only `/routing-categories` (403) on every screen; sticky side panels no longer slide under the header.
+
 ### Changed — 2026-09-09 프로젝트명 통일
 - 제품명 **SharpTalk / IVY TalkTalk → btbz-SharpTalk (SharpTalk, 한국어 샵톡)**. 표시 문자열·살아있는 문서·스킬명(`sharptalk-dev`)만 변경; 기술 접두어(`ivy_`/`ivy:`), 임베드 계약(`IVY_WIDGET_CONFIG`, `window.ShopTalk`), 도메인, 역사 문서는 그대로 (REQ/PLN-260909).
 

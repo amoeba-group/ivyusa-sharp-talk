@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
-import { Card } from '@/components/Card';
+import { formatDateTime } from '@/lib/format';
+import { FilterBar, FilterDate, FilterSelect, ResetFiltersButton } from '@/components/Toolbar';
+import { Drawer } from '@/components/Drawer';
 import { Badge } from '@/components/Badge';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
-import { Modal } from '@/components/Modal';
 import { ConversationTranscript } from '@/domain/history/ConversationTranscript';
-import { FormRow, Input, Select } from '@/components/Field';
 import { useUsers } from '@/domain/users/users.hooks';
 import { useWorkLog } from './work-log.hooks';
 import { AGENT_ACTIONS, HOST_ACTIONS } from './work-log.service';
@@ -17,9 +17,7 @@ import type { WorkLogEntry } from './work-log.service';
 const PAGE_SIZE = 20;
 
 function fmtTime(value?: string): string {
-  if (!value) return '—';
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+  return formatDateTime(value);
 }
 
 /** `conversation:77` → `conversation 77`, so the column reads as prose. */
@@ -63,7 +61,7 @@ export function WorkLogPage() {
   };
 
   const columns: Column<WorkLogEntry>[] = [
-    { key: 'createdAt', header: t('time'), render: (r) => fmtTime(r.createdAt) },
+    { key: 'createdAt', header: t('time'), className: 'whitespace-nowrap text-gray-500', render: (r) => fmtTime(r.createdAt) },
     {
       key: 'actor',
       header: t('agent'),
@@ -122,36 +120,46 @@ export function WorkLogPage() {
     <div>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
-      <Card className="mb-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <FormRow label={t('from')}>
-            <Input type="date" value={from} onChange={(e) => reset(setFrom)(e.target.value)} />
-          </FormRow>
-          <FormRow label={t('to')}>
-            <Input type="date" value={to} onChange={(e) => reset(setTo)(e.target.value)} />
-          </FormRow>
-          <FormRow label={t('agent')}>
-            <Select value={actorId} onChange={(e) => reset(setActorId)(e.target.value)}>
-              <option value="">{tc('all')}</option>
-              {(users.data ?? []).map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name || u.email}
-                </option>
-              ))}
-            </Select>
-          </FormRow>
-          <FormRow label={t('action')}>
-            <Select value={action} onChange={(e) => reset(setAction)(e.target.value)}>
-              <option value="">{t('allActions')}</option>
-              {[...AGENT_ACTIONS, ...HOST_ACTIONS].map((a) => (
-                <option key={a} value={a}>
-                  {t(`actions.${a}`, { defaultValue: a })}
-                </option>
-              ))}
-            </Select>
-          </FormRow>
-        </div>
-      </Card>
+      <FilterBar>
+        <FilterDate label={t('from')} value={from} onChange={reset(setFrom)} />
+        <FilterDate label={t('to')} value={to} onChange={reset(setTo)} />
+        <FilterSelect
+          label={t('agent')}
+          active={!!actorId}
+          value={actorId}
+          onChange={(e) => reset(setActorId)(e.target.value)}
+        >
+          <option value="">{`${t('agent')}: ${tc('all')}`}</option>
+          {(users.data ?? []).map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name || u.email}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSelect
+          label={t('action')}
+          active={!!action}
+          value={action}
+          onChange={(e) => reset(setAction)(e.target.value)}
+        >
+          <option value="">{t('allActions')}</option>
+          {[...AGENT_ACTIONS, ...HOST_ACTIONS].map((a) => (
+            <option key={a} value={a}>
+              {t(`actions.${a}`, { defaultValue: a })}
+            </option>
+          ))}
+        </FilterSelect>
+        <ResetFiltersButton
+          visible={!!(from || to || actorId || action)}
+          onClick={() => {
+            setFrom('');
+            setTo('');
+            setActorId('');
+            setAction('');
+            setPage(1);
+          }}
+        />
+      </FilterBar>
 
       <Table
         columns={columns}
@@ -165,16 +173,15 @@ export function WorkLogPage() {
       <Pagination page={page} pageSize={PAGE_SIZE} total={data?.total ?? 0} onPageChange={setPage} />
 
       <p className="mt-3 text-xs text-gray-400">{t('notice')}</p>
-      <Modal
+      <Drawer
         open={!!open}
         onClose={() => setOpen(null)}
-        size="lg"
         title={open ? t('transcriptTitle', { id: open.conversationId }) : ''}
       >
         {open && (
           <ConversationTranscript conversationId={open.conversationId} highlightMessageId={open.messageId} />
         )}
-      </Modal>
+      </Drawer>
     </div>
   );
 }

@@ -44,5 +44,12 @@
     "custom": "Tùy chọn",
     "from": "Từ",
     "to": "Đến"
-  }
+  },
+  "resetFilters": "Đặt lại bộ lọc",
+  "filters": "Bộ lọc",
+  "previous": "Trang trước",
+  "next": "Trang sau",
+  "clearSearch": "Xóa tìm kiếm",
+  "openDetails": "Mở chi tiết",
+  "onThisPage": "Trên trang này"
 }

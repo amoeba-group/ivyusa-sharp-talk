@@ -123,7 +123,7 @@ export function RegionScopeEditor({
         </div>
       </div>
       <p className="text-[11px] text-gray-400">{t('scopeHint')}</p>
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button size="sm" variant="ghost" disabled={saving} onClick={onCancel}>
           {tc('cancel')}
         </Button>

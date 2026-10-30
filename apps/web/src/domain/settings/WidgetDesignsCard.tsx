@@ -486,7 +486,7 @@ export function WidgetDesignsCard() {
               {/* The shell followed 모서리 already; the bubbles did not, which is the
                   same gap the widget itself had (FIX-260917). Both now read the one
                   scale the widget reads — see radiusVars(). */}
-              <div className="overflow-hidden border border-gray-200 shadow-sm"
+              <div data-theme="light" className="overflow-hidden border border-gray-200 bg-white text-gray-900 shadow-sm"
                 style={{ fontFamily: previewFont, fontSize: `${ed.draft.baseSize / DESIGN_LIMITS.baseSize.default}em`, borderRadius: RADIUS_PX[ed.draft.radius as keyof typeof RADIUS_PX] ?? 12, ...radiusVars(ed.draft.radius as WidgetRadius) } as CSSProperties}>
                 <div className="px-3 py-2.5 text-sm font-bold" style={{ backgroundColor: brand, color: '#fff' }}>ivyusa</div>
                 <div className="space-y-2 bg-white px-3 py-3">

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { Building2, UserRound } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { Tabs } from '@/components/Tabs';
+import { FilterBar, SearchField } from '@/components/Toolbar';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { Table } from '@/components/Table';
@@ -11,7 +14,6 @@ import { Modal } from '@/components/Modal';
 import { FormRow, Select } from '@/components/Field';
 import { useCustomers, useUpdateTier } from './customers.hooks';
 import type { Customer } from './customers.service';
-import { cn } from '@/lib/cn';
 import { CompaniesPanel } from './CompaniesPanel';
 import { CustomerDetailModal } from './CustomerDetailModal';
 
@@ -119,7 +121,7 @@ export function CustomersPage() {
       header: '',
       className: 'text-right',
       render: (c) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button
             size="sm"
             variant="secondary"
@@ -139,41 +141,32 @@ export function CustomersPage() {
     <div>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
-      <div className="mb-4 flex gap-2" role="tablist">
-        {(['b2b', 'b2c'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => {
-              setTab(key);
-              setPage(1);
-            }}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-sm font-medium',
-              tab === key ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
-            )}
-          >
-            {t(`tab_${key}`)}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        ariaLabel={t('title')}
+        value={tab}
+        onChange={(key) => {
+          setTab(key);
+          setPage(1);
+        }}
+        tabs={(['b2b', 'b2c'] as const).map((key) => ({
+          value: key,
+          label: t(`tab_${key}`),
+          icon: key === 'b2b' ? Building2 : UserRound,
+        }))}
+      />
 
       {tab === 'b2b' ? (
         <CompaniesPanel initialOpenId={linkedCompany} />
       ) : (
       <>
-      <div className="mb-4">
-        <input
-          type="search"
+      <FilterBar>
+        <SearchField
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           placeholder={t('searchPlaceholder')}
-          aria-label={t('searchPlaceholder')}
-          className="w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
+          className="max-w-md"
         />
-      </div>
+      </FilterBar>
 
       <Table
         columns={columns}

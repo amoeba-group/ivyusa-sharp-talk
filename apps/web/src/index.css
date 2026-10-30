@@ -15,9 +15,70 @@ body,
 
 body {
   margin: 0;
-  background-color: #f9fafb;
-  color: #111827;
+  background-color: rgb(var(--st-page));
+  color: rgb(var(--st-ink));
   -webkit-font-smoothing: antialiased;
+}
+
+/* Chart series colours: dataviz reference categorical slots 1–2, each mode
+   validated against its own card surface (validate_palette.js: all checks
+   pass — light on #ffffff, dark on #151922). Fixed order, never cycled. */
+:root {
+  --viz-1: 42 120 214;
+  --viz-2: 235 104 52;
+}
+:root[data-theme='dark'] {
+  --viz-1: 57 135 229;
+  --viz-2: 217 89 38;
+}
+
+/* Native controls (scrollbars, date pickers, <select> popups) follow the theme. */
+:root {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+[data-theme='dark'] [data-theme='light'] {
+  color-scheme: light;
+}
+
+@layer base {
+  /* Form fields that never set a background used to rely on the browser's
+     white; in dark mode that left white boxes with light text. Utilities still
+     win over this (it is in the base layer). */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']),
+  textarea,
+  select {
+    background-color: rgb(var(--c-bg-white));
+  }
+  ::placeholder {
+    color: rgb(var(--c-text-gray-400));
+  }
+  /* Keyboard focus is always visible, mouse focus stays quiet. */
+  :focus-visible {
+    outline: 2px solid rgb(99 102 241 / 0.6);
+    outline-offset: 2px;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
+  /* Thin, theme-aware scrollbars for the panels that scroll on their own. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--c-bg-gray-300)) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 * {

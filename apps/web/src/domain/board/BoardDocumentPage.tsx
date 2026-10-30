@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MDEditor from '@uiw/react-md-editor';
+import { useThemeStore } from '@/lib/theme';
 import '@uiw/react-md-editor/markdown-editor.css';
 import { PageHeader } from '@/components/PageHeader';
 import { Card } from '@/components/Card';
@@ -36,6 +37,7 @@ const GROUPS = ['counsel', 'product', 'operation'] as const;
  * in a side panel; images offer "insert into body" with their signed URL.
  */
 export function BoardDocumentPage() {
+  const colorMode = useThemeStore((s) => s.resolved);
   const { t } = useTranslation('board');
   const { t: tk } = useTranslation('knowledge');
   const { t: tc } = useTranslation('common');
@@ -265,7 +267,7 @@ export function BoardDocumentPage() {
         </FormRow>
 
         {/* MD source is authoritative (D-5); the wikilink hint keeps [[..]] discoverable. */}
-        <div data-color-mode="light" className="mt-2">
+        <div data-color-mode={colorMode} className="mt-2">
           {/* Editor-only by default (REQ-260910 R2): the split view halved the
               writing width; the toolbar still switches to split/preview. */}
           <MDEditor value={content} onChange={(v) => setContent(v ?? '')} height={420} preview="edit" />

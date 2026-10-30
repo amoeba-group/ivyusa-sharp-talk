@@ -36,5 +36,29 @@
     "connected": "接続済み",
     "error": "エラー",
     "unknown": "未テスト"
-  }
+  },
+  "activity": "アクティビティ",
+  "activitySubtitle": "選択した期間のウィジェット流入と会話",
+  "range": {
+    "d7": "7日",
+    "d14": "14日",
+    "d30": "30日"
+  },
+  "trendTitle": "日別ウィジェットアクティビティ",
+  "trendAria": "{{from}}から{{to}}までの日別ウィジェット表示と会話数",
+  "seriesOpens": "ウィジェット表示",
+  "seriesConversations": "会話",
+  "dayColumn": "日付",
+  "funnelTitle": "表示から会話まで",
+  "conversionOf": "前のステップの{{pct}}",
+  "viewTable": "表",
+  "viewChart": "グラフ",
+  "noActivity": "この期間のウィジェットアクティビティはまだありません。",
+  "activityUnavailable": "アクティビティグラフの表示には統計メニューの権限が必要です。",
+  "openStatistics": "統計を開く",
+  "aiShare": "AI が回答",
+  "escalatedShare": "担当者へエスカレーション",
+  "ofConversations": "会話に占める割合",
+  "quickLiveChat": "ライブチャットを開く",
+  "quickKnowledge": "ナレッジを管理"
 }

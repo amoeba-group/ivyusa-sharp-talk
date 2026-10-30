@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Archive, BookOpen, ExternalLink, Package, ShoppingBag } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { FilterBar, FilterSelect, ResetFiltersButton, SearchField } from '@/components/Toolbar';
 import { KpiCard } from '@/components/KpiCard';
 import { Badge } from '@/components/Badge';
-import { Input, Select } from '@/components/Field';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
@@ -219,7 +219,7 @@ export function ProductsPage() {
     <div>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label={t('kpi.total')} value={summary?.total ?? '—'} icon={Package} />
         <KpiCard label={t('kpi.active')} value={summary?.active ?? '—'} icon={ShoppingBag} />
         <KpiCard label={t('kpi.archived')} value={summary?.archived ?? '—'} icon={Archive} />
@@ -231,70 +231,72 @@ export function ProductsPage() {
         />
       </div>
 
-      {/* Widths live on the wrappers. Input/Select carry `w-full` from their
-          shared base class and `cn` joins classes without merging them, so a
-          `w-auto` on the control loses to it and every filter went full-width,
-          each on its own row. */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="w-72">
-          <Input
-            value={search}
-            placeholder={t('filters.searchPlaceholder')}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <FilterBar>
+        <SearchField
+          value={search}
+          placeholder={t('filters.searchPlaceholder')}
+          onChange={setSearch}
+          className="max-w-sm"
+        />
         {hasCompanies && (
-          <div className="w-60">
-            <Select
-              value={companyId}
-              onChange={(e) => {
-                setCompanyId(e.target.value);
-                setPage(1);
-              }}
-              aria-label={t('columns.company')}
-            >
-              <option value="">{t('filters.allCompanies')}</option>
-              <option value="none">{t('filters.storeProducts')}</option>
-              {(companies ?? []).map((c) => (
-                <option key={c.companyId} value={c.companyId}>
-                  {`${c.name ?? `#${c.companyId}`} (${c.count})`}
-                </option>
-              ))}
-            </Select>
-          </div>
-        )}
-        <div className="w-52">
-          <Select
-            value={category}
+          <FilterSelect
+            label={t('columns.company')}
+            active={!!companyId}
+            value={companyId}
             onChange={(e) => {
-              setCategory(e.target.value);
+              setCompanyId(e.target.value);
               setPage(1);
             }}
-            aria-label={t('columns.category')}
           >
-            <option value="">{t('filters.allCategories')}</option>
-            {(categories ?? []).map((c) => (
-              <option key={c} value={c}>
-                {c}
+            <option value="">{t('filters.allCompanies')}</option>
+            <option value="none">{t('filters.storeProducts')}</option>
+            {(companies ?? []).map((c) => (
+              <option key={c.companyId} value={c.companyId}>
+                {`${c.name ?? `#${c.companyId}`} (${c.count})`}
               </option>
             ))}
-          </Select>
-        </div>
-        <div className="w-44">
-          <Select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
-            }}
-            aria-label={t('columns.status')}
-          >
-            <option value="">{t('filters.allStatuses')}</option>
-            <option value="active">{t('status.active')}</option>
-            <option value="archived">{t('status.archived')}</option>
-          </Select>
-        </div>
-      </div>
+          </FilterSelect>
+        )}
+        <FilterSelect
+          label={t('columns.category')}
+          active={!!category}
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">{t('filters.allCategories')}</option>
+          {(categories ?? []).map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSelect
+          label={t('columns.status')}
+          active={!!status}
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">{t('filters.allStatuses')}</option>
+          <option value="active">{t('status.active')}</option>
+          <option value="archived">{t('status.archived')}</option>
+        </FilterSelect>
+        <ResetFiltersButton
+          visible={!!(search || companyId || category || status)}
+          onClick={() => {
+            setSearch('');
+            setCompanyId('');
+            setCategory('');
+            setStatus('');
+            setPage(1);
+          }}
+        />
+      </FilterBar>
 
       <Table
         columns={visibleColumns}

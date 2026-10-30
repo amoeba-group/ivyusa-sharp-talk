@@ -2,8 +2,9 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { MenuCode } from '@sharptalk/types';
 import { PageHeader } from '@/components/PageHeader';
+import { OnThisPage } from '@/components/OnThisPage';
 import { useMenuAccess } from '@/lib/use-menu-access';
-import { cn } from '@/lib/cn';
+import { tabClass } from '@/components/Tabs';
 
 interface Tab {
   to: string;
@@ -58,14 +59,7 @@ export function SettingsLayout() {
             <NavLink
               key={tab.to}
               to={tab.to}
-              className={({ isActive }) =>
-                cn(
-                  'whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                )
-              }
+              className={({ isActive }) => tabClass(isActive)}
             >
               {t(tab.labelKey)}
             </NavLink>
@@ -73,6 +67,7 @@ export function SettingsLayout() {
         </nav>
       </div>
 
+      <OnThisPage className="-mb-1" />
       <Outlet />
     </div>
   );

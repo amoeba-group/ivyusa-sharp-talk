@@ -41,5 +41,47 @@
   "settingsMarketing": "营销与客服",
   "settingsMessengers": "消息渠道",
   "settingsEtc": "其他设置",
-  "journey": "客户旅程"
+  "journey": "客户旅程",
+  "groups": {
+    "overview": "概览",
+    "conversations": "会话",
+    "insights": "分析",
+    "ai": "AI 与知识",
+    "commerce": "客户与商务",
+    "workspace": "工作区",
+    "platform": "平台",
+    "security": "访问与审计"
+  },
+  "search": {
+    "placeholder": "搜索菜单和设置…",
+    "button": "搜索",
+    "noResults": "没有匹配的菜单",
+    "pages": "菜单",
+    "settings": "设置",
+    "actions": "操作",
+    "hintNavigate": "移动",
+    "hintSelect": "打开",
+    "hintClose": "关闭",
+    "trigger": "搜索菜单…"
+  },
+  "theme": {
+    "label": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统",
+    "toggle": "切换浅色/深色",
+    "actionLight": "使用浅色主题",
+    "actionDark": "使用深色主题",
+    "actionSystem": "跟随系统主题"
+  },
+  "userMenu": {
+    "open": "账户菜单",
+    "signedInAs": "当前登录"
+  },
+  "sidebar": {
+    "collapse": "收起侧边栏",
+    "expand": "展开侧边栏",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单"
+  }
 }

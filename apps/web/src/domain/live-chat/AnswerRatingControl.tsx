@@ -106,7 +106,7 @@ export function AnswerRatingControl({
         placeholder={t('rating.notePh')}
         className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs"
       />
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <button type="button" className="text-[11px] text-gray-500 hover:underline" onClick={() => setOpen(false)}>
           {t('rating.cancel')}
         </button>

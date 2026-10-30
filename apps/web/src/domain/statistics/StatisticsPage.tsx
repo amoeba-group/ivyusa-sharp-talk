@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { FilterBar } from '@/components/Toolbar';
 import { Card } from '@/components/Card';
 import { Badge } from '@/components/Badge';
 import { Table } from '@/components/Table';
@@ -151,11 +152,9 @@ export function StatisticsPage() {
         </p>
       )}
 
-      <Card className="mb-4">
-        <div className="px-5 py-4">
-          <DateRangePicker {...dateRange} />
-        </div>
-      </Card>
+      <FilterBar>
+        <DateRangePicker {...dateRange} />
+      </FilterBar>
 
       {section === 'csat' && <CsatSection from={from} to={to} />}
       {section === 'accuracy' && <AccuracySection from={from} to={to} />}

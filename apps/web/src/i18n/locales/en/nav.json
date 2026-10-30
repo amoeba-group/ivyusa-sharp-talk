@@ -41,5 +41,47 @@
   "settingsMarketing": "Marketing & Helpdesk",
   "settingsMessengers": "Messengers",
   "settingsEtc": "Other settings",
-  "journey": "Customer Journey"
+  "journey": "Customer Journey",
+  "groups": {
+    "overview": "Overview",
+    "conversations": "Conversations",
+    "insights": "Insights",
+    "ai": "AI & Knowledge",
+    "commerce": "Customers & Commerce",
+    "workspace": "Workspace",
+    "platform": "Platform",
+    "security": "Access & Audit"
+  },
+  "search": {
+    "placeholder": "Search menus and settings…",
+    "button": "Search",
+    "noResults": "No matching menu",
+    "pages": "Menus",
+    "settings": "Settings",
+    "actions": "Actions",
+    "hintNavigate": "navigate",
+    "hintSelect": "open",
+    "hintClose": "close",
+    "trigger": "Search menus…"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Switch light/dark",
+    "actionLight": "Use light theme",
+    "actionDark": "Use dark theme",
+    "actionSystem": "Follow system theme"
+  },
+  "userMenu": {
+    "open": "Account menu",
+    "signedInAs": "Signed in as"
+  },
+  "sidebar": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  }
 }

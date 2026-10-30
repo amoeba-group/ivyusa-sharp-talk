@@ -737,7 +737,7 @@ export function LiveChatPage() {
 
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-4">
         {/* Session list */}
-        <div className="col-span-3 min-h-0 overflow-y-auto rounded-lg border border-gray-200 bg-white">
+        <div className="col-span-3 min-h-0 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-card">
           {/* Title, filters and search stay pinned while the list below
               scrolls (PLN-260829 R1). Opaque bg is required — the rows slide
               underneath. */}
@@ -1088,7 +1088,7 @@ export function LiveChatPage() {
         </div>
 
         {/* Message thread */}
-        <div className="col-span-6 flex min-h-0 flex-col rounded-lg border border-gray-200 bg-white">
+        <div className="col-span-6 flex min-h-0 flex-col rounded-xl border border-gray-200 bg-white shadow-card">
           {/* Group room replaces the thread pane while a group is open. */}
           {selectedGroup && (
             <GroupRoom groupId={selectedGroup} onDissolved={() => setSelectedGroup(null)} />

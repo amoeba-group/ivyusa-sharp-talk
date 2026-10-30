@@ -19,6 +19,7 @@ export function BoardCard({ group }: { group: string }) {
   return (
     <Card
       id={KNOWLEDGE_SECTION.BOARD}
+      navLabel={t('boardCard.title')}
       title={<span className="flex items-center gap-2"><StepNo n={3} />{t('boardCard.title')}</span>}
       action={
         <div className="flex items-center gap-2">

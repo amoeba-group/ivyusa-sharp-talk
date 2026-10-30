@@ -108,7 +108,7 @@ export function AccessSection({ from, to }: RangeProps) {
   return (
     <div className="space-y-4">
       <Card title={t('access.funnelTitle')}>
-        <div className="px-5 py-4">
+        <div>
         <p className="mb-3 text-xs text-gray-500">{t('access.funnelSubtitle')}</p>
         <div className="flex flex-wrap items-center gap-3">
           <Stat label={t('access.impressions')} hint={t('access.impressionsHint')} value={num(totals?.impressions ?? 0)} />

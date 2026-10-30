@@ -184,7 +184,7 @@ export function ProposalCard({ proposal, onVerifyInPreview }: ProposalCardProps)
         onClose={() => setEditing(false)}
         title={t('coach.editTitle')}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button variant="secondary" onClick={() => setEditing(false)}>
               {tc('cancel')}
             </Button>

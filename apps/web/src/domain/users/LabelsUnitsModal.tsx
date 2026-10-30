@@ -233,7 +233,7 @@ export function LabelsUnitsModal({ open, onClose }: { open: boolean; onClose: ()
                       </div>
                     </td>
                     <td className="px-3 py-2">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         {tab === 'labels' && PERMISSION_LABEL_CODES.has(r.code) && (
                           <Badge tone="info">{t('permissionLinked')}</Badge>
                         )}

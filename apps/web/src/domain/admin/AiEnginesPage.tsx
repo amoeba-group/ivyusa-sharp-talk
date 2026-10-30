@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { FilterBar, FilterToggle } from '@/components/Toolbar';
+import { Segmented } from '@/components/Segmented';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
 import { Table } from '@/components/Table';
@@ -158,7 +160,7 @@ export function AiEnginesPage() {
       key: 'actions',
       header: '',
       render: (r) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {r.provider !== 'stub' ? (
             <Button
               variant="secondary"
@@ -215,17 +217,17 @@ export function AiEnginesPage() {
         </div>
       ) : null}
 
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-        {(['all', 'platform', 'tenant'] as OwnerFilter[]).map((o) => (
-          <Button key={o} size="sm" variant={owner === o ? 'primary' : 'secondary'} onClick={() => setOwner(o)}>
-            {t(`filter.${o}`)}
-          </Button>
-        ))}
-        <label className="ml-2 flex items-center gap-1 text-gray-600">
-          <input type="checkbox" checked={failingOnly} onChange={(e) => setFailingOnly(e.target.checked)} />
+      <FilterBar>
+        <Segmented
+          ariaLabel={t('title')}
+          value={owner}
+          onChange={setOwner}
+          options={(['all', 'platform', 'tenant'] as OwnerFilter[]).map((o) => ({ value: o, label: t(`filter.${o}`) }))}
+        />
+        <FilterToggle checked={failingOnly} onChange={setFailingOnly}>
           {t('filter.failingOnly')}
-        </label>
-      </div>
+        </FilterToggle>
+      </FilterBar>
 
       <Table
         columns={columns}

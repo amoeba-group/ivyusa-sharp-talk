@@ -44,5 +44,12 @@
     "custom": "Custom",
     "from": "From",
     "to": "To"
-  }
+  },
+  "resetFilters": "Reset filters",
+  "filters": "Filters",
+  "previous": "Previous page",
+  "next": "Next page",
+  "clearSearch": "Clear search",
+  "openDetails": "Open details",
+  "onThisPage": "On this page"
 }

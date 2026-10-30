@@ -44,5 +44,12 @@
     "custom": "自定义",
     "from": "开始日",
     "to": "结束日"
-  }
+  },
+  "resetFilters": "重置筛选",
+  "filters": "筛选",
+  "previous": "上一页",
+  "next": "下一页",
+  "clearSearch": "清除搜索",
+  "openDetails": "打开详情",
+  "onThisPage": "本页内容"
 }

@@ -36,5 +36,29 @@
     "connected": "Đã kết nối",
     "error": "Lỗi",
     "unknown": "Chưa kiểm tra"
-  }
+  },
+  "activity": "Hoạt động",
+  "activitySubtitle": "Lượt truy cập widget và hội thoại trong khoảng thời gian đã chọn",
+  "range": {
+    "d7": "7 ngày",
+    "d14": "14 ngày",
+    "d30": "30 ngày"
+  },
+  "trendTitle": "Hoạt động widget theo ngày",
+  "trendAria": "Số lần mở widget và hội thoại theo ngày, từ {{from}} đến {{to}}",
+  "seriesOpens": "Mở widget",
+  "seriesConversations": "Hội thoại",
+  "dayColumn": "Ngày",
+  "funnelTitle": "Từ hiển thị đến hội thoại",
+  "conversionOf": "{{pct}} so với bước trước",
+  "viewTable": "Bảng",
+  "viewChart": "Biểu đồ",
+  "noActivity": "Chưa có hoạt động widget trong khoảng thời gian này.",
+  "activityUnavailable": "Cần quyền truy cập Thống kê để xem biểu đồ hoạt động.",
+  "openStatistics": "Mở thống kê",
+  "aiShare": "AI trả lời",
+  "escalatedShare": "Chuyển cho tư vấn viên",
+  "ofConversations": "trên tổng hội thoại",
+  "quickLiveChat": "Mở live chat",
+  "quickKnowledge": "Quản lý kiến thức"
 }

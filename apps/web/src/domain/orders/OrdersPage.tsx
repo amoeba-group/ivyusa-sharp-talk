@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
+import { formatDate } from '@/lib/format';
 import { useOrders } from './orders.hooks';
 import type { OrderRow } from './orders.service';
 
@@ -22,12 +23,6 @@ function fmtMoney(value?: number | null, currency?: string | null): string {
   return value.toLocaleString();
 }
 
-function fmtDate(value?: string): string {
-  if (!value) return '—';
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
-
 export function OrdersPage() {
   const { t } = useTranslation('orders');
   const [page, setPage] = useState(1);
@@ -35,15 +30,19 @@ export function OrdersPage() {
   const { data, isLoading, error } = useOrders({ page, pageSize: PAGE_SIZE });
 
   const columns: Column<OrderRow>[] = [
-    { key: 'orderNumber', header: t('orderNumber'), render: (o) => `#${o.orderNumber}` },
+    {
+      key: 'orderNumber',
+      header: t('orderNumber'),
+      render: (o) => <span className="font-medium text-gray-900">#{o.orderNumber}</span>,
+    },
     {
       key: 'status',
       header: t('status'),
       render: (o) => <StatusBadge status={o.statusUi ?? o.statusInternal ?? undefined} />,
     },
-    { key: 'amount', header: t('amount'), render: (o) => fmtMoney(o.total, o.currency) },
-    { key: 'items', header: t('items'), render: (o) => o.itemCount ?? 0 },
-    { key: 'createdAt', header: t('date'), render: (o) => fmtDate(o.createdAt) },
+    { key: 'amount', header: t('amount'), className: 'text-right tabular-nums', render: (o) => fmtMoney(o.total, o.currency) },
+    { key: 'items', header: t('items'), className: 'text-right tabular-nums', render: (o) => o.itemCount ?? 0 },
+    { key: 'createdAt', header: t('date'), className: 'whitespace-nowrap text-gray-500', render: (o) => formatDate(o.createdAt) },
   ];
 
   return (

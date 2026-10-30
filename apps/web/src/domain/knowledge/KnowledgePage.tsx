@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
+import { OnThisPage } from '@/components/OnThisPage';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
@@ -720,6 +721,7 @@ export function KnowledgePage() {
   return (
     <div>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <OnThisPage />
 
       <ProcessGuide optionalGuides={usageGuidesEnabled} />
 
@@ -732,6 +734,7 @@ export function KnowledgePage() {
         <SitePolicyCard />
         <Card
           id={KNOWLEDGE_SECTION.SOURCES}
+          navLabel={t('sources')}
           title={<span className="flex items-center gap-2"><StepNo n={1} />{t('sources')}</span>}
           action={<Button onClick={() => setSourceOpen(true)}>{t('addSource')}</Button>}
         >
@@ -949,7 +952,7 @@ export function KnowledgePage() {
                 render: (g) => {
                   const i = usageGuides.data?.findIndex((x) => x.key === g.key) ?? 0;
                   return (
-                  <div className="flex justify-end gap-1">
+                  <div className="flex flex-wrap justify-end gap-1">
                     <Button variant="ghost" onClick={() => void openGuide(g)}>
                       {g.documentId ? t('usageEdit') : t('usageWrite')}
                     </Button>
@@ -1010,9 +1013,22 @@ export function KnowledgePage() {
 
         {/* Step ③ sits between the taxonomy it uses and the documents it produces (REQ-260910 R1). */}
         <BoardCard group={group} />
+        </div>
 
+        <div className="space-y-4 xl:sticky xl:top-[136px] xl:self-start">
+          <KnowledgeQaPanel onEditSource={(id) => { setDetailId(id); setEditing(true); }} />
+          {/* Conflict review sits beside QA on purpose: the QA panel is where a
+              contradiction shows up, and this is where it gets settled. */}
+          <ConflictReview onOpenDocument={(id) => setDetailId(id)} />
+        </div>
+      </div>
+
+      {/* KB-Documents spans the full width (REQ-261030): beside the QA column
+          the table squeezed every title to one word per line. */}
+      <div className="mt-6 space-y-6">
         <Card
           id={KNOWLEDGE_SECTION.DOCUMENTS}
+          navLabel={t('documents')}
           title={<span className="flex items-center gap-2"><StepNo n={4} />{t('documents')}</span>}
           action={
             <div className="flex items-center gap-2">
@@ -1268,14 +1284,6 @@ export function KnowledgePage() {
               </div>
             );
           })()}
-        </div>
-
-        <div className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-          <KnowledgeQaPanel onEditSource={(id) => { setDetailId(id); setEditing(true); }} />
-          {/* Conflict review sits beside QA on purpose: the QA panel is where a
-              contradiction shows up, and this is where it gets settled. */}
-          <ConflictReview onOpenDocument={(id) => setDetailId(id)} />
-        </div>
       </div>
 
       {/* Usage guide editor (PLN-260807 P2). */}

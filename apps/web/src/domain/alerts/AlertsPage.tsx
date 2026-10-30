@@ -4,8 +4,9 @@ import { Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/Button';
+import { FilterBar, FilterSelect, FilterSpacer } from '@/components/Toolbar';
+import { Segmented } from '@/components/Segmented';
 import { Badge } from '@/components/Badge';
-import { Select } from '@/components/Field';
 import { Pagination } from '@/components/Pagination';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
@@ -148,54 +149,53 @@ function AlarmList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-md border border-gray-200 p-0.5">
-          {(['all', 'mine', 'broadcast'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => filter(setScope)(s)}
-              className={
-                scope === s ? 'rounded bg-primary-500 px-3 py-1 text-xs font-medium text-white' : 'rounded px-3 py-1 text-xs text-gray-600 hover:bg-gray-50'
-              }
-            >
-              {t(`alarmCenter.scope_${s}`)}
-            </button>
+      <FilterBar className="mb-0">
+        <Segmented
+          ariaLabel={t('alarmCenter.title')}
+          value={scope}
+          onChange={(s) => filter(setScope)(s)}
+          options={(['all', 'mine', 'broadcast'] as const).map((s) => ({ value: s, label: t(`alarmCenter.scope_${s}`) }))}
+        />
+        <FilterSelect
+          label={t('alarmCenter.col.status')}
+          active={status !== 'all'}
+          value={status}
+          onChange={(e) => filter(setStatus)(e.target.value as typeof status)}
+        >
+          <option value="all">{t('alarmCenter.statusAll')}</option>
+          <option value="new">{t('alarmCenter.statusNew')}</option>
+          <option value="acked">{t('alarmCenter.statusAckedShort')}</option>
+          <option value="expired">{t('alarmCenter.statusExpiredShort')}</option>
+        </FilterSelect>
+        <FilterSelect
+          label={t('alarmCenter.period')}
+          value={days}
+          onChange={(e) => filter(setDays)(Number(e.target.value))}
+        >
+          {[1, 7, 30, 90].map((d) => (
+            <option key={d} value={d}>
+              {t(`alarmCenter.period_${d}`)}
+            </option>
           ))}
-        </div>
-        <div className="w-36">
-          <Select aria-label={t('alarmCenter.col.status')} value={status} onChange={(e) => filter(setStatus)(e.target.value as typeof status)}>
-            <option value="all">{t('alarmCenter.statusAll')}</option>
-            <option value="new">{t('alarmCenter.statusNew')}</option>
-            <option value="acked">{t('alarmCenter.statusAckedShort')}</option>
-            <option value="expired">{t('alarmCenter.statusExpiredShort')}</option>
-          </Select>
-        </div>
-        <div className="w-32">
-          <Select aria-label={t('alarmCenter.period')} value={days} onChange={(e) => filter(setDays)(Number(e.target.value))}>
-            {[1, 7, 30, 90].map((d) => (
-              <option key={d} value={d}>
-                {t(`alarmCenter.period_${d}`)}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="w-44">
-          <Select aria-label={t('alarmCenter.col.category')} value={category} onChange={(e) => filter(setCategory)(e.target.value)}>
-            <option value="">{t('alarmCenter.categoryAll')}</option>
-            {(categories.data ?? []).map((c) => (
-              <option key={c.code} value={c.code}>
-                {categoryName(c.code)}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="ml-auto">
-          <Button size="sm" variant="secondary" onClick={() => setSettingsOpen(true)}>
-            <Settings className="h-4 w-4" /> {t('alarmCenter.settings.title')}
-          </Button>
-        </div>
-      </div>
+        </FilterSelect>
+        <FilterSelect
+          label={t('alarmCenter.col.category')}
+          active={!!category}
+          value={category}
+          onChange={(e) => filter(setCategory)(e.target.value)}
+        >
+          <option value="">{t('alarmCenter.categoryAll')}</option>
+          {(categories.data ?? []).map((c) => (
+            <option key={c.code} value={c.code}>
+              {categoryName(c.code)}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSpacer />
+        <Button size="sm" variant="secondary" onClick={() => setSettingsOpen(true)}>
+          <Settings className="h-4 w-4" aria-hidden /> {t('alarmCenter.settings.title')}
+        </Button>
+      </FilterBar>
       <Table
         columns={columns}
         data={data?.items ?? []}

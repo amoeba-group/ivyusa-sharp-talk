@@ -31,7 +31,7 @@ export function JourneySection({ from, to, onGoToSection }: Props) {
   if (error) {
     return (
       <Card title={t('journey.title')}>
-        <p className="px-5 py-8 text-center text-error">{(error as Error).message}</p>
+        <p className="py-6 text-center text-sm text-red-600">{(error as Error).message}</p>
       </Card>
     );
   }
@@ -46,7 +46,7 @@ export function JourneySection({ from, to, onGoToSection }: Props) {
   return (
     <div className="space-y-4">
       <Card title={t('journey.title')}>
-        <div className="px-5 py-5">
+        <div>
           <p className="mb-4 text-xs text-gray-500">{t('journey.subtitle')}</p>
 
           {/* Stages that nest. */}

@@ -36,5 +36,29 @@
     "connected": "已连接",
     "error": "错误",
     "unknown": "未测试"
-  }
+  },
+  "activity": "活动",
+  "activitySubtitle": "所选时间段内的小组件流量和会话",
+  "range": {
+    "d7": "7 天",
+    "d14": "14 天",
+    "d30": "30 天"
+  },
+  "trendTitle": "每日小组件活动",
+  "trendAria": "{{from}} 至 {{to}} 每日小组件打开次数与会话数",
+  "seriesOpens": "打开小组件",
+  "seriesConversations": "会话",
+  "dayColumn": "日期",
+  "funnelTitle": "从展示到会话",
+  "conversionOf": "上一步的 {{pct}}",
+  "viewTable": "表格",
+  "viewChart": "图表",
+  "noActivity": "此时间段内暂无小组件活动。",
+  "activityUnavailable": "查看活动图表需要统计菜单的权限。",
+  "openStatistics": "打开统计",
+  "aiShare": "AI 已回答",
+  "escalatedShare": "转接人工",
+  "ofConversations": "占会话",
+  "quickLiveChat": "打开在线客服",
+  "quickKnowledge": "管理知识"
 }

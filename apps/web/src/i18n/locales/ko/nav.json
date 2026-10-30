@@ -41,5 +41,47 @@
   "settingsMarketing": "마케팅·헬프데스크",
   "settingsMessengers": "메신저 채널",
   "settingsEtc": "기타 설정",
-  "journey": "고객여정"
+  "journey": "고객여정",
+  "groups": {
+    "overview": "개요",
+    "conversations": "상담",
+    "insights": "분석",
+    "ai": "AI·지식",
+    "commerce": "고객·커머스",
+    "workspace": "워크스페이스",
+    "platform": "플랫폼",
+    "security": "접근·감사"
+  },
+  "search": {
+    "placeholder": "메뉴·설정 검색…",
+    "button": "검색",
+    "noResults": "일치하는 메뉴가 없습니다",
+    "pages": "메뉴",
+    "settings": "설정",
+    "actions": "작업",
+    "hintNavigate": "이동",
+    "hintSelect": "열기",
+    "hintClose": "닫기",
+    "trigger": "메뉴 검색…"
+  },
+  "theme": {
+    "label": "테마",
+    "light": "라이트",
+    "dark": "다크",
+    "system": "시스템",
+    "toggle": "라이트/다크 전환",
+    "actionLight": "라이트 테마 사용",
+    "actionDark": "다크 테마 사용",
+    "actionSystem": "시스템 테마 따르기"
+  },
+  "userMenu": {
+    "open": "계정 메뉴",
+    "signedInAs": "로그인 계정"
+  },
+  "sidebar": {
+    "collapse": "사이드바 접기",
+    "expand": "사이드바 펼치기",
+    "openMenu": "메뉴 열기",
+    "closeMenu": "메뉴 닫기"
+  }
 }

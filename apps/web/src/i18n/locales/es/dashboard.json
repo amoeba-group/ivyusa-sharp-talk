@@ -36,5 +36,29 @@
     "connected": "Conectado",
     "error": "Error",
     "unknown": "Sin probar"
-  }
+  },
+  "activity": "Actividad",
+  "activitySubtitle": "Tráfico del widget y conversaciones del periodo seleccionado",
+  "range": {
+    "d7": "7 días",
+    "d14": "14 días",
+    "d30": "30 días"
+  },
+  "trendTitle": "Actividad diaria del widget",
+  "trendAria": "Aperturas del widget y conversaciones por día, del {{from}} al {{to}}",
+  "seriesOpens": "Widget abierto",
+  "seriesConversations": "Conversaciones",
+  "dayColumn": "Día",
+  "funnelTitle": "De la impresión a la conversación",
+  "conversionOf": "{{pct}} del paso anterior",
+  "viewTable": "Tabla",
+  "viewChart": "Gráfico",
+  "noActivity": "Todavía no hay actividad del widget en este periodo.",
+  "activityUnavailable": "Los gráficos de actividad requieren acceso a Estadísticas.",
+  "openStatistics": "Abrir estadísticas",
+  "aiShare": "Respondidas por la IA",
+  "escalatedShare": "Derivadas a un agente",
+  "ofConversations": "de las conversaciones",
+  "quickLiveChat": "Abrir chat en vivo",
+  "quickKnowledge": "Gestionar conocimiento"
 }

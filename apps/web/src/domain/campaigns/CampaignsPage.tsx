@@ -122,7 +122,7 @@ export function CampaignsPage() {
       header: '',
       className: 'text-right',
       render: (r) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>
             {t('edit')}
           </Button>

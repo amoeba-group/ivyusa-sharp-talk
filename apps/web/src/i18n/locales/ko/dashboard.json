@@ -36,5 +36,29 @@
     "connected": "연결됨",
     "error": "오류",
     "unknown": "미테스트"
-  }
+  },
+  "activity": "활동",
+  "activitySubtitle": "선택한 기간의 위젯 유입과 상담",
+  "range": {
+    "d7": "7일",
+    "d14": "14일",
+    "d30": "30일"
+  },
+  "trendTitle": "일별 위젯 활동",
+  "trendAria": "{{from}}부터 {{to}}까지 일별 위젯 열기와 상담 수",
+  "seriesOpens": "위젯 열기",
+  "seriesConversations": "상담",
+  "dayColumn": "날짜",
+  "funnelTitle": "노출에서 상담까지",
+  "conversionOf": "이전 단계의 {{pct}}",
+  "viewTable": "표",
+  "viewChart": "차트",
+  "noActivity": "이 기간에는 아직 위젯 활동이 없습니다.",
+  "activityUnavailable": "활동 차트는 통계 메뉴 권한이 있어야 볼 수 있습니다.",
+  "openStatistics": "통계 열기",
+  "aiShare": "AI 응답",
+  "escalatedShare": "상담원 연결",
+  "ofConversations": "상담 대비",
+  "quickLiveChat": "실시간 상담 열기",
+  "quickKnowledge": "지식 관리"
 }

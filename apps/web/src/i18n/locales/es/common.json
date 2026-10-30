@@ -44,5 +44,12 @@
     "custom": "Personalizado",
     "from": "Desde",
     "to": "Hasta"
-  }
+  },
+  "resetFilters": "Restablecer filtros",
+  "filters": "Filtros",
+  "previous": "Página anterior",
+  "next": "Página siguiente",
+  "clearSearch": "Borrar búsqueda",
+  "openDetails": "Abrir detalles",
+  "onThisPage": "En esta página"
 }

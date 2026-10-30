@@ -1342,7 +1342,8 @@ export function WidgetThemeCard() {
         {/* Live preview */}
         <div className="w-[260px]">
           <div className="mb-2 text-xs font-medium text-gray-500">{t('widgetTheme.preview')}</div>
-          <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+          {/* The shopper's widget is light whatever the console theme is. */}
+          <div data-theme="light" className="overflow-hidden rounded-xl border border-gray-200 bg-white text-gray-900 shadow-sm">
             <div
               className="flex items-center justify-between px-3 py-2.5 text-sm font-bold"
               style={{

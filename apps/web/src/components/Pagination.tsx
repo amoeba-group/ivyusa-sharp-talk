@@ -16,25 +16,27 @@ export function Pagination({ page, pageSize, total, onPageChange }: PaginationPr
   const to = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex items-center justify-between px-1 py-3 text-sm text-gray-500">
-      <span>{t('pagination.range', { from, to, total })}</span>
+    <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-3 text-sm text-gray-500">
+      <span className="tabular-nums">{t('pagination.range', { from, to, total })}</span>
       <div className="flex items-center gap-2">
         <Button
           variant="secondary"
           size="sm"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
+          aria-label={t('previous')}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden />
         </Button>
-        <span className="text-gray-600">{t('pagination.pageOf', { page, totalPages })}</span>
+        <span className="min-w-[3.5rem] text-center tabular-nums text-gray-600">{t('pagination.pageOf', { page, totalPages })}</span>
         <Button
           variant="secondary"
           size="sm"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
+          aria-label={t('next')}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden />
         </Button>
       </div>
     </div>

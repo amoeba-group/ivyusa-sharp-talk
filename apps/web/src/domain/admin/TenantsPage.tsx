@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CreditCard, LayoutList, UserCog } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
+import { formatDateTime } from '@/lib/format';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -92,12 +93,12 @@ export function TenantsPage() {
       header: t('assets'),
       render: (r) => (r.assetBytes == null ? '—' : r.assetBytes < 1024 * 1024 ? `${Math.round(r.assetBytes / 1024)} KB` : `${(r.assetBytes / 1024 / 1024).toFixed(1)} MB`),
     },
-    { key: 'createdAt', header: t('created'), render: (r) => r.createdAt ?? '—' },
+    { key: 'createdAt', header: t('created'), className: 'whitespace-nowrap text-gray-500', render: (r) => formatDateTime(r.createdAt) },
     {
       key: 'action',
       header: '',
       render: (r) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="secondary" size="sm" onClick={() => setPlanFor(r)}>
             <CreditCard className="mr-1 h-3.5 w-3.5" />
             {t('managePlan')}

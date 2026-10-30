@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListPlus, Printer } from 'lucide-react';
 import MDEditor from '@uiw/react-md-editor';
+import { useThemeStore } from '@/lib/theme';
 import '@uiw/react-md-editor/markdown-editor.css';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
@@ -34,6 +35,7 @@ export function JourneyReportModal({
   groupId?: string;
   onClose: () => void;
 }) {
+  const colorMode = useThemeStore((s) => s.resolved);
   const { t } = useTranslation('journey');
   const { t: tc } = useTranslation('common');
   const { data, isLoading } = useJourneyReport(reportId);
@@ -165,7 +167,7 @@ export function JourneyReportModal({
                     </div>
                   )}
                   <article
-                    data-color-mode="light"
+                    data-color-mode={colorMode}
                     // The preview's document-sized headings dwarf the summary above
                     // them inside a modal; a report reads as one page of sections.
                     className="[&_h1]:!text-lg [&_h1]:!border-0 [&_h2]:!text-base [&_h2]:!border-0 [&_h3]:!text-sm"

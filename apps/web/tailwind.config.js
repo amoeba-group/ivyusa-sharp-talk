@@ -1,6 +1,17 @@
 /** @type {import('tailwindcss').Config} */
+import plugin from 'tailwindcss/plugin.js';
+import { buildPalette, gray, primary } from './theme.palette.js';
+
+// Light/dark colour system — see theme.palette.js for the why.
+const { themeColors, lightVars, darkVars } = buildPalette();
+
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // `data-theme="dark"` on <html> is set before first paint by the inline
+  // script in index.html (no flash), then kept in sync by src/lib/theme.ts.
+  // An attribute, not a class: Tailwind prunes base rules whose class it never
+  // sees in the sources, which silently dropped the whole dark variable block.
+  darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
       // Mirrors the widget's scale so the custom-widget editor preview can be
@@ -14,35 +25,39 @@ export default {
         'st-xl': 'var(--ivy-radius-xl, 16px)',
       },
       colors: {
-        primary: {
-          50: '#EEF2FF',
-          100: '#E0E7FF',
-          200: '#C7D2FE',
-          300: '#A5B4FC',
-          400: '#818CF8',
-          500: '#6366F1',
-          600: '#4F46E5',
-          700: '#4338CA',
-          800: '#3730A3',
-          900: '#312E81',
-        },
+        primary,
         success: '#10B981',
         warning: '#F59E0B',
         error: '#EF4444',
         info: '#3B82F6',
-        gray: {
-          50: '#F9FAFB',
-          100: '#F3F4F6',
-          200: '#E5E7EB',
-          300: '#D1D5DB',
-          400: '#9CA3AF',
-          500: '#6B7280',
-          600: '#4B5563',
-          700: '#374151',
-          800: '#1F2937',
-          900: '#111827',
+        gray,
+        // Semantic surfaces (new shell + components).
+        page: 'rgb(var(--st-page) / <alpha-value>)',
+        surface: {
+          DEFAULT: 'rgb(var(--st-surface) / <alpha-value>)',
+          2: 'rgb(var(--st-surface-2) / <alpha-value>)',
+          elevated: 'rgb(var(--st-elevated) / <alpha-value>)',
+          sidebar: 'rgb(var(--st-sidebar) / <alpha-value>)',
+        },
+        line: 'rgb(var(--st-border) / <alpha-value>)',
+        ink: {
+          DEFAULT: 'rgb(var(--st-ink) / <alpha-value>)',
+          2: 'rgb(var(--st-ink-2) / <alpha-value>)',
+          3: 'rgb(var(--st-ink-3) / <alpha-value>)',
         },
       },
+      // Per-utility colour maps: the same class name resolves to a job-specific
+      // value in dark mode (tints go dark, text on tints goes light).
+      backgroundColor: themeColors.bg,
+      gradientColorStops: themeColors.bg,
+      textColor: themeColors.text,
+      placeholderColor: themeColors.text,
+      fill: themeColors.text,
+      stroke: themeColors.text,
+      borderColor: themeColors.border,
+      divideColor: themeColors.border,
+      ringColor: themeColors.border,
+      ringOffsetColor: { white: themeColors.bg.white },
       fontFamily: {
         sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', "'Segoe UI'", 'Roboto', 'sans-serif'],
       },
@@ -54,7 +69,36 @@ export default {
         sidebar: '240px',
         'sidebar-collapsed': '64px',
       },
+      boxShadow: {
+        card: '0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.04)',
+        pop: '0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.08)',
+      },
+      keyframes: {
+        'st-fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'st-pop-in': {
+          from: { opacity: '0', transform: 'translateY(4px) scale(0.98)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'st-slide-in': { from: { transform: 'translateX(-100%)' }, to: { transform: 'translateX(0)' } },
+        'st-slide-in-right': { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+      },
+      animation: {
+        'st-fade-in': 'st-fade-in 120ms ease-out',
+        'st-pop-in': 'st-pop-in 140ms ease-out',
+        'st-slide-in': 'st-slide-in 180ms ease-out',
+        'st-slide-in-right': 'st-slide-in-right 200ms ease-out',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addBase }) => {
+      addBase({
+        ':root': lightVars,
+        ':root[data-theme="dark"]': darkVars,
+        // Previews of the shopper widget stay light inside a dark console.
+        '[data-theme="dark"] [data-theme="light"]': lightVars,
+        '@media print': { ':root[data-theme="dark"]': lightVars },
+      });
+    }),
+  ],
 };

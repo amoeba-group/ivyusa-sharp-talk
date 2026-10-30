@@ -20,6 +20,9 @@ export function AdminOverviewPage() {
   const integrationsQuery = useQuery({
     queryKey: ['admin', 'integrations'],
     queryFn: () => dashboardService.integrations(),
+    // Tenant-scoped endpoint: a platform admin gets 403, so the card hides
+    // instead of claiming "no integrations configured" (REQ-261030).
+    retry: false,
   });
   const dateRange = useDateRange('d30');
   const { from, to } = dateRange.range;
@@ -86,7 +89,7 @@ export function AdminOverviewPage() {
       </div>
 
       <Card title={t('journey.title')} className="mb-6">
-        <div className="px-5 pt-4">
+        <div className="mb-4">
           <DateRangePicker {...dateRange} />
         </div>
         <Table
@@ -97,13 +100,14 @@ export function AdminOverviewPage() {
           error={journeyQuery.error ? (journeyQuery.error as Error).message : null}
           emptyMessage={t('journey.empty')}
         />
-        <ul className="space-y-1 px-5 pb-4 text-xs text-gray-500">
+        <ul className="mt-3 space-y-1 text-xs text-gray-500">
           <li>{t('journey.funnelNote')}</li>
           <li>{t('journey.collectionNote')}</li>
           <li>{t('journey.privacyNote')}</li>
         </ul>
       </Card>
 
+      {!integrationsQuery.isError && (
       <Card title={t('integrationStatus')}>
         {integrationsQuery.isLoading ? (
           <div className="flex items-center justify-center py-8 text-gray-400">
@@ -126,6 +130,7 @@ export function AdminOverviewPage() {
           </ul>
         )}
       </Card>
+      )}
     </div>
   );
 }

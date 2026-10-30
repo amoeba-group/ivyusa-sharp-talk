@@ -1,13 +1,18 @@
 import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTenantKey } from '@/lib/use-tenant-key';
+import { useAuthStore } from '@/store/auth-store';
 import { routingCategoriesService } from './routing-categories.service';
 
 export const useRoutingCategories = () => {
   const tenantKey = useTenantKey();
+  // Tenant data: the alarm bell and escalation modal sit in the shared layout,
+  // so platform admins used to fire this on every screen and get a 403.
+  const isTenantUser = useAuthStore((s) => s.principal?.actorType) === 'user';
   return useQuery({
     queryKey: ['routing-categories', tenantKey],
     queryFn: () => routingCategoriesService.list(),
+    enabled: isTenantUser,
   });
 };
 

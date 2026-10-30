@@ -107,7 +107,7 @@ export function KnowledgeCaptureModal({
         </FormRow>
         <p className="text-xs text-gray-400">{t('knowledge.hint')}</p>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={onClose}>
             {t('cancel', { ns: 'common' })}
           </Button>

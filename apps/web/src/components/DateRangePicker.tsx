@@ -55,61 +55,55 @@ export function DateRangePicker({ preset, setPreset, custom, setCustom, range, c
   const { t } = useTranslation('common');
   const presets: Exclude<RangePreset, 'custom'>[] = ['d7', 'd30', 'd90'];
 
+  const options: RangePreset[] = [...presets, 'custom'];
   return (
-    <div className={cn('flex flex-wrap items-end gap-3', className)}>
-      <div className="flex gap-1">
-        {presets.map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => setPreset(p)}
-            className={cn(
-              'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
-              preset === p
-                ? 'border-primary-500 bg-primary-50 text-primary-700'
-                : 'border-gray-200 text-gray-600 hover:bg-gray-50',
-            )}
-          >
-            {t(`range.${p}`)}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => {
-            // Seed the custom fields from whatever is on screen, so switching
-            // to "custom" never blanks the range the operator was just reading.
-            setCustom(range);
-            setPreset('custom');
-          }}
-          className={cn(
-            'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
-            preset === 'custom'
-              ? 'border-primary-500 bg-primary-50 text-primary-700'
-              : 'border-gray-200 text-gray-600 hover:bg-gray-50',
-          )}
-        >
-          {t('range.custom')}
-        </button>
+    <div className={cn('flex flex-wrap items-center gap-2', className)}>
+      <div role="radiogroup" aria-label={t('range.custom')} className="inline-flex rounded-lg bg-gray-100 p-0.5">
+        {options.map((p) => {
+          const active = preset === p;
+          return (
+            <button
+              key={p}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => {
+                if (p === 'custom') {
+                  // Seed the custom fields from whatever is on screen, so switching
+                  // to "custom" never blanks the range the operator was just reading.
+                  setCustom(range);
+                }
+                setPreset(p);
+              }}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors',
+                active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-800',
+              )}
+            >
+              {t(`range.${p}`)}
+            </button>
+          );
+        })}
       </div>
 
       {preset === 'custom' && (
-        <div className="flex items-end gap-2">
+        <div className="flex items-center gap-2">
           <Input
             type="date"
             aria-label={t('range.from')}
             value={custom.from}
             max={custom.to}
             onChange={(e) => setCustom({ ...custom, from: e.target.value })}
-            className="w-40"
+            className="h-9 w-40 py-1"
           />
-          <span className="pb-2 text-gray-400">–</span>
+          <span className="text-gray-400">–</span>
           <Input
             type="date"
             aria-label={t('range.to')}
             value={custom.to}
             min={custom.from}
             onChange={(e) => setCustom({ ...custom, to: e.target.value })}
-            className="w-40"
+            className="h-9 w-40 py-1"
           />
         </div>
       )}

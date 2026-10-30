@@ -119,7 +119,7 @@ export function AdminUsersPage() {
       render: (a) => {
         const self = String(a.id) === String(principal?.id ?? '');
         return (
-          <div className="flex justify-end gap-1">
+          <div className="flex flex-wrap justify-end gap-1">
             <Button size="sm" variant="secondary" onClick={() => { setTempPwSendEmail(true); setTempPwTarget(a); }}>
               {t('tempPw')}
             </Button>

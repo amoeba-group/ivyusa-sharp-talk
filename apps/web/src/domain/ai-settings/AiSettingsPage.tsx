@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Trash2, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
+import { OnThisPage } from '@/components/OnThisPage';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
@@ -74,6 +75,7 @@ export function AiSettingsPage() {
   return (
     <div>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <OnThisPage />
 
       {/* Settings on the left, the studio (preview + coaching) pinned on the
           right (xl+). Below xl it drops under the settings so it stays
@@ -94,7 +96,8 @@ export function AiSettingsPage() {
           <AnswerReuseSection />
           <HandoffMovedNotice />
         </div>
-        <div className="xl:sticky xl:top-6 xl:self-start">
+        {/* Below the sticky header (64px) and the section bar. */}
+        <div className="xl:sticky xl:top-[136px] xl:self-start">
           <AiStudioPanel agent={selectedAgent ?? null} />
         </div>
       </div>

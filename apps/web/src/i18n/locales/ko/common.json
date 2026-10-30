@@ -44,5 +44,12 @@
     "custom": "기간 선택",
     "from": "시작일",
     "to": "종료일"
-  }
+  },
+  "resetFilters": "필터 초기화",
+  "filters": "필터",
+  "previous": "이전 페이지",
+  "next": "다음 페이지",
+  "clearSearch": "검색어 지우기",
+  "openDetails": "상세 열기",
+  "onThisPage": "이 페이지"
 }

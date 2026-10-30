@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShieldAlert, X } from 'lucide-react';
-import { Sidebar } from './Sidebar';
+import { MobileNav, Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { CommandPalette, useCommandPaletteShortcut } from './CommandPalette';
 import { useUiStore } from '@/store/ui-store';
 import { useAuthStore } from '@/store/auth-store';
 import { ChangePasswordModal } from '@/domain/auth/ChangePasswordModal';
@@ -22,6 +23,7 @@ export function AppLayout() {
   const mfaEnforceFrom = useAuthStore((s) => s.mfaEnforceFrom);
   const actorType = useAuthStore((s) => s.principal?.actorType);
   const [graceDismissed, setGraceDismissed] = useState(false);
+  useCommandPaletteShortcut();
 
   const myPagePath = actorType === 'admin' ? '/admin/my-page' : '/my-page';
   const graceDeadline = mfaEnforceFrom
@@ -30,13 +32,15 @@ export function AppLayout() {
   const showGraceBanner = mfaRequired && !mfaEnforced && !graceDismissed;
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full bg-page">
       <Sidebar />
-      <div className={cn('transition-[margin] duration-200', collapsed ? 'ml-[64px]' : 'ml-[240px]')}>
+      <MobileNav />
+      <CommandPalette />
+      <div className={cn('transition-[padding] duration-200', collapsed ? 'lg:pl-[72px]' : 'lg:pl-[248px]')}>
         <Header />
         {/* MFA grace-period advisory (PLN-MFA M3): required rank, deadline not yet passed. */}
         {showGraceBanner && (
-          <div className="mx-auto mt-4 flex max-w-content items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <div className="mx-4 mt-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 sm:mx-6 2xl:mx-auto 2xl:max-w-content">
             <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden />
             <span className="flex-1">
               {t('mfaGraceBanner', { date: graceDeadline })}{' '}
@@ -57,7 +61,7 @@ export function AppLayout() {
         {/* One gate for every console route (PLN-260812 S4): the sidebar hides
             menus a member may not reach, but a typed URL or an old bookmark
             walks straight past that. */}
-        <main className="mx-auto max-w-content p-6">
+        <main className="mx-auto max-w-content px-4 py-6 sm:px-6">
           <MenuGuard>
             <Outlet />
           </MenuGuard>

@@ -136,7 +136,7 @@ export function CommentCard({ conversationId }: { conversationId: string | null 
                       value={editDraft}
                       onChange={(e) => setEditDraft(e.target.value)}
                     />
-                    <div className="flex justify-end gap-1">
+                    <div className="flex flex-wrap justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
                         {t('comments.cancel')}
                       </Button>

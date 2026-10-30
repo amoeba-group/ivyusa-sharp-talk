@@ -63,7 +63,7 @@ function SitePolicyCardBody() {
 
   return (
     <>
-      <Card title={<span className="flex items-center gap-2">🌐 {t('site.title')}</span>}>
+      <Card navLabel={t('site.title')} title={<span className="flex items-center gap-2">🌐 {t('site.title')}</span>}>
         <p className="mb-3 text-xs text-gray-500">{t('site.hint')}</p>
         <form
           className="flex flex-col gap-2 sm:flex-row"

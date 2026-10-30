@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, User, Users } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
-import { Select } from '@/components/Field';
+import { FilterBar, FilterSelect, FilterToggle, ResetFiltersButton } from '@/components/Toolbar';
 import { cn } from '@/lib/cn';
 import { useJourneyActions, useJourneyBoard, useJourneyPeople } from './journey.hooks';
 import { stageLabel } from './journey.service';
@@ -52,30 +52,37 @@ export function JourneyBoardPage() {
     <div>
       <PageHeader title={t('board.title')} subtitle={t('board.subtitle')} />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-        <Select className="w-auto" value={kind} aria-label={t('board.kind')} onChange={(e) => setKind(e.target.value)}>
+      <FilterBar>
+        <FilterSelect label={t('board.kind')} active={!!kind} value={kind} onChange={(e) => setKind(e.target.value)}>
           <option value="">{t('board.allKinds')}</option>
           <option value="timeline">{t('board.kindTimeline')}</option>
           <option value="project">{t('board.kindProject')}</option>
-        </Select>
-        <Select className="w-auto" value={owner} aria-label={t('card.owner')} onChange={(e) => setOwner(e.target.value)}>
+        </FilterSelect>
+        <FilterSelect label={t('card.owner')} active={!!owner} value={owner} onChange={(e) => setOwner(e.target.value)}>
           <option value="">{t('board.allOwners')}</option>
           {people?.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
           ))}
-        </Select>
-        <label className="flex items-center gap-1.5 text-gray-700">
-          <input type="checkbox" checked={overdue} onChange={(e) => setOverdue(e.target.checked)} />
+        </FilterSelect>
+        <FilterToggle checked={overdue} onChange={setOverdue}>
           {t('board.overdueOnly')}
-        </label>
-      </div>
+        </FilterToggle>
+        <ResetFiltersButton
+          visible={!!(kind || owner || overdue)}
+          onClick={() => {
+            setKind('');
+            setOwner('');
+            setOverdue(false);
+          }}
+        />
+      </FilterBar>
 
       {isLoading ? (
         <p className="text-sm text-gray-500">{tc('loading')}</p>
       ) : !cards.length && !kind && !owner && !overdue ? (
-        <p className="rounded-lg border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
+        <p className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500">
           {t('board.empty')}
         </p>
       ) : (

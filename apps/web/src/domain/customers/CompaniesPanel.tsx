@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
-import { Select } from '@/components/Field';
+import { FilterBar, FilterSelect, FilterSpacer, SearchField } from '@/components/Toolbar';
 import { Pagination } from '@/components/Pagination';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
@@ -82,36 +82,32 @@ export function CompaniesPanel({ initialOpenId = null }: { initialOpenId?: strin
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <input
-          type="search"
+      <FilterBar>
+        <SearchField
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           placeholder={t('companySearchPlaceholder')}
-          aria-label={t('companySearchPlaceholder')}
-          className="w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
+          className="max-w-md"
         />
-        <div className="w-48">
-          <Select
-            aria-label={t('companyRegion')}
-            value={region}
-            onChange={(e) => {
-              setRegion(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">{t('allRegions')}</option>
-            {REGION_CODES.map((r) => (
-              <option key={r} value={r}>
-                {regionLabel(r)}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="ml-auto">
-          <Button onClick={() => setAdding(true)}>{t('addHotel')}</Button>
-        </div>
-      </div>
+        <FilterSelect
+          label={t('companyRegion')}
+          active={!!region}
+          value={region}
+          onChange={(e) => {
+            setRegion(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">{t('allRegions')}</option>
+          {REGION_CODES.map((r) => (
+            <option key={r} value={r}>
+              {regionLabel(r)}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSpacer />
+        <Button onClick={() => setAdding(true)}>{t('addHotel')}</Button>
+      </FilterBar>
       <p className="mb-3 text-xs text-gray-500">{t('companyHint')}</p>
       <Table
         columns={columns}

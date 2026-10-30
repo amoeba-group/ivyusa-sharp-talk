@@ -41,5 +41,47 @@
   "settingsMarketing": "マーケティング・ヘルプデスク",
   "settingsMessengers": "メッセンジャー",
   "settingsEtc": "その他設定",
-  "journey": "カスタマージャーニー"
+  "journey": "カスタマージャーニー",
+  "groups": {
+    "overview": "概要",
+    "conversations": "会話",
+    "insights": "分析",
+    "ai": "AI・ナレッジ",
+    "commerce": "顧客・コマース",
+    "workspace": "ワークスペース",
+    "platform": "プラットフォーム",
+    "security": "アクセス・監査"
+  },
+  "search": {
+    "placeholder": "メニューと設定を検索…",
+    "button": "検索",
+    "noResults": "一致するメニューがありません",
+    "pages": "メニュー",
+    "settings": "設定",
+    "actions": "操作",
+    "hintNavigate": "移動",
+    "hintSelect": "開く",
+    "hintClose": "閉じる",
+    "trigger": "メニューを検索…"
+  },
+  "theme": {
+    "label": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム",
+    "toggle": "ライト/ダーク切替",
+    "actionLight": "ライトテーマを使う",
+    "actionDark": "ダークテーマを使う",
+    "actionSystem": "システムのテーマに従う"
+  },
+  "userMenu": {
+    "open": "アカウントメニュー",
+    "signedInAs": "ログイン中"
+  },
+  "sidebar": {
+    "collapse": "サイドバーを折りたたむ",
+    "expand": "サイドバーを展開",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる"
+  }
 }

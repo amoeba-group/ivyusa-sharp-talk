@@ -36,5 +36,29 @@
     "connected": "Connected",
     "error": "Error",
     "unknown": "Not tested"
-  }
+  },
+  "activity": "Activity",
+  "activitySubtitle": "Widget traffic and conversations for the selected period",
+  "range": {
+    "d7": "7 days",
+    "d14": "14 days",
+    "d30": "30 days"
+  },
+  "trendTitle": "Daily widget activity",
+  "trendAria": "Daily widget opens and conversations, {{from}} to {{to}}",
+  "seriesOpens": "Widget opened",
+  "seriesConversations": "Conversations",
+  "dayColumn": "Day",
+  "funnelTitle": "From impression to conversation",
+  "conversionOf": "{{pct}} of the previous step",
+  "viewTable": "Table",
+  "viewChart": "Chart",
+  "noActivity": "No widget activity in this period yet.",
+  "activityUnavailable": "Activity charts need access to Statistics.",
+  "openStatistics": "Open statistics",
+  "aiShare": "Answered by AI",
+  "escalatedShare": "Escalated to an agent",
+  "ofConversations": "of conversations",
+  "quickLiveChat": "Open live chat",
+  "quickKnowledge": "Manage knowledge"
 }

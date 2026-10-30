@@ -44,5 +44,12 @@
     "custom": "期間指定",
     "from": "開始日",
     "to": "終了日"
-  }
+  },
+  "resetFilters": "フィルターをリセット",
+  "filters": "フィルター",
+  "previous": "前のページ",
+  "next": "次のページ",
+  "clearSearch": "検索をクリア",
+  "openDetails": "詳細を開く",
+  "onThisPage": "このページ"
 }

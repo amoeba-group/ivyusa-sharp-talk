@@ -41,5 +41,47 @@
   "settingsMarketing": "Marketing & Helpdesk",
   "settingsMessengers": "Kênh nhắn tin",
   "settingsEtc": "Cài đặt khác",
-  "journey": "Hành trình khách hàng"
+  "journey": "Hành trình khách hàng",
+  "groups": {
+    "overview": "Tổng quan",
+    "conversations": "Hội thoại",
+    "insights": "Phân tích",
+    "ai": "AI & Kiến thức",
+    "commerce": "Khách hàng & Bán hàng",
+    "workspace": "Không gian làm việc",
+    "platform": "Nền tảng",
+    "security": "Truy cập & Kiểm toán"
+  },
+  "search": {
+    "placeholder": "Tìm menu và cài đặt…",
+    "button": "Tìm kiếm",
+    "noResults": "Không có menu phù hợp",
+    "pages": "Menu",
+    "settings": "Cài đặt",
+    "actions": "Thao tác",
+    "hintNavigate": "di chuyển",
+    "hintSelect": "mở",
+    "hintClose": "đóng",
+    "trigger": "Tìm menu…"
+  },
+  "theme": {
+    "label": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Theo hệ thống",
+    "toggle": "Chuyển sáng/tối",
+    "actionLight": "Dùng giao diện sáng",
+    "actionDark": "Dùng giao diện tối",
+    "actionSystem": "Theo giao diện hệ thống"
+  },
+  "userMenu": {
+    "open": "Menu tài khoản",
+    "signedInAs": "Đang đăng nhập"
+  },
+  "sidebar": {
+    "collapse": "Thu gọn thanh bên",
+    "expand": "Mở rộng thanh bên",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu"
+  }
 }

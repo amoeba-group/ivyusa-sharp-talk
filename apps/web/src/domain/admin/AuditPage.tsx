@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
+import { formatDateTime } from '@/lib/format';
 import { Badge } from '@/components/Badge';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
@@ -16,7 +17,7 @@ export function AuditPage() {
   const { data, isLoading, error } = useAudit({ page, pageSize: PAGE_SIZE });
 
   const columns: Column<AuditEntry>[] = [
-    { key: 'createdAt', header: t('time'), render: (r) => r.createdAt ?? '—' },
+    { key: 'createdAt', header: t('time'), className: 'whitespace-nowrap text-gray-500', render: (r) => formatDateTime(r.createdAt) },
     {
       key: 'actor',
       header: t('actor'),
