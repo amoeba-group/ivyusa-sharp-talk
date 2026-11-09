@@ -41,3 +41,6 @@ apps/api/storage/
 # chat attachments written by the dev UPLOAD_DIR default (PLN-260814)
 apps/api/.uploads/
 .uploads/
+
+# Claude Code — per-user local overrides (never commit)
+.claude/settings.local.json

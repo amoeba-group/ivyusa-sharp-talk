@@ -1,0 +1,22 @@
+{
+  "name": "sharptalk-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright E2E suite for the IVY USA TalkTalk widget (ivy-docs/TEST-CASES.md). Standalone package - NOT a workspace, so it never touches the root package-lock used by deploy builds.",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --project=desktop --grep @smoke",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:prod": "cross-env E2E_TARGET=prod playwright test",
+    "test:task": "playwright test --project=desktop --grep",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^20.19.43",
+    "cross-env": "^10.1.0",
+    "typescript": "^5.9.3"
+  }
+}

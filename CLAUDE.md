@@ -114,3 +114,11 @@ Kit rules adopted (dev-kit 03/04 — MUST):
   status — **401 = deployed, 404 = not deployed, 502 = API down/restarting**.
 - Never run `docker/staging/deploy-staging.sh` locally (deploys to local Docker);
   never `docker compose build` directly (`--env-file` loss inlines wrong `VITE_*`).
+
+## 8. IVY USA TalkTalk widget (`deploy/talk-ivyusa` → talk.ivyusa.com)
+- **Source of truth:** `ivy-docs/` — `SPEC.md` (Figma `fviVlvtkuHYU0Agre1daTr` page `23:2`, screens SCR-IVY-xx, rules BR-xx, gaps G-xx, selector contract §9), `TASKS.md` (ordered T00–T16), `ARCHITECTURE.md`, `TEST-CASES.md`, `BUGS.md`.
+  When asked to start/continue IVY work: read SPEC + TASKS, take the next task in TASKS §1 order, follow TASKS §0 (PLN → approval → implement → `e2e` green → update TASKS/TEST-CASES/BUGS → RPT → push this branch). Never work on `main` for IVY.
+- **E2E:** `e2e/` is a standalone Playwright package (not an npm workspace — never add it to the root lockfile). `cd e2e && npm run test:smoke` · `npm run test:task -- @T03` · `npm run test:prod` (talk.ivyusa.com; ELB allowlists IPs). Test titles carry the TC id; keep the selector contract in SPEC §9 when changing widget markup.
+- **Local:** `apps/widget/.env` must exist (copy `.env.example`), or the widget calls its own origin and 404s. Open `http://localhost:5174/?shop=ivyusa.myshopify.com`.
+- **Push ≠ deploy:** talk.ivyusa.com updates only after `git pull` + `bash scripts/deploy-self-hosted.sh` on EC2 `talkaibotprd01` (SQL first).
+- **Library docs — Context7 MCP** (`.mcp.json` → `context7`): before writing code against NestJS 11, TypeORM 0.3, React 18, Vite 5, Tailwind 3, TanStack Query 5, i18next 23, Zustand 4, Playwright 1.65 or Shopify APIs, resolve the library and fetch its docs for the version in package.json instead of relying on memory.
