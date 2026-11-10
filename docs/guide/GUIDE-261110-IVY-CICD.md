@@ -89,6 +89,13 @@ bash scripts/ivy-autodeploy.sh --dry-run   # chỉ báo, không deploy gì
 bash scripts/ivy-autodeploy-install.sh --cron
 crontab -l | grep ivy-autodeploy
 
+# Ghi mốc "đã deploy" = HEAD. Chỉ làm khi container đang chạy đúng code app của HEAD
+# (diff apps/packages/docker/sql ở trên trống). Thiếu mốc này thì một push chỉ sửa
+# tài liệu, nằm trên một lần deploy code bị lỗi, sẽ bị bỏ qua thay vì deploy lại.
+mkdir -p ~/.local/state/ivy-autodeploy
+printf '%s %s\n' "$(git rev-parse HEAD)" "$(date -u +%FT%TZ)" > ~/.local/state/ivy-autodeploy/deployed
+bash scripts/ivy-autodeploy.sh --status
+
 # Có sudo: systemd timer
 # sudo bash scripts/ivy-autodeploy-install.sh && systemctl list-timers ivy-autodeploy.timer
 ```

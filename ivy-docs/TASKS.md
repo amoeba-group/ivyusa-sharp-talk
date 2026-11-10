@@ -25,7 +25,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | Thứ tự | ID | Task | Loại | Ưu tiên | Phụ thuộc | Trạng thái | TC |
 |---|---|---|---|---|---|---|---|
 | 0 | T00 | Môi trường, Context7, Playwright, tài liệu | Setup | P0 | — | ✅ (trừ T00-b, T00-c) | TC-00-01..04 |
-| 1 | T01 | Shell panel, header "Hi, {firstName}", 2 tab + badge | CFG · UI | P0 | T00 | ⬜ | TC-01-01..07 |
+| 1 | T01 | Shell panel, header "Hi, {firstName}", 2 tab + badge | CFG · UI | P0 | T00 | 🟨 [PLN](../docs/plan/PLN-261110-IVY-T01-Shell-Header-Tabs.md) | TC-01-01..07 |
 | 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N | P0 | T01 | ⬜ | TC-02-01..06 |
 | 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ⬜ | TC-03-01..05 |
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N | P1 | T02 | ⬜ | TC-07-01..03 |
@@ -62,7 +62,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - (2) Token cho server (tuỳ chọn).
   - (3) ✅ 2026-11-10: đã cài **cron** trên `talkaibotprd01` (`appops`, `/docker/apps/talktalk`, không có sudo nên dùng `--cron`). Từ đây, **push lên `deploy/talk-ivyusa` mà CI xanh sẽ tự deploy production**.
 
-### T01 · Shell, header & tab — ⬜
+### T01 · Shell, header & tab — 🟨 chờ duyệt [PLN-261110-IVY-T01](../docs/plan/PLN-261110-IVY-T01-Shell-Header-Tabs.md)
 - **Figma:** `992:526`, `1006:7825`, mockup desktop `1006:2431`. **Gap:** G-01, G-02, G-03.
 - **Việc cần làm:**
   1. Cấu hình tenant ivyusa `widget_tabs = ["notifications","chat"]` (console → Settings › Widget, hoặc SQL seed cho local). Ghi lại thao tác cho production.
