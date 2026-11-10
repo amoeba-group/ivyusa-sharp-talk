@@ -25,6 +25,8 @@ git push deploy/talk-ivyusa
                    3. fast-forward → deploy-self-hosted.sh --check (config + SQL còn thiếu)
                         └ fail → quay checkout về commit cũ, 2 phút sau thử lại
                    4. deploy-self-hosted.sh (build, up, kiểm health/widget/console/boot log)
+                        └ nếu từ lần deploy trước chỉ đổi docs/ · ivy-docs/ · e2e/ · .github/ ·
+                          *.md ở root · script auto-deploy → chỉ fast-forward, KHÔNG build/restart
                    5. (nếu có token) ghi commit status "deploy/talk.ivyusa.com"
 ```
 

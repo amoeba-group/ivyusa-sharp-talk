@@ -16,6 +16,8 @@
 #      the containers that are running, and retry next cycle — so after a schema
 #      change the operator only has to apply the SQL; the deploy then proceeds.
 #   4. run deploy-self-hosted.sh (build, start, verify health/widget/console/boot)
+#      — unless nothing a container reads changed since the last deploy (docs,
+#      ivy-docs, e2e, CI): then only fast-forward, so no needless restart
 #   5. if IVY_GITHUB_TOKEN can write commit statuses, report the result on the
 #      commit as "deploy/talk.ivyusa.com"
 #
@@ -50,6 +52,11 @@ LOG_DIR="${IVY_LOG_DIR:-$HOME}"
 DEPLOY_CMD="${IVY_DEPLOY_CMD:-bash scripts/deploy-self-hosted.sh}"
 TOKEN="${IVY_GITHUB_TOKEN:-}"
 STATUS_CONTEXT="deploy/talk.ivyusa.com"
+# Paths no image or container reads: docs, ivy-docs, the e2e suite, CI config,
+# root-level *.md and this deploy tooling. A release that touches nothing else
+# only moves the checkout — rebuilding would restart production for nothing.
+# (apps/web/public/manual/*.md IS served, which is why *.md is root-level only.)
+NO_RUNTIME_RE='^(docs/|ivy-docs/|e2e/|\.github/|\.claude/|[^/]+\.md$|\.mcp\.json$|scripts/ivy-autodeploy(-install)?\.sh$)'
 
 say() { printf '[ivy-autodeploy] %s\n' "$*"; }
 die() { say "ERROR: $*" >&2; exit 1; }
@@ -172,6 +179,23 @@ main() {
     *)        say "$short gate unknown: $gate"; exit 0 ;;
   esac
   : >"$STATE_DIR/approved-$tip"
+
+  # Compare against what the containers were last built from, not HEAD: after a
+  # failed deploy HEAD is ahead of the containers, and a docs-only push on top
+  # must still deploy the code commit underneath it.
+  local base
+  base="$(cut -d' ' -f1 "$STATE_DIR/deployed" 2>/dev/null || true)"
+  if [[ -z "$base" ]] || ! git merge-base --is-ancestor "$base" "$tip" 2>/dev/null; then base="$head"; fi
+  if ! git diff --name-only "$base" "$tip" | grep -qvE "$NO_RUNTIME_RE"; then
+    if [[ "$mode" == dry ]]; then
+      say "would fast-forward to $short without deploying — no runtime file changed since ${base:0:8}"
+      exit 0
+    fi
+    git merge --ff-only --quiet "$tip"
+    post_status "$tip" success "No runtime change — checkout updated, containers untouched"
+    record "$short fast-forwarded without deploy (no runtime file changed since ${base:0:8})"
+    exit 0
+  fi
 
   if [[ "$mode" == dry ]]; then
     say "would deploy $short ($(git log -1 --format=%s "$tip")) over $(git rev-parse --short HEAD)"
