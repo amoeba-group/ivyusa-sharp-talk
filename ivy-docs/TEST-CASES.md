@@ -13,6 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -20,6 +21,7 @@ npm run report                         # mở báo cáo HTML
 E2E_TARGET=prod npm run test:prod      # smoke production (chỉ @prod, cần IP được allowlist)
 ```
 
+**CI:** workflow *IVY CI/CD* chạy `test:ci` trên stack được seed mới (widget bản build qua `vite preview`) cho mỗi push/PR vào `deploy/talk-ivyusa`. Task xong thì thêm `|@Tnn` vào `test:ci` ([GUIDE-261110 §7](../docs/guide/GUIDE-261110-IVY-CICD.md)). Khi fail, tải artifact `e2e-report-*` của run để xem chi tiết.
 **Tag:** `@T<nn>` task · `@smoke` luôn xanh · `@design` đối chiếu Figma (mock API) · `@integration` API thật · `@i18n` · `@a11y` · `@responsive` / `@mobile-only` · `@prod`.
 **Lớp mock (`@design`):** `e2e/fixtures/mock-api.ts` vá `session/ensure` (khách "Kiho Lee" đã nhận diện, 2 tab, consent granted) và phục vụ notifications/orders/tracking/review/products/affiliate/inquiries/CSAT bằng dữ liệu Figma (`e2e/fixtures/ivy-data.ts`). Trường **PROPOSED** trong fixture là hợp đồng API mà task phải hiện thực.
 

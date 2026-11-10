@@ -1,0 +1,149 @@
+name: IVY CI/CD
+
+# talk.ivyusa.com (IVY USA production) runs from deploy/talk-ivyusa — NOT main.
+# GitHub runs a push's workflows from the pushed commit, so this file only acts
+# on that branch. PLN-261110-IVY-CICD · runbook docs/guide/GUIDE-261110-IVY-CICD.md
+#
+#   push / PR ─► verify    ci.yml: typecheck · env · migrations · radius · i18n · test · build
+#             └► e2e gate  Playwright @smoke + finished tasks against a seeded stack
+#   push only ─► deploy-gate  environment talk-ivyusa-production (reviewer approval)
+#                  └► on the server, scripts/ivy-autodeploy.sh (systemd timer) sees
+#                     deploy-gate succeed for the branch tip, fast-forwards and runs
+#                     scripts/deploy-self-hosted.sh.
+#
+# Nothing in here can reach the server. The repository is public: a self-hosted
+# runner would execute fork-PR code on the production host, so CD is pull-based.
+# Do not add a self-hosted runner, and do not use [skip ci] on this branch — a
+# tip without a green deploy-gate is never deployed.
+#
+# The job named "deploy-gate" is read by scripts/ivy-autodeploy.sh (IVY_GATE_JOB),
+# and this file's name by IVY_WORKFLOW: rename them together.
+
+on:
+  push:
+    branches: [deploy/talk-ivyusa]
+  pull_request:
+    branches: [deploy/talk-ivyusa]
+
+# A newer push supersedes an older one — including one still waiting for approval.
+concurrency:
+  group: ivy-cicd-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    uses: ./.github/workflows/ci.yml
+
+  e2e:
+    name: e2e gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The same containers as `npm run db:up`, on the same remapped ports, so the
+      # committed env/backend/.env.development works unchanged.
+      - name: Start MySQL · Redis · RabbitMQ · Qdrant
+        run: docker compose -f docker/docker-compose.dev.yml up -d
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            e2e/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The widget bakes VITE_API_BASE_URL at build time; without .env it calls
+      # its own origin and every request 404s (ivy-docs BUG-001).
+      - name: Build API, widget and shared packages
+        run: |
+          cp apps/widget/.env.example apps/widget/.env
+          npx turbo run build --filter=@sharptalk/api... --filter=@sharptalk/widget...
+
+      # mysqladmin ping already answers during the entrypoint's init pass, which
+      # runs without networking — a TCP login proves the real server is up.
+      - name: Wait for MySQL
+        run: |
+          for _ in $(seq 1 60); do
+            if docker exec sharptalk_mysql mysql -h127.0.0.1 -usharptalk -psharptalk_dev_pw \
+                 -e 'SELECT 1' db_sharptalk >/dev/null 2>&1; then echo "MySQL ready"; exit 0; fi
+            sleep 2
+          done
+          docker logs sharptalk_mysql 2>&1 | tail -40
+          exit 1
+
+      - name: Seed tenant ivyusa and demo data
+        run: npm run db:seed
+
+      # The production bundle served by `vite preview` — what ships, not the dev server.
+      - name: Start API and widget
+        run: |
+          (cd apps/api && nohup node dist/main.js >"$RUNNER_TEMP/api.log" 2>&1 &)
+          (cd apps/widget && nohup npx vite preview --port 5174 --strictPort >"$RUNNER_TEMP/widget.log" 2>&1 &)
+          for _ in $(seq 1 60); do
+            if curl -sf http://localhost:3000/api/v1/health >/dev/null \
+               && curl -sf -o /dev/null http://localhost:5174/; then
+              curl -s http://localhost:3000/api/v1/health; echo; exit 0
+            fi
+            sleep 2
+          done
+          tail -60 "$RUNNER_TEMP/api.log"; tail -20 "$RUNNER_TEMP/widget.log"
+          exit 1
+
+      - name: Install Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      # The gate is @smoke plus every task whose cases are all green
+      # (ivy-docs/TASKS.md §0: finishing a task adds its tag to test:ci).
+      - name: Playwright gate
+        working-directory: e2e
+        run: npm run test:ci
+
+      - name: Upload report and server logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+            ${{ runner.temp }}/api.log
+            ${{ runner.temp }}/widget.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  deploy-gate:
+    name: deploy-gate
+    needs: [verify, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/deploy/talk-ivyusa'
+    runs-on: ubuntu-latest
+    environment:
+      name: talk-ivyusa-production
+      url: https://talk.ivyusa.com
+    steps:
+      - name: Release for talk.ivyusa.com
+        run: |
+          {
+            echo "### Released for talk.ivyusa.com"
+            echo
+            echo "Commit \`${GITHUB_SHA}\` passed verify + e2e and is approved for production."
+            echo
+            echo "The production host deploys it on its next 2-minute cycle"
+            echo "(\`scripts/ivy-autodeploy.sh\`). It deploys only the branch tip, and stops"
+            echo "before touching containers if SQL migrations are outstanding — apply the SQL"
+            echo "first (CLAUDE.md §7). Result: the \`deploy/talk.ivyusa.com\` commit status,"
+            echo "or \`journalctl -u ivy-autodeploy\` on the host."
+          } >>"$GITHUB_STEP_SUMMARY"

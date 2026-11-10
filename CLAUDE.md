@@ -120,5 +120,13 @@ Kit rules adopted (dev-kit 03/04 — MUST):
   When asked to start/continue IVY work: read SPEC + TASKS, take the next task in TASKS §1 order, follow TASKS §0 (PLN → approval → implement → `e2e` green → update TASKS/TEST-CASES/BUGS → RPT → push this branch). Never work on `main` for IVY.
 - **E2E:** `e2e/` is a standalone Playwright package (not an npm workspace — never add it to the root lockfile). `cd e2e && npm run test:smoke` · `npm run test:task -- @T03` · `npm run test:prod` (talk.ivyusa.com; ELB allowlists IPs). Test titles carry the TC id; keep the selector contract in SPEC §9 when changing widget markup.
 - **Local:** `apps/widget/.env` must exist (copy `.env.example`), or the widget calls its own origin and 404s. Open `http://localhost:5174/?shop=ivyusa.myshopify.com`.
-- **Push ≠ deploy:** talk.ivyusa.com updates only after `git pull` + `bash scripts/deploy-self-hosted.sh` on EC2 `talkaibotprd01` (SQL first).
+- **Production branch = `deploy/talk-ivyusa`, NEVER `main`.** Never commit to `main`, push to it, merge into it or deploy from it for IVY.
+- **CI/CD** ([GUIDE-261110-IVY-CICD](docs/guide/GUIDE-261110-IVY-CICD.md)):
+  - Every push or PR runs workflow `IVY CI/CD` (`.github/workflows/ivy-ci-cd.yml`): `ci.yml` verify + Playwright `test:ci` gate.
+  - A push then waits at `deploy-gate` (environment `talk-ivyusa-production`) for a reviewer's Approve.
+  - The host's systemd timer (`scripts/ivy-autodeploy.sh`) pulls the approved tip and runs `deploy-self-hosted.sh`. It is pull-based because the repo is public: never add a self-hosted runner.
+  - **Push ≠ deploy** until that timer is installed (TASKS T00-e). Until then, deploy by hand: `git pull` + `bash scripts/deploy-self-hosted.sh` on EC2 `talkaibotprd01`.
+  - SQL is always applied first.
+  - Finishing a task adds its `@Tnn` to `test:ci`.
+  - Never use `[skip ci]` on this branch.
 - **Library docs — Context7 MCP** (`.mcp.json` → `context7`): before writing code against NestJS 11, TypeORM 0.3, React 18, Vite 5, Tailwind 3, TanStack Query 5, i18next 23, Zustand 4, Playwright 1.65 or Shopify APIs, resolve the library and fetch its docs for the version in package.json instead of relying on memory.

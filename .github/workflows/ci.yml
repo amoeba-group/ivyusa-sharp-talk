@@ -9,6 +9,9 @@ on:
     branches: [main, production]
   push:
     branches: [main, production]
+  # Reused by ivy-ci-cd.yml, the pipeline for deploy/talk-ivyusa (talk.ivyusa.com
+  # production), so both branches share one definition of "build-green".
+  workflow_call:
 
 # Cancel superseded runs on the same ref to save minutes.
 concurrency:
@@ -50,6 +53,11 @@ jobs:
       # says nothing about it — how 47 call sites drifted before FIX-260917.
       - name: Widget radius tokens
         run: npm run radius:check
+
+      # A key missing from one locale is not an error at runtime — i18next falls
+      # back to English, so the gap ships silently (CLAUDE.md §2 i18n).
+      - name: Locale completeness
+        run: npm run i18n:check
 
       - name: Test
         run: npm test

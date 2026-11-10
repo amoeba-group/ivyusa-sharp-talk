@@ -18,6 +18,8 @@
 | BUG-009 | Lưu review thất bại bị nuốt lỗi, shopper không được báo gì | Widget | 🟠 | Open | T06 |
 | BUG-010 | Điện thoại/email hỗ trợ của IVY hard-code trong cả 6 locale → hiện cho **mọi tenant** | Widget / Multi-tenant | 🟠 | Open | T11 |
 | BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Open | T02 |
+| BUG-012 | `radius:check` và `check-migrations --check` báo đỏ trên Windows dù CI (Linux) xanh | Tooling | 🟡 | Open (CI không ảnh hưởng) | T00-d |
+| BUG-013 | Repo **public**: cài đặt PR từ fork chỉ duyệt người đóng góp lần đầu; `env/backend/.env.development` (secret dev) và IP/SSH user staging nằm trong repo công khai | Security | 🟠 | Need info | T00-e |
 
 ---
 
@@ -72,6 +74,21 @@
 ## BUG-011 · Pill trạng thái chưa dịch
 - `apps/widget/src/components/ui/Badge.tsx` (43-52) đoán màu theo text; text là `statusBadge` / `statusUi` từ server, thường là tiếng Anh. Vì vậy UI tiếng Hàn vẫn hiện "In Transit".
 - **Fix (T02):** map theo mã trạng thái → key i18n + màu cố định (SPEC §4).
+
+## BUG-012 · Kiểm tra CI báo đỏ trên Windows
+- **`npm run radius:check`** crash với đường dẫn `D:\D:\…\apps\widget\src`. Nguyên nhân: `scripts/check-radius-tokens.mjs:26` dùng `new URL('..', import.meta.url).pathname`, trên Windows trả về `/D:/…`. Fix: `fileURLToPath(new URL('..', import.meta.url))`.
+- **`node scripts/check-migrations.mjs --check`** báo manifest "out of date". Nguyên nhân: `core.autocrlf=true` khiến `sql/artefacts.tsv` trong working tree có CRLF, trong khi generator viết LF, mà phép so sánh là so chuỗi tuyệt đối. Trên Linux (CI) cả hai đều xanh: đã kiểm bằng `git -c core.autocrlf=false archive HEAD` chạy trong `node:20-alpine`.
+- **Bẫy khi kiểm:** `git archive` cũng áp dụng `autocrlf`. Phải dùng `-c core.autocrlf=false` khi muốn tái hiện môi trường Linux.
+- **Đề xuất:** sửa `pathname` → `fileURLToPath`; thêm `.gitattributes` `sql/artefacts.tsv text eol=lf` (hoặc so sánh sau khi bỏ `\r`).
+
+## BUG-013 · Repo public
+- `GET /repos/amoeba-group/ivyusa-sharp-talk` → `visibility: public`, `fork: true`; fork PR approval = `first_time_contributors` (2026-11-10).
+- **Hệ quả đã xử lý:** CD không dùng self-hosted runner hay SSH từ GitHub, mà để server tự kéo bản mới (PLN-261110-IVY-CICD §2).
+- **Còn mở:**
+  - Repo công khai `env/backend/.env.development` (secret dev, VAPID key) và tài liệu có IP/SSH user của staging.
+  - Nên chuyển fork PR approval sang `all_external_contributors`: Settings → Actions → General.
+  - Cân nhắc chuyển repo sang private. Nếu chuyển, CD vẫn chạy được nhưng server **bắt buộc** phải có token và deploy key để `git fetch`.
+  - **Quyết định thuộc về chủ repo.**
 
 ---
 

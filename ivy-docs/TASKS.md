@@ -11,7 +11,8 @@
 4. **Tự kiểm:** `npm run typecheck` · `npm test` · `npm run i18n:check` · `npm run radius:check`. Nếu đổi entity thì boot API thật (`Nest application successfully started`).
 5. **E2E:** `cd e2e && npm run test:task -- @T{nn}` → xanh; sau đó `npm run test:smoke` → xanh. Nếu task có `@responsive` thì chạy thêm `--project=mobile`.
 6. **Ghi lại:** cập nhật trạng thái ở bảng §1 + kết quả TC trong TEST-CASES.md; lỗi phát sinh ghi vào BUGS.md; viết RPT `docs/implementation/RPT-{YYMMDD}-IVY-T{nn}-{Topic}.md`.
-7. **Commit & push** lên `deploy/talk-ivyusa`. Deploy talk.ivyusa.com là bước riêng trên server (ARCHITECTURE §6); nếu có SQL thì phải áp **trước**.
+   **Mở cổng CI:** khi toàn bộ TC của task đã xanh, thêm `|@T{nn}` vào script `test:ci` trong `e2e/package.json` trong cùng commit.
+7. **Commit & push** lên `deploy/talk-ivyusa` (**không bao giờ dùng `main`**). Workflow *IVY CI/CD* sẽ chạy verify và e2e gate. Khi xanh, người duyệt bấm **Approve** ở job `deploy-gate`, và server tự deploy trong vòng khoảng 2 phút ([GUIDE-261110-IVY-CICD](../docs/guide/GUIDE-261110-IVY-CICD.md)). Nếu có SQL thì phải áp lên production **trước** khi duyệt.
 
 Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Done · ⛔ Blocked
 
@@ -53,6 +54,11 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - [x] `ivy-docs/` SPEC · TASKS · ARCHITECTURE · TEST-CASES · BUGS.
 - [ ] **T00-b** Khi quota Figma reset: `get_variable_defs` / `get_design_context` cho node `992:526`, `992:935`, `1008:2291`, `1004:1367` → cập nhật token SPEC §4 (màu/khoảng cách chính xác).
 - [ ] **T00-c** Đọc cấu hình tenant `ivyusa` trên production (widget_tabs, theme, copy, scenario) để biết điểm xuất phát thật. Cần quyền truy cập server/console production.
+- [x] **T00-d** CI/CD ([PLN-261110-IVY-CICD](../docs/plan/PLN-261110-IVY-CICD.md)): workflow `IVY CI/CD` (verify + e2e gate `test:ci` + deploy-gate), script server `scripts/ivy-autodeploy.sh` + installer.
+- [ ] **T00-e** Thiết lập một lần ([GUIDE §2](../docs/guide/GUIDE-261110-IVY-CICD.md)):
+  - (1) Environment `talk-ivyusa-production`: required reviewer + branch `deploy/talk-ivyusa`. Cần admin repo; Claude không tự đổi được cài đặt repo.
+  - (2) Token cho server (tuỳ chọn).
+  - (3) Cài timer trên `talkaibotprd01` (cần SSH).
 
 ### T01 · Shell, header & tab — ⬜
 - **Figma:** `992:526`, `1006:7825`, mockup desktop `1006:2431`. **Gap:** G-01, G-02, G-03.
@@ -153,5 +159,12 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 
 ### T16 · Deploy & smoke production — ⬜
 - **Điều kiện:** máy chạy test phải nằm trong allowlist của ELB (BUG-004); người có quyền server (`secrets/`).
-- **Việc cần làm:** áp SQL (nếu có) → `git pull` + `bash scripts/deploy-self-hosted.sh` trên `talkaibotprd01` → xác minh boot log/container/health → `cd e2e && npm run test:prod` → ghi RPT kèm SHA và trạng thái từng môi trường. Cập nhật `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` và `/SPEC.md §12` (BUG-005).
+- **Việc cần làm:**
+  1. Áp SQL (nếu có).
+  2. Deploy:
+     - Khi T00-e xong: push → CI xanh → Approve `deploy-gate` → timer trên `talkaibotprd01` tự deploy.
+     - Trước đó: `git pull` + `bash scripts/deploy-self-hosted.sh` bằng tay.
+  3. Xác minh boot log, container và health.
+  4. Chạy `cd e2e && npm run test:prod`.
+  5. Ghi RPT kèm SHA và trạng thái từng môi trường. Cập nhật `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` và `/SPEC.md §12` (BUG-005).
 - **TC:** TC-16-01..03.

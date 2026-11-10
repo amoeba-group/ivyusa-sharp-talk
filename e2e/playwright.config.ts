@@ -36,7 +36,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 2,
   retries: process.env.CI ? 1 : 0,
   forbidOnly: !!process.env.CI,
-  reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
+  // In GitHub Actions, failures also surface as annotations on the commit / PR.
+  reporter: process.env.GITHUB_ACTIONS
+    ? [['github'], ['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]]
+    : [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
     baseURL: t.widgetUrl,
     locale: 'en-US',
