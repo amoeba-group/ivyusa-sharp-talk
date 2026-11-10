@@ -108,7 +108,7 @@
     "launcherTeaser": "런처 인사 말풍선",
     "launcherTeaserHint": "런처 옆 인사 말풍선 문구입니다(테마 카드 → 인사 말풍선). {shop}은 표시명으로 바뀝니다. 비우면 기본 문구를 씁니다.",
     "headerGreeting": "로그인 사용자 인사말(헤더)",
-    "headerGreetingHint": "로그인 사용자가 확인됐을 때 헤더에 보이는 문구입니다. {name}은 이름으로 바뀝니다 — {name}만 적으면 이름만 표시. 비우면 \"{name}님\".",
+    "headerGreetingHint": "로그인 사용자가 확인됐을 때 헤더에 보이는 문구입니다. {name}은 이름으로 바뀝니다 — {name}만 적으면 이름만 표시. {firstName}은 첫 단어만 넣습니다(\"Kiho Lee\" → \"Kiho\"). 비우면 \"{name}님\".",
     "csatMode": "만족도 카드",
     "csatModeRating": "별점만(기본) — 얼굴 5개, 한 번 탭",
     "csatModeSurvey": "설문 — 해결 여부 + 별점 + 불만족 사유",

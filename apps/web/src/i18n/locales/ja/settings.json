@@ -108,7 +108,7 @@
     "launcherTeaser": "ランチャーのあいさつ",
     "launcherTeaserHint": "ランチャー横の吹き出しの文言です（テーマカード → あいさつの吹き出し）。{shop} は表示名に置き換わります。空なら既定文言。",
     "headerGreeting": "ヘッダーのあいさつ（ログインユーザー）",
-    "headerGreetingHint": "ユーザーを認識したときのヘッダー文言です。{name} は名前に置き換わります。{name} だけを入力すると名前のみ表示。空なら「{name}さん」。",
+    "headerGreetingHint": "ユーザーを認識したときのヘッダー文言です。{name} は名前に置き換わります。{name} だけを入力すると名前のみ表示。{firstName} は最初の単語だけに置き換わります（\"Kiho Lee\" → \"Kiho\"）。空なら「{name}さん」。",
     "csatMode": "満足度カード",
     "csatModeRating": "評価のみ（既定）— 顔5つ、1タップ",
     "csatModeSurvey": "アンケート — 解決？＋評価＋不満の理由",

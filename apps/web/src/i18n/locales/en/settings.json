@@ -108,7 +108,7 @@
     "launcherTeaser": "Launcher greeting",
     "launcherTeaserHint": "The greeting pill beside the launcher (theme card → Greeting pill). {shop} inserts the display name. Empty = default.",
     "headerGreeting": "Signed-in greeting (header)",
-    "headerGreetingHint": "Header text for a recognized shopper. {name} inserts their name — enter just {name} to show the name alone. Empty = \"Hi, {name}\".",
+    "headerGreetingHint": "Header text for a recognized shopper. {name} inserts their name — enter just {name} to show the name alone. {firstName} inserts only the first word (\"Kiho Lee\" → \"Kiho\"). Empty = \"Hi, {name}\".",
     "csatMode": "Satisfaction card",
     "csatModeRating": "Rating only (default) — five faces, one tap",
     "csatModeSurvey": "Survey — resolved? + rating + reason when unhappy",

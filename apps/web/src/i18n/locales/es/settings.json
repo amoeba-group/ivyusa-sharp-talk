@@ -108,7 +108,7 @@
     "launcherTeaser": "Saludo del lanzador",
     "launcherTeaserHint": "Texto de la burbuja junto al lanzador (tarjeta de tema → Burbuja de saludo). {shop} inserta el nombre para mostrar. Vacío = predeterminado.",
     "headerGreeting": "Saludo en la cabecera (usuario reconocido)",
-    "headerGreetingHint": "Texto de la cabecera cuando se reconoce al cliente. {name} inserta su nombre; escribe solo {name} para mostrar únicamente el nombre. Vacío = \"Hola, {name}\".",
+    "headerGreetingHint": "Texto de la cabecera cuando se reconoce al cliente. {name} inserta su nombre; escribe solo {name} para mostrar únicamente el nombre. {firstName} inserta solo la primera palabra (\"Kiho Lee\" → \"Kiho\"). Vacío = \"Hola, {name}\".",
     "csatMode": "Tarjeta de satisfacción",
     "csatModeRating": "Solo valoración (predeterminado): cinco caras, un toque",
     "csatModeSurvey": "Encuesta: ¿resuelto? + valoración + motivo si no está satisfecho",

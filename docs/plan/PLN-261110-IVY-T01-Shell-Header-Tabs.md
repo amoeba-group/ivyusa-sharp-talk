@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa dòng code nào |
+| Trạng thái | ✅ **Đã duyệt** 2026-11-10. (1) OK. (2) Chiều cao **600** như đề xuất, phải hiển thị đúng trên **mọi PC, tablet và điện thoại** → thêm TC-01-08 ×11 kích thước màn hình qua `embed.js`. (3) Guest **giữ tên shop**. Kết quả: [RPT-261110-IVY-T01](../implementation/RPT-261110-IVY-T01-Shell-Header-Tabs.md) |
 | Task | [ivy-docs/TASKS.md T01](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-01..03 · Gap G-01, G-02, G-03 · Q-01 |
 | Figma | `992:526` (Master), `1006:7825` (header EN), `1006:2431` (mockup desktop) |
 | TC | TC-01-01..07 ([e2e/tests/01-shell-header.spec.ts](../../e2e/tests/01-shell-header.spec.ts)). Baseline 4/7 xanh; đỏ: 01-01, 01-02, 01-06 |
@@ -85,6 +85,7 @@ Console talk.ivyusa.com → đăng nhập Tenant Master ivyusa → **Settings �
 ⚠️ **Thứ tự:** đặt *Signed-in greeting* **sau khi** code mới đã chạy trên production. Nếu đặt trước, widget cũ sẽ hiện nguyên chữ "Hi, {firstName}". Tab, Corners và Panel size đặt lúc nào cũng được.
 
 Nếu console không vào được từ mạng của bạn: mình sẽ soạn câu `UPDATE tenants … JSON_SET(…)` để chạy qua SSM, kèm bản backup cột trước khi sửa.
+⚠️ Khi làm cách này, phải đưa SQL vào bằng file qua `docker exec -i … mysql --default-character-set=utf8mb4 < file.sql`. Gõ thẳng chuỗi qua `docker exec … -e "…"` sẽ làm hỏng tiếng Hàn/Nhật/Trung/Việt thành mojibake, việc này đã xảy ra với DB local khi làm T01.
 
 ## 6. Ảnh hưởng phụ và deploy
 

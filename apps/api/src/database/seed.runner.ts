@@ -23,6 +23,33 @@ import { OrderItem } from '../domain/order/entity/order-item.entity';
 import { Fulfillment } from '../domain/order/entity/fulfillment.entity';
 import { Notification } from '../domain/notification/entity/notification.entity';
 import { IntegrationStatusEntity } from '../domain/integration/entity/integration-status.entity';
+import { DEFAULT_BRAND, WIDGET_HEADER_STYLE, normalizeWidgetTheme } from '@sharptalk/types';
+
+/**
+ * The IVY USA TalkTalk widget (ivy-docs/SPEC.md, PLN-261110-IVY-T01): two tabs,
+ * a 380px panel with 16px corners, and the header greeting by first name.
+ * Applied only when the seed CREATES the tenant (a fresh local or CI database);
+ * an existing tenant — production included, where SEED_ON_BOOT may run — keeps
+ * whatever its console settings say.
+ */
+const IVY_WIDGET_PRESET = {
+  widgetTabs: ['notifications', 'chat'],
+  widgetTheme: normalizeWidgetTheme({
+    brand: DEFAULT_BRAND,
+    headerStyle: WIDGET_HEADER_STYLE.WHITE,
+    design: { radius: 'lg', panel: { width: 380, height: 600 } },
+  }),
+  widgetCopy: {
+    headerGreeting: {
+      EN: 'Hi, {firstName}',
+      ES: 'Hola, {firstName}',
+      KO: '{firstName}님',
+      VI: 'Chào {firstName}',
+      JA: '{firstName}さん',
+      ZH: '{firstName} 您好',
+    },
+  },
+};
 
 /**
  * Functions given an explicit stub row at bootstrap.
@@ -87,6 +114,7 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
         name: 'ivyusa',
         status: 'active',
         plan: 'custom',
+        ...IVY_WIDGET_PRESET,
       }),
     );
   } else {

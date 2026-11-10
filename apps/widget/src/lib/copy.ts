@@ -18,6 +18,28 @@ export function fill(template: string, key: string, value: string): string {
 }
 
 /**
+ * The name a shopper is greeted by: the first word of their name. Shopify
+ * stores `firstName + " " + lastName`, so the first word is the first name; a
+ * name without spaces (most CJK names) is returned whole. A multi-word first
+ * name ("Mary Ann") keeps only its first word — the documented trade-off of
+ * deriving it rather than storing it (PLN-261110-IVY-T01 D2).
+ */
+export function firstNameOf(name: string | null | undefined): string {
+  return (name ?? '').trim().split(/\s+/)[0] ?? '';
+}
+
+/**
+ * A tenant's signed-in greeting with the shopper's name filled in. `{firstName}`
+ * is opt-in (PLN-261110-IVY-T01): only a tenant whose copy contains it greets by
+ * first name — every other template, and the built-in default, keeps the full
+ * name, because "first word = given name" does not hold for every language
+ * (a Vietnamese name starts with the family name).
+ */
+export function greetingFor(template: string, name: string): string {
+  return fill(fill(template, '{firstName}', firstNameOf(name) || name), '{name}', name);
+}
+
+/**
  * The welcome bubble's text (PLN-261023). The first-visit copy (agent greeting
  * or tenant bag) may carry `{name}`: with a known name it is used filled in —
  * so a tenant can write "Dear {name}, I'm Joydesk…" once — and only a template

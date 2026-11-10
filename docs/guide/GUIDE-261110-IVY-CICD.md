@@ -151,7 +151,7 @@ Khi deploy fail, commit status chuyển sang *failure* và log nằm ở `~/shar
 
 ## 7. Cổng e2e (`test:ci`)
 
-`e2e/package.json` → `test:ci` = `playwright test --project=desktop --grep "@smoke|@T00|@T13"`.
+`e2e/package.json` → `test:ci` = `playwright test --project=desktop --grep "@smoke|@T00|@T01|@T13"` (T01 được thêm ngày 2026-11-10, gồm cả ma trận thiết bị TC-01-08).
 Cổng này chỉ gồm các test **đang xanh**. 49/75 test còn đỏ theo thiết kế, vì các task chưa làm (ivy-docs/TEST-CASES.md §0).
 **Khi task Tnn xong** (toàn bộ TC xanh), thêm `|@Tnn` vào `test:ci` trong cùng commit (ivy-docs/TASKS.md §0).
 

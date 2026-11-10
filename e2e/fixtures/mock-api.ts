@@ -84,7 +84,7 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     calls.push({ method: req.method(), path, query: url.searchParams, body });
   };
 
-  await page.route('**/api/v1/**', async (route: Route) => {
+  const handle = async (route: Route) => {
     const req = route.request();
     const url = new URL(req.url());
     const path = url.pathname.replace(/^.*\/api\/v1/, '');
@@ -221,6 +221,21 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     }
 
     return route.fallback();
+  };
+
+  // A test can finish while a request is still in flight — the widget fires
+  // `session/ensure` twice in dev (StrictMode, ivy-docs BUG-003). Answering it
+  // after the context is torn down throws "Response has been disposed", which
+  // Playwright pins on a test that had already PASSED (3 such flakes on
+  // 2026-11-10). Teardown errors are ignored; every other error still fails.
+  const TEARDOWN = /has been disposed|has been closed|Target closed|Test ended|Failed to find context/i;
+  await page.route('**/api/v1/**', async (route: Route) => {
+    try {
+      await handle(route);
+    } catch (err) {
+      if (TEARDOWN.test(String((err as Error)?.message ?? err))) return;
+      throw err;
+    }
   });
 
   return {

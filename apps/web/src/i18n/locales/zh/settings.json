@@ -108,7 +108,7 @@
     "launcherTeaser": "启动问候语",
     "launcherTeaserHint": "启动按钮旁问候气泡的文案（主题卡 → 问候气泡）。{shop} 会替换为显示名称。留空 = 默认。",
     "headerGreeting": "标题栏问候（已登录用户）",
-    "headerGreetingHint": "识别到用户时标题栏显示的文字。{name} 会替换为姓名，只填 {name} 则仅显示姓名。留空 = “你好，{name}”。",
+    "headerGreetingHint": "识别到用户时标题栏显示的文字。{name} 会替换为姓名，只填 {name} 则仅显示姓名。{firstName} 只替换为第一个词（\"Kiho Lee\" → \"Kiho\"）。留空 = “你好，{name}”。",
     "csatMode": "满意度卡片",
     "csatModeRating": "仅评分（默认）— 五个表情，一次点击",
     "csatModeSurvey": "问卷 — 是否解决 + 评分 + 不满意原因",

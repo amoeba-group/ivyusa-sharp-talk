@@ -5,7 +5,7 @@ import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { isAppMode, postToHost } from '../../lib/host-bridge';
 import { logoUrl } from '../../lib/branding';
 import { resolveLauncher } from '../../lib/launcher';
-import { fill, pickCopy } from '../../lib/copy';
+import { greetingFor, pickCopy } from '../../lib/copy';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { TopTabs } from './TopTabs';
 import { BottomTabs } from './BottomTabs';
@@ -150,7 +150,8 @@ export function WidgetPanel() {
   const language = useWidgetStore((s) => s.language);
   const headerTitle = pickCopy(useWidgetStore((s) => s.widgetCopy?.headerTitle), language);
   // Known-customer greeting is tenant copy too (REQ-261019 HA): `{name}` alone
-  // shows the bare name; empty falls back to the built-in "Hi, {name}".
+  // shows the bare name; `{firstName}` greets by first name (PLN-261110-IVY-T01);
+  // empty falls back to the built-in "Hi, {name}".
   const headerGreeting = pickCopy(useWidgetStore((s) => s.widgetCopy?.headerGreeting), language);
   const customerName = useWidgetStore((s) => s.customerName);
   const theme = useWidgetStore((s) => s.widgetTheme);
@@ -172,7 +173,7 @@ export function WidgetPanel() {
   const logo = theme?.logo && (logoWithTitle || !customerName) ? logoUrl(theme.logo) : null;
   const title = customerName
     ? headerGreeting
-      ? fill(headerGreeting, '{name}', customerName)
+      ? greetingFor(headerGreeting, customerName)
       : t('header.greeting', { name: customerName })
     : headerTitle || displayName || t('notificationCenter');
   const visibleTabs = useWidgetStore((s) => s.visibleTabs);

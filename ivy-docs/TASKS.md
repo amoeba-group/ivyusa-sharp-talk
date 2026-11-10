@@ -25,7 +25,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | Thứ tự | ID | Task | Loại | Ưu tiên | Phụ thuộc | Trạng thái | TC |
 |---|---|---|---|---|---|---|---|
 | 0 | T00 | Môi trường, Context7, Playwright, tài liệu | Setup | P0 | — | ✅ (trừ T00-b, T00-c) | TC-00-01..04 |
-| 1 | T01 | Shell panel, header "Hi, {firstName}", 2 tab + badge | CFG · UI | P0 | T00 | 🟨 [PLN](../docs/plan/PLN-261110-IVY-T01-Shell-Header-Tabs.md) | TC-01-01..07 |
+| 1 | T01 | Shell panel, header "Hi, {firstName}", 2 tab + badge | CFG · UI | P0 | T00 | ✅ code · ⏳ cấu hình prod | TC-01-01..08 |
 | 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N | P0 | T01 | ⬜ | TC-02-01..06 |
 | 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ⬜ | TC-03-01..05 |
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N | P1 | T02 | ⬜ | TC-07-01..03 |
@@ -62,7 +62,15 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - (2) Token cho server (tuỳ chọn).
   - (3) ✅ 2026-11-10: đã cài **cron** trên `talkaibotprd01` (`appops`, `/docker/apps/talktalk`, không có sudo nên dùng `--cron`). Từ đây, **push lên `deploy/talk-ivyusa` mà CI xanh sẽ tự deploy production**.
 
-### T01 · Shell, header & tab — 🟨 chờ duyệt [PLN-261110-IVY-T01](../docs/plan/PLN-261110-IVY-T01-Shell-Header-Tabs.md)
+### T01 · Shell, header & tab — ✅ code (2026-11-10) · ⏳ cấu hình production · [PLN](../docs/plan/PLN-261110-IVY-T01-Shell-Header-Tabs.md) · [RPT](../docs/implementation/RPT-261110-IVY-T01-Shell-Header-Tabs.md)
+- **Đã làm:**
+  - Placeholder `{firstName}` cho *Signed-in greeting*.
+  - Seed IVY preset cho DB mới.
+  - Hint console ở 6 ngôn ngữ.
+  - TC-01-08 ×11 (mọi kích thước màn hình qua `embed.js`).
+  - Thêm `@T01` vào `test:ci`.
+- **Còn lại:** chủ dự án cấu hình console production theo PLN §5 **sau khi code đã deploy**.
+- Quyết định của chủ dự án (2026-11-10): chiều cao panel **600**; guest giữ **tên shop**.
 - **Figma:** `992:526`, `1006:7825`, mockup desktop `1006:2431`. **Gap:** G-01, G-02, G-03.
 - **Việc cần làm:**
   1. Cấu hình tenant ivyusa `widget_tabs = ["notifications","chat"]` (console → Settings › Widget, hoặc SQL seed cho local). Ghi lại thao tác cho production.
@@ -117,6 +125,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 ### T08 · Chat home — ⬜
 - **Figma:** `1008:2291`, `993:1993`. **Gap:** G-12, G-13, G-14.
 - **Hợp đồng API đề xuất** (`ScenarioButtonResponse`): `emoji?: string` (console cho nhập, lưu cùng scenario config).
+- **Ghi chú từ T01:** bong bóng chào trong Chat vẫn ghi họ tên đầy đủ ("Hi Kiho Lee! Welcome back…", lấy từ `welcomeGreeting` với `{name}`). Nếu thiết kế cần first name, mở rộng `{firstName}` sang `welcomeGreeting` (`lib/copy.ts`) giống header.
 - **Việc cần làm:**
   1. Kiểu hiển thị **chip wrap** (nền trắng, viền 1px, bo tròn, emoji đầu) cho quick-reply (`ScenarioMenu.tsx`).
   2. Cấu hình tenant ivyusa: 7 nút theo SPEC SCR-IVY-10 (EN theo Q-07) + lời chào "Hi! This is IVY Beauty. How can I help you?" (KO theo thiết kế).

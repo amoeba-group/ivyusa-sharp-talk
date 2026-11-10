@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -34,7 +34,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | Task | Pass / Tổng | TC đang xanh | TC đang đỏ |
 |---|---|---|---|
 | T00 | 4 / 4 | TC-00-01, TC-00-02, TC-00-03, TC-00-04 | — |
-| T01 | 4 / 7 | TC-01-03, TC-01-05, TC-01-07, TC-01-04 | TC-01-02, TC-01-01, TC-01-06 |
+| T01 | 4 / 7 → **18 / 18** ✅ (T01, 2026-11-10; gồm TC-01-08 ×11) | tất cả | — |
 | T02 | 0 / 6 | — | TC-02-01, TC-02-02, TC-02-03, TC-02-04, TC-02-05, TC-02-06 |
 | T03 | 0 / 5 | — | TC-03-01, TC-03-02, TC-03-03, TC-03-04, TC-03-05 |
 | T04 | 0 / 5 | — | TC-04-01, TC-04-02, TC-04-03, TC-04-04, TC-04-05 |
@@ -75,6 +75,17 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-01-05 | Đóng/mở | Close → ẩn; mở lại vẫn ở tab cũ; `Esc` → ẩn | SCR-IVY-01 |
 | TC-01-06 | Rộng 380px (theme thật) | bề rộng panel 378–382px | G-03, §4 |
 | TC-01-07 | Settings | ⚙ → "Chat & AI consent"; Back → về tab | SCR-IVY-02 |
+| TC-01-08 ×11 | Mọi kích thước màn hình, mở qua **`embed.js` thật** trên một trang storefront (tag `@devices`) | Panel nằm trọn trong màn hình. ≥ 640px: 380 × min(600, frame − 20). < 640px: rộng bằng màn hình, cao min(680, màn hình), bám đáy. Header "Hi, Kiho", 2 tab và nút Close đều hiện trong panel | SCR-IVY-01, yêu cầu 2026-11-10 "PC, tablet, mọi mobile" |
+
+**Kết quả T01 (2026-11-10, local):** 7/7 + TC-01-08 11/11 ✅. Kích thước đo được:
+
+| Màn hình | Panel |
+|---|---|
+| PC 1920×1080 · laptop 1366×768 · cửa sổ thấp 1280×650 | 380×600 |
+| iPad dọc 768×1024 · ngang 1024×768 · iPad Pro 1024×1366 | 380×600 |
+| điện thoại 320×568 · iPhone SE 375×667 | toàn màn hình |
+| iPhone 15 390×844 · Pixel 7 412×915 | bottom sheet rộng hết màn, cao 680 |
+| điện thoại xoay ngang 844×390 | 380×370 (tự co, không bị cắt) |
 
 ## T02 · Notifications — Order (`02-notifications-order.spec.ts`)
 

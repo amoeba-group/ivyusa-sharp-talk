@@ -108,7 +108,7 @@
     "launcherTeaser": "Lời chào nút mở",
     "launcherTeaserHint": "Nội dung bong bóng chào cạnh nút mở (thẻ giao diện → Bong bóng chào). {shop} chèn tên hiển thị. Để trống = mặc định.",
     "headerGreeting": "Lời chào ở đầu widget (đã đăng nhập)",
-    "headerGreetingHint": "Văn bản phần đầu khi nhận ra khách. {name} chèn tên — chỉ nhập {name} để hiện riêng tên. Để trống = \"Chào {name}\".",
+    "headerGreetingHint": "Văn bản phần đầu khi nhận ra khách. {name} chèn tên — chỉ nhập {name} để hiện riêng tên. {firstName} chỉ chèn từ đầu tiên (\"Kiho Lee\" → \"Kiho\"). Để trống = \"Chào {name}\".",
     "csatMode": "Thẻ hài lòng",
     "csatModeRating": "Chỉ đánh giá (mặc định) — năm biểu cảm, một chạm",
     "csatModeSurvey": "Khảo sát — đã giải quyết? + đánh giá + lý do khi không hài lòng",
