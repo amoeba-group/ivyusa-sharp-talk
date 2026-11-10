@@ -30,7 +30,7 @@ Không có thay đổi API, DB hay migration.
 | `@devices` TC-01-08 ×11 | **11/11**. Bảng kích thước: ivy-docs/TEST-CASES.md §T01 (PC/tablet 380×600, điện thoại nhỏ toàn màn hình, điện thoại lớn bottom-sheet 680, xoay ngang 380×370) |
 | Toàn bộ desktop | 37 pass / 48 fail. Ca đỏ là các task chưa làm. 2 ca vốn xanh bị fail do lỗi chập chờn của harness (BUG-014) |
 | Sau khi sửa BUG-014 (`e2e/fixtures/mock-api.ts`): mọi ca vốn xanh + T01, `--repeat-each=2` | **78/78** (39 ca: 25 ca baseline desktop + 14 ca mới của T01). Không có regression |
-| Cổng CI mới `@smoke\|@T00\|@T01\|@T13` | xem §3 (CI) |
+| Cổng CI mới `@smoke\|@T00\|@T01\|@T13` trên GitHub ([run 42757271526](https://github.com/amoeba-group/ivyusa-sharp-talk/actions/runs/42757271526), DB seed mới) | **28/28** (preset seed cho đúng 2 tab, 380px, "Hi, Kiho"); verify ✅ |
 
 Đã kiểm tra bằng mắt qua ảnh chụp: laptop 1366×768, iPhone 15, điện thoại xoay ngang.
 
@@ -38,8 +38,8 @@ Không có thay đổi API, DB hay migration.
 
 | Mục | Trạng thái |
 |---|---|
-| Commit | (điền khi push) trên `deploy/talk-ivyusa` |
-| CI | (điền khi xong) |
-| Server `talkaibotprd01` | Lần **build và deploy thật đầu tiên** do cron chạy, vì có thay đổi `apps/` |
+| Commit | `b50304f6` trên `deploy/talk-ivyusa` |
+| CI | ✅ run 42757271526, xong khoảng 04:44Z |
+| Server `talkaibotprd01` | ✅ **Lần deploy thật đầu tiên do cron chạy**: bắt đầu 04:44:02Z, xong **04:45:34Z** (log `/home/appops/sharptalk-deploy-20261110-044402-b50304f6.log`).<br>• `deploy-self-hosted.sh` in `Deployed.`, tức đã qua kiểm tra health, widget 200, console 200 và boot log.<br>• Tạo lại: `sharptalk_api` (healthy), `sharptalk_web`, `sharptalk_widget`.<br>• Giữ nguyên: mysql, redis, rabbitmq, qdrant, nginx (*Up 10 days*).<br>• Mốc `deployed` = `b50304f6`. |
 | Cấu hình production (PLN §5) | ⏳ Chủ dự án làm trong console **sau khi** code mới chạy: tab, Corners Large, width 380, greeting `{firstName}` ở 6 ngôn ngữ |
 | SQL / migration | Không có |
