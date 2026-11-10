@@ -14,7 +14,7 @@
 |---|---|---|
 | CI | `ci.yml` chỉ chạy cho `main`/`production` → push lên `deploy/talk-ivyusa` **không được kiểm tra gì** | Mọi push/PR vào `deploy/talk-ivyusa`: verify (typecheck · env · migration manifest · radius · **i18n** · test · build) + **e2e gate** Playwright |
 | E2E | Chỉ chạy tay ở local | Chạy trong CI với stack thật (MySQL/Redis/RabbitMQ/Qdrant + seed + API + widget bản build) |
-| CD | SSH vào EC2 → `git pull` → `bash scripts/deploy-self-hosted.sh` bằng tay | Push → CI xanh → **người duyệt bấm Approve** → server tự deploy trong ≤ 2 phút |
+| CD | SSH vào EC2 → `git pull` → `bash scripts/deploy-self-hosted.sh` bằng tay | Push → CI xanh → server tự deploy trong ≤ 2 phút (**không có bước duyệt**, xem D2) |
 | Migration | Áp tay trước khi deploy | Không đổi (áp tay). Nếu quên, deploy **tự dừng trước khi động vào container** rồi tự tiếp tục khi SQL đã áp |
 
 Ràng buộc phát hiện khi khảo sát:
@@ -32,7 +32,9 @@ Các phương án khác bị loại:
 - **SSH push:** phải mở cổng 22 cho dải IP của GitHub, và khóa SSH nằm trên GitHub.
 - **SSM/OIDC:** cần quyền IAM AWS của IVY. Có thể chuyển sang sau mà không phải sửa CI.
 
-**D2 — Duyệt bằng GitHub Environment `talk-ivyusa-production`** (required reviewer + branch policy chỉ cho `deploy/talk-ivyusa`). Job `deploy-gate` là tín hiệu duy nhất server tin. Job này chỉ chạy khi `event=push` trên đúng nhánh, nên PR từ fork không bao giờ mở được cổng.
+**D2 — Cổng `deploy-gate` gắn GitHub Environment `talk-ivyusa-production`.** Job `deploy-gate` là tín hiệu duy nhất server tin. Job này chỉ chạy khi `event=push` trên đúng nhánh, nên PR từ fork không bao giờ mở được cổng. Script server cũng chỉ nhận run có `event=push` và `branch=deploy/talk-ivyusa`.
+- **Sửa ngày 2026-11-10 theo quyết định của chủ dự án:** **không dùng required reviewer**. Push mà CI xanh là deploy production luôn.
+- Environment vẫn được giữ để có lịch sử deploy, và để bật reviewer sau này mà không phải sửa code.
 
 **D3 — Dùng lại `ci.yml` qua `workflow_call`** thay vì chép lại các bước, để chỉ có một định nghĩa "build-green" cho cả hai nhánh. Thêm `i18n:check` vào đó (CLAUDE.md yêu cầu, trước đây CI chưa chạy).
 
@@ -55,7 +57,7 @@ Các phương án khác bị loại:
 | S3 | `test:ci` + reporter `github` khi chạy trong Actions | `e2e/package.json`, `e2e/playwright.config.ts` |
 | S4 | Script server tự kéo + installer systemd | `scripts/ivy-autodeploy.sh`, `scripts/ivy-autodeploy-install.sh` |
 | S5 | Tài liệu: runbook, cập nhật ivy-docs, CLAUDE.md §8 | `docs/guide/GUIDE-261110-IVY-CICD.md`, `ivy-docs/*`, `CLAUDE.md` |
-| S6 | **Thiết lập một lần, người có quyền làm:** environment reviewer (admin repo) · token (tuỳ chọn) · cài timer trên EC2 (SSH) | GUIDE §2 |
+| S6 | **Thiết lập một lần, người có quyền làm:** token (tuỳ chọn) · cài timer trên EC2 (SSH). ~~Environment reviewer~~: bỏ (D2) | GUIDE §2 |
 
 ## 4. Ảnh hưởng phụ
 
@@ -64,7 +66,7 @@ Các phương án khác bị loại:
 - **Bảo mật:**
   - Không có secret deploy trên GitHub, không mở cổng vào server.
   - Token tuỳ chọn trên server chỉ có quyền Actions read và Commit statuses write cho đúng repo này.
-  - Vẫn như trước: ai push được vào `deploy/talk-ivyusa` thì có thể đưa code lên production, nhưng giờ phải có người duyệt.
+  - Ai push được vào `deploy/talk-ivyusa` thì đưa được code lên production; điều này giống trước, nhưng giờ còn tự động. Lớp chặn duy nhất là CI: verify + e2e gate, và `deploy-self-hosted.sh` kiểm health sau khi deploy.
 - **Deploy hiện tại:** `deploy-self-hosted.sh` không đổi. Deploy tay vẫn dùng được, nhưng nên dừng timer trong lúc làm.
 - **Quy trình task IVY:** TASKS §0 có thêm bước "thêm `@Tnn` vào `test:ci`". T16 chuyển sang dùng pipeline này.
 - **Không đụng UI, API, schema, i18n key.**

@@ -131,7 +131,7 @@ Tenant của session xác định theo `shop_domain` (`session.service.ts`); n�
 
 ```
 push deploy/talk-ivyusa ─► Actions "IVY CI/CD": verify (ci.yml) + e2e gate (test:ci)
-                          └► deploy-gate (environment talk-ivyusa-production, người duyệt Approve)
+                          └► deploy-gate (environment talk-ivyusa-production, không cần duyệt)
 EC2 talkaibotprd01 ─ timer 2 phút ─► scripts/ivy-autodeploy.sh: thấy deploy-gate xanh ở tip
                           ─► ff-only ─► deploy-self-hosted.sh --check ─► deploy-self-hosted.sh
 ```
@@ -140,8 +140,8 @@ Server **tự kéo** bản mới, GitHub không kết nối vào server. Lý do:
 
 | Bước | Ai / ở đâu | Lệnh |
 |---|---|---|
-| 1. Commit & push | máy dev | `git push origin deploy/talk-ivyusa` → CI chạy; deploy chỉ sau khi Approve |
-| 2. Áp SQL migration (nếu PR có `sql/*.sql` hoặc `*.entity.ts`) | server, **trước** khi duyệt hoặc deploy | theo `## Migration` trong PR; skill `pre-deploy-check` |
+| 1. Commit & push | máy dev | `git push origin deploy/talk-ivyusa` → CI chạy; xanh thì tự deploy |
+| 2. Áp SQL migration (nếu PR có `sql/*.sql` hoặc `*.entity.ts`) | server, **trước khi push** | theo `## Migration` trong PR; skill `pre-deploy-check` |
 | 3. Kéo code | server `talkaibotprd01` (timer hoặc tay) | `git pull --ff-only` |
 | 4. Deploy | server (timer hoặc tay) | `bash scripts/deploy-self-hosted.sh` |
 | 5. Xác minh | server + trình duyệt | log boot `successfully started`, tuổi container (`docker ps`), `/api/v1/health` ok, `/widget/` và `/` = 200; route mới: 401 = đã deploy, 404 = chưa, 502 = API đang restart |

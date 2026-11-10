@@ -34,13 +34,13 @@ Kế hoạch: [PLN-261110-IVY-CICD](../plan/PLN-261110-IVY-CICD.md) · Runbook: 
 |---|---|
 | Commit | `fb6ce1c7` trên `deploy/talk-ivyusa` (đã push; trước đó là `82f6288d`) |
 | CI | Xanh (run 42745220139) |
-| Environment `talk-ivyusa-production` | GitHub **tự tạo khi chạy lần đầu, chưa có rule nào** (không reviewer, không branch policy). Claude không tự đổi cài đặt repo; lệnh tạo bằng API bị chặn vì là thay đổi tài nguyên dùng chung. → **T00-e (1)**: admin thêm reviewer + branch `deploy/talk-ivyusa` (GUIDE §2.1) |
+| Environment `talk-ivyusa-production` | GitHub **tự tạo khi chạy lần đầu, không có rule nào**. **Giữ nguyên như vậy**: ngày 2026-11-10 chủ dự án quyết định không cần duyệt, push mà CI xanh là deploy (PLN D2). |
 | Server `talkaibotprd01` | **Chưa cài timer**, vì cần SSH và `secrets/` không có trong bản clone. Hiện vẫn deploy bằng tay. Commit này chỉ đụng CI/script/tài liệu, **không đổi code app**, nên production không cần deploy lại → **T00-e (3)** (GUIDE §2.3) |
 | SQL / migration | Không có |
 | talk.ivyusa.com | Không đổi |
 
 ## 4. Ghi chú
 
-- Lần đầu `deploy-gate` qua ngay vì environment chưa có reviewer. Điều này vô hại vì chưa có timer. **Phải thêm reviewer trước khi cài timer**, nếu không mọi push xanh sẽ tự lên production.
+- `deploy-gate` qua ngay khi CI xanh, đúng thiết kế vì không có reviewer. **Ngay khi cài timer (T00-e (3)), mọi push lên `deploy/talk-ivyusa` mà CI xanh sẽ tự lên production.** Vì vậy SQL phải áp trước khi push.
 - Repo public (BUG-013) là lý do chọn kiểu server tự kéo. Nếu repo chuyển sang private, server cần token hoặc deploy key cho `git fetch` và token đọc Actions.
 - Khi hoàn thành một task IVY, thêm `|@Tnn` vào `test:ci` (TASKS §0).

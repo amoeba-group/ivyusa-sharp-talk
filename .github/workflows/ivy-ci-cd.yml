@@ -6,7 +6,9 @@ name: IVY CI/CD
 #
 #   push / PR ─► verify    ci.yml: typecheck · env · migrations · radius · i18n · test · build
 #             └► e2e gate  Playwright @smoke + finished tasks against a seeded stack
-#   push only ─► deploy-gate  environment talk-ivyusa-production (reviewer approval)
+#   push only ─► deploy-gate  environment talk-ivyusa-production — no reviewer by the
+#                  owner's decision (2026-11-10): green CI on a push = release. A
+#                  required reviewer can be added in Settings later with no code change.
 #                  └► on the server, scripts/ivy-autodeploy.sh (systemd timer) sees
 #                     deploy-gate succeed for the branch tip, fast-forwards and runs
 #                     scripts/deploy-self-hosted.sh.
@@ -25,7 +27,7 @@ on:
   pull_request:
     branches: [deploy/talk-ivyusa]
 
-# A newer push supersedes an older one — including one still waiting for approval.
+# A newer push supersedes an older one, so production follows the latest code.
 concurrency:
   group: ivy-cicd-${{ github.ref }}
   cancel-in-progress: true
@@ -139,7 +141,7 @@ jobs:
           {
             echo "### Released for talk.ivyusa.com"
             echo
-            echo "Commit \`${GITHUB_SHA}\` passed verify + e2e and is approved for production."
+            echo "Commit \`${GITHUB_SHA}\` passed verify + e2e and is released to production."
             echo
             echo "The production host deploys it on its next 2-minute cycle"
             echo "(\`scripts/ivy-autodeploy.sh\`). It deploys only the branch tip, and stops"

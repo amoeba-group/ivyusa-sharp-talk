@@ -16,7 +16,7 @@ git push deploy/talk-ivyusa
    ▼  GitHub Actions — workflow "IVY CI/CD"
    ├─ verify      typecheck · env:check · migration manifest · radius · i18n · test · build   (ci.yml)
    ├─ e2e gate    MySQL/Redis/RabbitMQ/Qdrant + seed + API + widget bản build → Playwright test:ci
-   └─ deploy-gate environment talk-ivyusa-production → chờ người duyệt bấm Approve (chỉ khi push)
+   └─ deploy-gate environment talk-ivyusa-production → không có bước duyệt: tự qua khi verify + e2e xanh (chỉ khi push)
                       │
                       ▼  EC2 talkaibotprd01 — systemd timer, mỗi 2 phút
                   scripts/ivy-autodeploy.sh
@@ -29,20 +29,22 @@ git push deploy/talk-ivyusa
 ```
 
 - **PR vào `deploy/talk-ivyusa`**: chỉ chạy `verify` + `e2e gate`, không bao giờ deploy.
-- **Chỉ commit ở đầu nhánh (tip) được deploy.** Push mới sẽ huỷ run cũ (kể cả run đang chờ duyệt).
+- **Push lên `deploy/talk-ivyusa` = deploy production**, miễn là CI xanh. Không có bước duyệt; quyết định của chủ dự án ngày 2026-11-10.
+- **Chỉ commit ở đầu nhánh (tip) được deploy.** Push mới sẽ huỷ run cũ, nên production luôn theo code mới nhất.
 - **Không dùng `[skip ci]` trên nhánh này**: tip không có deploy-gate xanh thì không bao giờ được deploy.
 - GitHub không thể kết nối vào server. Server tự kéo bản mới; xem lý do ở §8.
 
 ## 2. Thiết lập một lần
 
-### 2.1 GitHub — Environment có bước duyệt (cần quyền admin repo)
+### 2.1 GitHub — bước duyệt: KHÔNG dùng (không cần làm gì)
 
-`Settings → Environments → talk-ivyusa-production`. GitHub tự tạo environment này sau lần chạy đầu tiên; nếu chưa có thì bấm **New environment** và đặt đúng tên đó.
+Theo quyết định ngày 2026-11-10, CI xanh là tự deploy, không cần ai bấm duyệt. Environment `talk-ivyusa-production` đã được GitHub tự tạo, không có rule nào, và **giữ nguyên như vậy**. Nó vẫn có ích: GitHub ghi lịch sử deploy ở mục *Deployments*.
 
-- **Required reviewers**: thêm người được phép duyệt deploy, ví dụ `conghau0401`. Bỏ chọn **Prevent self-review**, vì một người vừa push vừa tự duyệt.
-- **Deployment branches and tags** → *Selected branches and tags* → thêm `deploy/talk-ivyusa`.
-
-> ⚠️ Nếu không đặt reviewer, mọi push qua được CI sẽ **tự deploy lên production**. Hãy làm bước này **trước** bước 2.3.
+Nếu sau này muốn bật lại bước duyệt, không cần sửa code:
+- Đăng nhập bằng tài khoản có quyền admin repo (hiện là `conghau0401`).
+- Vào https://github.com/amoeba-group/ivyusa-sharp-talk/settings/environments → `talk-ivyusa-production`.
+- **Required reviewers**: thêm người duyệt, bỏ chọn *Prevent self-review*.
+- **Deployment branches and tags**: chọn *Selected branches* rồi thêm `deploy/talk-ivyusa`.
 
 ### 2.2 (Tuỳ chọn) Token GitHub cho server
 
@@ -83,11 +85,10 @@ Installer kiểm tra: đúng nhánh, user không phải root và thuộc nhóm d
 
 ## 3. Làm việc hằng ngày
 
-1. Push lên `deploy/talk-ivyusa`.
-2. Mở GitHub → **Actions** → run *IVY CI/CD*. Đợi `verify` và `e2e gate` xanh.
-3. Job `deploy-gate` hiện **Waiting for review** → **Review deployments** → chọn `talk-ivyusa-production` → **Approve and deploy**.
-4. Trong vòng khoảng 2 phút, server bắt đầu deploy. Build lại image mất vài phút.
-5. Kiểm tra kết quả:
+1. Push lên `deploy/talk-ivyusa`. Chỉ cần làm vậy; các bước sau chạy tự động.
+2. GitHub → **Actions** → run *IVY CI/CD*: `verify` + `e2e gate` chạy khoảng 3 phút. Xanh thì `deploy-gate` tự qua. Đỏ thì **không deploy**, production giữ bản cũ.
+3. Trong vòng khoảng 2 phút sau khi `deploy-gate` xanh, server bắt đầu deploy. Build lại image mất vài phút.
+4. Kiểm tra kết quả:
    - Commit status `deploy/talk.ivyusa.com` (nếu có token).
    - Hoặc trên server: `journalctl -u ivy-autodeploy -n 50` · `bash scripts/ivy-autodeploy.sh --status` · log `~/sharptalk-deploy-*.log`.
    - Kiểm tra sau deploy theo CLAUDE.md §7: boot log, tuổi container, HTTP status của route mới.
@@ -98,8 +99,8 @@ E2E bị đỏ thì tải artifact `e2e-report-*` của run. Artifact gồm Play
 
 Quy tắc không đổi: **áp SQL lên DB production trước, rồi mới deploy code** (CLAUDE.md §7, PR cần mục `## Migration`).
 
-- Thứ tự đúng: backup → áp SQL từ `sql/` vào `sharptalk_mysql` → push hoặc duyệt.
-- Nếu lỡ duyệt trước khi áp SQL: `deploy-self-hosted.sh --check` sẽ fail, checkout **quay về commit cũ** (khớp với container đang chạy) và commit status ở trạng thái *pending "Waiting: deploy check failed"*. Áp SQL xong thì chu kỳ kế tiếp tự deploy, không cần làm gì thêm.
+- Thứ tự đúng: backup → áp SQL từ `sql/` vào `sharptalk_mysql` → **rồi mới push**. Vì không có bước duyệt, push chính là lệnh deploy.
+- Nếu lỡ push trước khi áp SQL: `deploy-self-hosted.sh --check` sẽ fail, checkout **quay về commit cũ** (khớp với container đang chạy) và commit status ở trạng thái *pending "Waiting: deploy check failed"*. Áp SQL xong thì chu kỳ kế tiếp tự deploy, không cần làm gì thêm.
 - Kiểm tra SQL nào còn thiếu: `MYSQL_CONTAINER=sharptalk_mysql bash scripts/check-migrations.sh`.
 
 ## 5. Deploy fail và rollback
@@ -107,7 +108,7 @@ Quy tắc không đổi: **áp SQL lên DB production trước, rồi mới depl
 Khi deploy fail, commit status chuyển sang *failure* và log nằm ở `~/sharptalk-deploy-*-<sha>.log`. Checkout **vẫn ở commit mới** và hệ thống không tự rollback, vì stack có thể đã chạy dở cùng thay đổi schema; việc này cần người quyết định.
 
 - **Sửa tiếp (ưu tiên):** push bản sửa, đi theo luồng bình thường.
-- **Revert:** `git revert <sha>` trên `deploy/talk-ivyusa` → push → duyệt. Commit revert cũng qua CI.
+- **Revert:** `git revert <sha>` trên `deploy/talk-ivyusa` → push. Commit revert cũng qua CI rồi tự deploy.
 - **Khẩn cấp trên server** (khi không chờ CI được):
   ```bash
   sudo systemctl stop ivy-autodeploy.timer         # BẮT BUỘC dừng trước — nếu không, timer sẽ deploy lại tip
@@ -117,7 +118,7 @@ Khi deploy fail, commit status chuyển sang *failure* và log nằm ở `~/shar
   git merge --ff-only origin/deploy/talk-ivyusa   # hoặc để timer tự làm
   sudo systemctl start ivy-autodeploy.timer
   ```
-  Lưu ý: commit đã được duyệt sẽ được server nhớ lại. Nếu bật lại timer khi tip vẫn là commit lỗi, server sẽ deploy lại commit đó.
+  Lưu ý: server nhớ những commit đã qua `deploy-gate`. Nếu bật lại timer khi tip vẫn là commit lỗi, server sẽ deploy lại commit đó.
 
 ## 6. Tạm dừng hoặc gỡ
 
@@ -157,4 +158,4 @@ Server chỉ deploy commit **tip của `deploy/talk-ivyusa`** có job `deploy-ga
 | `gate unknown: error GitHub API…` | Mạng ra ngoài hoặc hết giới hạn 60/h → thêm token (§2.2) |
 | `not deployable: run failure …` | CI đỏ ở tip → sửa và push lại |
 | `waiting: deploy check failed` | Còn SQL chưa áp hoặc config thiếu → xem log, áp SQL (§4) |
-| Không có gì xảy ra sau khi duyệt | `systemctl list-timers ivy-autodeploy.timer`; `bash scripts/ivy-autodeploy.sh --dry-run` |
+| CI xanh nhưng không deploy | `systemctl list-timers ivy-autodeploy.timer`; `bash scripts/ivy-autodeploy.sh --dry-run` |

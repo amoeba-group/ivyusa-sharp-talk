@@ -12,7 +12,9 @@
 5. **E2E:** `cd e2e && npm run test:task -- @T{nn}` → xanh; sau đó `npm run test:smoke` → xanh. Nếu task có `@responsive` thì chạy thêm `--project=mobile`.
 6. **Ghi lại:** cập nhật trạng thái ở bảng §1 + kết quả TC trong TEST-CASES.md; lỗi phát sinh ghi vào BUGS.md; viết RPT `docs/implementation/RPT-{YYMMDD}-IVY-T{nn}-{Topic}.md`.
    **Mở cổng CI:** khi toàn bộ TC của task đã xanh, thêm `|@T{nn}` vào script `test:ci` trong `e2e/package.json` trong cùng commit.
-7. **Commit & push** lên `deploy/talk-ivyusa` (**không bao giờ dùng `main`**). Workflow *IVY CI/CD* sẽ chạy verify và e2e gate. Khi xanh, người duyệt bấm **Approve** ở job `deploy-gate`, và server tự deploy trong vòng khoảng 2 phút ([GUIDE-261110-IVY-CICD](../docs/guide/GUIDE-261110-IVY-CICD.md)). Nếu có SQL thì phải áp lên production **trước** khi duyệt.
+7. **Commit & push** lên `deploy/talk-ivyusa` (**không bao giờ dùng `main`**). Workflow *IVY CI/CD* sẽ chạy verify và e2e gate. Khi xanh, server **tự deploy production**, không có bước duyệt ([GUIDE-261110-IVY-CICD](../docs/guide/GUIDE-261110-IVY-CICD.md)).
+   - Push = deploy, nên chỉ push khi task đã xong và đã kiểm.
+   - Nếu có SQL thì phải áp lên production **trước khi push**.
 
 Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Done · ⛔ Blocked
 
@@ -56,7 +58,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - [ ] **T00-c** Đọc cấu hình tenant `ivyusa` trên production (widget_tabs, theme, copy, scenario) để biết điểm xuất phát thật. Cần quyền truy cập server/console production.
 - [x] **T00-d** CI/CD ([PLN-261110-IVY-CICD](../docs/plan/PLN-261110-IVY-CICD.md)): workflow `IVY CI/CD` (verify + e2e gate `test:ci` + deploy-gate), script server `scripts/ivy-autodeploy.sh` + installer.
 - [ ] **T00-e** Thiết lập một lần ([GUIDE §2](../docs/guide/GUIDE-261110-IVY-CICD.md)):
-  - (1) Environment `talk-ivyusa-production`: required reviewer + branch `deploy/talk-ivyusa`. Cần admin repo; Claude không tự đổi được cài đặt repo.
+  - (1) ~~Reviewer cho environment `talk-ivyusa-production`~~: **bỏ**. Ngày 2026-11-10 quyết định không cần duyệt, push xanh là tự deploy.
   - (2) Token cho server (tuỳ chọn).
   - (3) Cài timer trên `talkaibotprd01` (cần SSH).
 
@@ -162,7 +164,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Việc cần làm:**
   1. Áp SQL (nếu có).
   2. Deploy:
-     - Khi T00-e xong: push → CI xanh → Approve `deploy-gate` → timer trên `talkaibotprd01` tự deploy.
+     - Khi T00-e xong: push → CI xanh → timer trên `talkaibotprd01` tự deploy.
      - Trước đó: `git pull` + `bash scripts/deploy-self-hosted.sh` bằng tay.
   3. Xác minh boot log, container và health.
   4. Chạy `cd e2e && npm run test:prod`.

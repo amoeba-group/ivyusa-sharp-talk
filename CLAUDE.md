@@ -123,8 +123,8 @@ Kit rules adopted (dev-kit 03/04 — MUST):
 - **Production branch = `deploy/talk-ivyusa`, NEVER `main`.** Never commit to `main`, push to it, merge into it or deploy from it for IVY.
 - **CI/CD** ([GUIDE-261110-IVY-CICD](docs/guide/GUIDE-261110-IVY-CICD.md)):
   - Every push or PR runs workflow `IVY CI/CD` (`.github/workflows/ivy-ci-cd.yml`): `ci.yml` verify + Playwright `test:ci` gate.
-  - A push then waits at `deploy-gate` (environment `talk-ivyusa-production`) for a reviewer's Approve.
-  - The host's systemd timer (`scripts/ivy-autodeploy.sh`) pulls the approved tip and runs `deploy-self-hosted.sh`. It is pull-based because the repo is public: never add a self-hosted runner.
+  - **No reviewer**: the owner decided on 2026-11-10 that a push to this branch with green CI deploys production automatically. So apply SQL *before* pushing, and never push half-finished work to this branch.
+  - The host's systemd timer (`scripts/ivy-autodeploy.sh`) pulls the tip once its `deploy-gate` is green and runs `deploy-self-hosted.sh`. It is pull-based because the repo is public: never add a self-hosted runner.
   - **Push ≠ deploy** until that timer is installed (TASKS T00-e). Until then, deploy by hand: `git pull` + `bash scripts/deploy-self-hosted.sh` on EC2 `talkaibotprd01`.
   - SQL is always applied first.
   - Finishing a task adds its `@Tnn` to `test:ci`.
