@@ -60,7 +60,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - [ ] **T00-e** Thiết lập một lần ([GUIDE §2](../docs/guide/GUIDE-261110-IVY-CICD.md)):
   - (1) ~~Reviewer cho environment `talk-ivyusa-production`~~: **bỏ**. Ngày 2026-11-10 quyết định không cần duyệt, push xanh là tự deploy.
   - (2) Token cho server (tuỳ chọn).
-  - (3) Cài timer trên `talkaibotprd01` (cần SSH).
+  - (3) ✅ 2026-11-10: đã cài **cron** trên `talkaibotprd01` (`appops`, `/docker/apps/talktalk`, không có sudo nên dùng `--cron`). Từ đây, **push lên `deploy/talk-ivyusa` mà CI xanh sẽ tự deploy production**.
 
 ### T01 · Shell, header & tab — ⬜
 - **Figma:** `992:526`, `1006:7825`, mockup desktop `1006:2431`. **Gap:** G-01, G-02, G-03.

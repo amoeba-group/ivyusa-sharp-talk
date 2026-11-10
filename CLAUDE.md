@@ -125,7 +125,8 @@ Kit rules adopted (dev-kit 03/04 — MUST):
   - Every push or PR runs workflow `IVY CI/CD` (`.github/workflows/ivy-ci-cd.yml`): `ci.yml` verify + Playwright `test:ci` gate.
   - **No reviewer**: the owner decided on 2026-11-10 that a push to this branch with green CI deploys production automatically. So apply SQL *before* pushing, and never push half-finished work to this branch.
   - The host's systemd timer (`scripts/ivy-autodeploy.sh`) pulls the tip once its `deploy-gate` is green and runs `deploy-self-hosted.sh`. It is pull-based because the repo is public: never add a self-hosted runner.
-  - **Push ≠ deploy** until that timer is installed (TASKS T00-e). Until then, deploy by hand: `git pull` + `bash scripts/deploy-self-hosted.sh` on EC2 `talkaibotprd01`.
+  - **Push = deploy** since 2026-11-10. The cron entry is installed on `talkaibotprd01`: user `appops`, `/docker/apps/talktalk`, log `~/ivy-autodeploy.log`.
+  - Pushes that touch only docs, ivy-docs, e2e or CI fast-forward the host without a rebuild.
   - SQL is always applied first.
   - Finishing a task adds its `@Tnn` to `test:ci`.
   - Never use `[skip ci]` on this branch.
