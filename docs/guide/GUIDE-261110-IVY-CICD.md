@@ -59,29 +59,41 @@ Lưu token vào `/etc/ivy-autodeploy.env` trên server (installer tạo sẵn fi
 | Vẫn chạy được: repo public, giới hạn 60 request/giờ, mỗi chu kỳ tốn tối đa 2 request khi có commit mới | Giới hạn 5000/giờ |
 | Kết quả deploy chỉ xem được trên server (`journalctl`, `--status`) | Commit trên GitHub hiện ✓/✗ `deploy/talk.ivyusa.com` |
 
-### 2.3 Server (EC2 `talkaibotprd01`, cần SSH)
+### 2.3 Server (EC2 `talkaibotprd01`)
 
-Điều kiện:
-- Checkout dùng để deploy đang ở nhánh `deploy/talk-ivyusa` và không có file tracked bị sửa.
-- `git fetch origin` chạy được mà không hỏi mật khẩu (repo public, HTTPS là được).
+Thông tin vận hành thực tế (khảo sát ngày 2026-11-10):
+- Truy cập server qua **AWS SSM Session Manager**, rồi `cd ~ && exec /bin/bash`.
+- User deploy: **`appops`**, thuộc nhóm `docker`, **không có sudo**.
+- Thư mục deploy: **`/docker/apps/talktalk`**, chủ sở hữu `appops`.
+- Remote `origin` = `https://github.com/amoeba-group/ivyusa-sharp-talk.git`.
+
+Điều kiện chung:
+- Checkout ở nhánh `deploy/talk-ivyusa` và không có file tracked bị sửa.
+- `git fetch origin` chạy được mà không hỏi mật khẩu.
 - User deploy thuộc nhóm `docker`.
-- Server có `python3` và `curl`.
+- Có `git`, `curl`, `python3` và `flock`.
 
 ```bash
-ssh <deploy-user>@<talkaibotprd01>
-cd <thư mục deploy>                        # nơi vẫn chạy bash scripts/deploy-self-hosted.sh
-git status -sb                             # phải là "## deploy/talk-ivyusa...origin/deploy/talk-ivyusa", không có file sửa
+cd /docker/apps/talktalk                   # thư mục deploy
+git status -sb                             # nhánh deploy/talk-ivyusa, không có file sửa
 git fetch origin
 git log --oneline HEAD..origin/deploy/talk-ivyusa   # xem server đang thiếu commit nào
 git merge --ff-only origin/deploy/talk-ivyusa       # lấy script CI/CD
 #   Nếu các commit vừa lấy có thay đổi code app → chạy deploy tay một lần như trước:
 #   bash scripts/deploy-self-hosted.sh
 bash scripts/ivy-autodeploy.sh --dry-run   # chỉ báo, không deploy gì
-sudo bash scripts/ivy-autodeploy-install.sh
-systemctl list-timers ivy-autodeploy.timer
+
+# Không có sudo (talkaibotprd01 / appops): crontab của chính user, mỗi 2 phút
+bash scripts/ivy-autodeploy-install.sh --cron
+crontab -l | grep ivy-autodeploy
+
+# Có sudo: systemd timer
+# sudo bash scripts/ivy-autodeploy-install.sh && systemctl list-timers ivy-autodeploy.timer
 ```
 
-Installer kiểm tra: đúng nhánh, user không phải root và thuộc nhóm docker, có `git`/`curl`/`python3`. Sau đó nó tạo `ivy-autodeploy.service` (oneshot, timeout 45 phút) và `ivy-autodeploy.timer` (mỗi 2 phút).
+Installer kiểm tra: đúng nhánh, user không phải root, sở hữu checkout và thuộc nhóm docker, có đủ `git`/`curl`/`python3`/`flock`.
+- **`--cron`:** thêm một dòng `*/2 * * * *` (đánh dấu `# ivy-autodeploy`) vào crontab của user, và không đụng tới các job khác. Env nằm ở `~/.config/ivy-autodeploy.env` (600), log ở `~/ivy-autodeploy.log`. Hai lần chạy không bao giờ chồng nhau nhờ `flock`.
+- **systemd:** tạo `ivy-autodeploy.service` (oneshot, timeout 45 phút) và `ivy-autodeploy.timer` (mỗi 2 phút). Env nằm ở `/etc/ivy-autodeploy.env`, log trong journald.
 
 ## 3. Làm việc hằng ngày
 
@@ -90,7 +102,7 @@ Installer kiểm tra: đúng nhánh, user không phải root và thuộc nhóm d
 3. Trong vòng khoảng 2 phút sau khi `deploy-gate` xanh, server bắt đầu deploy. Build lại image mất vài phút.
 4. Kiểm tra kết quả:
    - Commit status `deploy/talk.ivyusa.com` (nếu có token).
-   - Hoặc trên server: `journalctl -u ivy-autodeploy -n 50` · `bash scripts/ivy-autodeploy.sh --status` · log `~/sharptalk-deploy-*.log`.
+   - Hoặc trên server: `tail -n 50 ~/ivy-autodeploy.log` (cron) hoặc `journalctl -u ivy-autodeploy -n 50` (systemd) · `bash scripts/ivy-autodeploy.sh --status` · log chi tiết của từng lần deploy `~/sharptalk-deploy-*.log`.
    - Kiểm tra sau deploy theo CLAUDE.md §7: boot log, tuổi container, HTTP status của route mới.
 
 E2E bị đỏ thì tải artifact `e2e-report-*` của run. Artifact gồm Playwright report, trace và log API/widget.
@@ -111,23 +123,22 @@ Khi deploy fail, commit status chuyển sang *failure* và log nằm ở `~/shar
 - **Revert:** `git revert <sha>` trên `deploy/talk-ivyusa` → push. Commit revert cũng qua CI rồi tự deploy.
 - **Khẩn cấp trên server** (khi không chờ CI được):
   ```bash
-  sudo systemctl stop ivy-autodeploy.timer         # BẮT BUỘC dừng trước — nếu không, timer sẽ deploy lại tip
+  bash scripts/ivy-autodeploy-install.sh --cron --uninstall   # BẮT BUỘC dừng trước (systemd: sudo systemctl stop ivy-autodeploy.timer)
   git reset --keep <sha-tốt-trước-đó>
   bash scripts/deploy-self-hosted.sh
-  # ... sau đó push một commit revert lên deploy/talk-ivyusa, rồi:
-  git merge --ff-only origin/deploy/talk-ivyusa   # hoặc để timer tự làm
-  sudo systemctl start ivy-autodeploy.timer
+  # ... sau đó push một commit revert lên deploy/talk-ivyusa, rồi bật lại:
+  bash scripts/ivy-autodeploy-install.sh --cron                # (systemd: sudo systemctl start ivy-autodeploy.timer)
   ```
   Lưu ý: server nhớ những commit đã qua `deploy-gate`. Nếu bật lại timer khi tip vẫn là commit lỗi, server sẽ deploy lại commit đó.
 
 ## 6. Tạm dừng hoặc gỡ
 
-| Việc | Lệnh |
-|---|---|
-| Tạm dừng auto-deploy | `sudo systemctl stop ivy-autodeploy.timer` |
-| Bật lại | `sudo systemctl start ivy-autodeploy.timer` |
-| Gỡ hẳn (giữ `/etc/ivy-autodeploy.env`) | `sudo bash scripts/ivy-autodeploy-install.sh --uninstall` |
-| Deploy tay như trước | `git pull --ff-only && bash scripts/deploy-self-hosted.sh` (nên dừng timer trước) |
+| Việc | cron (talkaibotprd01, không sudo) | systemd (có sudo) |
+|---|---|---|
+| Tạm dừng / gỡ | `bash scripts/ivy-autodeploy-install.sh --cron --uninstall` | `sudo systemctl stop ivy-autodeploy.timer` / `sudo bash scripts/ivy-autodeploy-install.sh --uninstall` |
+| Bật lại | `bash scripts/ivy-autodeploy-install.sh --cron` | `sudo systemctl start ivy-autodeploy.timer` |
+| Xem đang chạy | `crontab -l \| grep ivy-autodeploy` · `tail -f ~/ivy-autodeploy.log` | `systemctl list-timers ivy-autodeploy.timer` · `journalctl -u ivy-autodeploy -f` |
+| Deploy tay như trước | Dừng trước, rồi `git pull --ff-only && bash scripts/deploy-self-hosted.sh` | như bên trái |
 
 ## 7. Cổng e2e (`test:ci`)
 
@@ -150,7 +161,7 @@ Server chỉ deploy commit **tip của `deploy/talk-ivyusa`** có job `deploy-ga
 
 ## 9. Xử lý sự cố
 
-| Triệu chứng (journalctl / `--status`) | Nguyên nhân · cách xử lý |
+| Triệu chứng (`~/ivy-autodeploy.log` / journalctl / `--status`) | Nguyên nhân · cách xử lý |
 |---|---|
 | `checkout is on 'X', expected 'deploy/talk-ivyusa'` | Ai đó đã checkout nhánh khác trên server → checkout lại `deploy/talk-ivyusa` |
 | `tracked files are modified` | Có file bị sửa tay trên server → commit/discard (`git diff` để xem) |
@@ -158,4 +169,5 @@ Server chỉ deploy commit **tip của `deploy/talk-ivyusa`** có job `deploy-ga
 | `gate unknown: error GitHub API…` | Mạng ra ngoài hoặc hết giới hạn 60/h → thêm token (§2.2) |
 | `not deployable: run failure …` | CI đỏ ở tip → sửa và push lại |
 | `waiting: deploy check failed` | Còn SQL chưa áp hoặc config thiếu → xem log, áp SQL (§4) |
-| CI xanh nhưng không deploy | `systemctl list-timers ivy-autodeploy.timer`; `bash scripts/ivy-autodeploy.sh --dry-run` |
+| CI xanh nhưng không deploy | `crontab -l \| grep ivy-autodeploy` (hoặc `systemctl list-timers ivy-autodeploy.timer`); `bash scripts/ivy-autodeploy.sh --dry-run` |
+| `another cycle is running` lặp lại vài lần | Một lần deploy đang build, lâu hơn 2 phút. Đây là bình thường, `flock` đang chặn chu kỳ chồng lên |

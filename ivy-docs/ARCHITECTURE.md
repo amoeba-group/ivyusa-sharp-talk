@@ -132,9 +132,11 @@ Tenant của session xác định theo `shop_domain` (`session.service.ts`); n�
 ```
 push deploy/talk-ivyusa ─► Actions "IVY CI/CD": verify (ci.yml) + e2e gate (test:ci)
                           └► deploy-gate (environment talk-ivyusa-production, không cần duyệt)
-EC2 talkaibotprd01 ─ timer 2 phút ─► scripts/ivy-autodeploy.sh: thấy deploy-gate xanh ở tip
+EC2 talkaibotprd01 ─ cron 2 phút (user appops) ─► scripts/ivy-autodeploy.sh: thấy deploy-gate xanh ở tip
                           ─► ff-only ─► deploy-self-hosted.sh --check ─► deploy-self-hosted.sh
 ```
+
+Server: truy cập qua AWS SSM Session Manager, user `appops` (nhóm docker, không sudo), checkout `/docker/apps/talktalk`.
 
 Server **tự kéo** bản mới, GitHub không kết nối vào server. Lý do: repo public (xem GUIDE §8). Trước khi cài timer trên server (T00-e), các bước 3–4 dưới đây vẫn làm bằng tay. Sau khi cài, timer tự làm bước 3–4.
 

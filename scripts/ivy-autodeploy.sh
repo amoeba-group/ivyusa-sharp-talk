@@ -4,8 +4,8 @@
 # Production for IVY USA runs from branch deploy/talk-ivyusa — NEVER main.
 #
 # Runs ON the production host (EC2 talkaibotprd01) from the deploy checkout,
-# every 2 minutes, via the systemd timer that scripts/ivy-autodeploy-install.sh
-# installs. One cycle:
+# every 2 minutes, via the crontab entry (`--cron`, no sudo — talkaibotprd01) or
+# the systemd timer that scripts/ivy-autodeploy-install.sh installs. One cycle:
 #
 #   1. fetch origin/deploy/talk-ivyusa — nothing to do when HEAD already has it
 #   2. ask GitHub whether the "IVY CI/CD" run for that exact commit (event=push,
