@@ -26,7 +26,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 |---|---|---|---|---|---|---|---|
 | 0 | T00 | Môi trường, Context7, Playwright, tài liệu | Setup | P0 | — | ✅ (trừ T00-b, T00-c) | TC-00-01..04 |
 | 1 | T01 | Shell panel, header "Hi, {firstName}", 2 tab + badge | CFG · UI | P0 | T00 | ✅ code · ⏳ cấu hình prod | TC-01-01..08 |
-| 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N | P0 | T01 | ⬜ | TC-02-01..06 |
+| 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N · API | P0 | T01 | 🟨 [PLN](../docs/plan/PLN-261110-IVY-T02-Notifications-Order.md) | TC-02-01..06 |
 | 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ⬜ | TC-03-01..05 |
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N | P1 | T02 | ⬜ | TC-07-01..03 |
 | 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · DB · UI | P1 | T02 | ⬜ | TC-04-01..05 |
@@ -80,7 +80,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **AC:** đúng 2 tab; badge "{n} unread", 0 thì ẩn; "Hi, Kiho"; rộng 380px ±2; Close/Esc đóng; Settings mở và Back quay về.
 - **TC:** TC-01-01..07.
 
-### T02 · Notifications — Order — ⬜
+### T02 · Notifications — Order — 🟨 chờ duyệt [PLN-261110-IVY-T02](../docs/plan/PLN-261110-IVY-T02-Notifications-Order.md)
 - **Figma:** Master `992:526`, `1006:7825`, `1006:2930`. **Gap:** G-04, G-05, G-06. **BR:** 01–08.
 - **Việc cần làm:**
   1. `tab-chips.ts`: bar gộp → **Order · Delivery · Promo · Review**. Bỏ "All" (Q-10); nhãn mới cho 6 locale (KO: 주문 · 배송 · 프로모 · 리뷰). Chip có `aria-pressed`. Phải giữ được hành vi cho tenant khác (thay đổi có điều kiện hoặc theo cấu hình).
