@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -35,9 +35,9 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 |---|---|---|---|
 | T00 | 4 / 4 | TC-00-01, TC-00-02, TC-00-03, TC-00-04 | — |
 | T01 | 4 / 7 → **18 / 18** ✅ (T01, 2026-11-10; gồm TC-01-08 ×11) | tất cả | — |
-| T02 | 0 / 6 | — | TC-02-01, TC-02-02, TC-02-03, TC-02-04, TC-02-05, TC-02-06 |
+| T02 | 0 / 6 → **6 / 6** ✅ (T02, 2026-11-11) | tất cả | — |
 | T03 | 0 / 5 | — | TC-03-01, TC-03-02, TC-03-03, TC-03-04, TC-03-05 |
-| T04 | 0 / 5 | — | TC-04-01, TC-04-02, TC-04-03, TC-04-04, TC-04-05 |
+| T04 | 0 / 5 → 3 / 5 (nhờ T02: chạm dòng mở Order Detail) | TC-04-01, TC-04-02, TC-04-05 | TC-04-03, TC-04-04 |
 | T05 | 0 / 4 | — | TC-05-01, TC-05-02, TC-05-03, TC-05-04 |
 | T06 | 0 / 3 | — | TC-06-01, TC-06-02, TC-06-03 |
 | T07 | 1 / 3 | TC-07-03 | TC-07-01, TC-07-02 |
@@ -47,8 +47,8 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T11 | 0 / 4 | — | TC-11-01, TC-11-02, TC-11-03, TC-11-04 |
 | T12 | 0 / 4 | — | TC-12-01, TC-12-02, TC-12-03, TC-12-04 |
 | T13 | 4 / 4 | TC-13-01, TC-13-02, TC-13-04, TC-13-03 | — |
-| T14 | 7 / 8 | TC-14-01 [en], TC-14-01 [es], TC-14-01 [ko], TC-14-01 [vi], TC-14-01 [ja], TC-14-01 [zh], TC-14-03 | TC-14-02 [ko] |
-| T15 | 3 / 4 | TC-15-02, TC-15-03, TC-15-01 | TC-15-04 |
+| T14 | 7 / 8 → 8 / 8 (nhờ T02: chip KO 주문 · 배송 · 프로모 · 리뷰) | TC-14-01 [en], TC-14-01 [es], TC-14-01 [ko], TC-14-01 [vi], TC-14-01 [ja], TC-14-01 [zh], TC-14-03, TC-14-02 [ko] | — |
+| T15 | 3 / 4 → 4 / 4 (nhờ T02: chip `aria-pressed`) | tất cả | — |
 
 > T16 (`@prod`) không chạy ở baseline vì talk.ivyusa.com trả 403 cho máy này (BUG-004).
 > Khi một task xong, cập nhật lại dòng của task đó (chạy `npm run test:task -- @Tnn`).
@@ -97,6 +97,20 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-02-04 | Định dạng thời gian | mọi `notif-time` khớp `Just now \| {n}mins ago \| {n}h ago \| Yesterday \| {n} days ago \| MMM d` | BR-05 |
 | TC-02-05 | Đã đọc + mở chi tiết | dòng `data-unread=true` → bấm → `POST /notifications/:id/read` → heading "Order Detail" | G-06, BR-03, BR-07 |
 | TC-02-06 | Màu pill | confirmed: xanh lá trội · in_transit: đỏ > lục (cam) · delivered: xám (chênh kênh < 24) · review: tím | §4, BR-06 |
+
+**Kết quả (2026-11-11):** 6/6. Chạy lặp `@T02` + cổng CI cũ ×2: 68/68.
+
+**Kiểm thử bổ sung cho T02:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit widget | `apps/widget/test/notice-row.test.mjs` | Biên thời gian BR-05: 59s / 1 phút / 59 phút / 1 giờ, qua nửa đêm, Yesterday theo lịch, 2 và 6 ngày, ngày tháng, khác năm. Nhóm Today's/Yesterday's. Mã pill: 6 chữ chuẩn, không đoán theo chữ na ná ("Delivery failed") |
+| Unit widget | `apps/widget/test/tab-chips.test.mjs` | Bar 1 tab danh sách, bar 3 tab không đổi, chip cũ (`all`/`orders`/`payment`) quay về Order, lọc dòng Order |
+| Jest API | `notification.service.spec.ts` | B2: tạo đúng, không lặp, không hồi sinh dòng đã xoá, chờ thanh toán, tenant 2 tab, không có Redis/khoá/tenant, chạy chung một lần giữa feed và badge, lỗi không làm hỏng feed, sắp theo thời điểm sự kiện. Feed chỉ đọc kênh `in_app` (BUG-015) |
+| Jest API | `order.service.tracking.spec.ts` | B1: thông báo giao hàng có `refType 'order'` + `refId` |
+| Tích hợp local (API + MySQL thật) | thủ công | B2 tạo 2 dòng, `createdAt` = ngày đặt, đã đọc (> 24 giờ). Gọi lại không tạo thêm. Dòng đã xoá không bị tạo lại. Đơn mới (< 24 giờ) → chưa đọc, badge 2 → 3 |
+
+> Fixture: dòng "hôm qua" giờ là **đúng 24 giờ trước** (`yesterday()` trong `e2e/fixtures/ivy-data.ts`). Trước đây dùng 26 giờ, nên từ 00:00 đến 02:00 giờ New York nó rơi vào 2 ngày trước và TC-02-02 đỏ (BUG-016).
 
 ## T03 · Delivery (`03-delivery.spec.ts`)
 

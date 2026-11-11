@@ -37,7 +37,7 @@ describe('OrderService tracking', () => {
       sessionService as never,
       {} as never, // productRepo
     );
-    return { svc, order, saved };
+    return { svc, order, saved, bus };
   }
 
   describe('trackingForSession → trackingUrl', () => {
@@ -92,6 +92,19 @@ describe('OrderService tracking', () => {
       const { svc, order, saved } = build(existing);
       await svc.applyFulfillment(order as never, 'delivered', undefined, undefined, 'data:text/html,x');
       expect(saved[0]).toMatchObject({ tenantId: '1', trackingUrl: null, status: 'delivered', trackingNumber: '1Z1' });
+    });
+
+    it('names the order on the shipping notice, so the widget can open it (ivy-docs T02 B1)', async () => {
+      const { svc, order, bus } = build(null);
+      await svc.applyFulfillment(order as never, 'in_transit', '1Z1', 'UPS');
+      const notice = bus.publish.mock.calls.find(([, p]) => (p as { category?: string })?.category === 'shipping');
+      expect(notice?.[1]).toMatchObject({
+        tenantId: '1',
+        customerId: '7',
+        statusBadge: 'In Transit',
+        refType: 'order',
+        refId: '42',
+      });
     });
   });
 });

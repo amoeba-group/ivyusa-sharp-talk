@@ -100,6 +100,42 @@ export function isOrderInTransit(order: {
   return IN_TRANSIT_UI.test((order.statusUi ?? '').trim());
 }
 
+/**
+ * The status a notification pill names (ivy-docs SPEC §9 `data-status`), which
+ * decides its colour and its translated label.
+ */
+export const NOTICE_STATUS = {
+  CONFIRMED: 'confirmed',
+  IN_TRANSIT: 'in_transit',
+  DELIVERED: 'delivered',
+  REVIEW: 'review',
+  PENDING_PAYMENT: 'pending_payment',
+  CANCEL_REQUESTED: 'cancel_requested',
+} as const;
+export type NoticeStatus = (typeof NOTICE_STATUS)[keyof typeof NOTICE_STATUS];
+
+/**
+ * `notifications.status_badge` holds the API's own `ORDER_STATUS_UI` wording
+ * ("Confirmed", "In Transit"…), written in English by the server. Those six
+ * strings are the whole vocabulary, so they are matched EXACTLY (case and
+ * spacing aside) rather than by substring — a guess like /deliver/ is what
+ * made the old pill colour "Delivery failed" as a success (ivy-docs BUG-011).
+ */
+const BADGE_TO_NOTICE_STATUS: Record<string, NoticeStatus> = {
+  confirmed: NOTICE_STATUS.CONFIRMED,
+  'in transit': NOTICE_STATUS.IN_TRANSIT,
+  delivered: NOTICE_STATUS.DELIVERED,
+  review: NOTICE_STATUS.REVIEW,
+  'pending payment': NOTICE_STATUS.PENDING_PAYMENT,
+  'cancel requested': NOTICE_STATUS.CANCEL_REQUESTED,
+};
+
+/** The pill status for a stored badge, or null when it is wording we do not own. */
+export function noticeStatus(statusBadge?: string | null): NoticeStatus | null {
+  const key = (statusBadge ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+  return BADGE_TO_NOTICE_STATUS[key] ?? null;
+}
+
 /** Anchored platform wording for "arrived", used only without an internal status. */
 const DELIVERED_UI = /^(delivered|complete[d]?)$/i;
 

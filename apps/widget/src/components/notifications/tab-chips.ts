@@ -51,23 +51,36 @@ export interface ChipOptions {
  * chips, because otherwise switching a tab off would silently delete features —
  * a shopper with the orders tab disabled must still be able to track a shipment.
  */
+/**
+ * The Master Shots' Order chip: the feed of order NOTICES (confirmed, shipped,
+ * delivered…) — payment + shipping notifications, each drawn from the order it
+ * names. Not the order list: that is `orders` above (ivy-docs T02 D1).
+ */
+export const ORDER_FEED_CHIP = 'order';
+
+/** Notification categories the Order chip shows. */
+export const ORDER_FEED_CATEGORIES: readonly string[] = ['payment', 'shipping'];
+
 export function chipsFor(tab: TabKey, visibleTabs: TabKey[], opts: ChipOptions = {}): ChipDef[] {
   const bothPresent =
     visibleTabs.includes('notifications') && visibleTabs.includes('orders');
   if (bothPresent) return tab === 'orders' ? ORDER_CHIPS : NOTICE_CHIPS;
   // One list tab absorbs the other's chips, in the design's single bar
-  // (PLN-260923 P1): All · Payment · Delivery · Event · Review.
-  //  - `orders` is still the order LIST; beside "All" with no Orders tab next
-  //    to it the design calls it Payment, so only the label moves.
+  // (ivy-docs SPEC BR-01, T02): Order · Delivery · Promo · Review. No "All"
+  // (SPEC Q-10).
+  //  - Order is the order-notice feed, which the API now writes for every
+  //    recent order (T02 B2) — the old `payment` chip opened empty because
+  //    nothing wrote one (REQ-260818 C-1).
+  //  - Promo is the `event` feed under the design's name.
+  //  - `chat` notices (the mobile app's) have no chip: they repeat the Chat tab.
   //  - `inquiries` is not in that design. It is the only home of the issue
   //    feed, so it stays for tenants that actually run an issue workflow and
   //    goes for everyone else, where it could only ever be empty (D-2).
-  const [orders, shipping, review, inquiries] = ORDER_CHIPS;
+  const [, shipping, review, inquiries] = ORDER_CHIPS;
   const chips: ChipDef[] = [
-    NOTICE_CHIPS[0],
-    { ...orders, labelKey: 'notifications.filters.payment' },
+    { key: ORDER_FEED_CHIP, labelKey: 'notifications.filters.order' },
     shipping,
-    NOTICE_CHIPS[1],
+    { ...NOTICE_CHIPS[1], labelKey: 'notifications.filters.promo' },
     review,
   ];
   return opts.inquiries ? [...chips, inquiries] : chips;
@@ -76,6 +89,11 @@ export function chipsFor(tab: TabKey, visibleTabs: TabKey[], opts: ChipOptions =
 /** The chip a tab starts on — always its own first. */
 export function defaultChip(tab: TabKey, visibleTabs: TabKey[], opts: ChipOptions = {}): string {
   return chipsFor(tab, visibleTabs, opts)[0]?.key ?? 'all';
+}
+
+/** The rows the Order chip shows, from a feed that may hold other categories too. */
+export function orderFeedRows<T extends { category: string }>(rows: readonly T[]): T[] {
+  return rows.filter((n) => ORDER_FEED_CATEGORIES.includes(n.category));
 }
 
 /** True when `filter` is one this tab actually renders. */

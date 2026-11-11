@@ -98,6 +98,14 @@ export const NOTIFICATION_SCOPE = { ORDER: 'order', NOTICE: 'notice' } as const;
 export type NotificationScope = (typeof NOTIFICATION_SCOPE)[keyof typeof NOTIFICATION_SCOPE];
 
 /**
+ * `notifications.ref_type`: the in-app record a notification is about, which the
+ * widget opens on tap. `order` → Order Detail (ivy-docs T02); `order_item` →
+ * the review form (PLN-260817 S5).
+ */
+export const NOTIFICATION_REF = { ORDER: 'order', ORDER_ITEM: 'order_item' } as const;
+export type NotificationRef = (typeof NOTIFICATION_REF)[keyof typeof NOTIFICATION_REF];
+
+/**
  * Categories the shop sends because something happened to an order or a
  * conversation. They are default-ALLOW on external channels; everything else is
  * marketing and default-DENY (PLN-260817-Widget-Header-Prefs-Cleanup).

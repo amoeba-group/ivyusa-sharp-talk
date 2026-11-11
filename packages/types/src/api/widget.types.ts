@@ -433,9 +433,10 @@ export interface NotificationResponse {
   /** Deep-link target (campaign product/url — A-9); client routes on tap. */
   linkUrl: string | null;
   /**
-   * In-app record this notification is about — currently only `'order_item'`,
-   * set by review requests so the client can open the review form for the right
-   * item (PLN-260817 S5). Null on every row written before it existed.
+   * In-app record this notification is about (`NOTIFICATION_REF`): `'order_item'`
+   * on review requests, so the client can open the review form for the right
+   * item (PLN-260817 S5); `'order'` on order and shipping notices, which open
+   * Order Detail (ivy-docs T02). Null on every row written before it existed.
    */
   refType: string | null;
   /** Id of `refType`'s record. BIGINT, so a string on the wire. */

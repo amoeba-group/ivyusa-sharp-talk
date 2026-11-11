@@ -7,14 +7,27 @@ import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { SessionService } from '../session/session.service';
 import { NotifyInput } from './dto/response/notification.response';
+import { OrderCache } from '../order/entity/order-cache.entity';
+import { OrderItem } from '../order/entity/order-item.entity';
+import {
+  EMPTY_ITEM_SUMMARY,
+  orderSummaryText,
+  summarizeOrderItems,
+} from '../order/order-item-summary';
 import {
   EXTERNAL_CHANNELS,
   NOTIFICATION_CATEGORY,
+  NOTIFICATION_REF,
   NOTIFICATION_SCOPE,
   ORDER_NOTIFICATION_CATEGORIES,
+  ORDER_STATUS_INTERNAL,
+  ORDER_STATUS_UI,
   TRANSACTIONAL_CATEGORIES,
+  WIDGET_TAB,
+  WIDGET_TABS_DEFAULT,
   channelAllowedByTenant,
   isMarketingCategory,
+  normalizeWidgetTabs,
   type NotificationScope,
 } from '@sharptalk/types';
 
@@ -27,6 +40,29 @@ import { RedisService } from '../../infrastructure/cache/redis.service';
 
 /** TTL for the unread-badge count cache (PERF-11) — widget polls it every 30s. */
 const UNREAD_CACHE_TTL_SEC = 20;
+
+/**
+ * Order notices (ivy-docs T02 B2): the same recent window the widget's order
+ * list reads (10 orders / 30 days, PLN-260808), checked at most once per
+ * customer per 5 minutes. An order placed in the last 24 hours arrives unread.
+ */
+const ORDER_NOTICE_MAX = 10;
+const ORDER_NOTICE_DAYS = 30;
+const ORDER_NOTICE_THROTTLE_SEC = 300;
+const ORDER_NOTICE_UNREAD_MS = 24 * 60 * 60 * 1000;
+
+function orderNoticeLockKey(customerId: number): string {
+  return `notif:order-notices:${customerId}`;
+}
+
+/**
+ * The feed is the in-app channel. `notify()` also writes one row per external
+ * channel it delivered to (email/sms/web_push/push) as a delivery record, with
+ * the same customer and text, so reading every row showed each event up to five
+ * times and counted it five times on the badge (ivy-docs BUG-015). The in_app
+ * row is written unconditionally, so filtering to it never hides an event.
+ */
+const FEED_CHANNEL = 'in_app';
 
 /** Per-scope, because the widget may show two badges that must not share a cache. */
 function unreadCacheKey(customerId: number, scope?: NotificationScope): string {
@@ -60,7 +96,7 @@ function scopedWhere(
   scope: NotificationScope | undefined,
 ): Record<string, unknown> {
   // Shopper-deleted rows never surface again (PLN-260916 P3).
-  const where: Record<string, unknown> = { customerId, deletedAt: IsNull() };
+  const where: Record<string, unknown> = { customerId, channel: FEED_CHANNEL, deletedAt: IsNull() };
   if (category && category !== 'all') {
     where.category = category;
     return where;
@@ -96,7 +132,12 @@ export class NotificationService implements OnModuleInit {
     private readonly sessionService: SessionService,
     private readonly bus: EventBusService,
     private readonly redis: RedisService,
+    @InjectRepository(OrderCache) private readonly orderRepo: Repository<OrderCache>,
+    @InjectRepository(OrderItem) private readonly itemRepo: Repository<OrderItem>,
   ) {}
+
+  /** ensureOrderNotices runs in flight, per customer — see ensureOrderNoticesOnce. */
+  private readonly orderNoticeRuns = new Map<number, Promise<number>>();
 
   onModuleInit(): void {
     this.bus.subscribe(EVENTS.NOTIFICATION, async (payload: unknown) => {
@@ -317,12 +358,144 @@ export class NotificationService implements OnModuleInit {
     scope?: NotificationScope,
   ): Promise<[Notification[], number]> {
     const customerId = await this.requireCustomerId(token);
+    await this.ensureOrderNoticesOnce(token, customerId);
     return this.notifRepo.findAndCount({
       where: scopedWhere(customerId, category, scope),
-      order: { id: 'DESC' },
+      // Event time first: an order notice is written when it is first noticed
+      // but dated when the order was placed, so its id is newer than its time.
+      order: { createdAt: 'DESC', id: 'DESC' },
       skip: (page - 1) * size,
       take: size,
     });
+  }
+
+  /**
+   * Shares one ensureOrderNotices run between calls that arrive together. The
+   * widget opens the feed and polls the badge at the same moment; without this
+   * the call that lost the Redis lock would answer before the winner had
+   * written anything, and the first open would show an empty Order chip.
+   * A failure is logged and swallowed: the feed must load either way.
+   */
+  private ensureOrderNoticesOnce(token: string, customerId: number): Promise<number> {
+    const running = this.orderNoticeRuns.get(customerId);
+    if (running) return running;
+    const run = this.ensureOrderNotices(token, customerId)
+      .catch((err: unknown) => {
+        this.logger.warn(
+          `order notices skipped for customer ${customerId}: ${(err as Error)?.message ?? String(err)}`,
+        );
+        return 0;
+      })
+      .finally(() => this.orderNoticeRuns.delete(customerId));
+    this.orderNoticeRuns.set(customerId, run);
+    return run;
+  }
+
+  /**
+   * Writes the "order confirmed" notices the feed's Order chip is made of
+   * (ivy-docs T02 B2). Nothing else in the system writes one: Shopify orders
+   * reach the cache already paid, and only shipping changes ever notified.
+   *
+   * - One `payment` row per recent order (≤ 10, ≤ 30 days) that has no order
+   *   notice at all yet. A soft-deleted row counts, so a deleted notice stays
+   *   deleted (T07).
+   * - Dated when the order was placed. Unread only if that was in the last
+   *   24 hours, so the first open after deploy does not light the badge for a
+   *   month of history.
+   * - Written straight to the repository, never through notify(): notify()
+   *   fans out to email/SMS/push, and these are catch-up notices for the
+   *   widget, not messages to send.
+   * - Only for tenants whose widget shows ONE list tab, as IVY does. With both
+   *   Notifications and Orders on, the order list already covers this and the
+   *   chip bar has no Order feed (tab-chips `chipsFor`).
+   * - Redis is the only guard against two API calls writing the same notice
+   *   (no unique key, and none without a migration), so without Redis this
+   *   does nothing.
+   *
+   * Returns how many notices it wrote.
+   */
+  async ensureOrderNotices(token: string, customerId: number): Promise<number> {
+    if (!this.redis.available()) return 0;
+    const first = await this.redis.setIfAbsent(
+      orderNoticeLockKey(customerId),
+      '1',
+      ORDER_NOTICE_THROTTLE_SEC,
+    );
+    if (first !== true) return 0;
+
+    // Tenant-scoped like every order read: a missing tenant narrows to nothing.
+    const session = await this.sessionService.requireCustomer(token);
+    const tenantId = session.tenantId ?? null;
+    if (tenantId == null || !(await this.showsOneListTab(tenantId))) return 0;
+
+    const orders = await this.orderRepo
+      .createQueryBuilder('o')
+      .where('o.customer_id = :customerId', { customerId })
+      .andWhere('o.tenant_id = :tenantId', { tenantId })
+      .andWhere('COALESCE(o.ordered_at, o.created_at) >= DATE_SUB(NOW(), INTERVAL :d DAY)', {
+        d: ORDER_NOTICE_DAYS,
+      })
+      .orderBy('COALESCE(o.ordered_at, o.created_at)', 'DESC')
+      .take(ORDER_NOTICE_MAX)
+      .getMany();
+    // Not confirmed yet: its notice comes on a later check, once it is paid.
+    const confirmed = orders.filter(
+      (o) => o.statusInternal !== ORDER_STATUS_INTERNAL.PENDING_PAYMENT,
+    );
+    if (confirmed.length === 0) return 0;
+
+    const noticed = await this.notifRepo.find({
+      where: {
+        customerId,
+        refType: NOTIFICATION_REF.ORDER,
+        refId: In(confirmed.map((o) => o.id)),
+      },
+    });
+    const has = new Set(noticed.map((n) => String(n.refId)));
+    const missing = confirmed.filter((o) => !has.has(String(o.id)));
+    if (missing.length === 0) return 0;
+
+    const summaries = await summarizeOrderItems(
+      this.itemRepo,
+      missing.map((o) => o.id),
+    );
+    const now = Date.now();
+    const rows = missing.map((o) => {
+      const placedAt = o.orderedAt ?? o.createdAt;
+      const recent = now - placedAt.getTime() < ORDER_NOTICE_UNREAD_MS;
+      return this.notifRepo.create({
+        tenantId,
+        customerId,
+        sessionId: null,
+        category: NOTIFICATION_CATEGORY.PAYMENT,
+        // The widget redraws the row from the order; these are its fallback.
+        title: o.orderNumber,
+        body: orderSummaryText(summaries.get(String(o.id)) ?? EMPTY_ITEM_SUMMARY),
+        statusBadge: ORDER_STATUS_UI.CONFIRMED,
+        linkUrl: null,
+        refType: NOTIFICATION_REF.ORDER,
+        refId: o.id,
+        channel: FEED_CHANNEL,
+        readAt: recent ? null : new Date(now),
+        deletedAt: null,
+        createdAt: placedAt,
+      });
+    });
+    await this.notifRepo.save(rows);
+    await Promise.all(unreadCacheKeys(customerId).map((k) => this.redis.del(k)));
+    this.logger.debug(`customer ${customerId}: wrote ${rows.length} order notice(s)`);
+    return rows.length;
+  }
+
+  /**
+   * Whether the tenant's widget shows a single list tab — the same test as
+   * the widget's `chipsFor`, on the same resolved tab list the session hands it.
+   */
+  private async showsOneListTab(tenantId: number): Promise<boolean> {
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+    if (!tenant) return false;
+    const tabs: string[] = normalizeWidgetTabs(tenant.widgetTabs) ?? [...WIDGET_TABS_DEFAULT];
+    return !(tabs.includes(WIDGET_TAB.NOTIFICATIONS) && tabs.includes(WIDGET_TAB.ORDERS));
   }
 
   /**
@@ -367,6 +540,8 @@ export class NotificationService implements OnModuleInit {
    */
   async unreadCount(token: string, scope?: NotificationScope): Promise<number> {
     const customerId = await this.requireCustomerId(token);
+    // The badge poll is what finds a new order between feed opens.
+    await this.ensureOrderNoticesOnce(token, customerId);
     const key = unreadCacheKey(customerId, scope);
     if (this.redis.available()) {
       const hit = await this.redis.get(key);

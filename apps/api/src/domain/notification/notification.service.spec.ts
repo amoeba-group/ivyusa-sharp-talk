@@ -5,6 +5,8 @@ import { Notification } from './entity/notification.entity';
 import { NotificationPref } from './entity/notification-pref.entity';
 import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
+import { OrderCache } from '../order/entity/order-cache.entity';
+import { OrderItem } from '../order/entity/order-item.entity';
 import { EventBusService } from '../../infrastructure/infrastructure.module';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { ORDER_NOTIFICATION_CATEGORIES } from '@sharptalk/types';
@@ -317,13 +319,25 @@ describe('NotificationService scoping — order vs notice half', () => {
 
   it('no scope means the whole feed — the single-list-tab configuration', async () => {
     await svc.list('tok', 'all', 1, 20);
-    expect(lastWhere).toEqual({ customerId: 42, deletedAt: expect.anything() });
+    expect(lastWhere).toEqual({ customerId: 42, channel: 'in_app', deletedAt: expect.anything() });
   });
 
   it('an explicit chip wins over the scope', async () => {
     // A chip asks for exactly one category; the scope only decides what "all" means.
     await svc.list('tok', 'event', 1, 20, 'order');
-    expect(lastWhere).toEqual({ customerId: 42, category: 'event', deletedAt: expect.anything() });
+    expect(lastWhere).toEqual({
+      customerId: 42,
+      category: 'event',
+      channel: 'in_app',
+      deletedAt: expect.anything(),
+    });
+  });
+
+  it('the feed and the badge read only in_app rows, not the per-channel delivery records (BUG-015)', async () => {
+    await svc.list('tok', 'all', 1, 20, 'order');
+    expect(lastWhere).toMatchObject({ channel: 'in_app' });
+    await svc.unreadCount('tok');
+    expect(countWhere).toMatchObject({ channel: 'in_app' });
   });
 
   it('unreadCount applies the same scope, so two badges cannot double-count', async () => {
@@ -494,5 +508,222 @@ describe('NotificationService.remove', () => {
     update.mockClear();
     await expect(svc.remove('tok', {})).resolves.toBe(0);
     expect(update).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Order notices for the widget's Order chip (ivy-docs T02 B2).
+ * Repositories are hand-rolled fakes: what matters is what gets WRITTEN.
+ */
+describe('NotificationService.ensureOrderNotices', () => {
+  const HOUR = 60 * 60 * 1000;
+  const DAY = 24 * HOUR;
+  type FakeOrder = Partial<OrderCache> & { id: number };
+
+  function build(
+    opts: {
+      orders?: FakeOrder[];
+      existing?: Array<{ refId: number; deletedAt?: Date | null }>;
+      widgetTabs?: string[] | null;
+      tenantId?: number | null;
+      redisUp?: boolean;
+      lock?: boolean | null;
+      items?: Array<{ id: number; orderId: number; title: string }>;
+    } = {},
+  ) {
+    const saved: Notification[] = [];
+    const finds: Array<Record<string, unknown>> = [];
+    const notifRepo = {
+      create: jest.fn((e: Partial<Notification>) => e as Notification),
+      save: jest.fn(async (rows: Notification[]) => {
+        saved.push(...rows);
+        return rows;
+      }),
+      find: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
+        finds.push(where);
+        return (opts.existing ?? []).map((e) => ({ refId: e.refId, deletedAt: e.deletedAt ?? null }));
+      }),
+      findAndCount: jest.fn(async () => [[], 0]),
+      count: jest.fn(async () => 0),
+    } as unknown as Repository<Notification>;
+
+    const orderQb = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getMany: jest.fn(async () => opts.orders ?? []),
+    };
+    const orderRepo = { createQueryBuilder: jest.fn(() => orderQb) } as unknown as Repository<OrderCache>;
+
+    const items = opts.items ?? [];
+    const itemQb = {
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      groupBy: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn(async () => {
+        const byOrder = new Map<number, number[]>();
+        for (const i of items) byOrder.set(i.orderId, [...(byOrder.get(i.orderId) ?? []), i.id]);
+        return [...byOrder].map(([oid, ids]) => ({
+          oid: String(oid),
+          cnt: String(ids.length),
+          first_id: String(Math.min(...ids)),
+        }));
+      }),
+    };
+    const itemRepo = {
+      createQueryBuilder: jest.fn(() => itemQb),
+      find: jest.fn(async () => items),
+    } as unknown as Repository<OrderItem>;
+
+    const redis = {
+      del: jest.fn(),
+      get: jest.fn(async () => null),
+      set: jest.fn(),
+      available: () => opts.redisUp ?? true,
+      setIfAbsent: jest.fn(async () => (opts.lock === undefined ? true : opts.lock)),
+    } as unknown as RedisService;
+    const sessionService = {
+      requireCustomerId: jest.fn(async () => 42),
+      requireCustomer: jest.fn(async () => ({
+        customerId: 42,
+        tenantId: opts.tenantId === undefined ? 7 : opts.tenantId,
+      })),
+    } as unknown as SessionService;
+    const tenantRepo = {
+      findOne: jest.fn(async () => ({
+        id: 7,
+        widgetTabs: opts.widgetTabs === undefined ? ['notifications', 'chat'] : opts.widgetTabs,
+      })),
+    } as unknown as Repository<Tenant>;
+
+    const svc = new NotificationService(
+      notifRepo,
+      {} as unknown as Repository<NotificationPref>,
+      {} as unknown as Repository<Session>,
+      tenantRepo,
+      sessionService,
+      { subscribe: jest.fn(), publish: jest.fn() } as unknown as EventBusService,
+      redis,
+      orderRepo,
+      itemRepo,
+    );
+    return { svc, saved, finds, redis, orderRepo, notifRepo, sessionService };
+  }
+
+  const order = (id: number, placedAgoMs: number, extra: Partial<OrderCache> = {}): FakeOrder => ({
+    id,
+    orderNumber: `IVY-${id}`,
+    statusInternal: 'paid',
+    orderedAt: new Date(Date.now() - placedAgoMs),
+    createdAt: new Date(),
+    ...extra,
+  });
+
+  it('writes one Confirmed notice per recent order, dated when it was placed', async () => {
+    const { svc, saved, redis } = build({
+      orders: [order(39891, 20_000), order(39641, 3 * DAY)],
+      items: [
+        { id: 1, orderId: 39891, title: 'Hydrating Face Mask (10pcs)' },
+        { id: 2, orderId: 39891, title: 'Fan' },
+        { id: 3, orderId: 39891, title: 'Fan' },
+        { id: 4, orderId: 39641, title: 'Vitamin C Serum Set' },
+      ],
+    });
+    await expect(svc.ensureOrderNotices('tok', 42)).resolves.toBe(2);
+    const [fresh, older] = saved;
+    expect(fresh).toMatchObject({
+      tenantId: 7,
+      customerId: 42,
+      category: 'payment',
+      channel: 'in_app',
+      title: 'IVY-39891',
+      body: 'Hydrating Face Mask (10pcs) + 2 items',
+      statusBadge: 'Confirmed',
+      refType: 'order',
+      refId: 39891,
+      readAt: null,
+    });
+    expect(older).toMatchObject({ title: 'IVY-39641', body: 'Vitamin C Serum Set' });
+    expect(Date.now() - fresh.createdAt.getTime()).toBeLessThan(DAY);
+    expect(Date.now() - older.createdAt.getTime()).toBeGreaterThanOrEqual(3 * DAY);
+    // Placed in the last 24 h → unread (badge); older → already read.
+    expect(older.readAt).toBeInstanceOf(Date);
+    expect(redis.del).toHaveBeenCalled();
+  });
+
+  it('never writes a second notice for an order, nor revives one the shopper deleted', async () => {
+    const { svc, saved, finds } = build({
+      orders: [order(1, HOUR), order(2, HOUR), order(3, HOUR)],
+      existing: [{ refId: 1 }, { refId: 2, deletedAt: new Date() }],
+    });
+    await expect(svc.ensureOrderNotices('tok', 42)).resolves.toBe(1);
+    expect(saved.map((r) => r.refId)).toEqual([3]);
+    // The lookup must not filter out soft-deleted rows.
+    expect(finds[0]).toMatchObject({ customerId: 42, refType: 'order' });
+    expect(finds[0]).not.toHaveProperty('deletedAt');
+  });
+
+  it('waits for payment: no "Confirmed" for an order that is still pending payment', async () => {
+    const { svc, saved } = build({ orders: [order(1, HOUR, { statusInternal: 'pending_payment' })] });
+    await expect(svc.ensureOrderNotices('tok', 42)).resolves.toBe(0);
+    expect(saved).toHaveLength(0);
+  });
+
+  it('leaves tenants with both list tabs alone (their Orders tab already lists orders)', async () => {
+    for (const widgetTabs of [['notifications', 'orders', 'chat'], null]) {
+      const { svc, saved, orderRepo } = build({ orders: [order(1, HOUR)], widgetTabs });
+      await expect(svc.ensureOrderNotices('tok', 42)).resolves.toBe(0);
+      expect(saved).toHaveLength(0);
+      expect(orderRepo.createQueryBuilder).not.toHaveBeenCalled();
+    }
+  });
+
+  it('applies to a single list tab either way round (orders + chat)', async () => {
+    const { svc } = build({ orders: [order(1, HOUR)], widgetTabs: ['orders', 'chat'] });
+    await expect(svc.ensureOrderNotices('tok', 42)).resolves.toBe(1);
+  });
+
+  it('does nothing without the Redis lock, without Redis, or without a tenant', async () => {
+    const cases: Array<Parameters<typeof build>[0]> = [
+      { lock: false },
+      { lock: null },
+      { redisUp: false },
+      { tenantId: null },
+    ];
+    for (const c of cases) {
+      const { svc, saved } = build({ orders: [order(1, HOUR)], ...c });
+      await expect(svc.ensureOrderNotices('tok', 42)).resolves.toBe(0);
+      expect(saved).toHaveLength(0);
+    }
+  });
+
+  it('the feed and the badge share one run, and the feed waits for it', async () => {
+    const { svc, saved, redis, notifRepo } = build({ orders: [order(1, HOUR)] });
+    let savedBeforeList = -1;
+    (notifRepo.findAndCount as jest.Mock).mockImplementation(async () => {
+      savedBeforeList = saved.length;
+      return [[], 0];
+    });
+    await Promise.all([svc.list('tok', 'all', 1, 20), svc.unreadCount('tok')]);
+    expect(redis.setIfAbsent).toHaveBeenCalledTimes(1);
+    expect(saved).toHaveLength(1);
+    expect(savedBeforeList).toBe(1);
+  });
+
+  it('a failure while writing notices still serves the feed', async () => {
+    const { svc, sessionService } = build({ orders: [order(1, HOUR)] });
+    (sessionService.requireCustomer as jest.Mock).mockRejectedValue(new Error('db down'));
+    await expect(svc.list('tok', 'all', 1, 20)).resolves.toEqual([[], 0]);
+  });
+
+  it('lists by event time, so a back-dated order notice sorts where it happened', async () => {
+    const { svc, notifRepo } = build({ redisUp: false });
+    await svc.list('tok', 'all', 1, 20);
+    expect((notifRepo.findAndCount as jest.Mock).mock.calls[0][0].order).toEqual({
+      createdAt: 'DESC',
+      id: 'DESC',
+    });
   });
 });

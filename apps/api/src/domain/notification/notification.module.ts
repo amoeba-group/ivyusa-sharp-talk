@@ -5,11 +5,17 @@ import { Notification } from './entity/notification.entity';
 import { NotificationPref } from './entity/notification-pref.entity';
 import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
+import { OrderCache } from '../order/entity/order-cache.entity';
+import { OrderItem } from '../order/entity/order-item.entity';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notification, NotificationPref, Session, Tenant]), SessionModule],
+  imports: [
+    // Order rows are read (never written) for the feed's order notices (ivy-docs T02 B2).
+    TypeOrmModule.forFeature([Notification, NotificationPref, Session, Tenant, OrderCache, OrderItem]),
+    SessionModule,
+  ],
   controllers: [NotificationController],
   providers: [NotificationService],
   exports: [NotificationService],

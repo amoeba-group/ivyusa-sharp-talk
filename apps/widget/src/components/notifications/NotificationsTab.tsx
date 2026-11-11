@@ -1,39 +1,88 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BellOff, Check, ExternalLink, Lock, Star } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { AuthGate } from '../chat/AuthGate';
 import { isAuthError } from '../../lib/errors';
 import { useDeleteNotifications, useMarkRead, useNotifications } from '../../hooks/useNotifications';
-import { listIssues, type IssueFeedItem } from '../../services/orderService';
+import { useOrders } from '../../hooks/useOrders';
+import {
+  TAB_ORDER_DAYS,
+  TAB_ORDER_LIMIT,
+  listIssues,
+  type IssueFeedItem,
+} from '../../services/orderService';
 import { myPageOrdersUrl } from '../../lib/platform';
 import { Badge, toneForStatus } from '../ui/Badge';
+import { StatusPill } from '../ui/StatusPill';
 import { Spinner } from '../ui/Spinner';
-import { formatDate, groupByDate, relativeTime } from '../../lib/format';
+import { formatDate, groupByDate, noticeTime, shortDate } from '../../lib/format';
 import { NotificationIcon } from './NotificationIcon';
 import { ShipmentList } from './ShipmentList';
 import { OrderList } from '../orders/OrderList';
 import { OrderDetailView } from '../orders/OrderDetail';
 import { ReviewForm } from '../orders/ReviewForm';
 import { ReviewItemList } from '../orders/ReviewItemList';
-import { chipBelongsTo, chipsFor, defaultChip } from './tab-chips';
+import {
+  ORDER_FEED_CHIP,
+  chipBelongsTo,
+  chipsFor,
+  defaultChip,
+  orderFeedRows,
+} from './tab-chips';
 import { NOTIFICATION_SCOPE } from '../../lib/widget-tabs';
-import type { NotificationItem } from '../../lib/types';
+// Source path, not '@sharptalk/types': see lib/widget-tabs.ts.
+import { NOTIFICATION_REF } from '../../../../../packages/types/src/common/enum.types';
+import type { NotificationItem, OrderSummary } from '../../lib/types';
 
+/** "Just now" / "10mins ago" / "3h ago" / "Yesterday" / "4 days ago" / "Nov 3" (SPEC BR-05). */
+function noticeTimeText(t: TFunction, iso: string, lng: string): string {
+  const p = noticeTime(iso);
+  if (!p) return '';
+  switch (p.unit) {
+    case 'justNow':
+      return t('notifications.time.justNow');
+    case 'yesterday':
+      return t('notifications.time.yesterday');
+    case 'date':
+      return shortDate(iso, lng, !p.sameYear);
+    default:
+      return t(`notifications.time.${p.unit}`, { count: p.count });
+  }
+}
+
+/** "Hydrating Face Mask (10pcs) + 2 items" (SPEC BR-08), in the UI language. */
+function orderSummary(t: TFunction, o: OrderSummary): string | null {
+  if (!o.firstItemTitle) return o.itemCount > 0 ? t('orders.itemCount', { count: o.itemCount }) : null;
+  return o.itemCount > 1
+    ? t('notifications.itemsMore', { title: o.firstItemTitle, count: o.itemCount - 1 })
+    : o.firstItemTitle;
+}
 
 function Row({
   n,
+  order,
   highlighted,
   onRead,
+  onOpenOrder,
   onReview,
   selecting = false,
   selected = false,
   onToggle,
 }: {
   n: NotificationItem;
+  /**
+   * The order an order notice names, when the widget has it loaded. The row is
+   * then drawn from the order — number, first item, item count — in the
+   * shopper's language (ivy-docs T02 D1). Without it the stored English
+   * title/body stand in.
+   */
+  order?: OrderSummary;
   highlighted: boolean;
   onRead: (id: string) => void;
+  onOpenOrder: (orderId: string) => void;
   onReview: (orderItemId: string) => void;
   /** Selection mode (PLN-260916 P3): rows show a check circle instead of the unread dot. */
   selecting?: boolean;
@@ -45,34 +94,57 @@ function Row({
   // A review request can only open the form when the notification carries the
   // item it refers to. Rows written before `refType`/`refId` existed have none,
   // so they render as plain rows rather than a button that cannot work.
-  const reviewable = n.category === 'review' && n.refType === 'order_item' && !!n.refId;
+  const reviewable =
+    n.category === 'review' && n.refType === NOTIFICATION_REF.ORDER_ITEM && !!n.refId;
+  // An order notice opens the order it names (SPEC SCR-IVY-04, G-06).
+  const orderId = n.refType === NOTIFICATION_REF.ORDER && n.refId ? n.refId : null;
+  const title = order?.orderNumber ?? n.title;
+  const summary = order ? orderSummary(t, order) : n.body;
+  const time = noticeTimeText(t, n.createdAt, i18n.language);
+
+  const activate = () => {
+    if (selecting) {
+      onToggle?.(n.id);
+      return;
+    }
+    if (unread) onRead(n.id);
+    if (orderId) onOpenOrder(orderId);
+  };
 
   return (
     <div
+      data-testid="notif-item"
+      data-id={n.id}
+      data-category={n.category}
+      data-unread={unread ? 'true' : 'false'}
       className={`flex w-full items-start gap-3 border-b border-gray-100 px-4 py-3.5 text-left ${
         highlighted ? 'bg-highlight' : 'bg-white'
       }`}
     >
       <NotificationIcon category={n.category} hasLink={!!n.linkUrl} highlighted={highlighted} />
-      {/* The mark-as-read target and the review action are SIBLINGS, never
+      {/* The row's own button and the review action are SIBLINGS, never
           nested. A button inside a button is invalid HTML: browsers recover
           from it inconsistently and the inner control's keyboard behaviour
           stops being dependable. */}
       <div className="min-w-0 flex-1">
         <button
-          onClick={() => unread && onRead(n.id)}
+          type="button"
+          onClick={activate}
           className="w-full text-left"
-          aria-label={unread ? t('notifications.markRead') : undefined}
+          // A row that only marks itself read says so; one that opens an
+          // order is named by its content.
+          aria-label={unread && !orderId && !selecting ? t('notifications.markRead') : undefined}
         >
           <span className="flex items-center gap-2">
-            {n.title && (
-              <span className="truncate text-sm font-bold text-gray-900">{n.title}</span>
-            )}
-            {n.statusBadge && (
-              <Badge tone={toneForStatus(n.statusBadge)}>{n.statusBadge}</Badge>
-            )}
+            {title && <span className="truncate text-sm font-bold text-gray-900">{title}</span>}
+            <StatusPill badge={n.statusBadge} />
           </span>
-          {n.body && <span className="mt-0.5 block text-sm text-gray-800">{n.body}</span>}
+          {summary && <span className="mt-0.5 block text-sm text-gray-800">{summary}</span>}
+          {time && (
+            <span data-testid="notif-time" className="mt-1 block text-xs text-gray-400">
+              {time}
+            </span>
+          )}
         </button>
         {reviewable && (
           <button
@@ -84,7 +156,6 @@ function Row({
             {t('orders.writeReview')}
           </button>
         )}
-        <p className="mt-1 text-xs text-gray-400">{relativeTime(n.createdAt, i18n.language)}</p>
       </div>
       {selecting ? (
         <button
@@ -199,20 +270,40 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
   const isReviewList = notifFilter === 'review';
   // The order LIST, not a notification category — see tab-chips ORDER_CHIPS.
   const isOrderList = notifFilter === 'orders';
+  // The order-NOTICE feed (single list tab, ivy-docs T02) — see ORDER_FEED_CHIP.
+  const isOrderFeed = notifFilter === ORDER_FEED_CHIP;
   // What "all" covers. With both list tabs on, each shows only its own half —
   // otherwise Notifications' "All" would repeat every order row the Orders tab
   // is already showing and the chip split would buy nothing.
   const bothListTabs =
     visibleTabs.includes('notifications') && visibleTabs.includes('orders');
-  const scope = !bothListTabs
-    ? undefined
-    : tab === 'orders'
-      ? NOTIFICATION_SCOPE.ORDER
-      : NOTIFICATION_SCOPE.NOTICE;
+  // The Order chip asks for the order half (payment/shipping/review) so a page
+  // is not spent on promos; reviews are then dropped on this side.
+  const scope = isOrderFeed
+    ? NOTIFICATION_SCOPE.ORDER
+    : !bothListTabs
+      ? undefined
+      : tab === 'orders'
+        ? NOTIFICATION_SCOPE.ORDER
+        : NOTIFICATION_SCOPE.NOTICE;
   const { data, isLoading, isError, error } = useNotifications(
     sessionToken,
-    isShipping || isInquiries || isOrderList || isReviewList ? 'all' : notifFilter,
+    isShipping || isInquiries || isOrderList || isReviewList || isOrderFeed ? 'all' : notifFilter,
     scope,
+  );
+  const rows = useMemo(
+    () => (isOrderFeed ? orderFeedRows(data ?? []) : (data ?? [])),
+    [data, isOrderFeed],
+  );
+  // The orders the Order chip's notices name, to draw each row from its order.
+  // Same window and cache entry as the order list (20 / 90 days).
+  const { data: recentOrders } = useOrders(sessionToken, authenticated && isOrderFeed, {
+    size: TAB_ORDER_LIMIT,
+    days: TAB_ORDER_DAYS,
+  });
+  const ordersById = useMemo(
+    () => new Map((recentOrders ?? []).map((o) => [String(o.id), o])),
+    [recentOrders],
   );
   const markRead = useMarkRead(sessionToken);
   const queryClient = useQueryClient();
@@ -297,36 +388,42 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
     );
   }
 
-  const groups = groupByDate(data ?? [], i18n.language);
+  const groups = groupByDate(rows, i18n.language);
   // Exactly one row wears the highlight wash: the newest unread (PLN §7 D-5).
   // The design shows a single emphasised row and no rule for it; making every
   // unread row cream would turn a 20-row list into a cream block.
-  const newestUnreadId = (data ?? []).find((n) => !n.readAt)?.id ?? null;
+  const newestUnreadId = rows.find((n) => !n.readAt)?.id ?? null;
   const myPageUrl = myPageOrdersUrl();
 
   return (
     <div className="flex h-full flex-col">
-      {/* Filter chips */}
-      <div className="scroll-thin flex items-center gap-2 overflow-x-auto border-b border-gray-100 px-4 py-3">
-        {chips.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setNotifFilter(f.key)}
-            className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              notifFilter === f.key
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {t(f.labelKey)}
-          </button>
-        ))}
+      {/* Filter chips. They scroll sideways when a language's labels do not
+          fit; the Select toggle sits OUTSIDE that scroller so it is never
+          pushed out of view (it was, in English at 380px and in Vietnamese). */}
+      <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <div className="scroll-thin flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+          {chips.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              aria-pressed={notifFilter === f.key}
+              onClick={() => setNotifFilter(f.key)}
+              className={`flex-shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                notifFilter === f.key
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t(f.labelKey)}
+            </button>
+          ))}
+        </div>
         {/* Selection mode toggle — only where the plain notification list renders. */}
-        {!isOrderList && !isShipping && !isInquiries && !isReviewList && (data?.length ?? 0) > 0 && (
+        {!isOrderList && !isShipping && !isInquiries && !isReviewList && rows.length > 0 && (
           <button
             type="button"
             onClick={() => (selecting ? exitSelecting() : setSelecting(true))}
-            className="ml-auto flex-shrink-0 text-xs font-medium text-gray-500 hover:text-gray-800"
+            className="flex-shrink-0 text-xs font-medium text-gray-500 hover:text-gray-800"
           >
             {selecting ? t('notifications.cancelSelect') : t('notifications.select')}
           </button>
@@ -360,15 +457,24 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             )}
             {groups.map((g) => (
               <div key={g.label}>
-                <div className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">
+                <div
+                  data-testid="notif-group"
+                  className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500"
+                >
                   {g.relative ? t(`notifications.groups.${g.relative}`) : g.label}
                 </div>
                 {g.items.map((n) => (
                   <Row
                     key={n.id}
                     n={n}
+                    order={
+                      n.refType === NOTIFICATION_REF.ORDER && n.refId
+                        ? ordersById.get(String(n.refId))
+                        : undefined
+                    }
                     highlighted={n.id === newestUnreadId}
                     onRead={(id) => markRead.mutate(id)}
+                    onOpenOrder={setOpenOrder}
                     onReview={setReviewItem}
                     selecting={selecting}
                     selected={selectedIds.includes(n.id)}

@@ -17,9 +17,11 @@
 | BUG-008 | `scripts/manual-screenshots.mjs` trỏ widget sang :5175 (cổng PWA) | Tooling | 🟡 | Open | — |
 | BUG-009 | Lưu review thất bại bị nuốt lỗi, shopper không được báo gì | Widget | 🟠 | Open | T06 |
 | BUG-010 | Điện thoại/email hỗ trợ của IVY hard-code trong cả 6 locale → hiện cho **mọi tenant** | Widget / Multi-tenant | 🟠 | Open | T11 |
-| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Open | T02 |
+| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed (T02, feed thông báo) | T02 |
 | BUG-012 | `radius:check` và `check-migrations --check` báo đỏ trên Windows dù CI (Linux) xanh | Tooling | 🟡 | Open (CI không ảnh hưởng) | T00-d |
 | BUG-014 | E2E chập chờn: "apiResponse.json: Response has been disposed" làm fail test đã pass | E2E harness | 🟡 | Fixed (T01) | T01 |
+| BUG-015 | Feed thông báo hiện mỗi sự kiện **tới 5 lần** (1 dòng cho mỗi kênh in_app/email/sms/web_push/push) và badge đếm cả 5 | API | 🟠 | Fixed (T02) | T02 |
+| BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
 | BUG-013 | Repo **public**: cài đặt PR từ fork chỉ duyệt người đóng góp lần đầu; `env/backend/.env.development` (secret dev) và IP/SSH user staging nằm trong repo công khai | Security | 🟠 | Need info | T00-e |
 
 ---
@@ -75,6 +77,23 @@
 ## BUG-011 · Pill trạng thái chưa dịch
 - `apps/widget/src/components/ui/Badge.tsx` (43-52) đoán màu theo text; text là `statusBadge` / `statusUi` từ server, thường là tiếng Anh. Vì vậy UI tiếng Hàn vẫn hiện "In Transit".
 - **Fix (T02):** map theo mã trạng thái → key i18n + màu cố định (SPEC §4).
+- **Đã sửa (2026-11-11):**
+  - `noticeStatus()` (`packages/types/src/common/order-status.ts`) khớp **chính xác** 6 chữ `ORDER_STATUS_UI` sang mã: `confirmed`, `in_transit`, `delivered`, `review`, `pending_payment`, `cancel_requested`.
+  - `StatusPill.tsx` dùng mã đó để lấy nhãn `notifications.status.*` (6 ngôn ngữ) và màu. Chữ lạ thì hiện nguyên văn, màu trung tính, `data-status="other"`.
+  - Phạm vi: feed thông báo. `toneForStatus` (đoán theo chữ) vẫn còn ở danh sách đơn và feed inquiry, sẽ xử lý ở T03/T09 khi làm lại các màn đó.
+
+## BUG-015 · Feed thông báo lặp mỗi sự kiện theo số kênh
+- **Hiện tượng:**
+  - `notify()` luôn ghi 1 dòng `in_app`, rồi ghi **thêm 1 dòng cho mỗi kênh ngoài** đã gửi (email/sms/web_push/push) làm bản ghi giao nhận. Các dòng này cùng khách, cùng nội dung.
+  - `list()` và `unreadCount()` không lọc theo kênh. Vì vậy 1 cập nhật giao hàng (loại giao dịch, mặc định cho phép mọi kênh) hiện **5 dòng giống nhau** trong widget và app, và badge **+5**.
+- **Phát hiện:** khi làm T02, nếu không sửa, chip Order sẽ lặp mỗi dòng "In Transit" 5 lần.
+- **Fix:** `scopedWhere` lọc `channel = 'in_app'` (`notification.service.ts`, `FEED_CHANNEL`). Dòng `in_app` luôn được ghi nên không mất sự kiện nào. Các dòng kênh ngoài vẫn được giữ làm bản ghi giao nhận (push dispatch, thống kê).
+- **Ảnh hưởng production:** badge của khách sẽ **giảm** về đúng số sự kiện chưa đọc (trước đây bị nhân theo số kênh). App mobile dùng cùng API nên cũng hết lặp.
+- **Phòng ngừa:** feed hiển thị phải luôn chọn đúng một kênh. Jest: "the feed and the badge read only in_app rows".
+
+## BUG-016 · Fixture e2e "hôm qua" phụ thuộc giờ chạy
+- Thông báo 505 và đơn IVY-39880 dùng `ago(DAY + 2 * HOUR)`. Suite chạy với `timezoneId: 'America/New_York'`, nên từ 00:00 đến 02:00 giờ New York (05:00–07:00 UTC, tức giữa trưa ở Việt Nam) thời điểm đó rơi vào **2 ngày trước**. Khi đó nhóm "Yesterday's" biến mất và TC-02-02 đỏ, ~8% số lần chạy, kể cả trên CI.
+- **Fix:** `yesterday()` = đúng 24 giờ trước, luôn nằm trong ngày hôm qua (trừ ngày đổi giờ DST).
 
 ## BUG-012 · Kiểm tra CI báo đỏ trên Windows
 - **`npm run radius:check`** crash với đường dẫn `D:\D:\…\apps\widget\src`. Nguyên nhân: `scripts/check-radius-tokens.mjs:26` dùng `new URL('..', import.meta.url).pathname`, trên Windows trả về `/D:/…`. Fix: `fileURLToPath(new URL('..', import.meta.url))`.

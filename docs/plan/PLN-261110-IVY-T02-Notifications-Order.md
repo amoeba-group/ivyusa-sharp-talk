@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa dòng code nào |
+| Trạng thái | ✅ **Đã duyệt 2026-11-11** và đã làm, xem [RPT-261111](../implementation/RPT-261111-IVY-T02-Notifications-Order.md). Trả lời §7: (1) duyệt cả B1 + B2; (2) **múi giờ máy khách**; (3) "{n} days ago" tới 6 ngày rồi "Nov 3" |
 | Task | [ivy-docs/TASKS.md T02](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-04 · G-04, G-05, G-06 · BR-01..08 · BUG-011 |
 | Figma | Master `992:526` (KR, có chế độ chọn), `1006:7825` (EN), `1006:2930` |
 | TC | TC-02-01..06 ([e2e/tests/02-notifications-order.spec.ts](../../e2e/tests/02-notifications-order.spec.ts)), baseline 0/6. T07 (chọn/xoá) dùng chung danh sách này |

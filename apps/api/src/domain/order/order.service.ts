@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import {
   CJM_STAGE,
   FULFILLMENT_STATUS,
+  NOTIFICATION_REF,
   ORDER_STATUS_INTERNAL,
   deliverySteps,
   fulfillmentStepIndex,
@@ -14,6 +15,7 @@ import { carrierTrackingUrl, safeTrackingUrl } from './carrier-tracking';
 import { INTEGRATION_PROVIDER } from '@sharptalk/types';
 import { OrderCache } from './entity/order-cache.entity';
 import { OrderItem } from './entity/order-item.entity';
+import { EMPTY_ITEM_SUMMARY, summarizeOrderItems, type OrderItemSummary } from './order-item-summary';
 import { Fulfillment } from './entity/fulfillment.entity';
 import { Session } from '../session/entity/session.entity';
 import { SessionService, sessionCacheKey } from '../session/session.service';
@@ -231,43 +233,15 @@ export class OrderService {
 
   /**
    * order id → item count + first line-item title (PERF-7: the count replaced
-   * one COUNT per row; the title keeps that property).
-   *
-   * The widget's shipment list renders "<first item> + N more" per order. Getting
-   * that string from order *detail* would be one extra request per row, so it is
-   * aggregated here instead: two fixed queries regardless of how many orders the
-   * page holds. GROUP_CONCAT is deliberately avoided — its SEPARATOR must be a
-   * string literal, so a title containing the separator would corrupt the split.
+   * one COUNT per row; the title keeps that property). Two fixed queries — see
+   * `summarizeOrderItems`, which the notification feed's order notices share.
    */
-  private async itemSummaries(
-    orderIds: number[],
-  ): Promise<Map<string, { count: number; firstTitle: string | null }>> {
-    if (orderIds.length === 0) return new Map();
-    const counts = await this.itemRepo
-      .createQueryBuilder('i')
-      .select('i.order_id', 'oid')
-      .addSelect('COUNT(*)', 'cnt')
-      .addSelect('MIN(i.id)', 'first_id')
-      .where('i.order_id IN (:...ids)', { ids: orderIds })
-      .groupBy('i.order_id')
-      .getRawMany<{ oid: string; cnt: string; first_id: string }>();
-
-    const firstIds = counts.map((r) => Number(r.first_id)).filter((n) => Number.isFinite(n));
-    const firstItems = firstIds.length
-      ? await this.itemRepo.find({ where: { id: In(firstIds) } })
-      : [];
-    const titleById = new Map(firstItems.map((i) => [String(i.id), i.title]));
-
-    return new Map(
-      counts.map((r) => [
-        String(r.oid),
-        { count: Number(r.cnt), firstTitle: titleById.get(String(r.first_id)) ?? null },
-      ]),
-    );
+  private itemSummaries(orderIds: number[]): Promise<Map<string, OrderItemSummary>> {
+    return summarizeOrderItems(this.itemRepo, orderIds);
   }
 
   /** Orders with no cached items still need a summary object, not a null hole. */
-  private static readonly EMPTY_ITEM_SUMMARY = { count: 0, firstTitle: null };
+  private static readonly EMPTY_ITEM_SUMMARY = EMPTY_ITEM_SUMMARY;
 
   /** Order detail (items + totals), scoped to the bound customer. */
   async detailForSession(sessionToken: string, orderId: number) {
@@ -512,6 +486,11 @@ export class OrderService {
       title: 'Shipping update',
       body: `Your order ${order.orderNumber} is now ${statusUi ?? status}.`,
       statusBadge: statusUi,
+      // Names the order, so the widget can draw the row from it (number, items)
+      // and open Order Detail on tap (ivy-docs T02 B1). It is also how
+      // NotificationService.ensureOrderNotices sees that the order already has one.
+      refType: NOTIFICATION_REF.ORDER,
+      refId: order.id,
     });
     // Journey breadcrumb (PLN-260807 F3, A-7): the diary timeline's Delivery stage.
     await this.bus.publish(EVENTS.CJM, {

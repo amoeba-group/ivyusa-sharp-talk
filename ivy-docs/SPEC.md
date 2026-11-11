@@ -206,8 +206,8 @@ Launcher (góc phải dưới) ─► Panel 380px
 | BR-01 | 4 nhóm thông báo: **Order** (thanh toán/xác nhận đơn) · **Delivery** (tiến trình giao theo từng bước) · **Promo** (coupon/sự kiện) · **Review** (yêu cầu đánh giá đơn đã giao). Biến thể cũ (전체/결제/구독/이벤트/리뷰/배송) **không dùng** — Master Shots chốt 4 nhóm. | Master `992:189`; ghi chú `0:1` `3:3` |
 | BR-02 | Badge tab = số chưa đọc; 0 → ẩn. | `0:1` `3:2` "새로 도착한 알림 개수를 아이콘에 표시합니다." |
 | BR-03 | Chưa đọc = nền tô + chấm đỏ; chạm mở → đã đọc. | `1006:7825` |
-| BR-04 | Nhóm theo ngày: Today's / Yesterday's / cũ hơn (theo múi giờ hiển thị). | Master |
-| BR-05 | Thời gian: hôm nay → "Just now" / "{n}mins ago" / "{n}h ago"; hôm qua → "Yesterday"; từ 2 ngày → **ngày tháng** theo ghi chú, nhưng thiết kế lại vẽ "2days ago"/"4 Days ago" → **mâu thuẫn (Q-02)**. Múi giờ: ghi chú hỏi EST/EDT → mặc định **America/New_York**. | `0:1` `21:26` |
+| BR-04 | Nhóm theo ngày: Today's / Yesterday's / cũ hơn, theo **múi giờ máy của khách** (chủ dự án chốt 2026-11-11). | Master |
+| BR-05 | Thời gian: trong 1 giờ → "Just now" / "{n}mins ago"; hôm nay → "{n}h ago"; hôm qua → "Yesterday"; 2–6 ngày → "{n} days ago"; cũ hơn → ngày tháng "Nov 3" (Q-02, chốt 2026-11-11). Ngày tính theo lịch của **máy khách**, không cố định America/New_York (ghi chú hỏi EST/EDT; chủ dự án chọn giờ máy khách ngày 2026-11-11). | `0:1` `21:26` |
 | BR-06 | Mapping trạng thái giao hàng: 발송 준비 = **Preparing** · 배송 시작 = **Processing** (ghi chú gọi "Shipped") · 배송중 = **In Transit** · 배송완료 = **Delivered**. Pill: Confirmed xanh lá, In Transit cam, Delivered xám, Review tím. | `0:1` `7:14`; Master |
 | BR-07 | Chạm thông báo giao hàng → đi tới vị trí trạng thái giao của đơn đó. | `0:1` `3:37` "클릭 시, 배송현황 위치로 가도록" |
 | BR-08 | Tóm tắt đơn: "{sản phẩm đầu} + {n} items" (EN) / "{sản phẩm đầu} 외 {n}개" (KO). Thiết kế còn lẫn "+ 2 Others", "and 2 more items" → chuẩn hoá theo Master ("+ 2 items"). | Master; `0:1` `7:140..143` |
@@ -252,12 +252,12 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 | Nút ngôn ngữ / Settings / Close | `getByRole('button', { name: 'Language' \| 'Settings' \| 'Close' })` | ✅ |
 | Tab | `getByRole('tab', { name: /Notifications/ \| /Chat/ })` + `aria-selected` | ✅ `TopTabs.tsx` |
 | Badge tab | `getByLabel('{n} unread')` bên trong tab | ✅ |
-| Chip lọc | `getByRole('button', { name: 'Order' \| 'Delivery' \| 'Promo' \| 'Review', exact: true })` + `aria-pressed` | ➕ nhãn mới + `aria-pressed` (T02) |
+| Chip lọc | `getByRole('button', { name: 'Order' \| 'Delivery' \| 'Promo' \| 'Review', exact: true })` + `aria-pressed` | ✅ nhãn mới + `aria-pressed` (T02) |
 | Nút vào chế độ chọn | `getByRole('button', { name: 'Select' })` | ✅ |
-| Nhóm ngày | `[data-testid="notif-group"]` | ➕ (T02) |
-| Dòng thông báo | `[data-testid="notif-item"]` + `data-id` + `data-unread="true\|false"` + `data-category` | ➕ (T02) |
-| Thời gian dòng | `[data-testid="notif-time"]` (text theo BR-05) | ➕ (T02) |
-| Pill trạng thái | `[data-testid="status-pill"]` + `data-status="confirmed\|in_transit\|delivered\|review"` | ➕ (T02) |
+| Nhóm ngày | `[data-testid="notif-group"]` | ✅ (T02) |
+| Dòng thông báo | `[data-testid="notif-item"]` + `data-id` + `data-unread="true\|false"` + `data-category` | ✅ (T02) |
+| Thời gian dòng | `[data-testid="notif-time"]` (text theo BR-05) | ✅ (T02) |
+| Pill trạng thái | `[data-testid="status-pill"]` + `data-status="confirmed\|in_transit\|delivered\|review"` (ngoài ra `pending_payment`, `cancel_requested`; chữ lạ → `other`) | ✅ (T02) — mới có trong feed thông báo; thẻ Delivery/Review dùng ở T03/T06 |
 | Thẻ giao hàng | `[data-testid="delivery-card"]`; bước `[data-testid="delivery-step"]` + `data-state="done\|current\|todo"` | ➕ (T03) |
 | Order Detail | `getByRole('heading', { name: 'Order Detail' })` | ➕ copy (T04) |
 | Chọn từng dòng | `getByRole('checkbox')` trong `notif-item` | ✅ `role="checkbox"` + `aria-checked` |
@@ -302,7 +302,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-20 | CSAT **4** mặt + **건너뛰기** | **5** mặt (thang 1–5, cố ý), nút "닫기" (`CsatCard.tsx`) | Quyết định Q-12; đổi "닫기" → "건너뛰기"; dòng "상담이 종료되었습니다" hiện **sau** khi đánh giá (hiện đang ở trên) | UI · I18N | T12 |
 | G-21 | Settings/Privacy | Đã có đủ khối (`PreferencesPanel.tsx`); không có tiêu đề màn | Đối chiếu copy/khoảng cách; header biến thể (Q-09) | UI | T13 |
 | G-22 | Copy KO/EN theo thiết kế | i18n 6 ngôn ngữ đã có (`apps/widget/src/i18n/locales/*.ts`) | Thêm/sửa key mới; chạy `npm run i18n:check` | I18N | T14 |
-| G-23 | A11y chip lọc | Chip không có `aria-pressed`; badge tab có `aria-label` "{n} unread" ✓ | Bổ sung theo NFR-02 | UI | T15 |
+| G-23 | A11y chip lọc | ~~Chip không có `aria-pressed`~~ → có từ T02; badge tab có `aria-label` "{n} unread" ✓ | Bổ sung theo NFR-02 | UI | T15 |
 | G-24 | Mobile toàn màn hình | Có chế độ `compact=1` / `mode=app` | Kiểm thử 390px, sửa tràn | UI | T15 |
 
 **Đã khớp thiết kế (giữ nguyên):** menu 6 ngôn ngữ (`LanguageSwitcher.tsx`), nút Settings/Close, badge tab (99+), nhóm "Today's/Yesterday" (code: "Today's notifications"/"Yesterday"), thẻ giao hàng + stepper ngang (`TrackingStepperH.tsx`), chế độ chọn/xoá, review list + form, typing bubble "답변을 작성 중입니다…", Settings (consent + ngày + version, marketing opt-out, CCPA, export JSON, delete).
@@ -316,7 +316,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | ID | Câu hỏi | Mặc định nếu chưa có trả lời |
 |---|---|---|
 | Q-01 | Khách vãng lai thấy gì ở header và tab Notifications? | Header "Hi there", giữ cổng Verify identity / Guest order lookup |
-| Q-02 | Từ 2 ngày trở lên hiện **ngày tháng** (ghi chú) hay "2days ago" (thiết kế)? | "{n} days ago" tới 6 ngày, sau đó ngày tháng `MMM d` |
+| Q-02 | Từ 2 ngày trở lên hiện **ngày tháng** (ghi chú) hay "2days ago" (thiết kế)? | ✅ **Chốt 2026-11-11:** "{n} days ago" tới 6 ngày, sau đó ngày tháng `MMM d`; ngày theo múi giờ máy khách |
 | Q-03 | Vào chế độ chọn để xoá bằng cách nào (nút "Edit", nhấn giữ…)? | Nút "Select" ở hàng chip |
 | Q-04 | 2 chip "??" sau "인기상품" trong Product Help là gì? | Ẩn, chỉ hiện "인기상품" |
 | Q-05 | "Track Order" mở trang nào (Shopify order status hay link hãng vận chuyển)? | Link tracking của fulfillment, không có thì trang order status của Shopify |

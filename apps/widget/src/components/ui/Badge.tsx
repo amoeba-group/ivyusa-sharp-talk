@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 /**
  * Status pills (PLN-260817, frames 34/49/57/64).
@@ -22,14 +22,17 @@ const tones: Record<string, string> = {
 export function Badge({
   children,
   tone = 'default',
+  className = '',
+  ...rest
 }: {
   children: ReactNode;
   tone?: keyof typeof tones | string;
-}) {
+} & HTMLAttributes<HTMLSpanElement>) {
   const cls = tones[tone] ?? tones.default;
   return (
     <span
-      className={`inline-flex items-center rounded-st-sm px-2 py-0.5 text-xs font-semibold ${cls}`}
+      {...rest}
+      className={`inline-flex items-center rounded-st-sm px-2 py-0.5 text-xs font-semibold ${cls} ${className}`}
     >
       {children}
     </span>

@@ -77,11 +77,56 @@ export function relativeTime(iso: string, lng = 'en'): string {
 }
 
 /** Calendar-day distance from today, ignoring clock time. */
-function daysAgo(iso: string): number | null {
+function daysAgo(iso: string, now: Date = new Date()): number | null {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  return Math.round((startOf(new Date()) - startOf(d)) / DAY);
+  // Rounded, not floored: a day across a DST change is 23 or 25 hours long.
+  return Math.round((startOf(now) - startOf(d)) / DAY);
+}
+
+/**
+ * A notification row's time, as the design writes it (ivy-docs SPEC BR-05, Q-02):
+ * "Just now" · "10mins ago" · "3h ago" · "Yesterday" · "4 days ago" · "Nov 3".
+ *
+ * Days are calendar days in the shopper's own time zone (the browser's), the
+ * same days the list is grouped by — so a row under "Yesterday's" says
+ * "Yesterday" even when it is only 9 hours old. Within the last hour minutes
+ * win over the calendar: an order placed 5 minutes before midnight is "5mins
+ * ago", not "Yesterday".
+ *
+ * Returns the parts, not text: the caller words them through i18n, and the
+ * rules stay testable without it.
+ */
+export type NoticeTime =
+  | { unit: 'justNow' }
+  | { unit: 'minutes' | 'hours' | 'days'; count: number }
+  | { unit: 'yesterday' }
+  | { unit: 'date'; sameYear: boolean };
+
+export function noticeTime(iso: string, now: Date = new Date()): NoticeTime | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const diff = now.getTime() - d.getTime();
+  // A clock a little ahead of ours must not print "-1mins ago".
+  if (diff < MINUTE) return { unit: 'justNow' };
+  if (diff < HOUR) return { unit: 'minutes', count: Math.floor(diff / MINUTE) };
+  const days = daysAgo(iso, now) ?? 0;
+  if (days <= 0) return { unit: 'hours', count: Math.max(1, Math.floor(diff / HOUR)) };
+  if (days === 1) return { unit: 'yesterday' };
+  if (days <= 6) return { unit: 'days', count: days };
+  return { unit: 'date', sameYear: d.getFullYear() === now.getFullYear() };
+}
+
+/** "Nov 3" this year, "Nov 3, 2025" before it — in the UI language. */
+export function shortDate(iso: string, lng = 'en', withYear = false): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(lng, {
+    month: 'short',
+    day: 'numeric',
+    ...(withYear ? { year: 'numeric' } : {}),
+  });
 }
 
 export interface DateGroup<T> {
@@ -92,17 +137,19 @@ export interface DateGroup<T> {
 }
 
 /**
- * Groups by calendar day, tagging the two most recent days so the caller can
- * render them as "Today's notifications" / "Yesterday" (design frames 34, 48).
- * Older days keep an absolute date, which is what a shopper scrolling back needs.
+ * Groups by calendar day in the shopper's time zone, tagging the two most
+ * recent days so the caller can render them as "Today's" / "Yesterday's"
+ * (ivy-docs SPEC BR-04). Older days keep an absolute date, which is what a
+ * shopper scrolling back needs. Groups follow the order of `items`.
  */
 export function groupByDate<T extends { createdAt: string }>(
   items: T[],
   lng = 'en',
+  now: Date = new Date(),
 ): DateGroup<T>[] {
   const map = new Map<string, DateGroup<T>>();
   for (const it of items) {
-    const ago = daysAgo(it.createdAt);
+    const ago = daysAgo(it.createdAt, now);
     const relative = ago === 0 ? 'today' : ago === 1 ? 'yesterday' : null;
     const key = relative ?? formatDate(it.createdAt, lng);
     let group = map.get(key);

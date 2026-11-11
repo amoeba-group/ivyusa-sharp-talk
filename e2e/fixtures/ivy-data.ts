@@ -12,6 +12,14 @@ const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
 export const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
 
+/**
+ * A time on YESTERDAY's calendar date, whenever the suite runs. Exactly 24 hours
+ * back always is (outside a DST changeover day); "26 hours ago" was not — from
+ * 00:00 to 02:00 New York time (05:00–07:00 UTC, midday in Vietnam) it is two
+ * days back, and the Yesterday's group TC-02-02 asserts disappeared.
+ */
+export const yesterday = () => ago(DAY);
+
 export const CUSTOMER = {
   fullName: 'Kiho Lee',
   firstName: 'Kiho',
@@ -40,7 +48,7 @@ export function orderList() {
     },
     {
       id: ORDERS.delivered.id, orderNumber: 'IVY-39880', statusInternal: 'delivered', statusUi: 'Delivered',
-      total: 41.5, currency: 'USD', createdAt: ago(DAY + 2 * HOUR), orderedAt: ago(DAY + 2 * HOUR),
+      total: 41.5, currency: 'USD', createdAt: yesterday(), orderedAt: yesterday(),
       itemCount: 3, firstItemTitle: 'Hydrating Face Mask 10pcs',
     },
     {
@@ -124,7 +132,7 @@ export function notifications() {
     {
       id: '505', category: 'shipping', title: 'IVY-39880', body: 'Hydrating Face Mask 10pcs + 2 items',
       statusBadge: 'Delivered', linkUrl: null, refType: 'order', refId: ORDERS.delivered.id, channel: 'in_app',
-      read: true, readAt: ago(DAY), createdAt: ago(DAY + 2 * HOUR),
+      read: true, readAt: ago(DAY), createdAt: yesterday(),
     },
     {
       id: '506', category: 'event', title: 'BACK TO SCHOOL', body: 'Buy one Get One CODE:SCHOOL20',
