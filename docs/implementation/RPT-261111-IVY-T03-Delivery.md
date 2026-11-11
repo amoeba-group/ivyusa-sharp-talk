@@ -74,7 +74,7 @@ Kế hoạch: [PLN-261111-IVY-T03](../plan/PLN-261111-IVY-T03-Delivery.md), duy�
 
 | Mục | Trạng thái |
 |---|---|
-| Commit | _(điền sau khi push)_ |
-| CI | _(điền sau khi push)_ |
-| Server `talkaibotprd01` | _(cron tự deploy khi CI xanh, xem `~/ivy-autodeploy.log`)_ |
+| Commit | `dc4d545d` trên `deploy/talk-ivyusa` |
+| CI | ✅ run 42974469712, xong 06:46:35Z: verify ✅, e2e gate ✅ (có `@T03`), deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron sẽ deploy vài phút sau khi CI xanh.<br>• Máy dev bị ELB trả 403, nên không tự kiểm tra được.<br>• Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm `Deployed.` cho `dc4d545d`. Commit tài liệu sau đó chỉ cập nhật code, không build lại |
 | SQL / migration | Không có |
