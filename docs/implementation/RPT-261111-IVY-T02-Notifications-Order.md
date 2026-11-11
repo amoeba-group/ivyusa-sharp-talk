@@ -91,7 +91,8 @@ Kế hoạch: [PLN-261110-IVY-T02](../plan/PLN-261110-IVY-T02-Notifications-Orde
 
 | Mục | Trạng thái |
 |---|---|
-| Commit | _(điền sau khi push)_ |
-| CI | _(điền sau khi push)_ |
-| Server `talkaibotprd01` | _(cron tự deploy khi CI xanh, xem `~/ivy-autodeploy.log`)_ |
+| Commit | `95ba7510` trên `deploy/talk-ivyusa` |
+| CI | ✅ run 42956426659, xong 04:03:42Z: verify ✅, e2e gate ✅ (có `@T02`), deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** CI xanh lúc 04:03:42Z, nên cron sẽ deploy vài phút sau đó (T01 mất khoảng 1,5 phút).<br>• Máy dev bị ELB trả 403, nên không tự kiểm tra được.<br>• Chủ dự án sẽ kiểm tra sau bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm dòng `Deployed.` và mốc `deployed` = `95ba7510` |
+| Cấu hình production (T01, PLN-T01 §5) | ⏳ Chủ dự án làm trong console: **tắt tab Orders** (bắt buộc để chip mới và B2 có tác dụng), Corners Large, width 380, greeting `{firstName}` ở 6 ngôn ngữ |
 | SQL / migration | Không có |
