@@ -17,11 +17,13 @@
 | BUG-008 | `scripts/manual-screenshots.mjs` trỏ widget sang :5175 (cổng PWA) | Tooling | 🟡 | Open | — |
 | BUG-009 | Lưu review thất bại bị nuốt lỗi, shopper không được báo gì | Widget | 🟠 | Open | T06 |
 | BUG-010 | Điện thoại/email hỗ trợ của IVY hard-code trong cả 6 locale → hiện cho **mọi tenant** | Widget / Multi-tenant | 🟠 | Open | T11 |
-| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed (T02, feed thông báo) | T02 |
+| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed: feed thông báo (T02), thẻ giao hàng (T03). Còn: danh sách đơn, feed inquiry (T09) | T02 · T03 · T09 |
 | BUG-012 | `radius:check` và `check-migrations --check` báo đỏ trên Windows dù CI (Linux) xanh | Tooling | 🟡 | Open (CI không ảnh hưởng) | T00-d |
 | BUG-014 | E2E chập chờn: "apiResponse.json: Response has been disposed" làm fail test đã pass | E2E harness | 🟡 | Fixed (T01) | T01 |
 | BUG-015 | Feed thông báo hiện mỗi sự kiện **tới 5 lần** (1 dòng cho mỗi kênh in_app/email/sms/web_push/push) và badge đếm cả 5 | API | 🟠 | Fixed (T02) | T02 |
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
+| BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng | E2E harness | 🟡 | Fixed (T03) | T03 |
+| BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
 | BUG-013 | Repo **public**: cài đặt PR từ fork chỉ duyệt người đóng góp lần đầu; `env/backend/.env.development` (secret dev) và IP/SSH user staging nằm trong repo công khai | Security | 🟠 | Need info | T00-e |
 
 ---
@@ -81,6 +83,7 @@
   - `noticeStatus()` (`packages/types/src/common/order-status.ts`) khớp **chính xác** 6 chữ `ORDER_STATUS_UI` sang mã: `confirmed`, `in_transit`, `delivered`, `review`, `pending_payment`, `cancel_requested`.
   - `StatusPill.tsx` dùng mã đó để lấy nhãn `notifications.status.*` (6 ngôn ngữ) và màu. Chữ lạ thì hiện nguyên văn, màu trung tính, `data-status="other"`.
   - Phạm vi: feed thông báo. `toneForStatus` (đoán theo chữ) vẫn còn ở danh sách đơn và feed inquiry, sẽ xử lý ở T03/T09 khi làm lại các màn đó.
+- **T03 (2026-11-11):** thẻ giao hàng (chip Delivery) dùng `StatusPill` với mã lấy từ bước tracking (`deliveryCardStatus`), nên pill, stepper và câu trạng thái luôn khớp nhau. Còn lại `toneForStatus` ở `OrderList.tsx` và `IssueFeed`: xử lý ở T09.
 
 ## BUG-015 · Feed thông báo lặp mỗi sự kiện theo số kênh
 - **Hiện tượng:**
@@ -94,6 +97,18 @@
 ## BUG-016 · Fixture e2e "hôm qua" phụ thuộc giờ chạy
 - Thông báo 505 và đơn IVY-39880 dùng `ago(DAY + 2 * HOUR)`. Suite chạy với `timezoneId: 'America/New_York'`, nên từ 00:00 đến 02:00 giờ New York (05:00–07:00 UTC, tức giữa trưa ở Việt Nam) thời điểm đó rơi vào **2 ngày trước**. Khi đó nhóm "Yesterday's" biến mất và TC-02-02 đỏ, ~8% số lần chạy, kể cả trên CI.
 - **Fix:** `yesterday()` = đúng 24 giờ trước, luôn nằm trong ngày hôm qua (trừ ngày đổi giờ DST).
+
+## BUG-017 · TC-03-05 đọc URL tab mới quá sớm
+- **Hiện tượng:** sau khi bấm Track Order, test lấy `(await popup).url()` và nhận `""`. Tab mới đã mở, nhưng lúc sự kiện `popup` bắn ra thì tab chưa điều hướng tới `ups.com`. Lỗi xảy ra mỗi lần chạy, kể cả khi app mở đúng link.
+- **Fix:** giả lập `https://www.ups.com/**` ở mức context để CI không phụ thuộc mạng ngoài, rồi `waitForURL(/ups\.com\/track/, { waitUntil: 'commit' })` trước khi kiểm tra URL (có `tracknum`). Lặp ×3: 15/15.
+- **Phòng ngừa:** với tab mới hoặc điều hướng, luôn chờ `waitForURL` / `waitForLoadState`. Không đọc `url()` ngay sau sự kiện `popup`.
+
+## BUG-018 · TC-01-06 đo panel trước khi theme về
+- **Hiện tượng:** cổng CI chạy lặp ×2 có 1 lần đỏ: "Expected <= 382, Received 404". Chạy riêng TC-01-06 ×15 với 4 worker: **11/15 đỏ**. CI chạy 1 worker và có retry nên chưa lộ ra.
+- **Nguyên nhân:** `.ivy-panel-desktop` dùng `var(--ivy-panel-w, 404px)` (`apps/widget/src/index.css`). Theme của tenant (380px) đặt biến này sau khi tải cấu hình. Test mở panel rồi đo **ngay**, nên khi API chậm nó đo trúng 404px mặc định. Không liên quan T03.
+- **Fix (test):** `expect.poll` chờ độ rộng ≤ 382 rồi mới kiểm tra ≥ 378, giống TC-01-08. Sau fix: 15/15 với 4 worker.
+- **Còn mở (mức thấp):** nếu khách mở widget trước khi cấu hình tenant về, panel có thể chớp từ 404px xuống 380px. Thực tế hiếm vì cấu hình tải ngay khi trang nạp. Có thể xử lý ở T15 bằng cách chờ theme rồi mới cho mở, hoặc đổi mặc định sang 380px.
+- **Phòng ngừa:** mọi phép đo hình học phụ thuộc cấu hình tenant phải dùng `expect.poll` hoặc assertion tự chờ.
 
 ## BUG-012 · Kiểm tra CI báo đỏ trên Windows
 - **`npm run radius:check`** crash với đường dẫn `D:\D:\…\apps\widget\src`. Nguyên nhân: `scripts/check-radius-tokens.mjs:26` dùng `new URL('..', import.meta.url).pathname`, trên Windows trả về `/D:/…`. Fix: `fileURLToPath(new URL('..', import.meta.url))`.

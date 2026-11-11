@@ -41,9 +41,18 @@ test.describe('T03 · Notifications — Delivery', () => {
   });
 
   test('TC-03-05 Track Order opens the carrier tracking page in a new tab @T03 @design', async ({ page, widget }) => {
+    // The carrier page is stubbed so the test never depends on ups.com being up
+    // or reachable from CI. A new tab starts on an empty URL and only then
+    // navigates, so wait for that navigation instead of reading the URL at once
+    // (BUG-017).
+    await page.context().route('https://www.ups.com/**', (route) =>
+      route.fulfill({ contentType: 'text/html', body: '<title>UPS tracking (stub)</title>' }),
+    );
     const c = card(widget, ORDERS.inTransit.orderNumber);
     const popup = page.waitForEvent('popup');
     await c.getByRole('button', { name: 'Track Order' }).or(c.getByRole('link', { name: 'Track Order' })).click();
-    expect((await popup).url()).toContain('ups.com/track');
+    const tab = await popup;
+    await tab.waitForURL(/ups\.com\/track/, { waitUntil: 'commit' });
+    expect(tab.url()).toContain('tracknum=1Z999AA10123456784');
   });
 });

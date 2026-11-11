@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §7 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-11** và đã làm, xem [RPT-261111-T03](../implementation/RPT-261111-IVY-T03-Delivery.md). Trả lời §7: (1) ok; (2) **a**, bước 2 dịch theo "Processing"; (3) **a**, dải ngày theo ngày đặt đơn |
 | Task | [ivy-docs/TASKS.md T03](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-05 · G-07 · BR-06 · phần còn lại của BUG-011 (pill trên thẻ giao hàng) |
 | Figma | `1007:1069` (EN, đã đối chiếu), Master `992:935`. Bản KO `1006:4374` chưa xem được vì Figma MCP hết lượt gọi (gói Starter) |
 | TC | TC-03-01..05 ([e2e/tests/03-delivery.spec.ts](../../e2e/tests/03-delivery.spec.ts)), baseline 0/5 |

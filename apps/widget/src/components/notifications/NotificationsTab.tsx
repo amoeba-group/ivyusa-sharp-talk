@@ -20,6 +20,7 @@ import { StatusPill } from '../ui/StatusPill';
 import { Spinner } from '../ui/Spinner';
 import { formatDate, groupByDate, noticeTime, shortDate } from '../../lib/format';
 import { NotificationIcon } from './NotificationIcon';
+import { DateGroupHeader } from './DateGroupHeader';
 import { ShipmentList } from './ShipmentList';
 import { OrderList } from '../orders/OrderList';
 import { OrderDetailView } from '../orders/OrderDetail';
@@ -457,12 +458,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             )}
             {groups.map((g) => (
               <div key={g.label}>
-                <div
-                  data-testid="notif-group"
-                  className="bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500"
-                >
-                  {g.relative ? t(`notifications.groups.${g.relative}`) : g.label}
-                </div>
+                <DateGroupHeader group={g} />
                 {g.items.map((n) => (
                   <Row
                     key={n.id}

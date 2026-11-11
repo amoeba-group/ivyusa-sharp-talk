@@ -25,14 +25,19 @@ export const INTERNAL_TO_UI_STATUS: Record<OrderStatusInternal, OrderStatusUi> =
  * 4 steps mirror FULFILLMENT_TO_STEP_INDEX (preparing → shipped → in transit →
  * delivered). These are customer-facing strings, so they must follow
  * `session.language` — never ship one hardcoded language to every locale.
+ *
+ * Wording is the IVY design's (ivy-docs SPEC BR-06, T03): the second step is
+ * "Processing" (KO 배송시작), and every language says what the English says,
+ * so a shopper who switches language sees the same step names. The widget's
+ * `orders.trackingSteps` fallback mirrors this table.
  */
 export const DELIVERY_STEPS_BY_LANG = {
-  EN: ['Preparing', 'Shipped', 'In transit', 'Delivered'],
-  ES: ['En preparación', 'Enviado', 'En tránsito', 'Entregado'],
+  EN: ['Preparing', 'Processing', 'In Transit', 'Delivered'],
+  ES: ['En preparación', 'En proceso', 'En tránsito', 'Entregado'],
   KO: ['발송준비', '배송시작', '배송중', '배송완료'],
-  VI: ['Đang chuẩn bị', 'Đã gửi hàng', 'Đang vận chuyển', 'Đã giao'],
-  JA: ['準備中', '発送済み', '配送中', '配達完了'],
-  ZH: ['备货中', '已发货', '运输中', '已送达'],
+  VI: ['Đang chuẩn bị', 'Đang xử lý', 'Đang vận chuyển', 'Đã giao'],
+  JA: ['準備中', '処理中', '配送中', '配達完了'],
+  ZH: ['备货中', '处理中', '运输中', '已送达'],
 } as const;
 
 export type DeliveryStepLang = keyof typeof DELIVERY_STEPS_BY_LANG;

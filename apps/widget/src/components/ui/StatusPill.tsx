@@ -21,16 +21,23 @@ const TONE: Record<NoticeStatus, string> = {
 };
 
 /**
- * A notification's status pill (ivy-docs T02 D3), from the badge text the API
- * stored. A status we know gets its translated label and its colour; any other
- * wording is shown as written, in the neutral tone, rather than coloured by
- * guesswork (BUG-011).
+ * A status pill (ivy-docs T02 D3). Either from the badge text the API stored on
+ * a notification, or from a status code the caller already worked out (the
+ * delivery card knows it from the tracking step — T03 D4). A status we know
+ * gets its translated label and its colour; any other wording is shown as
+ * written, in the neutral tone, rather than coloured by guesswork (BUG-011).
  */
-export function StatusPill({ badge }: { badge: string | null | undefined }) {
+export function StatusPill({
+  badge,
+  status: known,
+}: {
+  badge?: string | null;
+  status?: NoticeStatus | null;
+}) {
   const { t } = useTranslation();
   const text = badge?.trim();
-  if (!text) return null;
-  const status = noticeStatus(text);
+  const status = known ?? (text ? noticeStatus(text) : null);
+  if (!status && !text) return null;
   return (
     <Badge
       tone={status ? TONE[status] : 'default'}

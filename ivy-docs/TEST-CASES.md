@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -36,7 +36,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T00 | 4 / 4 | TC-00-01, TC-00-02, TC-00-03, TC-00-04 | — |
 | T01 | 4 / 7 → **18 / 18** ✅ (T01, 2026-11-10; gồm TC-01-08 ×11) | tất cả | — |
 | T02 | 0 / 6 → **6 / 6** ✅ (T02, 2026-11-11) | tất cả | — |
-| T03 | 0 / 5 | — | TC-03-01, TC-03-02, TC-03-03, TC-03-04, TC-03-05 |
+| T03 | 0 / 5 → **5 / 5** ✅ (T03, 2026-11-11) | tất cả | — |
 | T04 | 0 / 5 → 3 / 5 (nhờ T02: chạm dòng mở Order Detail) | TC-04-01, TC-04-02, TC-04-05 | TC-04-03, TC-04-04 |
 | T05 | 0 / 4 | — | TC-05-01, TC-05-02, TC-05-03, TC-05-04 |
 | T06 | 0 / 3 | — | TC-06-01, TC-06-02, TC-06-03 |
@@ -73,7 +73,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-01-03 | Badge chưa đọc | tab Notifications có nhãn "{n} unread" với n = số chưa đọc | BR-02 |
 | TC-01-04 | Ẩn badge khi 0 | feed rỗng → không có badge | BR-02 |
 | TC-01-05 | Đóng/mở | Close → ẩn; mở lại vẫn ở tab cũ; `Esc` → ẩn | SCR-IVY-01 |
-| TC-01-06 | Rộng 380px (theme thật) | bề rộng panel 378–382px | G-03, §4 |
+| TC-01-06 | Rộng 380px (theme thật) | bề rộng panel 378–382px, **chờ** theme của tenant về (panel có thể mở ở 404px mặc định trước đó, BUG-018) | G-03, §4 |
 | TC-01-07 | Settings | ⚙ → "Chat & AI consent"; Back → về tab | SCR-IVY-02 |
 | TC-01-08 ×11 | Mọi kích thước màn hình, mở qua **`embed.js` thật** trên một trang storefront (tag `@devices`) | Panel nằm trọn trong màn hình. ≥ 640px: 380 × min(600, frame − 20). < 640px: rộng bằng màn hình, cao min(680, màn hình), bám đáy. Header "Hi, Kiho", 2 tab và nút Close đều hiện trong panel | SCR-IVY-01, yêu cầu 2026-11-10 "PC, tablet, mọi mobile" |
 
@@ -119,8 +119,18 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-03-01 | Thẻ theo đơn | có `delivery-card` cho IVY-39641 (đang giao) và IVY-39880 (đã giao) | SCR-IVY-05 |
 | TC-03-02 | Nhãn bước | 4 `delivery-step` = Preparing · Processing · In Transit · Delivered | G-07, BR-06 |
 | TC-03-03 | Thẻ đang giao | pill "In Transit"; `data-state` = done, done, current, todo; "Your order is on the way!" | BR-06 |
-| TC-03-04 | Thẻ đã giao | pill "Delivered"; 4 bước done; "Your order is Delivered !" | BR-06 |
-| TC-03-05 | Track Order | mở tab mới tới `ups.com/track` (trackingUrl) | SCR-IVY-05, Q-05 |
+| TC-03-04 | Thẻ đã giao | pill "Delivered"; 4 bước done; "Your order is Delivered!" (test chấp nhận có hoặc không có dấu cách trước "!") | BR-06 |
+| TC-03-05 | Track Order | mở tab mới tới `ups.com/track` (trackingUrl). Trang UPS được giả lập; test chờ tab mới điều hướng xong rồi mới đọc URL (BUG-017) | SCR-IVY-05, Q-05 |
+
+**Kết quả (2026-11-11):** 5/5, lặp ×3: 15/15. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T13`) ×2: 78/78. Toàn bộ desktop: 55 pass / 30 fail, mọi ca đỏ thuộc T04–T12 chưa làm.
+
+**Kiểm thử bổ sung cho T03:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit widget | `apps/widget/test/delivery-card.test.mjs` | Trạng thái bước: đang giao (done · done · current · todo), đã giao (cả 4 done), bước 1–2, chưa có tracking (-1), số bước khác 4. Pill theo bước tracking khi đã tải (kể cả khi trạng thái đơn chậm hơn fulfillment), theo trạng thái đơn khi chưa tải |
+| Jest `packages/types` | `status-map.spec.ts` | Đủ 4 bước ở cả 6 ngôn ngữ; EN = Preparing · Processing · In Transit · Delivered; VI bước 2 = "Đang xử lý" |
+| Ảnh chụp | thủ công, 380px | EN / KO / VI / ES so với Figma `1007:1069` |
 
 ## T04 · Order Detail (`04-order-detail.spec.ts`)
 

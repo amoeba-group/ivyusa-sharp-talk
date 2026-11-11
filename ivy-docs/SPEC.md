@@ -135,7 +135,7 @@ Launcher (góc phải dưới) ─► Panel 380px
 
 ### SCR-IVY-05 · Notifications — Delivery
 - **Figma:** Master `992:935`, `1007:1069` (EN), `1006:4374` / `1154:379` (KO).
-- Mỗi đơn 1 thẻ: mã đơn đậm + pill (In Transit cam / Delivered xám) · tên sản phẩm · **stepper 4 bước** `Preparing → Processing → In Transit → Delivered` (KO: 배송준비 · 배송시작 · 배송중 · 배송완료) · thông điệp trạng thái · nút **Track Order** (KO: 배송조회).
+- Mỗi đơn 1 thẻ: mã đơn đậm + pill (In Transit cam / Delivered xám) · tên sản phẩm · **stepper 4 bước** `Preparing → Processing → In Transit → Delivered` (KO: 발송준비 · 배송시작 · 배송중 · 배송완료, theo BR-06; trước đây mục này ghi "배송준비", lệch với BR-06) · thông điệp trạng thái · nút **Track Order** (KO: 배송조회).
 - Track Order → mở trang tracking của hãng vận chuyển (tab mới) — cần URL tracking từ fulfillment (Q-05).
 
 ### SCR-IVY-06 · Order Detail
@@ -257,8 +257,8 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 | Nhóm ngày | `[data-testid="notif-group"]` | ✅ (T02) |
 | Dòng thông báo | `[data-testid="notif-item"]` + `data-id` + `data-unread="true\|false"` + `data-category` | ✅ (T02) |
 | Thời gian dòng | `[data-testid="notif-time"]` (text theo BR-05) | ✅ (T02) |
-| Pill trạng thái | `[data-testid="status-pill"]` + `data-status="confirmed\|in_transit\|delivered\|review"` (ngoài ra `pending_payment`, `cancel_requested`; chữ lạ → `other`) | ✅ (T02) — mới có trong feed thông báo; thẻ Delivery/Review dùng ở T03/T06 |
-| Thẻ giao hàng | `[data-testid="delivery-card"]`; bước `[data-testid="delivery-step"]` + `data-state="done\|current\|todo"` | ➕ (T03) |
+| Pill trạng thái | `[data-testid="status-pill"]` + `data-status="confirmed\|in_transit\|delivered\|review"` (ngoài ra `pending_payment`, `cancel_requested`; chữ lạ → `other`) | ✅ (T02) — mới có trong feed thông báo; thẻ Delivery ✅ (T03, mã lấy từ bước tracking); Review ở T06 |
+| Thẻ giao hàng | `[data-testid="delivery-card"]` (+`data-id`); bước `[data-testid="delivery-step"]` + `data-state="done\|current\|todo"` (đã giao: cả 4 `done`) | ✅ (T03) |
 | Order Detail | `getByRole('heading', { name: 'Order Detail' })` | ➕ copy (T04) |
 | Chọn từng dòng | `getByRole('checkbox')` trong `notif-item` | ✅ `role="checkbox"` + `aria-checked` |
 | Nút xoá | `getByRole('button', { name: 'Delete Selected Notifications' \| 'Delete All Notifications' })` | ➕ copy (T07) |
@@ -286,7 +286,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-04 | Chip **Order · Delivery · Promo · Review** | Gộp 1 tab: **All · Payment · Delivery · Event · Review** (+Inquiries nếu có workflow) (`tab-chips.ts`) | Đổi nhãn Payment→**Order**, Event→**Promo**; bỏ chip All (Q-10); thêm `aria-pressed` cho chip | UI · I18N | T02 |
 | G-05 | Dòng: mã đơn + pill + "X + 2 items" + "Just now / 10mins ago" | Tiêu đề/nội dung tự do; pill = text server **chưa dịch**, màu đoán theo text (`Badge.tsx` 43-52); thời gian dạng `Intl` ("10 minutes ago") (`format.ts`) | Hiển thị có cấu trúc (mã đơn tách khỏi tóm tắt), pill map theo **mã trạng thái** + i18n, định dạng thời gian theo BR-05 | UI · I18N | T02 |
 | G-06 | Chạm thông báo → mở Order Detail / vị trí giao hàng (BR-07) | Chỉ đánh dấu đã đọc, `linkUrl` không mở (`NotificationsTab.tsx`) | Điều hướng theo `refType/refId` | UI | T02 |
-| G-07 | Stepper **Preparing → Processing → In Transit → Delivered**; "Your order is on the way!" / "Your order is Delivered !"; nút **Track Order** | **Preparing → Shipped → In transit → Delivered** (`packages/types/src/domain/status-map.ts` `DELIVERY_STEPS_BY_LANG`); "Your order is on its way — it will reach you soon!"; "Track shipment" (`ShipmentList.tsx`) | Đổi nhãn bước 2 + copy (lưu ý `status-map.ts` dùng chung với API/console) | I18N | T03 |
+| G-07 | Stepper **Preparing → Processing → In Transit → Delivered**; "Your order is on the way!" / "Your order is Delivered !"; nút **Track Order** | **Preparing → Shipped → In transit → Delivered** (`packages/types/src/domain/status-map.ts` `DELIVERY_STEPS_BY_LANG`); "Your order is on its way — it will reach you soon!"; "Track shipment" (`ShipmentList.tsx`) | Đổi nhãn bước 2 + copy (lưu ý `status-map.ts` dùng chung với API/console) | I18N | T03 ✅ (2026-11-11; bước 2 ở ES/VI/JA/ZH dịch theo "Processing") |
 | G-08 | Order Detail có **Billing/Shipping address + phone**, nhãn "Information" | Không có địa chỉ/điện thoại trong response (`widget.types.ts` `OrderDetailResponse`), nhãn "Contact information" | Thêm cột order (sync Shopify `shipping_address`, `billing_address`, `phone`) → mapper → UI. **Cần migration SQL** | API · DB · UI | T04 |
 | G-09 | Promo: coupon (gift navy) vs sự kiện (sparkle magenta), tiêu đề đậm + mô tả, mã coupon | Chỉ là notification `event` với icon gift/sparkle; không có mã/copy; link không bấm được; API không có khái niệm coupon | Thẻ promo theo thiết kế + bấm mở link; hiển thị mã coupon (lấy từ body/metadata) + nút copy | UI (+API tuỳ chọn) | T05 |
 | G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 |

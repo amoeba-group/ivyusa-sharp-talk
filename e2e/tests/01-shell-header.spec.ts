@@ -18,9 +18,12 @@ test.describe('T01 · Panel shell, header & tabs', () => {
     test('TC-01-06 panel is 380px wide on desktop @T01 @design', async ({ widget }) => {
       await widget.goto();
       await widget.open();
-      const box = await widget.panel.boundingBox();
-      expect(box?.width).toBeGreaterThanOrEqual(378);
-      expect(box?.width).toBeLessThanOrEqual(382);
+      // The panel can open at the 404px CSS default before the tenant theme
+      // (380px) arrives, so wait for the theme instead of measuring the first
+      // frame (BUG-018) — same as TC-01-08 below.
+      const width = async () => Math.round((await widget.panel.boundingBox())?.width ?? 0);
+      await expect.poll(width, { timeout: 5_000 }).toBeLessThanOrEqual(382);
+      expect(await width()).toBeGreaterThanOrEqual(378);
     });
   });
 

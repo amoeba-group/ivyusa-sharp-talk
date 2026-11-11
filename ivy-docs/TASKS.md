@@ -27,7 +27,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 0 | T00 | Môi trường, Context7, Playwright, tài liệu | Setup | P0 | — | ✅ (trừ T00-b, T00-c) | TC-00-01..04 |
 | 1 | T01 | Shell panel, header "Hi, {firstName}", 2 tab + badge | CFG · UI | P0 | T00 | ✅ code · ⏳ cấu hình prod | TC-01-01..08 |
 | 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N · API | P0 | T01 | ✅ code · ⏳ cần tab Orders tắt trên prod (T01) | TC-02-01..06 |
-| 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261111-IVY-T03-Delivery.md) | TC-03-01..05 |
+| 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ✅ | TC-03-01..05 |
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N | P1 | T02 | ⬜ | TC-07-01..03 |
 | 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · DB · UI | P1 | T02 | ⬜ | TC-04-01..05 |
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI (+API) | P1 | T02 | ⬜ | TC-05-01..04 |
@@ -100,10 +100,22 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   5. Thêm test-id theo SPEC §9: `notif-item` (+`data-id`, `data-unread`, `data-category`), `notif-group`, `notif-time`, `status-pill` (+`data-status`).
 - **TC:** TC-02-01..06 — **6/6** ✅.
 
-### T03 · Delivery — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261111-IVY-T03-Delivery.md)
+### T03 · Delivery — ✅ (2026-11-11) · [PLN](../docs/plan/PLN-261111-IVY-T03-Delivery.md) · [RPT](../docs/implementation/RPT-261111-IVY-T03-Delivery.md)
 - **Figma:** `992:935`, `1007:1069`. **Gap:** G-07. **BR:** 06.
-- **Việc cần làm:** `DELIVERY_STEPS_BY_LANG` (`packages/types/src/domain/status-map.ts`): bước 2 → **Processing**, viết hoa "In Transit" theo thiết kế (kiểm tra console/API cũng dùng hằng này). Copy "Your order is on the way!" / "Your order is Delivered !" / nút **Track Order** (6 locale). Test-id `delivery-card`, `delivery-step` (+`data-state`).
-- **TC:** TC-03-01..05.
+- **Quyết định của chủ dự án (2026-11-11):** bước 2 ở ES / VI / JA / ZH dịch theo "Processing" của thiết kế EN; dải ngày trên thẻ tính theo **ngày đặt đơn**.
+- **Đã làm:**
+  - Nhãn bước **Preparing · Processing · In Transit · Delivered** ở server (`DELIVERY_STEPS_BY_LANG`) và bản dự phòng của widget, 6 ngôn ngữ. KO giữ 발송준비 · 배송시작 · 배송중 · 배송완료.
+  - Thẻ theo Figma `1007:1069`:
+    - stepper vòng 40px chỉ icon, `delivery-step` + `data-state`;
+    - pill theo mã (BUG-011);
+    - "SP + 2 more items";
+    - "Your order is on the way!" (cam) / "Your order is Delivered!" (đen đậm);
+    - nút **Track Order**;
+    - dải ngày Today's / Yesterday's.
+  - Sửa 2 test e2e chập chờn: BUG-017 (TC-03-05) và BUG-018 (TC-01-06 trong cổng CI).
+  - Thêm `@T03` vào `test:ci`.
+- **Có hiệu lực ngay**, không cần chờ cấu hình T01. Khi chưa tắt tab Orders, thay đổi hiện ở tab Orders → chip Delivery.
+- **TC:** TC-03-01..05 — **5/5** ✅.
 
 ### T07 · Chọn & xoá — ⬜
 - **Figma:** `992:526`, `1006:2814`, `1006:2698`. **Gap:** G-11. **BR:** 09.

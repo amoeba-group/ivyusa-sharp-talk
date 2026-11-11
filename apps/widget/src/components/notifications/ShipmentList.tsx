@@ -1,14 +1,17 @@
 import { useQueries } from '@tanstack/react-query';
-import { ExternalLink, PackageSearch } from 'lucide-react';
+import { PackageSearch } from 'lucide-react';
 import { useAnalytics } from '../../lib/analytics';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { getTracking } from '../../services/orderService';
 import { useOrders } from '../../hooks/useOrders';
-import { Badge, toneForStatus } from '../ui/Badge';
+import { StatusPill } from '../ui/StatusPill';
 import { Spinner } from '../ui/Spinner';
 import { TrackingStepperH } from '../orders/TrackingStepperH';
-import { isShipmentish, statusLabel } from '../orders/order-status';
+import { isShipmentish } from '../orders/order-status';
+import { groupByDate } from '../../lib/format';
+import { deliveryCardStatus, isDeliveredStep } from '../../lib/delivery';
+import { DateGroupHeader } from './DateGroupHeader';
 import type { OrderSummary, Tracking } from '../../lib/types';
 
 /**
@@ -31,6 +34,17 @@ function trackingStepLabels(t: TFunction): string[] {
   return Array.isArray(raw) ? raw.filter((s): s is string => typeof s === 'string') : [];
 }
 
+/** When the order was placed — what the card's date band goes by (T03 §7-3). */
+const placedAt = (o: OrderSummary): string => o.orderedAt ?? o.createdAt;
+
+const OUTLINE_BUTTON =
+  'mt-3 flex w-full items-center justify-center rounded-st-md border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50';
+
+/**
+ * One delivery card (ivy-docs T03, SCR-IVY-05, Figma `1007:1069`): order number
+ * and status pill, item summary, the 4-step stepper, the status message and
+ * Track Order.
+ */
 function ShipmentCard({
   order,
   tracking,
@@ -45,8 +59,10 @@ function ShipmentCard({
   const { t } = useTranslation();
   const analytics = useAnalytics();
   const fallbackSteps = trackingStepLabels(t);
-  const steps = tracking?.steps?.length ? tracking.steps : fallbackSteps;
-  const delivered = !!tracking && tracking.stepIndex >= steps.length - 1;
+  const stepCount = tracking?.steps?.length || fallbackSteps.length;
+  const delivered = !!tracking && isDeliveredStep(tracking.stepIndex, stepCount);
+  // Pill, stepper and message all follow the tracking step once it loads (D4).
+  const status = deliveryCardStatus(order, tracking, fallbackSteps.length);
 
   const summary = order.firstItemTitle
     ? order.itemCount > 1
@@ -55,14 +71,10 @@ function ShipmentCard({
     : t('orders.itemCount', { count: order.itemCount });
 
   return (
-    <div className="border-b border-gray-100 px-4 py-4">
+    <div data-testid="delivery-card" data-id={order.id} className="border-b border-gray-100 px-4 py-4">
       <div className="flex items-start justify-between gap-2">
         <span className="text-base font-bold text-gray-900">{order.orderNumber}</span>
-        {statusLabel(t, order) && (
-          <Badge tone={toneForStatus(order.statusInternal ?? order.statusUi)}>
-            {statusLabel(t, order)}
-          </Badge>
-        )}
+        <StatusPill status={status} />
       </div>
       <p className="mt-1 text-sm text-gray-700">{summary}</p>
 
@@ -79,32 +91,28 @@ function ShipmentCard({
 
       {tracking && (
         <p
-          className={`mt-3 text-center text-sm ${
-            delivered ? 'text-gray-500' : 'font-bold text-warning'
+          className={`mt-3 text-center text-sm font-bold ${
+            delivered ? 'text-gray-900' : 'text-warning'
           }`}
         >
           {delivered ? t('orders.shipmentDelivered') : t('orders.shipmentInTransit')}
         </p>
       )}
 
-      {/* Same rule as the order detail's Track row (PLN-260923 P2): the
-          carrier's own page when we have one, otherwise the order detail. */}
+      {/* Q-05 / PLN-260923 P2: the carrier's own page in a new tab when we have
+          one, otherwise the order detail inside the widget. */}
       {tracking?.trackingUrl ? (
         <a
           href={tracking.trackingUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => analytics.trackingView(order.id, true)}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-st-md border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+          className={OUTLINE_BUTTON}
         >
           {t('orders.trackingCta')}
-          <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
         </a>
       ) : (
-        <button
-          onClick={onOpen}
-          className="mt-3 w-full rounded-st-md border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
-        >
+        <button type="button" onClick={onOpen} className={OUTLINE_BUTTON}>
           {t('orders.trackingCta')}
         </button>
       )}
@@ -113,11 +121,13 @@ function ShipmentCard({
 }
 
 /**
- * The Shipping filter of the notification tab (PLN-260817 W-2).
+ * The Delivery chip (PLN-260817 W-2, ivy-docs T03).
  *
  * This is the one filter that does NOT read the notification feed: the design
  * shows live shipment progress here, which lives on the order, not on the
- * notification row that announced it.
+ * notification row that announced it. Orders on their way or delivered, newest
+ * five, under the same date bands as the Order chip — by the day the order was
+ * placed, in the shopper's own time zone.
  */
 export function ShipmentList({
   sessionToken,
@@ -126,9 +136,12 @@ export function ShipmentList({
   sessionToken: string | null;
   onOpenOrder: (orderId: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data, isLoading, isError } = useOrders(sessionToken);
-  const shipments = (data ?? []).filter(isShipmentish).slice(0, TRACKED_MAX);
+  const shipments = (data ?? [])
+    .filter(isShipmentish)
+    .sort((a, b) => Date.parse(placedAt(b)) - Date.parse(placedAt(a)))
+    .slice(0, TRACKED_MAX);
 
   const trackingQueries = useQueries({
     queries: shipments.map((o) => ({
@@ -150,16 +163,30 @@ export function ShipmentList({
     );
   }
 
+  const trackingOf = new Map(shipments.map((o, i) => [o.id, trackingQueries[i]]));
+  const groups = groupByDate(
+    shipments.map((order) => ({ createdAt: placedAt(order), order })),
+    i18n.language,
+  );
+
   return (
     <div>
-      {shipments.map((order, i) => (
-        <ShipmentCard
-          key={order.id}
-          order={order}
-          tracking={trackingQueries[i]?.data}
-          loading={!!trackingQueries[i]?.isLoading}
-          onOpen={() => onOpenOrder(order.id)}
-        />
+      {groups.map((g) => (
+        <div key={g.label}>
+          <DateGroupHeader group={g} />
+          {g.items.map(({ order }) => {
+            const q = trackingOf.get(order.id);
+            return (
+              <ShipmentCard
+                key={order.id}
+                order={order}
+                tracking={q?.data}
+                loading={!!q?.isLoading}
+                onOpen={() => onOpenOrder(order.id)}
+              />
+            );
+          })}
+        </div>
       ))}
     </div>
   );

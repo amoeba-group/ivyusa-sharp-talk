@@ -28,10 +28,15 @@ describe('status-map — internalToUiStatus', () => {
 
 describe('status-map — fulfillmentStepIndex & delivery steps', () => {
   it('has a 4-step delivery stepper in every supported language', () => {
-    for (const lang of ['EN', 'ES', 'KO'] as const) {
+    for (const lang of ['EN', 'ES', 'KO', 'VI', 'JA', 'ZH'] as const) {
       expect(DELIVERY_STEPS_BY_LANG[lang]).toHaveLength(4);
     }
     expect(DELIVERY_STEPS_BY_LANG.KO).toEqual(['발송준비', '배송시작', '배송중', '배송완료']);
+  });
+
+  it('uses the IVY design wording (ivy-docs BR-06, T03): step 2 is "Processing"', () => {
+    expect(DELIVERY_STEPS_BY_LANG.EN).toEqual(['Preparing', 'Processing', 'In Transit', 'Delivered']);
+    expect(DELIVERY_STEPS_BY_LANG.VI[1]).toBe('Đang xử lý');
   });
 
   it('returns the steps for the session language (case-insensitive)', () => {
