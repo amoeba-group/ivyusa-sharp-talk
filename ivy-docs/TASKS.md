@@ -28,7 +28,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 1 | T01 | Shell panel, header "Hi, {firstName}", 2 tab + badge | CFG · UI | P0 | T00 | ✅ code · ⏳ cấu hình prod | TC-01-01..08 |
 | 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N · API | P0 | T01 | ✅ code · ⏳ cần tab Orders tắt trên prod (T01) | TC-02-01..06 |
 | 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ✅ | TC-03-01..05 |
-| 4 | T07 | Chọn & xoá thông báo | UI · I18N | P1 | T02 | ⬜ | TC-07-01..03 |
+| 4 | T07 | Chọn & xoá thông báo | UI · I18N | P1 | T02 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261111-IVY-T07-Select-Delete.md) | TC-07-01..03 |
 | 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · DB · UI | P1 | T02 | ⬜ | TC-04-01..05 |
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI (+API) | P1 | T02 | ⬜ | TC-05-01..04 |
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ⬜ | TC-06-01..03 |
@@ -117,7 +117,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Có hiệu lực ngay**, không cần chờ cấu hình T01. Khi chưa tắt tab Orders, thay đổi hiện ở tab Orders → chip Delivery.
 - **TC:** TC-03-01..05 — **5/5** ✅.
 
-### T07 · Chọn & xoá — ⬜
+### T07 · Chọn & xoá — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261111-IVY-T07-Select-Delete.md)
 - **Figma:** `992:526`, `1006:2814`, `1006:2698`. **Gap:** G-11. **BR:** 09.
 - **Việc cần làm:** copy "Delete Selected Notifications" / "Delete All Notifications" (KO 선택 알림 삭제 / 전체 알림 삭제); thay `window.confirm` bằng xác nhận trong panel; toast "{n} notifications deleted" / lỗi. (Tuỳ chọn) vuốt trái để xoá trên mobile.
 - **TC:** TC-07-01..03.
