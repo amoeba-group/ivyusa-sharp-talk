@@ -29,7 +29,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N · API | P0 | T01 | ✅ code · ⏳ cần tab Orders tắt trên prod (T01) | TC-02-01..06 |
 | 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ✅ | TC-03-01..05 |
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N · API | P1 | T02 | ✅ | TC-07-01..07 |
-| 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · DB · UI | P1 | T02 | ⬜ | TC-04-01..05 |
+| 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · DB · UI | P1 | T02 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T04-Order-Detail.md) | TC-04-01..05 |
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI (+API) | P1 | T02 | ⬜ | TC-05-01..04 |
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ⬜ | TC-06-01..03 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ⬜ | TC-08-01..05 |
@@ -131,7 +131,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Có hiệu lực ngay**, không cần chờ cấu hình T01. Khi chưa tắt tab Orders, chế độ chọn ở tab Notifications (chip All / Event).
 - **TC:** TC-07-01..07 — **7/7** ✅ (01..03 theo thiết kế, 04..07 thêm cho phạm vi chip, Esc, tên ô chọn, lỗi xoá).
 
-### T04 · Order Detail — ⬜ (có migration)
+### T04 · Order Detail — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T04-Order-Detail.md) (migration tuỳ §7-2)
+- **Lưu ý:** địa chỉ và điện thoại là dữ liệu được bảo vệ của Shopify (PCD). App phải được cấp quyền Address/Phone thì mới đọc được (REQ-260920 G8).
 - **Figma:** `1154:116`, `1007:250`, `1006:4282`. **Gap:** G-08.
 - **Hợp đồng API đề xuất** (`OrderDetailResponse`, đã dùng trong `e2e/fixtures/ivy-data.ts`):
   ```ts
