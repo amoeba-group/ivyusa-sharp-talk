@@ -1,5 +1,6 @@
 import { apiClient } from '../lib/api-client';
 import type {
+  OrderAddresses,
   OrderDetail,
   OrderLookupResult,
   OrderSummary,
@@ -71,6 +72,16 @@ export function listIssues(sessionToken: string): Promise<IssueFeedItem[]> {
   return apiClient
     .get<{ issues: IssueFeedItem[] }>('/issues', { session_token: sessionToken })
     .then((r) => r.issues ?? []);
+}
+
+/**
+ * Billing + shipping address of one order (ivy-docs T04), read live from the
+ * store. `available: false` = the server could not read them; hide the blocks.
+ */
+export function getOrderAddresses(id: string, sessionToken: string): Promise<OrderAddresses> {
+  return apiClient.get<OrderAddresses>(`/orders/${id}/addresses`, {
+    session_token: sessionToken,
+  });
 }
 
 export function getTracking(

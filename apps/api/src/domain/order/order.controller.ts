@@ -8,13 +8,17 @@ import { RequireCapability } from '../../global/decorator/auth.decorator';
 import { CurrentUser } from '../../global/decorator/current-user.decorator';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { OrderAddressService } from './order-address.service';
 import { SessionToken } from '../../global/decorator/session-token.decorator';
 
 /** Widget + admin order endpoints (FR-019/020/021). */
 @ApiTags('Orders')
 @Controller('orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly orderAddressService: OrderAddressService,
+  ) {}
 
   @Post('guest-lookup')
   @Public()
@@ -50,6 +54,15 @@ export class OrderController {
   @ApiOperation({ summary: 'Latest fulfillment + delivery stepper (FR-031)' })
   async tracking(@Param('id', ParseIntPipe) id: number, @SessionToken() token: string) {
     return this.orderService.trackingForSession(token, id);
+  }
+
+  @Get(':id/addresses')
+  @Public()
+  @ApiOperation({
+    summary: 'Billing + shipping address, read live from the store and never stored (ivy-docs T04)',
+  })
+  async addresses(@Param('id', ParseIntPipe) id: number, @SessionToken() token: string) {
+    return this.orderAddressService.addressesForSession(token, id);
   }
 }
 

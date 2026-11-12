@@ -222,6 +222,34 @@ mutation WebhookCreate($topic: WebhookSubscriptionTopic!, $sub: WebhookSubscript
   }
 }`;
 
+/** One order's two addresses (ivy-docs T04). Protected customer data: Address + Phone. */
+const ORDER_ADDRESSES_QUERY = `
+query OrderAddresses($id: ID!) {
+  order(id: $id) {
+    shippingAddress { name address1 address2 city province zip country countryCodeV2 phone }
+    billingAddress { name address1 address2 city province zip country countryCodeV2 phone }
+  }
+}`;
+
+/** A Shopify MailingAddress as the address query selects it. */
+export interface ShopifyMailingAddress {
+  name?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  province?: string | null;
+  zip?: string | null;
+  country?: string | null;
+  countryCodeV2?: string | null;
+  phone?: string | null;
+}
+
+/** What `fetchOrderAddresses` read. `null` addresses are absent on the order. */
+export interface ShopifyOrderAddresses {
+  shipping: ShopifyMailingAddress | null;
+  billing: ShopifyMailingAddress | null;
+}
+
 const CUSTOMER_QUERY = `
 query Customer($id: ID!) {
   customer(id: $id) {
@@ -263,6 +291,16 @@ export class ShopifyAdminClient {
   private isAccessScopeError(e: unknown): boolean {
     const msg = e instanceof Error ? e.message : String(e);
     return /access denied|access scope/i.test(msg);
+  }
+
+  /**
+   * A field refused for lack of access, including protected customer data the
+   * app was not granted ("not approved to access"). Address reads only: the
+   * order sync keeps `isAccessScopeError`, so its tier fallback is unchanged.
+   */
+  private isAccessDenial(e: unknown): boolean {
+    const msg = e instanceof Error ? e.message : String(e);
+    return this.isAccessScopeError(e) || /not approved to access|protected customer data/i.test(msg);
   }
 
   /** rich → basic → none, stepping down only on a scope/access denial. */
@@ -355,6 +393,34 @@ export class ShopifyAdminClient {
     throw new Error(
       `webhookSubscriptionCreate failed: ${errors.map((e) => e.message).join('; ') || 'unknown error'}`,
     );
+  }
+
+  /**
+   * One order's shipping and billing address, read live (ivy-docs T04 D1).
+   *
+   * Both are protected customer data (Address + Phone). Until the app is
+   * granted them Shopify refuses the fields, so a refusal answers `'denied'`
+   * instead of throwing: it is a configuration state, not a failure, and the
+   * caller hides the blocks. Anything else (network, 5xx, timeout) throws.
+   * `null` = the order does not exist on the store.
+   */
+  async fetchOrderAddresses(
+    shopDomain: string,
+    token: string,
+    shopifyOrderId: string,
+  ): Promise<ShopifyOrderAddresses | 'denied' | null> {
+    let body: { data?: { order?: { shippingAddress?: ShopifyMailingAddress | null; billingAddress?: ShopifyMailingAddress | null } | null } };
+    try {
+      body = (await this.gql(shopDomain, token, ORDER_ADDRESSES_QUERY, {
+        id: `gid://shopify/Order/${shopifyOrderId}`,
+      })) as typeof body;
+    } catch (e) {
+      if (this.isAccessDenial(e)) return 'denied';
+      throw e;
+    }
+    const o = body.data?.order;
+    if (!o) return null;
+    return { shipping: o.shippingAddress ?? null, billing: o.billingAddress ?? null };
   }
 
   /**

@@ -75,9 +75,19 @@ export function orderDetail(id: string) {
       { id: 'li-2', title: 'Ultra Mini Portable Fan, Powerful Pocket-Sized Handheld Fan', optionText: 'Burgundy / 6-8', qty: 1, price: 4.99, imageUrl: null },
       { id: 'li-3', title: 'Ultra Mini Portable Fan, Powerful Pocket-Sized Handheld Fan', optionText: 'Burgundy / 6-8', qty: 1, price: 4.99, imageUrl: null },
     ],
-    // PROPOSED (T04): addresses + phone are not in OrderDetailResponse yet.
-    billingAddress: null,
-    shippingAddress: {
+  };
+}
+
+/**
+ * `GET /orders/:id/addresses` (T04): read live from Shopify, so it is its own
+ * endpoint, not part of the detail. The order has no billing address — the
+ * design then shows "-" (Figma 1006:4282).
+ */
+export function orderAddresses(_id: string) {
+  return {
+    available: true,
+    billing: null,
+    shipping: {
       name: 'Hyein Kim',
       address1: '25 HARBOR PARK DR',
       address2: null,
@@ -85,6 +95,7 @@ export function orderDetail(id: string) {
       province: 'New York',
       zip: '11050-4605',
       country: 'United States',
+      countryCode: 'US',
       phone: '123123123',
     },
   };

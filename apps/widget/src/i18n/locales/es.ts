@@ -342,6 +342,9 @@ export const es: Translation = {
     shipping: 'Envío',
     shippingFree: 'Gratis',
     contact: 'Información de contacto',
+    /** Order Detail address blocks (ivy-docs T04). */
+    billingAddress: 'Dirección de facturación',
+    shippingAddress: 'Dirección de envío',
     itemCount_one: '{{count}} artículo',
     itemCount_other: '{{count}} artículos',
     itemsMore_one: '{{title}} + {{count}} artículo más',

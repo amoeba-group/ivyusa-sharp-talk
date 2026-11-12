@@ -339,6 +339,9 @@ export const zh: Translation = {
     shipping: '运费',
     shippingFree: '免费',
     contact: '联系方式',
+    /** Order Detail address blocks (ivy-docs T04). */
+    billingAddress: '账单地址',
+    shippingAddress: '收货地址',
     itemCount_one: '{{count}} 件商品',
     itemCount_other: '{{count}} 件商品',
     itemsMore_one: '{{title}} 等 {{count}} 件',

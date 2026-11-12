@@ -20,6 +20,7 @@ import { ScheduledShopifySyncService } from './scheduled-shopify-sync.service';
 import { TenantModule } from '../tenant/tenant.module';
 import { CustomerModule } from '../customer/customer.module';
 import { IntegrationModule } from '../integration/integration.module';
+import { OrderAddressService } from './order-address.service';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { IntegrationModule } from '../integration/integration.module';
   ],
   providers: [
     OrderService,
+    OrderAddressService,
     ShopifyAdminClient,
     ShopifySyncService,
     ShopifyWebhookService,

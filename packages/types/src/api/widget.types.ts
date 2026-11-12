@@ -405,6 +405,38 @@ export interface OrderDetailResponse {
   items: OrderItemResponse[];
 }
 
+/** One postal address on an order, as the store holds it (ivy-docs T04). */
+export interface OrderAddressResponse {
+  name: string | null;
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  province: string | null;
+  zip: string | null;
+  /** The store's country name ("United States"). */
+  country: string | null;
+  /** ISO 3166-1 alpha-2 ("US"), so the client can name it in the UI language. */
+  countryCode: string | null;
+  phone: string | null;
+}
+
+/**
+ * `GET /orders/:id/addresses` (ivy-docs T04 D1). Read live from the store and
+ * never stored. Addresses are Shopify protected customer data, so they are
+ * only readable once the app is granted Address/Phone access.
+ *
+ * - `available: false` → the server could not read them (no access, not a
+ *   Shopify order, store down). The client hides the blocks: this is not "no
+ *   address".
+ * - `available: true` with `billing: null` → the order genuinely has no
+ *   billing address; the design shows "-".
+ */
+export interface OrderAddressesResponse {
+  available: boolean;
+  billing: OrderAddressResponse | null;
+  shipping: OrderAddressResponse | null;
+}
+
 /**
  * `steps` are localized LABELS and progress comes from `stepIndex` — there is no
  * per-step object.

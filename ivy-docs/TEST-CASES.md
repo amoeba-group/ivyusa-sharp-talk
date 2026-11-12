@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T07|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T07|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -37,7 +37,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T01 | 4 / 7 → **18 / 18** ✅ (T01, 2026-11-10; gồm TC-01-08 ×11) | tất cả | — |
 | T02 | 0 / 6 → **6 / 6** ✅ (T02, 2026-11-11) | tất cả | — |
 | T03 | 0 / 5 → **5 / 5** ✅ (T03, 2026-11-11) | tất cả | — |
-| T04 | 0 / 5 → 3 / 5 (nhờ T02: chạm dòng mở Order Detail) | TC-04-01, TC-04-02, TC-04-05 | TC-04-03, TC-04-04 |
+| T04 | 0 / 5 → 3 / 5 (nhờ T02) → **7 / 7** ✅ (T04, 2026-11-12; thêm TC-04-06, 07) | tất cả | — |
 | T05 | 0 / 4 | — | TC-05-01, TC-05-02, TC-05-03, TC-05-04 |
 | T06 | 0 / 3 | — | TC-06-01, TC-06-02, TC-06-03 |
 | T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
@@ -138,9 +138,22 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 |---|---|---|---|
 | TC-04-01 | Dòng hàng | IVY-39891; "Hydrating Face Mask (10pcs)"; 2× "Burgundy / 6-8"; 3× "$4.99" | SCR-IVY-06 |
 | TC-04-02 | Tổng tiền | Discount "-$4.99" · "Subtotal · 3 items" "$55.00" · Shipping "Free" · "USD $55.00" | SCR-IVY-06 |
-| TC-04-03 | Thông tin & địa chỉ | Information (Hyein Kim, email) · Billing address · Shipping address (25 HARBOR PARK DR / PORT WASHINGTON New York 11050-4605 / United States / 123123123) | G-08 |
-| TC-04-04 | Contact | chuyển sang tab Chat, có câu hỏi chứa số đơn 39891 | SCR-IVY-06 |
+| TC-04-03 | Thông tin & địa chỉ | Information (Hyein Kim, email) · Billing address · Shipping address (25 HARBOR PARK DR / PORT WASHINGTON New York / 11050-4605 / United States / 123123123). ZIP một dòng riêng như Figma `1008:3254`; "United States" so khớp chính xác (BUG-020) | G-08 |
+| TC-04-04 | Contact | chuyển sang tab Chat, có câu hỏi chứa số đơn 39891 **trong tab đang hiện** (BUG-020) | SCR-IVY-06 |
 | TC-04-05 | Back | quay lại danh sách | SCR-IVY-06 |
+| TC-04-06 | Không đọc được địa chỉ | `GET /orders/:id/addresses` → `available: false`: không có "Billing address" / "Shipping address" / dòng địa chỉ; tiêu đề, tên, Total vẫn hiện | PLN-261112 D1 |
+| TC-04-07 | Không có billing | khối Billing address = "-"; widget có gọi `/orders/:id/addresses` | Figma `1008:3254` |
+
+**Kết quả (2026-11-12):** 7/7, lặp ×3 (2 worker): 21/21. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T07|@T13`) ×2: 106/106. Toàn bộ desktop: 65 pass / 26 fail, mọi ca đỏ thuộc T05, T06, T08–T12 chưa làm.
+
+**Kiểm thử bổ sung cho T04:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Jest API | `order-address.service.spec.ts` | Client: query đúng 1 đơn theo gid, có `phone`; lỗi PCD ("not approved to access", "Access denied") → `denied`, lỗi khác vẫn ném, đơn không có → null. Mapper: đổi field, chuỗi trống → null, mã quốc gia viết hoa, địa chỉ trống → null. Service: đúng kết nối của tenant; đơn người khác / không có → 404; đơn Cafe24 hoặc không có kết nối → không gọi Shopify; không có quyền / lỗi / không có đơn → `available: false`; quá 4 giây → `available: false` |
+| Unit widget | `apps/widget/test/order-address.test.mjs` | Các dòng địa chỉ theo thiết kế (ZIP riêng), dòng 2, thiếu trường, tên quốc gia 6 ngôn ngữ, không có mã quốc gia, mã đơn có / không "#" |
+| Tích hợp local (API thật) | thủ công | `GET /orders/1/addresses` (đơn của khách, local không có kết nối Shopify) → `available: false`; đơn lạ → 404 `E5001`. API boot `successfully started` với service mới |
+| Ảnh chụp | thủ công, 380px | EN / KO / VI so với ảnh Figma `1008:3254` / `1006:4282` chủ dự án gửi |
 
 ## T05 · Promo (`05-promo.spec.ts`)
 

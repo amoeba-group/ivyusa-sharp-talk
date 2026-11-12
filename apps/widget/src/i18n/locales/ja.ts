@@ -346,6 +346,9 @@ export const ja: Translation = {
     shipping: '送料',
     shippingFree: '無料',
     contact: '連絡先情報',
+    /** Order Detail address blocks (ivy-docs T04). */
+    billingAddress: '請求先住所',
+    shippingAddress: '配送先住所',
     itemCount_one: '{{count}}点',
     itemCount_other: '{{count}}点',
     itemsMore_one: '{{title}} 他{{count}}点',

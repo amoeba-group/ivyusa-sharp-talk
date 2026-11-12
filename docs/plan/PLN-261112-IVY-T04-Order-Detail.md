@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §7 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112-T04](../implementation/RPT-261112-IVY-T04-Order-Detail.md). Trả lời §7: (1) ok; (2) **a**, đọc trực tiếp từ Shopify; (3) **b**, quyền PCD chưa rõ; (4) chủ dự án gửi ảnh Figma KO `1006:4282` và EN `1008:3254` |
 | Task | [ivy-docs/TASKS.md T04](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-06 · G-08 |
 | Figma | `1154:116`, `1007:250`, `1008:3254` (EN), `1006:4282` (KO). Chưa mở được vì Figma MCP vẫn hết lượt gọi (gói Starter). Dựa vào SPEC SCR-IVY-06, mô tả thiết kế trong [REQ-260920](../analysis/REQ-260920-Widget-Order-Detail-Redesign.md) và màn hiện tại |
 | TC | TC-04-01..05 ([e2e/tests/04-order-detail.spec.ts](../../e2e/tests/04-order-detail.spec.ts)), hiện **3/5** (01, 02, 05 xanh) |

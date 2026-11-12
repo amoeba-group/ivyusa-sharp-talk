@@ -29,7 +29,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 2 | T02 | Notifications — chip Order/Delivery/Promo/Review, dòng, nhóm ngày, thời gian, đã đọc | UI · I18N · API | P0 | T01 | ✅ code · ⏳ cần tab Orders tắt trên prod (T01) | TC-02-01..06 |
 | 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ✅ | TC-03-01..05 |
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N · API | P1 | T02 | ✅ | TC-07-01..07 |
-| 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · DB · UI | P1 | T02 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T04-Order-Detail.md) | TC-04-01..05 |
+| 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · UI | P1 | T02 | ✅ code · ⏳ quyền PCD Address/Phone cho app Shopify | TC-04-01..07 |
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI (+API) | P1 | T02 | ⬜ | TC-05-01..04 |
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ⬜ | TC-06-01..03 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ⬜ | TC-08-01..05 |
@@ -131,17 +131,24 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Có hiệu lực ngay**, không cần chờ cấu hình T01. Khi chưa tắt tab Orders, chế độ chọn ở tab Notifications (chip All / Event).
 - **TC:** TC-07-01..07 — **7/7** ✅ (01..03 theo thiết kế, 04..07 thêm cho phạm vi chip, Esc, tên ô chọn, lỗi xoá).
 
-### T04 · Order Detail — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T04-Order-Detail.md) (migration tuỳ §7-2)
-- **Lưu ý:** địa chỉ và điện thoại là dữ liệu được bảo vệ của Shopify (PCD). App phải được cấp quyền Address/Phone thì mới đọc được (REQ-260920 G8).
-- **Figma:** `1154:116`, `1007:250`, `1006:4282`. **Gap:** G-08.
-- **Hợp đồng API đề xuất** (`OrderDetailResponse`, đã dùng trong `e2e/fixtures/ivy-data.ts`):
-  ```ts
-  billingAddress: Address | null;
-  shippingAddress: Address | null;
-  // Address = { name, address1, address2, city, province, zip, country, phone }
-  ```
-- **Việc cần làm:** cột/bảng địa chỉ cho order (SQL `sql/migration_*.sql` + entity có `type` rõ ràng) → sync Shopify (`shipping_address`, `billing_address`, `phone`) trong webhook/sync → mapper → UI. Nhãn "Order Detail", "Information", "Billing address" ("-" khi trống), "Shipping address", hàng "Contact" ›. PR có `## Migration`.
-- **TC:** TC-04-01..05.
+### T04 · Order Detail — ✅ code (2026-11-12) · ⏳ quyền PCD · [PLN](../docs/plan/PLN-261112-IVY-T04-Order-Detail.md) · [RPT](../docs/implementation/RPT-261112-IVY-T04-Order-Detail.md)
+- **Figma:** `1008:3254` (EN), `1006:4282` (KO), đối chiếu qua ảnh chủ dự án gửi ngày 2026-11-12. `1154:116`, `1007:250`. **Gap:** G-08.
+- **Quyết định của chủ dự án (2026-11-12):**
+  - Địa chỉ đọc **trực tiếp từ Shopify** khi mở Order Detail, không lưu DB, nên không có migration.
+  - Quyền PCD của app production chưa rõ: khối địa chỉ tự ẩn cho tới khi có quyền.
+  - Chữ KO theo ảnh Figma.
+- **Lưu ý:** địa chỉ và điện thoại là dữ liệu được bảo vệ của Shopify (PCD). App phải được cấp quyền **Address** và **Phone** thì mới đọc được (REQ-260920 G8). Việc cấp quyền do chủ dự án làm trên dashboard Shopify; bật xong không cần deploy lại.
+- **Đã làm:**
+  - API `GET /orders/:id/addresses` (`OrderAddressService`): kiểm tra sở hữu, chỉ đơn Shopify, chờ tối đa 4 giây. Không có quyền / lỗi → `available: false`. Không lưu, không log địa chỉ.
+  - Màn Order Detail theo Figma:
+    - tiêu đề "Order Detail";
+    - **Information** | **Billing address** ("-" khi đơn không có) 2 cột, **Shipping address** bên dưới, ZIP một dòng riêng, tên quốc gia theo ngôn ngữ;
+    - hàng **Contact**;
+    - mã đơn "IVY-39891" không thêm "#";
+    - "Qty" chỉ khi > 1.
+  - Pill trạng thái dùng `StatusPill` như dòng thông báo ("Confirmed", không còn "Paid"): hết BUG-011 trên màn này.
+  - Sửa test khớp chữ ở tab bị ẩn (BUG-020). Thêm `@T04` vào `test:ci`.
+- **TC:** TC-04-01..07 — **7/7** ✅ (06, 07 thêm: không có quyền → ẩn khối địa chỉ; không có billing → "-").
 
 ### T05 · Promo — ⬜
 - **Figma:** `1006:5284`, `1007:1978`, icon `993:1254`. **Gap:** G-09.

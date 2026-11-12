@@ -1,5 +1,6 @@
 import {
   internalToUiStatus,
+  type OrderAddressResponse,
   type OrderDetailResponse,
   type OrderItemResponse,
   type OrderListItemResponse,
@@ -8,6 +9,7 @@ import {
 } from '@sharptalk/types';
 import { OrderCache } from './entity/order-cache.entity';
 import { OrderItem } from './entity/order-item.entity';
+import type { ShopifyMailingAddress } from './shopify-admin.client';
 
 /**
  * Response shapes live in `@sharptalk/types` so the widget consumes the same contract —
@@ -18,6 +20,13 @@ export type OrderListItem = OrderListItemResponse;
 export type OrderItemView = OrderItemResponse;
 export type ReviewItemView = ReviewItemResponse;
 export type OrderDetailView = OrderDetailResponse;
+export type OrderAddressView = OrderAddressResponse;
+
+/** Blank → null, so the client never has to tell "" from absent. */
+const text = (v: string | null | undefined): string | null => {
+  const t = v?.trim();
+  return t ? t : null;
+};
 
 /** Entity -> response mapping for orders (camelCase payloads). */
 export class OrderMapper {
@@ -88,6 +97,26 @@ export class OrderMapper {
       reviewed,
       orderedAt: new Date(order.orderedAt ?? order.createdAt).toISOString(),
     };
+  }
+
+  /**
+   * A Shopify MailingAddress → the widget's address (ivy-docs T04). An address
+   * with no line at all is no address: the design then shows "-".
+   */
+  static toAddress(a: ShopifyMailingAddress | null | undefined): OrderAddressView | null {
+    if (!a) return null;
+    const view: OrderAddressView = {
+      name: text(a.name),
+      address1: text(a.address1),
+      address2: text(a.address2),
+      city: text(a.city),
+      province: text(a.province),
+      zip: text(a.zip),
+      country: text(a.country),
+      countryCode: text(a.countryCodeV2)?.toUpperCase() ?? null,
+      phone: text(a.phone),
+    };
+    return Object.values(view).some((v) => v != null) ? view : null;
   }
 
   static toDetail(

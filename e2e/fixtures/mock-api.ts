@@ -2,6 +2,7 @@ import type { Page, Route, Request } from '@playwright/test';
 import {
   CUSTOMER,
   notifications as seedNotifications,
+  orderAddresses,
   orderDetail,
   orderList,
   reviewItems,
@@ -34,6 +35,8 @@ export interface MockOptions {
   emptyFeed?: boolean;
   /** Make one endpoint fail (method + path prefix), e.g. { 'POST /reviews': 500 }. */
   failures?: Record<string, number>;
+  /** Order Detail addresses: 'unavailable' = the store refused them (no PCD access, T04). */
+  addresses?: 'ok' | 'unavailable';
 }
 
 export interface RecordedCall {
@@ -73,6 +76,7 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     mockScenario: true,
     emptyFeed: false,
     failures: {},
+    addresses: 'ok',
     ...opts,
   };
   const state = { notifications: o.emptyFeed ? [] : seedNotifications() };
@@ -174,6 +178,13 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     }
     if (method === 'GET' && path === '/orders/review-items') {
       return route.fulfill({ json: ok(reviewItems()) });
+    }
+    const addrMatch = path.match(/^\/orders\/(\w+)\/addresses$/);
+    if (method === 'GET' && addrMatch) {
+      record(req, path, url);
+      return route.fulfill({
+        json: ok(o.addresses === 'unavailable' ? { available: false, billing: null, shipping: null } : orderAddresses(addrMatch[1])),
+      });
     }
     const trackMatch = path.match(/^\/orders\/(\w+)\/tracking$/);
     if (method === 'GET' && trackMatch) {

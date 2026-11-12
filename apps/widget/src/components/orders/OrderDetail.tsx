@@ -3,13 +3,15 @@ import { ArrowLeft, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Pack
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore } from '../../store/widgetStore';
 import { isAuthError } from '../../lib/errors';
-import { useOrder, useTracking } from '../../hooks/useOrders';
+import { useOrder, useOrderAddresses, useTracking } from '../../hooks/useOrders';
 import { useAnalytics } from '../../lib/analytics';
-import { Badge, toneForStatus } from '../ui/Badge';
+import { StatusPill } from '../ui/StatusPill';
 import { Spinner } from '../ui/Spinner';
 import { formatMoney } from '../../lib/format';
+import { addressLines, displayOrderNumber } from '../../lib/address';
+import type { OrderAddress } from '../../lib/types';
 import { TrackingStepper } from './TrackingStepper';
-import { isDelivered as isOrderDeliveredStatus, statusLabel } from './order-status';
+import { isDelivered as isOrderDeliveredStatus } from './order-status';
 import { ReviewForm } from './ReviewForm';
 
 /**
@@ -125,6 +127,32 @@ function ActionLink({
   );
 }
 
+/**
+ * One labelled block of the customer section (Figma 1006:4282): a bold label,
+ * then plain lines. `empty` is the design's "-" for an address the order does
+ * not have.
+ */
+function InfoBlock({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-1.5 text-sm font-semibold text-gray-900">{label}</div>
+      <div className="space-y-0.5 break-words text-sm text-gray-700">{children}</div>
+    </div>
+  );
+}
+
+function AddressLines({ address, lang }: { address: OrderAddress | null; lang: string }) {
+  const lines = address ? addressLines(address, lang) : [];
+  if (lines.length === 0) return <div>-</div>;
+  return (
+    <>
+      {lines.map((l, i) => (
+        <div key={i}>{l}</div>
+      ))}
+    </>
+  );
+}
+
 export function OrderDetailView({
   orderId,
   sessionToken,
@@ -136,9 +164,12 @@ export function OrderDetailView({
   onBack: () => void;
   onAsk: (orderNumber: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const analytics = useAnalytics();
   const { data, isLoading, isError, error } = useOrder(orderId, sessionToken);
+  // Read live from the store, separately, so the rest of the screen never
+  // waits on it (ivy-docs T04 D1).
+  const addresses = useOrderAddresses(orderId, sessionToken);
   const setAuthenticated = useWidgetStore((s) => s.setAuthenticated);
   const [showTrack, setShowTrack] = useState(false);
   const [reviewItemId, setReviewItemId] = useState<string | null>(null);
@@ -199,11 +230,11 @@ export function OrderDetailView({
             here makes the same order look like two (PLN §2-1). */}
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="text-sm font-semibold text-gray-900">
-            #{order.orderNumber}
+            {displayOrderNumber(order.orderNumber)}
           </span>
-          <Badge tone={toneForStatus(order.statusInternal ?? order.statusUi)}>
-            {statusLabel(t, order)}
-          </Badge>
+          {/* The same pill as the notification row that led here, by status
+              code ("Confirmed", not the raw "Paid") — BUG-011 on this screen. */}
+          <StatusPill badge={order.statusUi} />
         </div>
 
         <ul className="divide-y divide-gray-50">
@@ -212,7 +243,9 @@ export function OrderDetailView({
             // webhook path; the scheduled GraphQL sync cannot read it without
             // the read_products scope (PLN §1). Absent → the line just carries
             // the quantity rather than an empty separator.
-            const meta = [it.optionText, t('orders.qty', { count: it.qty })]
+            // The design shows the variant only; a quantity above one still
+            // matters to the shopper, so it is shown then (T04 D4).
+            const meta = [it.optionText, it.qty > 1 ? t('orders.qty', { count: it.qty }) : null]
               .filter(Boolean)
               .join(' · ');
             return (
@@ -298,24 +331,50 @@ export function OrderDetailView({
           />
         </div>
 
-        {(order.contactName || order.contactEmail) && (
-          <div className="mt-2 border-t border-gray-100 pt-3">
-            <div className="mb-1 text-sm font-semibold text-gray-900">
-              {t('orders.contact')}
+        {/* Customer section (Figma 1006:4282): contact | billing side by side,
+            shipping below. The address blocks exist only when the store let us
+            read them — `available: false` is "could not read", not "none", so
+            it hides them instead of printing "-" (T04 D1). */}
+        {(() => {
+          const hasContact = !!(order.contactName || order.contactEmail);
+          const read = addresses.data?.available ? addresses.data : null;
+          const loading = addresses.isLoading;
+          if (!hasContact && !read && !loading) return null;
+          const contact = hasContact && (
+            <InfoBlock label={t('orders.contact')}>
+              {order.contactName && <div>{order.contactName}</div>}
+              {order.contactEmail && (
+                <a
+                  href={`mailto:${order.contactEmail}`}
+                  className="block truncate text-primary-600 hover:underline"
+                >
+                  {order.contactEmail}
+                </a>
+              )}
+            </InfoBlock>
+          );
+          return (
+            <div data-testid="order-customer" className="mt-2 space-y-4 border-t border-gray-100 pt-3">
+              <div className={read ? 'grid grid-cols-2 gap-4' : ''}>
+                {contact}
+                {read && (
+                  <InfoBlock label={t('orders.billingAddress')}>
+                    <AddressLines address={read.billing} lang={i18n.language} />
+                  </InfoBlock>
+                )}
+              </div>
+              {read && (
+                <InfoBlock label={t('orders.shippingAddress')}>
+                  <AddressLines address={read.shipping} lang={i18n.language} />
+                </InfoBlock>
+              )}
+              {loading && (
+                // Placeholder only; the addresses are announced when they land.
+                <div aria-hidden className="h-16 animate-pulse rounded-st-md bg-gray-100" />
+              )}
             </div>
-            {order.contactName && (
-              <div className="text-sm text-gray-700">{order.contactName}</div>
-            )}
-            {order.contactEmail && (
-              <a
-                href={`mailto:${order.contactEmail}`}
-                className="text-sm text-primary-600 hover:underline"
-              >
-                {order.contactEmail}
-              </a>
-            )}
-          </div>
-        )}
+          );
+        })()}
 
         <div className="mt-2 border-t border-gray-100">
           {trackingUrl ? (

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   getOrder,
+  getOrderAddresses,
   getTracking,
   listOrders,
   listReviewItems,
@@ -36,6 +37,22 @@ export function useTracking(id: string | null, sessionToken: string | null) {
     queryKey: ['tracking', id, sessionToken],
     queryFn: () => getTracking(id!, sessionToken!),
     enabled: !!id && !!sessionToken,
+  });
+}
+
+/**
+ * Order Detail addresses (ivy-docs T04). Kept 5 minutes: each fetch is a live
+ * call to the store, and an address does not change while the shopper looks.
+ * No retry: a refusal is an answer (`available: false`), and a failure should
+ * hide the block quickly rather than keep the placeholder spinning.
+ */
+export function useOrderAddresses(id: string | null, sessionToken: string | null) {
+  return useQuery({
+    queryKey: ['order-addresses', id, sessionToken],
+    queryFn: () => getOrderAddresses(id!, sessionToken!),
+    enabled: !!id && !!sessionToken,
+    staleTime: 5 * 60_000,
+    retry: false,
   });
 }
 

@@ -22,6 +22,8 @@ import type {
   ThreadResponse,
   NotificationPrefResponse,
   NotificationResponse,
+  OrderAddressResponse,
+  OrderAddressesResponse,
   OrderDetailResponse,
   OrderItemResponse,
   ReviewItemResponse,
@@ -91,6 +93,8 @@ export type ScenarioPostAction = ScenarioPostActionResponse;
 export type OrderSummary = OrderListItemResponse;
 export type OrderItem = OrderItemResponse;
 export type OrderDetail = OrderDetailResponse;
+export type OrderAddress = OrderAddressResponse;
+export type OrderAddresses = OrderAddressesResponse;
 export type OrderLookupResult = OrderLookupResponse;
 export type Tracking = TrackingResponse;
 export type ReviewItem = ReviewItemResponse;

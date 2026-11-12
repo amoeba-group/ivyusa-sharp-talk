@@ -145,6 +145,11 @@ Launcher (góc phải dưới) ─► Panel 380px
 - **Discount** (đỏ, "-$4.99") · Subtotal · N items · Shipping (Free) · **Total "USD $55.00"**.
 - **Information** (tên, email dạng link) · **Billing address** ("-" nếu trống) · **Shipping address** (tên, địa chỉ, thành phố/bang/ZIP, quốc gia, điện thoại).
 - Dòng **Contact** (KO: 문의하기) ở cuối → mở Chat với ngữ cảnh đơn này.
+- **Đã làm (T04, 2026-11-12):** đối chiếu ảnh Figma `1008:3254` (EN) và `1006:4282` (KO).
+  - Nhãn EN "Information"; bản KO ghi "Contact information" → KO 연락처 정보.
+  - ZIP ở một dòng riêng.
+  - Địa chỉ đọc trực tiếp từ Shopify (`GET /orders/:id/addresses`), không lưu. App chưa có quyền PCD Address/Phone thì khối địa chỉ ẩn.
+  - Giữ pill trạng thái thay icon xe tải (PLN-261112 D5).
 
 ### SCR-IVY-07 · Notifications — Promo
 - **Figma:** `1006:5284` (EN), `1007:1978` (KO), `993:1618`; bộ icon coupon `993:1254`.
@@ -260,7 +265,7 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 | Thời gian dòng | `[data-testid="notif-time"]` (text theo BR-05) | ✅ (T02) |
 | Pill trạng thái | `[data-testid="status-pill"]` + `data-status="confirmed\|in_transit\|delivered\|review"` (ngoài ra `pending_payment`, `cancel_requested`; chữ lạ → `other`) | ✅ (T02) — mới có trong feed thông báo; thẻ Delivery ✅ (T03, mã lấy từ bước tracking); Review ở T06 |
 | Thẻ giao hàng | `[data-testid="delivery-card"]` (+`data-id`); bước `[data-testid="delivery-step"]` + `data-state="done\|current\|todo"` (đã giao: cả 4 `done`) | ✅ (T03) |
-| Order Detail | `getByRole('heading', { name: 'Order Detail' })` | ➕ copy (T04) |
+| Order Detail | `getByRole('heading', { name: 'Order Detail' })`; khối khách `[data-testid="order-customer"]` | ✅ (T04) |
 | Chọn từng dòng | `getByRole('checkbox')` trong `notif-item`; tên theo dòng: `Select IVY-39891` | ✅ `role="checkbox"` + `aria-checked` (tên theo dòng: T07) |
 | Nút xoá | `getByRole('button', { name: 'Delete Selected Notifications' \| 'Delete All Notifications' })` | ✅ (T07) |
 | Xác nhận xoá tất cả | `getByRole('alertdialog')` (+`data-testid="delete-all-confirm"`), nút `Cancel` / `Delete` | ✅ (T07) |
@@ -290,7 +295,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-05 | Dòng: mã đơn + pill + "X + 2 items" + "Just now / 10mins ago" | Tiêu đề/nội dung tự do; pill = text server **chưa dịch**, màu đoán theo text (`Badge.tsx` 43-52); thời gian dạng `Intl` ("10 minutes ago") (`format.ts`) | Hiển thị có cấu trúc (mã đơn tách khỏi tóm tắt), pill map theo **mã trạng thái** + i18n, định dạng thời gian theo BR-05 | UI · I18N | T02 |
 | G-06 | Chạm thông báo → mở Order Detail / vị trí giao hàng (BR-07) | Chỉ đánh dấu đã đọc, `linkUrl` không mở (`NotificationsTab.tsx`) | Điều hướng theo `refType/refId` | UI | T02 |
 | G-07 | Stepper **Preparing → Processing → In Transit → Delivered**; "Your order is on the way!" / "Your order is Delivered !"; nút **Track Order** | **Preparing → Shipped → In transit → Delivered** (`packages/types/src/domain/status-map.ts` `DELIVERY_STEPS_BY_LANG`); "Your order is on its way — it will reach you soon!"; "Track shipment" (`ShipmentList.tsx`) | Đổi nhãn bước 2 + copy (lưu ý `status-map.ts` dùng chung với API/console) | I18N | T03 ✅ (2026-11-11; bước 2 ở ES/VI/JA/ZH dịch theo "Processing") |
-| G-08 | Order Detail có **Billing/Shipping address + phone**, nhãn "Information" | Không có địa chỉ/điện thoại trong response (`widget.types.ts` `OrderDetailResponse`), nhãn "Contact information" | Thêm cột order (sync Shopify `shipping_address`, `billing_address`, `phone`) → mapper → UI. **Cần migration SQL** | API · DB · UI | T04 |
+| G-08 | Order Detail có **Billing/Shipping address + phone**, nhãn "Information" | Không có địa chỉ/điện thoại trong response (`widget.types.ts` `OrderDetailResponse`), nhãn "Contact information" | Thêm cột order (sync Shopify `shipping_address`, `billing_address`, `phone`) → mapper → UI. **Cần migration SQL** | API · UI | T04 ✅ (2026-11-12; đọc trực tiếp từ Shopify, không migration; hiện khi app có quyền PCD Address/Phone) |
 | G-09 | Promo: coupon (gift navy) vs sự kiện (sparkle magenta), tiêu đề đậm + mô tả, mã coupon | Chỉ là notification `event` với icon gift/sparkle; không có mã/copy; link không bấm được; API không có khái niệm coupon | Thẻ promo theo thiết kế + bấm mở link; hiển thị mã coupon (lấy từ body/metadata) + nút copy | UI (+API tuỳ chọn) | T05 |
 | G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 |
 | G-11 | Chọn nhiều + "Delete Selected Notifications" / "Delete All Notifications" | Đã có: nút "Select", "Delete selected (n)", "Delete all notifications" + `window.confirm` (`NotificationsTab.tsx` 324-333, 391-410) | Copy theo thiết kế; thay `window.confirm` bằng xác nhận trong panel; toast kết quả; (tuỳ chọn) vuốt trái để xoá | UI · I18N · API | T07 ✅ (2026-11-12; "Delete All" chỉ xoá chip đang xem; vuốt trái để xoá → T15) |

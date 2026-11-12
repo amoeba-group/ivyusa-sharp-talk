@@ -342,6 +342,9 @@ export const ko: Translation = {
     shipping: '배송비',
     shippingFree: '무료',
     contact: '연락처 정보',
+    /** Order Detail address blocks (ivy-docs T04). */
+    billingAddress: '청구지 주소',
+    shippingAddress: '배송지 주소',
     itemCount_one: '{{count}}개 상품',
     itemCount_other: '{{count}}개 상품',
     itemsMore_one: '{{title}} 외 {{count}}건',

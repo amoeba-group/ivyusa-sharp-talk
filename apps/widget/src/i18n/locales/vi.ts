@@ -346,6 +346,9 @@ export const vi: Translation = {
     shipping: 'Phí vận chuyển',
     shippingFree: 'Miễn phí',
     contact: 'Thông tin liên hệ',
+    /** Order Detail address blocks (ivy-docs T04). */
+    billingAddress: 'Địa chỉ thanh toán',
+    shippingAddress: 'Địa chỉ giao hàng',
     itemCount_one: '{{count}} sản phẩm',
     itemCount_other: '{{count}} sản phẩm',
     itemsMore_one: '{{title}} + {{count}} sản phẩm khác',
