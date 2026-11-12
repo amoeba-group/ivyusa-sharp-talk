@@ -96,6 +96,10 @@ export function ChatTab() {
   const scenarioButtons = useScenario(sessionToken);
   const commerceEnabled = useWidgetStore((s) => s.commerceEnabled);
   const quickReplyStyle = useWidgetStore((s) => s.widgetTheme?.design?.quickReplyStyle) ?? 'chip';
+  // Paint the menu once its style is known — the tenant's config has arrived,
+  // or a cached theme from the last visit stands in — so it never shows in the
+  // default style and then flips (ivy-docs T08).
+  const menuStyleKnown = useWidgetStore((s) => s.tenantConfigLoaded || s.widgetTheme != null);
   // Recent orders for the in-thread "My orders" answer. Only fetched once the
   // shopper actually asks — `enabled` follows the inline card being shown.
   const activeTab = useWidgetStore((s) => s.activeTab);
@@ -538,7 +542,7 @@ export function ChatTab() {
 
         {/* 0 buttons = a real answer (all scoped away / disabled, REQ-260825
             R1) — render nothing rather than an empty grid box. */}
-        {scenarioButtons.length > 0 && (
+        {menuStyleKnown && scenarioButtons.length > 0 && (
           <ScenarioMenu
             buttons={scenarioButtons}
             onScenario={handleScenario}
@@ -801,7 +805,8 @@ export function ChatTab() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={t('chat.inputPlaceholder')}
+          // The tenant's own words when set ("Ask Anything", ivy-docs T08 D3).
+          placeholder={pickCopy(widgetCopy?.composerPlaceholder, language) ?? t('chat.inputPlaceholder')}
           className="st-input flex-1 rounded-full border border-gray-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50"
         />
         <button

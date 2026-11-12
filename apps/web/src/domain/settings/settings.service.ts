@@ -139,6 +139,8 @@ export interface WidgetSettings {
   launcherTeaser?: Record<string, string>;
   /** PLN-261023 AI disclosure line; absent on an older API = empty. */
   disclosureLine?: Record<string, string>;
+  /** ivy-docs T08 chat composer placeholder; absent on an older API = empty. */
+  composerPlaceholder?: Record<string, string>;
   displayNameFallback: string | null;
 }
 
@@ -153,10 +155,11 @@ export interface WidgetCopyDraft {
   agentSenderName: Record<string, string>;
   launcherTeaser: Record<string, string>;
   disclosureLine: Record<string, string>;
+  composerPlaceholder: Record<string, string>;
 }
 
 /** The per-language bags a WidgetCopyDraft carries — one place to iterate. */
-export const WIDGET_COPY_BAGS = ['firstVisit', 'loginGreeting', 'headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser', 'disclosureLine'] as const;
+export const WIDGET_COPY_BAGS = ['firstVisit', 'loginGreeting', 'headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser', 'disclosureLine', 'composerPlaceholder'] as const;
 export type WidgetCopyBag = (typeof WIDGET_COPY_BAGS)[number];
 
 /** Tenant delivery policy — a ceiling on what the shop sends, per category. */
@@ -233,6 +236,7 @@ const COPY_WIRE_KEYS: Record<WidgetCopyBag, string> = {
   agentSenderName: 'agent_sender_name',
   launcherTeaser: 'launcher_teaser',
   disclosureLine: 'disclosure_line',
+  composerPlaceholder: 'composer_placeholder',
 };
 
 /** Flatten the per-language bags into the API's `{bag}_{lang}` fields. */

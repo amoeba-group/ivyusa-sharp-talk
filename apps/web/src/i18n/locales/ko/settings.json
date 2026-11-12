@@ -116,7 +116,9 @@
     "disclosureLine": "AI 고지 문구",
     "disclosureLineHint": "채팅 상단/하단의 AI 안내 줄입니다. [대괄호] 안의 글자가 이용약관 링크가 됩니다(개인정보 고지 → 약관 URL). 비우면 기본 문구(예: \"AI가 생성한 답변 · 미국에서 처리\")를 씁니다.",
     "closeFeedbackPrompt": "닫을 때 상담 피드백 안내",
-    "closeFeedbackPromptHint": "고객이 상담 중 위젯의 ×를 누르면 피드백을 권합니다. 닫으면 상담이 종료됩니다(상담원 대기 중에는 묻지 않음)."
+    "closeFeedbackPromptHint": "고객이 상담 중 위젯의 ×를 누르면 피드백을 권합니다. 닫으면 상담이 종료됩니다(상담원 대기 중에는 묻지 않음).",
+    "composerPlaceholder": "채팅 입력창 안내 문구",
+    "composerPlaceholderHint": "비어 있는 채팅 입력창에 보이는 문구입니다. 예: \"무엇이든 물어보세요\". 비우면 기본 문구를 씁니다."
   },
   "shopify": {
     "title": "Shopify 연동",
@@ -892,7 +894,7 @@
     "history": "이력",
     "quickReplyStyle": "빠른 답장 스타일",
     "quickReplyChip": "채움 칩 (기본)",
-    "quickReplyCard": "아이콘 카드 (흰 배경·외곽선)",
+    "quickReplyCard": "흰색 외곽선 칩 (이모지 또는 아이콘)",
     "reviewLink": "리뷰 작성 링크",
     "reviewLinkHint": "위젯 리뷰 탭의 '리뷰 쓰기'가 이동할 주소입니다. 비우면 상품 페이지로 이동합니다. 리뷰 앱 영역으로 바로 가려면 {productUrl}#reviews 처럼, 또는 {productUrl}을 포함한 전체 https:// 주소를 입력하세요.",
     "historyTitle": "변경 이력 — {{name}}",

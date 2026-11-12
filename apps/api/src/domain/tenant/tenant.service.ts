@@ -1277,6 +1277,7 @@ function mergeWidgetCopy(
     agentSenderName: { ...(current?.agentSenderName ?? {}) },
     launcherTeaser: { ...(current?.launcherTeaser ?? {}) },
     disclosureLine: { ...(current?.disclosureLine ?? {}) },
+    composerPlaceholder: { ...(current?.composerPlaceholder ?? {}) },
   };
   if (dto.display_name !== undefined) copy.displayName = dto.display_name?.trim() || null;
   const setLang = (bag: Record<string, string>, lang: string, v: string | null | undefined) => {
@@ -1338,9 +1339,15 @@ function mergeWidgetCopy(
   setLang(copy.disclosureLine!, 'VI', dto.disclosure_line_vi);
   setLang(copy.disclosureLine!, 'JA', dto.disclosure_line_ja);
   setLang(copy.disclosureLine!, 'ZH', dto.disclosure_line_zh);
+  setLang(copy.composerPlaceholder!, 'EN', dto.composer_placeholder_en);
+  setLang(copy.composerPlaceholder!, 'ES', dto.composer_placeholder_es);
+  setLang(copy.composerPlaceholder!, 'KO', dto.composer_placeholder_ko);
+  setLang(copy.composerPlaceholder!, 'VI', dto.composer_placeholder_vi);
+  setLang(copy.composerPlaceholder!, 'JA', dto.composer_placeholder_ja);
+  setLang(copy.composerPlaceholder!, 'ZH', dto.composer_placeholder_zh);
   // An empty bag is dropped rather than stored as `{}`: the JSON a tenant saved
   // before these keys existed must keep comparing equal in the settings snapshot diff.
-  for (const key of ['headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser', 'disclosureLine'] as const) {
+  for (const key of ['headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser', 'disclosureLine', 'composerPlaceholder'] as const) {
     if (Object.keys(copy[key]!).length === 0) delete copy[key];
   }
   const empty =
@@ -1352,6 +1359,7 @@ function mergeWidgetCopy(
     !copy.aiSenderName &&
     !copy.agentSenderName &&
     !copy.launcherTeaser &&
-    !copy.disclosureLine;
+    !copy.disclosureLine &&
+    !copy.composerPlaceholder;
   return empty ? null : copy;
 }

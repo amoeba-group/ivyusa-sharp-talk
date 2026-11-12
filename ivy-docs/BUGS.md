@@ -24,6 +24,8 @@
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
 | BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng (TC-05-04 cùng lỗi) | E2E harness | 🟡 | Fixed (T03, T05, T06) | T03 · T05 · T06 |
 | BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
+| BUG-022 | Lưu nút trả lời nhanh trong console **làm mất câu hỏi** (`message`) của nút "Send a message": `sanitize()` dựng lại nút mà không có trường này, nên nút luôn gửi nhãn thay câu đã nhập | API | 🟠 | Fixed (T08) | T08 |
+| BUG-023 | Lần đầu mở Chat (khách đã đăng nhập, chưa có theme cache): menu nút vẽ **kiểu mặc định** (lưới 2 cột xanh) rồi mới đổi sang kiểu của tenant khi session/ensure về | Widget | 🟡 | Fixed (T08) | T08 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
 | BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
@@ -120,6 +122,18 @@
 - **Nguyên nhân:** tab đã mở thì vẫn được gắn trong trang, chỉ bị ẩn (`WidgetPanel`, để giữ cuộc chat). Strict mode của Playwright đếm cả phần tử bị ẩn, và `getByText` mặc định so khớp một phần chuỗi.
 - **Fix:** TC-04-04 tìm trong `getByRole('tabpanel')`, tức chỉ tab đang hiện. TC-04-03 dùng `exact: true`. T04 ×3: 21/21.
 - **Phòng ngừa:** chữ có thể xuất hiện ở tab khác thì thu phạm vi vào tab đang hiện, hoặc so khớp chính xác.
+
+## BUG-022 · Lưu nút làm mất câu hỏi của nút
+- **Hiện tượng:** console → AI Settings → nút có Action "Send a message" có ô câu hỏi (PLN-261001). Nhập câu hỏi rồi Save thì câu hỏi biến mất. Đã thử thật ở local: `PUT /ai-config` có `message`, DB lưu nút **không có** `message`.
+- **Nguyên nhân:** `AiConfigService.sanitize()` dựng lại từng nút chỉ với các trường nó liệt kê (`id, label, action, enabled, agentIds`). Chính chú thích trong hàm cũng ghi "anything not listed is silently dropped on save", nhưng `message` bị quên.
+- **Fix (T08):** `sanitize()` giữ `message` (cắt khoảng trắng, tối đa 300 ký tự) và `emoji` mới. Jest `ai-config.service.scenario-emoji.spec.ts`.
+- **Phòng ngừa:** thêm trường vào một kiểu được "dựng lại" thì phải thêm vào hàm dựng và có test "lưu xong đọc lại".
+
+## BUG-023 · Menu Chat đổi kiểu sau lần vẽ đầu
+- **Hiện tượng:** TC-08-03 có lúc đọc nền chip `rgb(219, 234, 254)` (pill xanh của kiểu mặc định) thay vì trắng. TC-08-06 xác nhận: bỏ cơ chế chờ thì **6/6** lần chip xuất hiện đầu tiên ở kiểu mặc định.
+- **Nguyên nhân:** khách đã đăng nhập (luồng app proxy) nhận token trước khi session/ensure trả cấu hình tenant. Danh sách nút tải bằng token đó nên vẽ ngay, khi `widgetTheme` còn null.
+- **Fix (T08):** store có cờ `tenantConfigLoaded`, bật khi session/ensure trả về hoặc lỗi. Menu chỉ vẽ khi cờ bật hoặc đã có theme cache từ lần trước.
+- **Phòng ngừa:** phần UI có kiểu phụ thuộc cấu hình tenant thì chờ cấu hình (hoặc cache), đừng vẽ bằng mặc định rồi đổi.
 
 ## BUG-021 · Chữ cam không đủ tương phản
 - **Hiện tượng:** cam thiết kế `#FF6900` trên nền trắng = 2.89:1, dưới chuẩn WCAG AA cho chữ thường (4.5:1). Màu này đang dùng làm chữ ở câu "Your order is on the way!" của thẻ giao hàng (T03, đậm 14px, chưa phải "chữ lớn").

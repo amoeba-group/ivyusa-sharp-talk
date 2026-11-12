@@ -24,6 +24,8 @@ export interface ScenarioButton {
    * Same shape as `label`: a plain string, or a per-language map.
    */
   message?: string | LocalizedText;
+  /** Leading emoji on the widget chip (ivy-docs T08 D1); absent = the action's icon. */
+  emoji?: string;
   /**
    * AI agents this button shows for (REQ-260825 R5). Empty/absent = every
    * agent (the pre-R5 behaviour). Visibility only — the button's behaviour

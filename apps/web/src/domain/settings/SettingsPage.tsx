@@ -521,6 +521,7 @@ export function WidgetBehaviorCard() {
     agentSenderName: data?.agentSenderName ?? {},
     launcherTeaser: data?.launcherTeaser ?? {},
     disclosureLine: data?.disclosureLine ?? {},
+    composerPlaceholder: data?.composerPlaceholder ?? {},
   };
   const copy = copyDraft ?? storedCopy;
   const setCopyText = (field: WidgetCopyBag, text: string) =>
@@ -684,6 +685,8 @@ export function WidgetBehaviorCard() {
         </p>
         {/* PLN-261023-Widget-Disclosure-Line-Copy: the AI notice line; [brackets] = terms link. */}
         {copyLine('disclosureLine', 160)}
+        {/* ivy-docs T08 D3: the chat composer placeholder ("Ask Anything"). */}
+        {copyLine('composerPlaceholder', 60)}
 
         <Button
           onClick={() =>

@@ -59,6 +59,22 @@ export function personaCacheKey(tenantId: number, aiAgentId?: number | null): st
  * Korean shopper — the widget's own translations existed but only applied when
  * the request FAILED.
  */
+/**
+ * Cut `text` to at most `max` UTF-16 units without splitting a character: a
+ * plain `.slice()` can leave half a surrogate pair, which renders as "�".
+ */
+function capWholeChars(text: string, max: number): string {
+  let out = '';
+  for (const ch of text) {
+    if (out.length + ch.length > max) break;
+    out += ch;
+  }
+  return out;
+}
+
+/** Longest question a "send a message" button may carry (ivy-docs BUG-022). */
+const MESSAGE_MAX = 300;
+
 export const DEFAULT_SCENARIO_BUTTONS: ScenarioButton[] = [
   {
     id: 'delivery_status',
@@ -538,13 +554,16 @@ export class AiConfigService {
     return Object.keys(out).length > 0 ? out : null;
   }
 
-  /** Keep a plain label plain; trim a per-language one and drop blank languages. */
-  private trimLabel(label: string | LocalizedText): string | LocalizedText {
-    if (typeof label === 'string') return label.trim().slice(0, 60);
+  /**
+   * Keep a plain label plain; trim a per-language one and drop blank languages.
+   * `max` is 60 for a chip label; a button's question may run longer.
+   */
+  private trimLabel(label: string | LocalizedText, max = 60): string | LocalizedText {
+    if (typeof label === 'string') return label.trim().slice(0, max);
     const out: LocalizedText = {};
     for (const lang of SESSION_LANGUAGE_CODES) {
       const v = label[lang]?.trim();
-      if (v) out[lang] = v.slice(0, 60);
+      if (v) out[lang] = v.slice(0, max);
     }
     // Every language the same means the tenant meant "one label" — store the
     // simpler shape so the row does not grow six copies of one word.
@@ -590,11 +609,21 @@ export class AiConfigService {
         const agentIds = [
           ...new Set((b.agentIds ?? []).map(Number).filter((n) => Number.isFinite(n) && n > 0)),
         ];
+        // The button's own question (PLN-261001 §1-3). It was missing from this
+        // rebuild, so every console save dropped it and the button fell back to
+        // sending its label (ivy-docs BUG-022). Kept only when it says something.
+        const message = b.message != null ? this.trimLabel(b.message, MESSAGE_MAX) : undefined;
+        const hasMessage = message != null && resolveScenarioLabel(message, null).trim().length > 0;
+        // Leading emoji (ivy-docs T08 D1): trimmed, at most 16 UTF-16 units —
+        // room for a skin-tone or ZWJ sequence, not for a sentence.
+        const emoji = typeof b.emoji === 'string' ? capWholeChars(b.emoji.trim(), 16) : '';
         return {
           id: b.id?.trim() || `btn_${i}`,
           label: this.trimLabel(b.label),
           action: b.action?.trim() || 'message',
           enabled: b.enabled !== false,
+          ...(hasMessage ? { message } : {}),
+          ...(emoji ? { emoji } : {}),
           ...(agentIds.length ? { agentIds } : {}),
         };
       });

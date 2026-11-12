@@ -116,7 +116,9 @@
     "disclosureLine": "AI disclosure line",
     "disclosureLineHint": "The AI notice line above or below the chat. Words in [brackets] link to your terms of service (Privacy notice → Terms URL). Empty = the built-in line, e.g. \"AI-generated replies · processed in the United States\".",
     "closeFeedbackPrompt": "Ask for feedback on close",
-    "closeFeedbackPromptHint": "When a customer presses × during a conversation, the widget invites feedback. Closing then ends the conversation (not asked while waiting for an agent)."
+    "closeFeedbackPromptHint": "When a customer presses × during a conversation, the widget invites feedback. Closing then ends the conversation (not asked while waiting for an agent).",
+    "composerPlaceholder": "Chat input placeholder",
+    "composerPlaceholderHint": "Hint text in the empty chat box, e.g. \"Ask Anything\". Empty = \"Type a message…\"."
   },
   "shopify": {
     "title": "Shopify connection",
@@ -892,7 +894,7 @@
     "history": "History",
     "quickReplyStyle": "Quick-reply style",
     "quickReplyChip": "Filled chips (default)",
-    "quickReplyCard": "Icon cards (white, outlined)",
+    "quickReplyCard": "White outlined chips (emoji or icon)",
     "reviewLink": "Review link",
     "reviewLinkHint": "Where \"Write a review\" in the widget's Review tab goes. Empty = the product page. Use {productUrl}#reviews to jump to your review app's section, or a full https:// URL containing {productUrl}.",
     "historyTitle": "History — {{name}}",

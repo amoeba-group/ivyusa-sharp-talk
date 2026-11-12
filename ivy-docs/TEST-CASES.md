@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -41,7 +41,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T05 | 0 / 4 → **7 / 7** ✅ (T05, 2026-11-12; thêm TC-05-05..07) | tất cả | — |
 | T06 | 0 / 3 → **5 / 5** ✅ (T06, 2026-11-12; thêm TC-06-04, 05) | tất cả | — |
 | T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
-| T08 | 1 / 5 | TC-08-05 | TC-08-01, TC-08-02, TC-08-03, TC-08-04 |
+| T08 | 1 / 5 → **6 / 6** ✅ (T08, 2026-11-12; thêm TC-08-06) | tất cả | — |
 | T09 | 1 / 4 | TC-09-01 | TC-09-02, TC-09-03, TC-09-04 |
 | T10 | 1 / 5 | TC-10-05 | TC-10-01, TC-10-02, TC-10-03, TC-10-04 |
 | T11 | 0 / 4 | — | TC-11-01, TC-11-02, TC-11-03, TC-11-04 |
@@ -231,9 +231,24 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 |---|---|---|---|
 | TC-08-01 | Lời chào | bubble có "IVY Beauty" | SCR-IVY-10 |
 | TC-08-02 | 7 quick-reply | `quick-replies` có đúng 7 nút theo thứ tự, mỗi nút có emoji + nhãn (💰 Payment check … 🤝 Contact Support) | G-12, BR-11 |
-| TC-08-03 | Kiểu chip | nền `rgb(255,255,255)`, viền ≥ 1px, ≥ 3 chip trên 1 hàng (wrap, không lưới 2 cột) | G-12, §4 |
+| TC-08-03 | Kiểu chip | nền `rgb(255,255,255)` (đọc bằng `expect.poll`), viền ≥ 1px. EN: trong một hàng có chip rộng khác nhau (rộng theo chữ, không lưới 2 cột). **KO** (frame `1008:2291`): ≥ 3 chip trên 1 hàng | G-12, §4 |
 | TC-08-04 | Composer | placeholder "Ask Anything"; Send disabled khi rỗng, enabled khi có chữ | G-13 |
 | TC-08-05 | Hỏi–đáp thật | gửi câu hỏi → `POST /chat/message` < 300 → bubble khách + câu trả lời bot hiện | BR-16 |
+| TC-08-06 | Lần vẽ đầu | MutationObserver ghi màu nền chip **ngay khi chip xuất hiện** = trắng (không vẽ kiểu mặc định rồi đổi). Bỏ cơ chế chờ thì đỏ 6/6 (BUG-023) | PLN-261112-T08 |
+
+**Kết quả (2026-11-12):** 6/6, lặp ×4 (3 worker): 24/24. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T13`) ×2: 140/140. Toàn bộ desktop: 82 pass / 15 fail, mọi ca đỏ thuộc T09–T12 chưa làm.
+
+> TC-08-01 và TC-08-04 đọc lời chào và placeholder từ **cấu hình thật của tenant** (session/ensure không bị mock). CI có cấu hình này nhờ seed; DB local cũ cần nhập cấu hình như GUIDE-261112-IVY-Chat-Home-Config.
+
+**Kiểm thử bổ sung cho T08:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Jest API | `ai-engine/ai-config.service.scenario-emoji.spec.ts` | Lưu nút giữ `emoji` (cắt khoảng trắng) và `message` (BUG-022); `message` dài tới 300; emoji / message trống thì không lưu; emoji dài cắt ở 16 đơn vị **theo ký tự trọn vẹn**; emoji có tông da giữ nguyên |
+| Jest API | `tenant/tenant.service.spec.ts` | `composer_placeholder_*`: theo ngôn ngữ, cắt khoảng trắng, xoá như các bag khác |
+| Seed | thủ công, DB tạm `db_t08_seedcheck` | Seed mới tạo: lời chào KO, placeholder EN "Ask Anything", `quickReplyStyle: card`, `disclosurePlacement: bottom`, 7 nút (nút 1 💰, nút 7 KO "Contact Support"). Đã xoá DB tạm |
+| Tích hợp local (API thật) | thủ công | Nhập cấu hình IVY qua đúng endpoint console dùng: `PATCH /tenants/widget-settings`, `PATCH /tenants/widget-theme`, `PUT /ai-config`. Đọc lại đúng 6 ngôn ngữ (utf8mb4) |
+| Ảnh chụp | thủ công, 380px | KO / EN / VI; KO khớp ảnh thiết kế (3 chip / hàng, bong bóng xám không avatar) |
 
 ## T09 · My Orders (`09-my-orders.spec.ts`)
 

@@ -159,6 +159,7 @@ export class TenantMapper {
       agentSenderName: t.widgetCopy?.agentSenderName ?? {},
       launcherTeaser: t.widgetCopy?.launcherTeaser ?? {},
       disclosureLine: t.widgetCopy?.disclosureLine ?? {},
+      composerPlaceholder: t.widgetCopy?.composerPlaceholder ?? {},
       displayNameFallback: t.name ?? null,
     };
   }

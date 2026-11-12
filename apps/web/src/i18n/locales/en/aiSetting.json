@@ -566,5 +566,6 @@
     "previewBody": "…answer text…",
     "saved": "Answer footer saved",
     "saveError": "Could not save the answer footer"
-  }
+  },
+  "emoji": "Emoji"
 }

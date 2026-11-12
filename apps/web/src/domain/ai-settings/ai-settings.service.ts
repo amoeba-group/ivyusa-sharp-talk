@@ -61,6 +61,8 @@ export interface ScenarioButton {
   agentIds?: number[];
   /** Question a "send a message" button asks; empty = use the label. */
   message?: string | Partial<Record<ScenarioLang, string>>;
+  /** Leading emoji on the widget chip (ivy-docs T08 D1); empty = the action's icon. */
+  emoji?: string;
 }
 
 /** Session language the console edits copy for — one source of truth with the API. */

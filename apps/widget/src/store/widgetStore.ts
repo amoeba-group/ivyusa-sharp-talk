@@ -136,6 +136,14 @@ interface WidgetState {
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
   widgetTheme: WidgetTheme | null;
   setWidgetTheme: (t: WidgetTheme | null) => void;
+  /**
+   * session/ensure has answered (or failed) at least once, so tenant settings
+   * such as the quick-reply style are known. Before that a signed-in shopper
+   * can already have a token and a button list, and the menu painted in the
+   * default style, then flipped (ivy-docs T08).
+   */
+  tenantConfigLoaded: boolean;
+  setTenantConfigLoaded: (v: boolean) => void;
   setEmbedIdentity: (v: 'pending' | 'verified' | 'anonymous') => void;
   setLanguage: (l: string) => void;
   /** Languages the tenant offers in the picker (PLN-261019); every registered one until the session says otherwise. */
@@ -223,6 +231,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setCustomerName: (n) => set({ customerName: n }),
   widgetTheme: null,
   setWidgetTheme: (t) => set({ widgetTheme: t }),
+  tenantConfigLoaded: false,
+  setTenantConfigLoaded: (v) => set({ tenantConfigLoaded: v }),
   setEmbedIdentity: (v) => set({ embedIdentity: v }),
   setLanguage: (l) => set({ language: l }),
   languages: [...SUPPORTED_LANGUAGES],

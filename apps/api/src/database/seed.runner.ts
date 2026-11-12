@@ -12,9 +12,9 @@ import { Unit } from '../domain/user/entity/unit.entity';
 import { defaultJobLabels, defaultUnits } from '../domain/user/default-org';
 import { AiEngine } from '../domain/ai-engine/entity/ai-engine.entity';
 import { TenantAiSetting } from '../domain/ai-engine/entity/tenant-ai-setting.entity';
-import { TenantAiConfig } from '../domain/ai-engine/entity/tenant-ai-config.entity';
+import { TenantAiConfig, type ScenarioButton } from '../domain/ai-engine/entity/tenant-ai-config.entity';
 import { AiAgent } from '../domain/ai-engine/entity/ai-agent.entity';
-import { DEFAULT_PERSONA, DEFAULT_SCENARIO_BUTTONS } from '../domain/ai-engine/ai-config.service';
+import { DEFAULT_PERSONA } from '../domain/ai-engine/ai-config.service';
 import { ContentFilterRule } from '../domain/moderation/entity/content-filter-rule.entity';
 import { KbDocument } from '../domain/knowledge/entity/kb-document.entity';
 import { Customer } from '../domain/customer/entity/customer.entity';
@@ -32,12 +32,51 @@ import { DEFAULT_BRAND, WIDGET_HEADER_STYLE, normalizeWidgetTheme } from '@sharp
  * an existing tenant — production included, where SEED_ON_BOOT may run — keeps
  * whatever its console settings say.
  */
+/** IVY chat greeting (ivy-docs T08, SPEC SCR-IVY-10; EN per Q-07). */
+const IVY_GREETING = {
+  EN: 'Hi! This is IVY Beauty. How can I help you?',
+  ES: '¡Hola! Somos IVY Beauty. ¿En qué podemos ayudarte?',
+  KO: '안녕하세요! IVY Beauty입니다. 무엇을 도와드릴까요?',
+  VI: 'Xin chào! Đây là IVY Beauty. Chúng tôi có thể giúp gì cho bạn?',
+  JA: 'こんにちは！IVY Beautyです。どのようなご用件でしょうか？',
+  ZH: '您好！这里是 IVY Beauty。有什么可以帮您？',
+};
+
+/**
+ * IVY's seven quick replies, in design order (ivy-docs T08 §4, Figma 1008:2291).
+ * KO from the design; EN per SPEC Q-07; the rest translated from EN. The KO
+ * design keeps "Contact Support" in English.
+ */
+const IVY_SCENARIO_BUTTONS: ScenarioButton[] = [
+  { id: 'payment_check', action: 'message', enabled: true, emoji: '💰',
+    label: { EN: 'Payment check', ES: 'Verificar pago', KO: '결제 확인', VI: 'Kiểm tra thanh toán', JA: 'お支払い確認', ZH: '付款确认' } },
+  { id: 'delivery_inquiry', action: 'delivery_status', enabled: true, emoji: '🚚',
+    label: { EN: 'Delivery inquiry', ES: 'Consulta de envío', KO: '배송 문의', VI: 'Hỏi về giao hàng', JA: '配送のお問い合わせ', ZH: '配送咨询' } },
+  { id: 'stock_inquiry', action: 'message', enabled: true, emoji: '📦',
+    label: { EN: 'Stock inquiry', ES: 'Consulta de stock', KO: '재고 문의', VI: 'Hỏi về tồn kho', JA: '在庫のお問い合わせ', ZH: '库存咨询' } },
+  { id: 'exchange_refund', action: 'cancel_refund', enabled: true, emoji: '😊',
+    label: { EN: 'Exchange & Refund', ES: 'Cambios y reembolsos', KO: '교환 및 환불', VI: 'Đổi trả & hoàn tiền', JA: '交換・返金', ZH: '换货与退款' } },
+  { id: 'product_inquiry', action: 'product_help', enabled: true, emoji: '✨',
+    label: { EN: 'Product inquiry', ES: 'Consulta de producto', KO: '제품문의', VI: 'Hỏi về sản phẩm', JA: '商品のお問い合わせ', ZH: '商品咨询' } },
+  { id: 'feedback', action: 'message', enabled: true, emoji: '💬',
+    label: { EN: 'Feedback', ES: 'Comentarios', KO: '피드백', VI: 'Góp ý', JA: 'ご意見', ZH: '意见反馈' } },
+  { id: 'contact_support', action: 'contact_support', enabled: true, emoji: '🤝',
+    label: { EN: 'Contact Support', ES: 'Contactar con soporte', KO: 'Contact Support', VI: 'Liên hệ hỗ trợ', JA: 'サポートに問い合わせ', ZH: '联系客服' } },
+];
+
 const IVY_WIDGET_PRESET = {
   widgetTabs: ['notifications', 'chat'],
   widgetTheme: normalizeWidgetTheme({
     brand: DEFAULT_BRAND,
     headerStyle: WIDGET_HEADER_STYLE.WHITE,
-    design: { radius: 'lg', panel: { width: 380, height: 600 } },
+    // T08: white emoji chips (SCR-IVY-10) and the AI notice as one line under
+    // the composer (Q-13).
+    design: {
+      radius: 'lg',
+      panel: { width: 380, height: 600 },
+      quickReplyStyle: 'card',
+      disclosurePlacement: 'bottom',
+    },
   }),
   widgetCopy: {
     headerGreeting: {
@@ -47,6 +86,17 @@ const IVY_WIDGET_PRESET = {
       VI: 'Chào {firstName}',
       JA: '{firstName}さん',
       ZH: '{firstName} 您好',
+    },
+    // T08 (SCR-IVY-10): the design greets the same way signed in or not.
+    firstVisit: IVY_GREETING,
+    loginGreeting: IVY_GREETING,
+    composerPlaceholder: {
+      EN: 'Ask Anything',
+      ES: 'Pregunta lo que quieras',
+      KO: '무엇이든 물어보세요',
+      VI: 'Hỏi bất cứ điều gì',
+      JA: '何でも聞いてください',
+      ZH: '随便问问',
     },
   },
 };
@@ -265,7 +315,8 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
           'Answer only from the knowledge base; never invent policies.',
           'Offer to connect a human agent when unsure or out of scope.',
         ],
-        scenarioButtons: DEFAULT_SCENARIO_BUTTONS,
+        // The seeded tenant is IVY: its seven design quick replies (T08).
+        scenarioButtons: IVY_SCENARIO_BUTTONS,
       }),
     );
   }

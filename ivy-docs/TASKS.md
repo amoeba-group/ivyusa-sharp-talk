@@ -32,7 +32,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · UI | P1 | T02 | ✅ code · ⏳ quyền PCD Address/Phone cho app Shopify | TC-04-01..07 |
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI · API · console | P1 | T02 | ✅ | TC-05-01..07 |
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ✅ | TC-06-01..05 |
-| 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T08-Chat-Home.md) | TC-08-01..05 |
+| 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ⬜ | TC-09-01..04 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ⬜ | TC-10-01..05 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ⬜ | TC-11-01..04 |
@@ -186,17 +186,22 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Sửa TC-06-02 (đọc URL tab mới quá sớm, BUG-017) và TC-06-03 (trước luôn bị skip). Thêm `@T06` vào `test:ci`.
 - **TC:** TC-06-01..05 — **5/5** ✅ (04: gửi lại sau lỗi thì lưu được; 05: bị chặn E4002).
 
-### T08 · Chat home — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T08-Chat-Home.md)
-- **Figma:** `1008:2291`, `993:1993`. **Gap:** G-12, G-13, G-14.
-- **Hợp đồng API đề xuất** (`ScenarioButtonResponse`): `emoji?: string` (console cho nhập, lưu cùng scenario config).
-- **Ghi chú từ T01:** bong bóng chào trong Chat vẫn ghi họ tên đầy đủ ("Hi Kiho Lee! Welcome back…", lấy từ `welcomeGreeting` với `{name}`). Nếu thiết kế cần first name, mở rộng `{firstName}` sang `welcomeGreeting` (`lib/copy.ts`) giống header.
-- **Việc cần làm:**
-  1. Kiểu hiển thị **chip wrap** (nền trắng, viền 1px, bo tròn, emoji đầu) cho quick-reply (`ScenarioMenu.tsx`).
-  2. Cấu hình tenant ivyusa: 7 nút theo SPEC SCR-IVY-10 (EN theo Q-07) + lời chào "Hi! This is IVY Beauty. How can I help you?" (KO theo thiết kế).
-  3. Composer placeholder "Ask Anything" (copy tenant hoặc i18n); nút gửi disabled khi rỗng.
-  4. Thanh công bố AI: giữ nhưng thu gọn (Q-13).
-  5. Test-id `quick-replies`.
-- **TC:** TC-08-01..05.
+### T08 · Chat home — ✅ code (2026-11-12) · ⏳ cấu hình prod · [PLN](../docs/plan/PLN-261112-IVY-T08-Chat-Home.md) · [RPT](../docs/implementation/RPT-261112-IVY-T08-Chat-Home.md) · [GUIDE cấu hình](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)
+- **Figma:** `1008:2291` (đối chiếu qua ảnh chủ dự án gửi), `993:1993`. **Gap:** G-12, G-13, G-14.
+- **Quyết định của chủ dự án (2026-11-12):**
+  - Placeholder là **trường mới của tenant**; tenant khác giữ "Type a message…".
+  - Cấu hình production nhập trong console theo GUIDE (không chạy SQL).
+- **Đã làm:**
+  - Nút trả lời nhanh có `emoji`: API lưu và trả; console AI Settings có ô Emoji.
+    - Sửa luôn **BUG-022**: lưu nút làm mất `message`.
+  - Kiểu "card" = chip trắng viền 1px, bo tròn, emoji đầu, wrap; `data-testid="quick-replies"`.
+  - Menu chỉ vẽ khi đã biết kiểu nút (**BUG-023**: lần đầu vào, menu hiện kiểu mặc định rồi đổi).
+  - `widgetCopy.composerPlaceholder` (6 ngôn ngữ, console → Tenant Settings → Chat input placeholder).
+  - Seed: preset IVY (lời chào, placeholder, kiểu card, công bố AI dưới ô nhập, 7 nút + emoji), áp cho DB mới (CI / local).
+  - Mock trả nhãn theo ngôn ngữ; TC-08-03 kiểm KO (3 chip / hàng như thiết kế) và EN (chip theo độ dài chữ).
+  - Thêm TC-08-06 (không đổi kiểu sau lần vẽ đầu). Thêm `@T08` vào `test:ci`.
+- **Việc của chủ dự án:** nhập cấu hình theo [GUIDE-261112-IVY-Chat-Home-Config](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md) (khoảng 15 phút).
+- **TC:** TC-08-01..06 — **6/6** ✅.
 
 ### T09 · My Orders — ⬜
 - **Figma:** `1006:5530`. **Gap:** G-15. **BR:** 12.

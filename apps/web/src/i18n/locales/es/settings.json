@@ -116,7 +116,9 @@
     "disclosureLine": "Línea de aviso de IA",
     "disclosureLineHint": "La línea de aviso de IA sobre o bajo el chat. Las palabras entre [corchetes] enlazan a tus términos del servicio (Aviso de privacidad → URL de términos). Vacío = la línea predeterminada.",
     "closeFeedbackPrompt": "Pedir opinión al cerrar",
-    "closeFeedbackPromptHint": "Cuando el cliente pulsa × durante una conversación, el widget le invita a opinar. Al cerrar, la conversación termina (no se pregunta mientras espera a un agente)."
+    "closeFeedbackPromptHint": "Cuando el cliente pulsa × durante una conversación, el widget le invita a opinar. Al cerrar, la conversación termina (no se pregunta mientras espera a un agente).",
+    "composerPlaceholder": "Texto de ejemplo del chat",
+    "composerPlaceholderHint": "Texto de ayuda en el cuadro de chat vacío, p. ej. \"Pregunta lo que quieras\". Vacío = \"Escribe un mensaje…\"."
   },
   "shopify": {
     "title": "Conexión de Shopify",
@@ -892,7 +894,7 @@
     "history": "Historial",
     "quickReplyStyle": "Estilo de respuestas rápidas",
     "quickReplyChip": "Chips rellenos (predeterminado)",
-    "quickReplyCard": "Tarjetas con icono (blancas, con borde)",
+    "quickReplyCard": "Chips blancos con borde (emoji o icono)",
     "reviewLink": "Enlace de reseña",
     "reviewLinkHint": "Adónde lleva \"Escribir una reseña\" en la pestaña Reseñas del widget. Vacío = la página del producto. Use {productUrl}#reviews para ir a la sección de su app de reseñas, o una URL https:// completa que contenga {productUrl}.",
     "historyTitle": "Historial — {{name}}",

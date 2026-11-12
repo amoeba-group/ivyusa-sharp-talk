@@ -122,7 +122,9 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
 
     if (o.mockScenario && method === 'GET' && path === '/ai-config/scenario') {
       record(req, path, url);
-      return route.fulfill({ json: ok(scenarioConfig({ withFlows: o.scenarioFlows })) });
+      return route.fulfill({
+        json: ok(scenarioConfig({ withFlows: o.scenarioFlows, language: url.searchParams.get('language') })),
+      });
     }
 
     if (!o.authenticated) return route.fallback();

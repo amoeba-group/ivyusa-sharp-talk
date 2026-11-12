@@ -385,6 +385,17 @@ function ScenarioButtonsSection() {
               key={btn.id}
               className="flex flex-wrap items-end gap-3 rounded-lg border border-gray-100 p-3"
             >
+              {/* ivy-docs T08 D1: shown before the label on the "card" chips. */}
+              <div className="w-20">
+                <Label>{t('emoji')}</Label>
+                <Input
+                  value={btn.emoji ?? ''}
+                  aria-label={t('emoji')}
+                  maxLength={16}
+                  placeholder="💬"
+                  onChange={(e) => patch(i, { emoji: e.target.value })}
+                />
+              </div>
               <div className="min-w-[160px] flex-1">
                 <Label>{t('label')}</Label>
                 <Input

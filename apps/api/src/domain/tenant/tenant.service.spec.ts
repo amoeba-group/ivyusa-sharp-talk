@@ -167,6 +167,21 @@ describe('TenantService.updatePrivacyNotice', () => {
       });
       expect(cleared.widgetCopy).toBeNull();
     });
+
+    it('ivy-docs T08 composer placeholder: per language, trimmed, cleared like the other bags', async () => {
+      const saved = await svc.updateWidgetSettings(1, 7, {
+        login_mode: 'redirect',
+        composer_placeholder_en: ' Ask Anything ',
+        composer_placeholder_ko: '무엇이든 물어보세요',
+      });
+      expect(saved.widgetCopy?.composerPlaceholder).toEqual({ EN: 'Ask Anything', KO: '무엇이든 물어보세요' });
+      const cleared = await svc.updateWidgetSettings(1, 7, {
+        login_mode: 'redirect',
+        composer_placeholder_en: '',
+        composer_placeholder_ko: null,
+      });
+      expect(cleared.widgetCopy).toBeNull();
+    });
   });
 
   /**

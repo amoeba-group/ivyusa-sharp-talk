@@ -116,7 +116,9 @@
     "disclosureLine": "AI 提示语",
     "disclosureLineHint": "聊天上方/下方的 AI 提示行。[方括号] 内的文字会链接到服务条款（隐私声明 → 条款 URL）。留空则使用默认提示语。",
     "closeFeedbackPrompt": "关闭时邀请反馈",
-    "closeFeedbackPromptHint": "客户在咨询中点击小部件的 × 时邀请反馈。关闭后会结束咨询（等待人工客服时不询问）。"
+    "closeFeedbackPromptHint": "客户在咨询中点击小部件的 × 时邀请反馈。关闭后会结束咨询（等待人工客服时不询问）。",
+    "composerPlaceholder": "聊天输入框提示",
+    "composerPlaceholderHint": "聊天输入框为空时显示的提示，例如“随便问问”。留空则使用默认提示。"
   },
   "shopify": {
     "title": "Shopify 连接",
@@ -892,7 +894,7 @@
     "history": "历史",
     "quickReplyStyle": "快捷回复样式",
     "quickReplyChip": "填充圆片（默认）",
-    "quickReplyCard": "图标卡片（白底描边）",
+    "quickReplyCard": "白色描边标签（表情或图标）",
     "reviewLink": "评价链接",
     "reviewLinkHint": "小部件评价标签中“写评价”跳转的地址。留空＝商品页面。使用 {productUrl}#reviews 跳到评价应用区域，或输入包含 {productUrl} 的完整 https:// 地址。",
     "historyTitle": "变更历史 — {{name}}",

@@ -116,7 +116,9 @@
     "disclosureLine": "AI表示文",
     "disclosureLineHint": "チャットの上部／下部に表示されるAIの案内行です。[角かっこ]内の文字が利用規約へのリンクになります（プライバシー通知 → 規約URL）。空欄の場合は既定の文を使います。",
     "closeFeedbackPrompt": "閉じるときにフィードバックを案内",
-    "closeFeedbackPromptHint": "相談中に顧客がウィジェットの×を押すとフィードバックを案内します。閉じると相談は終了します（担当者待ちの間は案内しません）。"
+    "closeFeedbackPromptHint": "相談中に顧客がウィジェットの×を押すとフィードバックを案内します。閉じると相談は終了します（担当者待ちの間は案内しません）。",
+    "composerPlaceholder": "チャット入力欄のヒント",
+    "composerPlaceholderHint": "空のチャット入力欄に表示する文言です。例:「何でも聞いてください」。空欄なら既定の文言を使います。"
   },
   "shopify": {
     "title": "Shopify連携",
@@ -892,7 +894,7 @@
     "history": "履歴",
     "quickReplyStyle": "クイック返信のスタイル",
     "quickReplyChip": "塗りつぶしチップ（既定）",
-    "quickReplyCard": "アイコン付きカード（白・枠線）",
+    "quickReplyCard": "白い枠線チップ（絵文字またはアイコン）",
     "reviewLink": "レビューリンク",
     "reviewLinkHint": "ウィジェットのレビュータブの「レビューを書く」の遷移先です。空欄＝商品ページ。レビューアプリの欄へ直接移動するには {productUrl}#reviews、または {productUrl} を含む完全な https:// URL を入力してください。",
     "historyTitle": "変更履歴 — {{name}}",

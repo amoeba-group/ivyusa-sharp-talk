@@ -312,6 +312,13 @@ export class UpdateWidgetSettingsRequest {
   @IsOptional() @IsString() @MaxLength(160) disclosure_line_vi?: string | null;
   @IsOptional() @IsString() @MaxLength(160) disclosure_line_ja?: string | null;
   @IsOptional() @IsString() @MaxLength(160) disclosure_line_zh?: string | null;
+  // ivy-docs T08 D3 — the chat composer's placeholder ("Ask Anything").
+  @IsOptional() @IsString() @MaxLength(60) composer_placeholder_en?: string | null;
+  @IsOptional() @IsString() @MaxLength(60) composer_placeholder_es?: string | null;
+  @IsOptional() @IsString() @MaxLength(60) composer_placeholder_ko?: string | null;
+  @IsOptional() @IsString() @MaxLength(60) composer_placeholder_vi?: string | null;
+  @IsOptional() @IsString() @MaxLength(60) composer_placeholder_ja?: string | null;
+  @IsOptional() @IsString() @MaxLength(60) composer_placeholder_zh?: string | null;
 }
 
 /**

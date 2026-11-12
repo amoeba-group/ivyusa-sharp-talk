@@ -200,6 +200,7 @@ export function adoptTenantConfig(res: SessionResponse): void {
   applyTheme(res.widgetTheme ?? null);
   s.setWidgetTheme(res.widgetTheme ?? null);
   if (res.widgetCopy) s.setWidgetCopy(res.widgetCopy);
+  s.setTenantConfigLoaded(true);
   s.setIssueFeed(!!res.issueFeed);
   // Per session, not per tenant: a guest (or a fresh session after logout) reads false.
   s.setThreadAvailable(!!res.threadAvailable);
@@ -401,6 +402,9 @@ export function useEnsureSession() {
       })
       .catch(() => {
         /* offline / backend not running — widget still renders */
+        // …with the built-in menu, rather than holding it back for a config
+        // that is not coming.
+        if (!cancelled) useWidgetStore.getState().setTenantConfigLoaded(true);
       });
     }
 

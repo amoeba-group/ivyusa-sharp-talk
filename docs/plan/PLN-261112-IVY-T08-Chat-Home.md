@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §7 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112-T08](../implementation/RPT-261112-IVY-T08-Chat-Home.md). Trả lời §7: (1) ok; (2) **a**, placeholder là trường tenant; (3) **a**, hướng dẫn nhập console ([GUIDE](../guide/GUIDE-261112-IVY-Chat-Home-Config.md)); (4) chủ dự án gửi ảnh thiết kế |
 | Task | [ivy-docs/TASKS.md T08](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-10 · G-12, G-13, G-14 · BR-11 · Q-07, Q-13, Q-14 |
 | Figma | `1008:2291` (KO), `993:1993` (EN). Figma MCP vẫn hết lượt gọi; dựa vào SPEC. Xin ảnh bản EN ở §7-4 |
 | TC | TC-08-01..05 ([e2e/tests/08-chat-home.spec.ts](../../e2e/tests/08-chat-home.spec.ts)), hiện **1/5** (chỉ TC-08-05, hỏi đáp qua API thật) |

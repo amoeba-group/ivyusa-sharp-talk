@@ -566,5 +566,6 @@
     "previewBody": "…回答正文…",
     "saved": "已保存回答页脚",
     "saveError": "无法保存回答页脚"
-  }
+  },
+  "emoji": "表情"
 }

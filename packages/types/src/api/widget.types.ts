@@ -66,6 +66,8 @@ export interface WidgetCopy {
    * brackets the usual " · terms of service" link follows the text.
    */
   disclosureLine?: WidgetCopyText;
+  /** Chat composer placeholder (ivy-docs T08 D3); absent = the built-in "Type a message…". */
+  composerPlaceholder?: WidgetCopyText;
 }
 
 export interface SessionResponse {
@@ -522,6 +524,8 @@ export interface ScenarioButtonResponse {
    * which is what these buttons did before the field existed.
    */
   message?: string;
+  /** Leading emoji on the chip (ivy-docs T08 D1, BR-11); absent = the action's icon. */
+  emoji?: string;
 }
 
 export interface ScenarioConfigResponse {

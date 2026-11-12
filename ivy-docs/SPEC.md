@@ -182,6 +182,11 @@ Launcher (góc phải dưới) ─► Panel 380px
 - Bubble chào: "안녕하세요! IVY Beauty입니다. 무엇을 도와드릴까요?" (EN cần dịch — Q-07).
 - 7 quick-reply dạng chip trắng có emoji, xếp tự do (wrap): 💰 결제 확인 · 🚚 배송 문의 · 📦 재고 문의 · 😊 교환 및 환불 · ✨ 제품문의 · 💬 피드백 · 🤝 Contact Support.
 - Composer: "Ask Anything" + nút gửi tròn xanh.
+- **Đã làm (T08, 2026-11-12):** đối chiếu ảnh thiết kế chủ dự án gửi (KO).
+  - Emoji cho nút (`ScenarioButton.emoji`); kiểu "card" = chip trắng.
+  - Placeholder là cấu hình tenant (`widgetCopy.composerPlaceholder`).
+  - Lời chào và 7 nút là cấu hình tenant: seed cho DB mới; production nhập theo GUIDE-261112-IVY-Chat-Home-Config.
+  - Giữ nút đính kèm (Q-14) và dòng công bố AI dưới ô nhập (Q-13).
 
 ### SCR-IVY-11 · Kịch bản My Orders
 - **Figma:** `1006:5530`.
@@ -280,7 +285,7 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 | Xác nhận xoá tất cả | `getByRole('alertdialog')` (+`data-testid="delete-all-confirm"`), nút `Cancel` / `Delete` | ✅ (T07) |
 | Toast | `getByRole('status')` (thành công) / `getByRole('alert')` (lỗi, có nút `Close`); `[data-testid="toast"]` + `data-tone="success\|error"` | ✅ (T07) — dùng chung, T05/T06 dùng lại |
 | Thẻ promo | `[data-testid="promo-item"]` + `data-kind="coupon\|event"`; icon `[data-testid="promo-icon"]`; mã coupon `[data-testid="coupon-code"]` + nút "Copy code" | ✅ (T05) |
-| Quick-reply | `[data-testid="quick-replies"]` › `getByRole('button', { name })` | ➕ testid (T08); class `.st-quick-reply` ✅ |
+| Quick-reply | `[data-testid="quick-replies"]` › `getByRole('button', { name })` | ✅ (T08); class `.st-quick-reply` ✅ |
 | Composer | `getByPlaceholder('Ask Anything')`, `getByRole('button', { name: 'Send' })` | ➕ placeholder (T08); Send ✅ |
 | Chip quay về đầu | `getByRole('button', { name: 'Start over' })` | ➕ (T09) |
 | Form liên hệ | `[data-testid="contact-form"]` › `getByLabel('Name' \| 'Email' \| 'Message')`, `getByRole('button', { name: 'Send Message' })` | ➕ (T11) |
@@ -308,9 +313,9 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-09 | Promo: coupon (gift navy) vs sự kiện (sparkle magenta), tiêu đề đậm + mô tả, mã coupon | Chỉ là notification `event` với icon gift/sparkle; không có mã/copy; link không bấm được; API không có khái niệm coupon | Thẻ promo theo thiết kế + bấm mở link; hiển thị mã coupon (lấy từ body/metadata) + nút copy | UI (+API tuỳ chọn) | T05 ✅ (2026-11-12; loại + mã lưu trong campaign, khoá sau khi gửi; chưa có coupon riêng từng khách) |
 | G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 ✅ (2026-11-12) |
 | G-11 | Chọn nhiều + "Delete Selected Notifications" / "Delete All Notifications" | Đã có: nút "Select", "Delete selected (n)", "Delete all notifications" + `window.confirm` (`NotificationsTab.tsx` 324-333, 391-410) | Copy theo thiết kế; thay `window.confirm` bằng xác nhận trong panel; toast kết quả; (tuỳ chọn) vuốt trái để xoá | UI · I18N · API | T07 ✅ (2026-11-12; "Delete All" chỉ xoá chip đang xem; vuốt trái để xoá → T15) |
-| G-12 | Chat home: chip trắng viền có **emoji**, xếp wrap; lời chào IVY | Lưới 2 cột pill xanh nhạt hoặc thẻ có icon; nút scenario không có trường emoji (`ScenarioMenu.tsx`, `/ai-config/scenario`) | Thêm trường `emoji` cho nút scenario + kiểu hiển thị "chip wrap"; cấu hình 7 nút + lời chào cho tenant | UI · API · CFG | T08 |
-| G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 |
-| G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 |
+| G-12 | Chat home: chip trắng viền có **emoji**, xếp wrap; lời chào IVY | Lưới 2 cột pill xanh nhạt hoặc thẻ có icon; nút scenario không có trường emoji (`ScenarioMenu.tsx`, `/ai-config/scenario`) | Thêm trường `emoji` cho nút scenario + kiểu hiển thị "chip wrap"; cấu hình 7 nút + lời chào cho tenant | UI · API · CFG | T08 ✅ (2026-11-12; emoji + chip trắng; nút / lời chào là cấu hình tenant) |
+| G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 ✅ (2026-11-12; placeholder là cấu hình tenant; giữ nút đính kèm) |
+| G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 ✅ (2026-11-12; `disclosurePlacement: bottom` = 1 dòng dưới ô nhập) |
 | G-15 | My Orders: thẻ đơn bấm được + chip 배송 조회 · 주문 취소 · 처음으로 | Thẻ không bấm được; chip ẩn khi đang hiện thẻ (`ChatTab.tsx` 439-445); không có chip "처음으로" ở đâu cả | Thẻ mở Order Detail; luôn hiện follow-up chip; thêm chip **처음으로** (start over) dùng chung cho mọi kịch bản | UI · I18N | T09 |
 | G-16 | Product Help: 11 danh mục + 인기상품; menu con 사용법/성분/교환·반품/재입고 | Menu con có; **thiếu danh mục & sản phẩm phổ biến**; API sẵn có nhưng chưa dùng: `GET /products/categories`, `/products?category=`, `/products/recommendations` | Luồng danh mục → sản phẩm phổ biến; "재입고 알림" gọi `POST /restock/subscribe` | UI | T10 |
 | G-17 | Contact Support: chỉ thẻ email `help@ivy.com` | 3 thẻ (điện thoại 1588-0000, email, live chat) **hard-code trong locale** (`ContactCard.tsx`) | Lấy kênh liên hệ từ cấu hình tenant; IVY chỉ bật email (+ live chat nếu có agent — Q-15) | UI · API · CFG | T11 |

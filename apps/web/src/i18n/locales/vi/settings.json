@@ -116,7 +116,9 @@
     "disclosureLine": "Dòng thông báo AI",
     "disclosureLineHint": "Dòng thông báo AI phía trên hoặc dưới khung chat. Chữ trong [ngoặc vuông] sẽ liên kết tới điều khoản dịch vụ (Thông báo quyền riêng tư → URL điều khoản). Để trống = dòng mặc định.",
     "closeFeedbackPrompt": "Mời góp ý khi đóng",
-    "closeFeedbackPromptHint": "Khi khách bấm × trong lúc trò chuyện, widget mời góp ý. Đóng sẽ kết thúc hội thoại (không hỏi khi đang chờ nhân viên)."
+    "closeFeedbackPromptHint": "Khi khách bấm × trong lúc trò chuyện, widget mời góp ý. Đóng sẽ kết thúc hội thoại (không hỏi khi đang chờ nhân viên).",
+    "composerPlaceholder": "Gợi ý trong ô chat",
+    "composerPlaceholderHint": "Chữ gợi ý trong ô chat khi còn trống, ví dụ \"Hỏi bất cứ điều gì\". Để trống = \"Nhập tin nhắn…\"."
   },
   "shopify": {
     "title": "Kết nối Shopify",
@@ -892,7 +894,7 @@
     "history": "Lịch sử",
     "quickReplyStyle": "Kiểu trả lời nhanh",
     "quickReplyChip": "Chip tô màu (mặc định)",
-    "quickReplyCard": "Thẻ có biểu tượng (nền trắng, viền)",
+    "quickReplyCard": "Chip trắng có viền (emoji hoặc biểu tượng)",
     "reviewLink": "Liên kết đánh giá",
     "reviewLinkHint": "Nơi nút \"Viết đánh giá\" trong tab Đánh giá của widget dẫn tới. Để trống = trang sản phẩm. Dùng {productUrl}#reviews để tới phần ứng dụng đánh giá, hoặc một URL https:// đầy đủ có chứa {productUrl}.",
     "historyTitle": "Lịch sử — {{name}}",

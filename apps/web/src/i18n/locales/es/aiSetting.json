@@ -566,5 +566,6 @@
     "previewBody": "…texto de la respuesta…",
     "saved": "Pie de respuesta guardado",
     "saveError": "No se pudo guardar el pie de respuesta"
-  }
+  },
+  "emoji": "Emoji"
 }

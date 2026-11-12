@@ -8,6 +8,8 @@ class ScenarioButtonDto {
   @IsBoolean() enabled: boolean;
   /** AI agents this button shows for (REQ-260825 R5); empty/absent = all. */
   @IsOptional() @IsArray() @IsInt({ each: true }) agentIds?: number[];
+  /** Leading emoji on the widget chip (ivy-docs T08 D1). */
+  @IsOptional() @IsString() @MaxLength(16) emoji?: string;
 }
 
 /** /ai-setting preview sandbox session (PLN-AiSetting-Preview W1). */

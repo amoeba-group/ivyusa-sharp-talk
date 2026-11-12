@@ -27,6 +27,8 @@ export interface TenantWidgetCopy {
   launcherTeaser?: Record<string, string>;
   /** AI disclosure line (PLN-261023-Widget-Disclosure-Line-Copy); `[…]` = terms link. */
   disclosureLine?: Record<string, string>;
+  /** Chat composer placeholder (ivy-docs T08 D3); absent = the widget's "Type a message…". */
+  composerPlaceholder?: Record<string, string>;
 }
 
 /** tenants — a tenant = a Shopify shop (FR-051). */

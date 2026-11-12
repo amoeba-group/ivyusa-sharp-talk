@@ -181,10 +181,12 @@ export const IVY_QUICK_REPLIES = [
 ];
 
 /** Scenario config incl. the flows reached from other entry points (My Orders, Affiliate). */
-export function scenarioConfig(opts: { withFlows?: boolean } = {}) {
-  const buttons = IVY_QUICK_REPLIES.map(({ id, emoji, label, action }) => ({
-    id, label, action, enabled: true,
-    emoji, // PROPOSED (T08)
+export function scenarioConfig(opts: { withFlows?: boolean; language?: string | null } = {}) {
+  // The API resolves labels to the language on screen (PLN-261023); so does this mock.
+  const ko = (opts.language ?? '').toUpperCase() === 'KO';
+  const buttons = IVY_QUICK_REPLIES.map(({ id, emoji, label, ko: koLabel, action }) => ({
+    id, label: ko ? koLabel : label, action, enabled: true,
+    emoji, // T08 D1
   }));
   if (opts.withFlows) {
     buttons.push(
