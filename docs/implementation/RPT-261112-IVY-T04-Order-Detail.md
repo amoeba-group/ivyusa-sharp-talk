@@ -95,8 +95,8 @@ Tên quốc gia theo ngôn ngữ: "United States" / "미국" / "Hoa Kỳ".
 
 | Mục | Trạng thái |
 |---|---|
-| Commit | ⏳ điền sau khi push lên `deploy/talk-ivyusa` |
-| CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ Cron sẽ deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log` |
+| Commit | `65374a8e` trên `deploy/talk-ivyusa` |
+| CI | ✅ run 43154837824, xong 04:29:44Z: verify ✅, e2e gate ✅ (có `@T04`), deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron sẽ deploy vài phút sau khi CI xanh.<br>• Máy dev bị ELB trả 403, nên không tự kiểm tra được.<br>• Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm `Deployed.` cho `65374a8e`. Commit tài liệu sau đó chỉ cập nhật code, không build lại |
 | SQL / migration | Không có |
 | Quyền PCD Address / Phone | ⏳ Chưa rõ, chủ dự án kiểm tra (§3) |
