@@ -31,7 +31,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N · API | P1 | T02 | ✅ | TC-07-01..07 |
 | 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · UI | P1 | T02 | ✅ code · ⏳ quyền PCD Address/Phone cho app Shopify | TC-04-01..07 |
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI · API · console | P1 | T02 | ✅ | TC-05-01..07 |
-| 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ⬜ | TC-06-01..03 |
+| 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T06-Review.md) | TC-06-01..03 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ⬜ | TC-08-01..05 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ⬜ | TC-09-01..04 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ⬜ | TC-10-01..05 |
@@ -173,7 +173,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Ngoài phạm vi:** coupon riêng từng khách (cần quyền Shopify `write_discounts`); icon theo nhóm khách (subscription / IVY member / Beautizen / Round).
 - **TC:** TC-05-01..07 — **7/7** ✅ (05..07 thêm: thông báo cũ, copy lỗi, chế độ chọn).
 
-### T06 · Review — ⬜
+### T06 · Review — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T06-Review.md)
 - **Figma:** `992:192`, `1008:2191`. **Gap:** G-10. **Bug:** BUG-009.
 - **Việc cần làm:** copy "Write Review"; tóm tắt "{title} · {price}"; `ReviewForm.tsx` hiện toast lỗi/thành công khi `POST /reviews`.
 - **TC:** TC-06-01..03.
