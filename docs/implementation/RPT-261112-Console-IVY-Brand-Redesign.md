@@ -64,6 +64,6 @@ E2E widget không bị ảnh hưởng: chỉ đổi `apps/web`, cổng CI chạy
 | Mục | Trạng thái |
 |---|---|
 | Phần 0 | ✅ `ef496f81`, CI run 43164775495 xanh |
-| Thiết kế lại | ⏳ điền sau khi push |
-| Server `talkaibotprd01` | ⏳ Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log` |
+| Thiết kế lại | ✅ `c2352982`, CI run 43166024802 xanh lúc 06:10:50Z: verify ✅, e2e gate ✅, deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm `Deployed.` cho `c2352982` |
 | SQL / migration | Không có |
