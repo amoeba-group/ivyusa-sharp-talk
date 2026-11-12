@@ -102,7 +102,7 @@ Kế hoạch: [PLN-261112-IVY-T05](../plan/PLN-261112-IVY-T05-Promo.md), duyệt
 
 | Mục | Trạng thái |
 |---|---|
-| Commit | ⏳ điền sau khi push lên `deploy/talk-ivyusa` |
-| CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ Cron sẽ deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log` |
+| Commit | `e20b4b1a` trên `deploy/talk-ivyusa` |
+| CI | ✅ run 43163422043, xong 05:48:15Z: verify ✅, e2e gate ✅ (có `@T05`), deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron sẽ deploy vài phút sau khi CI xanh.<br>• Máy dev bị ELB trả 403, nên không tự kiểm tra được.<br>• Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm `Deployed.` cho `e20b4b1a`. Commit tài liệu sau đó chỉ cập nhật code, không build lại |
 | SQL / migration | Không có |
