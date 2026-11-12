@@ -101,8 +101,8 @@ Sau đó đã xoá DB tạm.
 
 | Mục | Trạng thái |
 |---|---|
-| Commit | ⏳ điền sau khi push lên `deploy/talk-ivyusa` |
-| CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log` |
+| Commit | `e0b1b9b9` trên `deploy/talk-ivyusa` |
+| CI | ✅ run 43173207675, xong 07:12:36Z: verify ✅, e2e gate ✅ (có `@T08`), deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm `Deployed.` cho `e0b1b9b9` |
 | SQL / migration | Không có |
 | Cấu hình console | ⏳ Chủ dự án làm theo GUIDE sau khi deploy |
