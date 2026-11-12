@@ -184,9 +184,11 @@ export const IVY_QUICK_REPLIES = [
 export function scenarioConfig(opts: { withFlows?: boolean; language?: string | null } = {}) {
   // The API resolves labels to the language on screen (PLN-261023); so does this mock.
   const ko = (opts.language ?? '').toUpperCase() === 'KO';
-  const buttons = IVY_QUICK_REPLIES.map(({ id, emoji, label, ko: koLabel, action }) => ({
+  const buttons: Array<Record<string, unknown>> = IVY_QUICK_REPLIES.map(({ id, emoji, label, ko: koLabel, action }) => ({
     id, label: ko ? koLabel : label, action, enabled: true,
     emoji, // T08 D1
+    // T10 D2: the store collections under "Popular products", on the Product Help button.
+    ...(action === 'product_help' ? { categories: PRODUCT_CATEGORY_CONFIG } : {}),
   }));
   if (opts.withFlows) {
     buttons.push(
@@ -197,9 +199,26 @@ export function scenarioConfig(opts: { withFlows?: boolean; language?: string | 
   return { scenarioButtons: buttons };
 }
 
-/** Product Help categories — Figma 993:2207 (mirror ivyusa.com collections). */
-export const PRODUCT_CATEGORIES = [
-  'Hair', 'Makeup', 'Lashes', 'For Men', 'Fragrance', 'Nails', 'Face & Body', 'Fashion', 'For Kids', 'Wellness', 'K-Beauty',
+/** Product Help categories — SPEC SCR-IVY-12 order (Figma 993:2207), ivyusa.com collections (T10 D2). */
+export const PRODUCT_CATEGORY_CONFIG = [
+  { id: 'hair', label: 'Hair' },
+  { id: 'makeup-main', label: 'Makeup' },
+  { id: 'nails', label: 'Nails' },
+  { id: 'face-body-care-main', label: 'Face & Body' },
+  { id: 'lashes', label: 'Lashes' },
+  { id: 'for-men', label: 'For Men' },
+  { id: 'fragrance', label: 'Fragrance' },
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'for-kids', label: 'For Kids' },
+  { id: 'wellness', label: 'Wellness' },
+  { id: 'k-beauty', label: 'K-Beauty' },
+];
+export const PRODUCT_CATEGORIES = PRODUCT_CATEGORY_CONFIG.map((c) => c.label);
+
+/** "Popular products" for Nails (T10 D3) — what `GET /products/popular?category=nails` answers. */
+export const POPULAR_NAILS = [
+  { handle: 'gel-polish-set', title: 'Gel Polish Starter Set', vendor: 'KISS', price: 24.99, currency: 'USD', imageUrl: null, productUrl: 'https://ivyusa.com/products/gel-polish-set' },
+  { handle: 'impress-press-on', title: 'imPRESS Press-on Manicure', vendor: 'KISS', price: 9.99, currency: 'USD', imageUrl: null, productUrl: 'https://ivyusa.com/products/impress-press-on' },
 ];
 
 export const SUPPORT_EMAIL = 'help@ivy.com';

@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|
 | BUG-001 | Widget local gọi `localhost:5174/api/v1` → 404, không tạo được session | Env / Docs | 🟠 | Workaround (local) · docs Open | T00 |
 | BUG-002 | `nest start --watch` trên Windows tự restart liên tục khi không có file nào đổi | Env | 🟠 | Workaround | T00 |
-| BUG-003 | `POST /session/ensure` bị gọi 2 lần khi mở widget lần đầu → 2 session | Widget | 🟡 | Need info (prod?) | T01 |
+| BUG-003 | `POST /session/ensure` bị gọi 2 lần khi mở widget lần đầu → 2 session | Widget | 🟡 | Dev only: bản build gọi 1 lần (kiểm 2026-11-12, T10). Test consent thật dùng `acceptConsent()` | T01 · T10 |
 | BUG-004 | talk.ivyusa.com trả 403 (AWS ELB) cho mọi đường dẫn từ máy dev | Infra / Access | 🔴 | Open | T16 |
 | BUG-005 | Tài liệu nói production "chưa deploy", nhưng talk.ivyusa.com đã chạy production | Docs | 🟡 | Open | T16 |
 | BUG-006 | `npm install` ở root viết lại `package-lock.json` (npm 10.9.2) | Tooling | 🟡 | Workaround | — |
@@ -51,6 +51,13 @@
 - **Hiện tượng:** mỗi lần mở widget lần đầu có 2 request `POST /session/ensure`, mỗi cái trả **token khác nhau**. `session/opened` và `session/consent` dùng token thứ nhất.
 - **Nghi vấn:** `React.StrictMode` (`apps/widget/src/main.tsx:33`) chạy effect 2 lần ở dev. Nếu bản build production cũng gọi 2 lần thì mỗi khách tạo 2 session, làm phồng analytics và gây rủi ro lệch token.
 - **Cần làm:** kiểm trên bản build (`vite build && vite preview`) hoặc trên production. Nếu vẫn gọi 2 lần, dedupe bằng một promise dùng chung trong `useSession`.
+- **Kiểm ngày 2026-11-12 (T10):**
+  - Bản build (`vite preview`) gọi **1 lần**, 4/4 lượt. Dev server gọi **2 lần**, 3/3 lượt.
+  - Kết luận: do StrictMode, **không xảy ra trên production**.
+- **Hậu quả ở dev (thấy khi làm T10):**
+  - Trace của TC-10-04: 3 lần `ensure` không token → 3 phiên. Khách bấm Accept ở phiên `MeNGu…`. Lời `ensure` chậm hơn về sau, widget đổi sang phiên `DFEys…` (chưa đồng ý). Server từ chối kịch bản ("We cannot process chat messages until you accept…"), mà banner không hiện lại.
+  - Test dùng consent thật chuyển sang `acceptConsent()`: chờ mạng yên rồi mới bấm Accept.
+- **Còn mở (mức thấp):** widget vẫn nhận token của lời `ensure` về sau dù đã có consent ở token trước. Chỉ gây hại khi có 2 lời gọi song song, nên hiện chỉ ở dev.
 
 ## BUG-004 · talk.ivyusa.com 403
 - **Hiện tượng:** `curl -I https://talk.ivyusa.com/` (cả `/widget/`, `/api/v1/health`, `/ivyusa`, `/admin/login`; HTTP lẫn HTTPS) → `403 Forbidden`, `Server: awselb/2.0`. DNS: 32.201.31.106, 52.4.26.102. Thời điểm: 2026-11-09 16:10 ICT.

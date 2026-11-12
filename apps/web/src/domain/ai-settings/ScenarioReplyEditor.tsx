@@ -35,7 +35,7 @@ const POST_ACTIONS: ScenarioPostAction['type'][] = [
  * so showing the defaults does not freeze them into the tenant's row.
  */
 /** Chip ids the widget acts on: a control, or another shipped script. */
-const CONTROL_FOLLOW_UP_IDS = ['agent_connect', 'my_orders', 'end_chat'];
+const CONTROL_FOLLOW_UP_IDS = ['agent_connect', 'my_orders', 'end_chat', 'track_delivery'];
 
 export function ScenarioReplyEditor({
   action,

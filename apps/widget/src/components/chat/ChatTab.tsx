@@ -12,6 +12,7 @@ import { getStoredConsent, setStoredConsent } from '../../lib/consent';
 import { useAnalytics } from '../../lib/analytics';
 import type {
   ChatAttachment,
+  ProductCategory,
   ScenarioButton,
   ScenarioPostAction,
 } from '../../lib/types';
@@ -23,12 +24,20 @@ import { ContactEmailCard } from './ContactEmailCard';
 import { CallbackCard } from './CallbackCard';
 import { ConsultCategoryCard } from './ConsultCategoryCard';
 import { ConsentBanner } from './ConsentBanner';
-import { ScenarioMenu, type SubAction } from './ScenarioMenu';
+import { ScenarioMenu } from './ScenarioMenu';
 import { AuthGate } from './AuthGate';
 import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
-import { replyChips, START_OVER_ID, TRACK_DELIVERY_ID, withStartOver } from './reply-chips';
+import {
+  OTHER_CATEGORIES_ID,
+  PRODUCT_HELP_IDS,
+  replyChips,
+  START_OVER_ID,
+  TRACK_DELIVERY_ID,
+  withStartOver,
+} from './reply-chips';
+import { CategoryPicker, PopularProductsAnswer, ProductHelpAnswer } from './ProductHelp';
 import { ChatChip } from './ChatChip';
 import { OrderDetailView } from '../orders/OrderDetail';
 import { chipBelongsTo } from '../notifications/tab-chips';
@@ -44,8 +53,22 @@ type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'callback' | '
  * thread had when it appeared, so it stays where it was asked and a later reply
  * lands below it — the single `inline` slot always sat at the bottom, under
  * whatever came after.
+ *
+ * Product Help (T10) adds three: its topic menu, the category picker, and a
+ * category's popular products. Their chip rows stay on screen; `picked`
+ * remembers which chip of the row was tapped, so it stays outlined.
  */
-type ThreadInsert = { key: string; kind: 'orders' | 'menu'; at: number; asked?: string | null };
+type ThreadInsert = {
+  key: string;
+  kind: 'orders' | 'menu' | 'product' | 'categories' | 'popular';
+  at: number;
+  asked?: string | null;
+  /** product / categories / popular: the tenant's Product Help categories. */
+  categories?: ProductCategory[];
+  /** popular: the category shown. */
+  category?: ProductCategory;
+  picked?: string;
+};
 
 
 export function ChatTab() {
@@ -350,6 +373,10 @@ export function ChatTab() {
       case 'cancel_refund':
         void scenario('cancel_refund', button.label).then(runPostAction);
         return;
+      case 'product_help':
+        // In the thread, not in place of the menu (ivy-docs T10 D1).
+        addInsert('product', button.label, { categories: button.categories ?? [] });
+        return;
       case 'message':
       default:
         // Custom button: ask the question it carries, or its label when it
@@ -426,9 +453,53 @@ export function ChatTab() {
     setInline('auth');
   }
 
-  function addInsert(kind: ThreadInsert['kind'], asked?: string | null) {
+  function addInsert(
+    kind: ThreadInsert['kind'],
+    asked?: string | null,
+    extra: Pick<ThreadInsert, 'categories' | 'category'> = {},
+  ) {
     insertSeq.current += 1;
-    setInserts((prev) => [...prev, { key: `${kind}-${insertSeq.current}`, kind, at: messages.length, asked }]);
+    setInserts((prev) => [...prev, { key: `${kind}-${insertSeq.current}`, kind, at: messages.length, asked, ...extra }]);
+  }
+
+  /** Outline the chip the shopper tapped in an insert's row (T10 D1). */
+  function markPicked(key: string, picked: string) {
+    setInserts((prev) => prev.map((x) => (x.key === key ? { ...x, picked } : x)));
+  }
+
+  /** A topic in the Product Help menu (T10 D1, Figma 1006:5588). */
+  function handleProductHelp(insert: ThreadInsert, id: string, label: string) {
+    markPicked(insert.key, id);
+    switch (id) {
+      case PRODUCT_HELP_IDS.POPULAR:
+        addInsert('categories', label, { categories: insert.categories });
+        return;
+      case PRODUCT_HELP_IDS.USAGE:
+        void doSend(t('chat.templates.usage'));
+        return;
+      case PRODUCT_HELP_IDS.INGREDIENTS:
+        void doSend(t('chat.templates.ingredients'));
+        return;
+      case PRODUCT_HELP_IDS.EXCHANGE:
+        // The shopper's bubble is the chip they tapped, as in the design; the
+        // answer and its chips are the tenant's copy of the script (T10 D4).
+        void scenario('return_exchange', label).then(runPostAction);
+        return;
+      case PRODUCT_HELP_IDS.RESTOCK:
+        // Asked of the AI: nothing sends back-in-stock alerts yet (T10 §8-4a).
+        void doSend(t('chat.templates.restock'));
+        return;
+      case START_OVER_ID:
+        startOver();
+        return;
+    }
+  }
+
+  /** "Other categories" / "Start over" under a category's popular products. */
+  function handlePopularChip(insert: ThreadInsert, id: string, label: string) {
+    markPicked(insert.key, id);
+    if (id === OTHER_CATEGORIES_ID) addInsert('categories', label, { categories: insert.categories });
+    else if (id === START_OVER_ID) startOver();
   }
 
   /** The My Orders answer, pinned here in the thread (T09). */
@@ -459,19 +530,6 @@ export function ChatTab() {
       return;
     }
     void scenario('shipping_policy', label).then(runPostAction);
-  }
-
-  function handleSubAction(a: SubAction) {
-    switch (a) {
-      case 'usage':
-        return doSend(t('chat.templates.usage'));
-      case 'ingredients':
-        return doSend(t('chat.templates.ingredients'));
-      case 'exchange':
-        return void scenario('return_exchange', t('chat.templates.exchange'));
-      case 'restock':
-        return doSend(t('chat.templates.restock'));
-    }
   }
 
   /** Scenario follow-up chip clicks: control actions or another script. */
@@ -537,6 +595,45 @@ export function ChatTab() {
             // The cards arrive after the answer mounts; follow them down.
             onSettled={scrollToEnd}
           />
+        ) : x.kind === 'product' ? (
+          <ProductHelpAnswer
+            key={x.key}
+            insertKey={x.key}
+            asked={x.asked}
+            hasCategories={!!x.categories?.length}
+            picked={x.picked}
+            disabled={sending}
+            onChip={(id, label) => handleProductHelp(x, id, label)}
+          />
+        ) : x.kind === 'categories' ? (
+          <CategoryPicker
+            key={x.key}
+            insertKey={x.key}
+            asked={x.asked}
+            categories={x.categories ?? []}
+            picked={x.picked}
+            disabled={sending}
+            onCategory={(c) => {
+              markPicked(x.key, `category:${c.id}`);
+              addInsert('popular', null, { category: c, categories: x.categories });
+            }}
+            onStartOver={() => {
+              markPicked(x.key, `control:${START_OVER_ID}`);
+              startOver();
+            }}
+          />
+        ) : x.kind === 'popular' && x.category ? (
+          <PopularProductsAnswer
+            key={x.key}
+            insertKey={x.key}
+            sessionToken={sessionToken}
+            category={x.category}
+            picked={x.picked}
+            disabled={sending}
+            onChip={(id, label) => handlePopularChip(x, id, label)}
+            // The cards arrive after the answer mounts; follow them down.
+            onSettled={scrollToEnd}
+          />
         ) : (
           <div key={x.key} className="space-y-2">
             <MessageBubble
@@ -546,7 +643,6 @@ export function ChatTab() {
               <ScenarioMenu
                 buttons={scenarioButtons}
                 onScenario={handleScenario}
-                onSubAction={handleSubAction}
                 style={quickReplyStyle}
               />
             )}
@@ -668,7 +764,6 @@ export function ChatTab() {
           <ScenarioMenu
             buttons={scenarioButtons}
             onScenario={handleScenario}
-            onSubAction={handleSubAction}
             style={quickReplyStyle}
           />
         )}

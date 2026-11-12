@@ -250,6 +250,50 @@ export interface ShopifyOrderAddresses {
   billing: ShopifyMailingAddress | null;
 }
 
+/**
+ * A collection's best sellers (ivy-docs T10 D3). Needs read_products only.
+ * `collectionByIdentifier` + `ProductCollectionSortKeys.BEST_SELLING`, checked
+ * against the 2026-01 Admin GraphQL reference. More are asked than shown:
+ * drafts and products not on the online store are dropped afterwards.
+ */
+const COLLECTION_BEST_SELLERS_QUERY = `
+query CollectionBestSellers($handle: String!, $first: Int!) {
+  collectionByIdentifier(identifier: { handle: $handle }) {
+    products(first: $first, sortKey: BEST_SELLING) {
+      nodes {
+        handle
+        title
+        vendor
+        status
+        onlineStoreUrl
+        featuredMedia { preview { image { url } } }
+        priceRangeV2 { minVariantPrice { amount currencyCode } }
+      }
+    }
+  }
+}`;
+
+/** A best seller as the storefront shows it. */
+export interface ShopifyBestSeller {
+  handle: string;
+  title: string;
+  vendor: string | null;
+  price: number | null;
+  currency: string | null;
+  imageUrl: string | null;
+  productUrl: string;
+}
+
+interface BestSellerNode {
+  handle?: string | null;
+  title?: string | null;
+  vendor?: string | null;
+  status?: string | null;
+  onlineStoreUrl?: string | null;
+  featuredMedia?: { preview?: { image?: { url?: string | null } | null } | null } | null;
+  priceRangeV2?: { minVariantPrice?: { amount?: string | null; currencyCode?: string | null } | null } | null;
+}
+
 const CUSTOMER_QUERY = `
 query Customer($id: ID!) {
   customer(id: $id) {
@@ -421,6 +465,43 @@ export class ShopifyAdminClient {
     const o = body.data?.order;
     if (!o) return null;
     return { shipping: o.shippingAddress ?? null, billing: o.billingAddress ?? null };
+  }
+
+  /**
+   * Up to `limit` best sellers of one collection, in Shopify's best-selling
+   * order (ivy-docs T10 D3). Only ACTIVE products published to the online store:
+   * a shopper is sent to `productUrl`, and an unpublished product has none.
+   * `null` = the store has no collection with that handle. Errors throw.
+   */
+  async fetchCollectionBestSellers(
+    shopDomain: string,
+    token: string,
+    handle: string,
+    limit: number,
+  ): Promise<ShopifyBestSeller[] | null> {
+    const body = (await this.gql(shopDomain, token, COLLECTION_BEST_SELLERS_QUERY, {
+      handle,
+      // Head-room for the drafts and unpublished rows filtered out below.
+      first: Math.min(limit * 3, 50),
+    })) as { data?: { collectionByIdentifier?: { products?: { nodes?: BestSellerNode[] } } | null } };
+    const collection = body.data?.collectionByIdentifier;
+    if (!collection) return null;
+    const out: ShopifyBestSeller[] = [];
+    for (const n of collection.products?.nodes ?? []) {
+      if (out.length >= limit) break;
+      if (n.status !== 'ACTIVE' || !n.onlineStoreUrl || !n.handle || !n.title) continue;
+      const amount = Number(n.priceRangeV2?.minVariantPrice?.amount);
+      out.push({
+        handle: n.handle,
+        title: n.title,
+        vendor: n.vendor?.trim() || null,
+        price: Number.isFinite(amount) ? amount : null,
+        currency: n.priceRangeV2?.minVariantPrice?.currencyCode ?? null,
+        imageUrl: n.featuredMedia?.preview?.image?.url ?? null,
+        productUrl: n.onlineStoreUrl,
+      });
+    }
+    return out;
   }
 
   /**

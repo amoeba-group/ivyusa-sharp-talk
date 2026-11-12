@@ -85,3 +85,47 @@ export function orderAnswerChips(
     startOver,
   ];
 }
+
+/** Product Help topics (ivy-docs T10 D1, Figma 1006:5588). */
+export const PRODUCT_HELP_IDS = {
+  POPULAR: 'popular_products',
+  USAGE: 'usage',
+  INGREDIENTS: 'ingredients',
+  EXCHANGE: 'exchange_return',
+  RESTOCK: 'restock_alert',
+} as const;
+/** "Other categories" under a popular-products answer. */
+export const OTHER_CATEGORIES_ID = 'other_categories';
+
+/**
+ * The Product Help menu: Popular products first when the tenant listed store
+ * categories (none = nothing to browse, so no chip), then the design's four
+ * topics and Start over.
+ */
+export function productHelpChips(
+  hasCategories: boolean,
+  labels: Record<'popular' | 'usage' | 'ingredients' | 'exchange' | 'restock' | 'startOver', string>,
+): Array<{ id: string; label: string }> {
+  return [
+    ...(hasCategories ? [{ id: PRODUCT_HELP_IDS.POPULAR, label: labels.popular }] : []),
+    { id: PRODUCT_HELP_IDS.USAGE, label: labels.usage },
+    { id: PRODUCT_HELP_IDS.INGREDIENTS, label: labels.ingredients },
+    { id: PRODUCT_HELP_IDS.EXCHANGE, label: labels.exchange },
+    { id: PRODUCT_HELP_IDS.RESTOCK, label: labels.restock },
+    { id: START_OVER_ID, label: labels.startOver },
+  ];
+}
+
+/**
+ * Category chips, then Start over. A category whose handle happens to equal a
+ * control id is still a category: callers tell them apart by `kind`.
+ */
+export function categoryChips(
+  categories: ReadonlyArray<{ id: string; label: string }>,
+  startOverLabel: string,
+): Array<{ id: string; label: string; kind: 'category' | 'control' }> {
+  return [
+    ...categories.map((c) => ({ id: c.id, label: c.label, kind: 'category' as const })),
+    { id: START_OVER_ID, label: startOverLabel, kind: 'control' as const },
+  ];
+}

@@ -567,5 +567,16 @@
     "saved": "Pie de respuesta guardado",
     "saveError": "No se pudo guardar el pie de respuesta"
   },
-  "emoji": "Emoji"
+  "emoji": "Emoji",
+  "scriptProductHelp": "Abre el menú de ayuda de producto en el chat: Cómo usar · Ingredientes · Cambio / Devolución · Aviso de reposición, y Productos populares si hay categorías abajo. Cambio / Devolución usa el guion return_exchange.",
+  "productCategories": {
+    "title": "Categorías de productos",
+    "hint": "Se muestran en \"Productos populares\". La colección es lo que va después de /collections/ en la URL de tu tienda; también puedes pegar la URL completa. El widget muestra los más vendidos de esa colección.",
+    "name": "Nombre ({{lang}})",
+    "collection": "Colección de Shopify",
+    "nameMissing": "Añade un nombre.",
+    "handleInvalid": "No es un identificador de colección. Usa letras, números y guiones, p. ej. nails.",
+    "add": "Añadir categoría",
+    "fixBeforeSave": "Algunas categorías necesitan un nombre o una colección válida. Corrígelas y guarda."
+  }
 }

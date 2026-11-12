@@ -526,8 +526,45 @@ export interface ScenarioButtonResponse {
   message?: string;
   /** Leading emoji on the chip (ivy-docs T08 D1, BR-11); absent = the action's icon. */
   emoji?: string;
+  /**
+   * Product Help only (ivy-docs T10 D2): the store collections offered under
+   * "Popular products", names resolved to this session's language. Absent or
+   * empty = the tenant set none, and the chip is not offered.
+   */
+  categories?: ProductCategoryOption[];
+}
+
+/** One Product Help category: `id` is the Shopify collection handle. */
+export interface ProductCategoryOption {
+  id: string;
+  label: string;
 }
 
 export interface ScenarioConfigResponse {
   scenarioButtons: ScenarioButtonResponse[];
+}
+
+// ---- popular products (ivy-docs T10 D3) ---------------------------------
+export interface PopularProductCard {
+  handle: string;
+  title: string;
+  vendor: string | null;
+  price: number | null;
+  currency: string | null;
+  imageUrl: string | null;
+  /** The product page on the storefront (always set: unpublished products are left out). */
+  productUrl: string;
+}
+
+/**
+ * `GET /products/popular?category=` — the best sellers of one configured
+ * collection, read live from the store. `available: false` = the store could
+ * not be asked (no connection, error, timeout); the widget then offers only
+ * `collectionUrl`.
+ */
+export interface PopularProductsResponse {
+  available: boolean;
+  products: PopularProductCard[];
+  /** The collection on the storefront, best-selling first; null when the tenant has no storefront. */
+  collectionUrl: string | null;
 }

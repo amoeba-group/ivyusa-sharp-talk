@@ -194,12 +194,20 @@ export const es: Translation = {
       affiliate: 'Afiliados',
       myOrders: 'Mis pedidos',
     },
+    // Product Help in the thread (ivy-docs T10, SCR-IVY-12; KO from Figma 1006:5588).
     productHelp: {
-      usage: 'Uso',
+      lead: '¿En qué podemos ayudarte?\nElige una opción 😊',
+      popular: 'Productos populares',
+      usage: 'Cómo usar',
       ingredients: 'Ingredientes',
-      exchange: 'Cambio · Devolución',
+      exchange: 'Cambio / Devolución',
       restock: 'Aviso de reposición',
-      back: 'Atrás',
+      pickCategory: '¿Qué categoría quieres ver? 😊',
+      popularLead: 'Estos son los productos más populares de {{category}} 👇',
+      popularEmpty: 'Ahora mismo no hay productos populares de {{category}} para mostrar.',
+      popularUnavailable: 'No pude cargar los productos populares de {{category}} en este momento.',
+      seeAll: 'Ver todo {{category}} en {{store}}',
+      otherCategories: 'Otras categorías',
     },
     templates: {
       cancelRefund: 'Me gustaría cancelar o solicitar un reembolso de mi pedido.',

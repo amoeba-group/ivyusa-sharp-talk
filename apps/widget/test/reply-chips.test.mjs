@@ -83,3 +83,22 @@ test('orderAnswerChips: three chips with orders, only Start over without', () =>
   assert.deepEqual(orderAnswerChips(true, labels).map((c) => c.label), ['Track delivery', 'Cancel order', 'Start over']);
   assert.deepEqual(orderAnswerChips(false, labels).map((c) => c.id), [START_OVER_ID]);
 });
+
+// ── Product Help (ivy-docs T10) ─────────────────────────────────────────────
+const { productHelpChips, categoryChips, PRODUCT_HELP_IDS } = await import(
+  `data:text/javascript,${encodeURIComponent(outputFiles[0].text)}`
+);
+const HELP = { popular: 'Popular products', usage: 'How to use', ingredients: 'Ingredients', exchange: 'Exchange / Return', restock: 'Restock alert', startOver: 'Start over' };
+
+test('Product Help menu: the design topics and Start over; Popular products only with categories', () => {
+  assert.deepEqual(productHelpChips(false, HELP).map((c) => c.label), ['How to use', 'Ingredients', 'Exchange / Return', 'Restock alert', 'Start over']);
+  const withCats = productHelpChips(true, HELP);
+  assert.equal(withCats[0].id, PRODUCT_HELP_IDS.POPULAR);
+  assert.equal(withCats.at(-1).id, START_OVER_ID);
+  assert.equal(new Set(withCats.map((c) => c.id)).size, withCats.length);
+});
+
+test('category chips keep the configured order, end with Start over, and say which is which', () => {
+  const chips = categoryChips([{ id: 'nails', label: 'Nails' }, { id: 'start_over', label: 'Odd handle' }], 'Start over');
+  assert.deepEqual(chips.map((c) => [c.id, c.kind]), [['nails', 'category'], ['start_over', 'category'], ['start_over', 'control']]);
+});

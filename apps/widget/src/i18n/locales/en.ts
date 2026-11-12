@@ -196,12 +196,20 @@ export const en = {
       affiliate: 'Affiliate',
       myOrders: 'My Orders',
     },
+    // Product Help in the thread (ivy-docs T10, SCR-IVY-12; KO from Figma 1006:5588).
     productHelp: {
-      usage: 'Usage',
+      lead: 'What do you need help with?\nPlease pick an item 😊',
+      popular: 'Popular products',
+      usage: 'How to use',
       ingredients: 'Ingredients',
-      exchange: 'Exchange · Return',
+      exchange: 'Exchange / Return',
       restock: 'Restock alert',
-      back: 'Back',
+      pickCategory: 'Which category would you like to see? 😊',
+      popularLead: 'Here are our most popular {{category}} products 👇',
+      popularEmpty: 'There are no popular {{category}} products to show right now.',
+      popularUnavailable: "I couldn't load the popular {{category}} products right now.",
+      seeAll: 'See all {{category}} on {{store}}',
+      otherCategories: 'Other categories',
     },
     templates: {
       cancelRefund: 'I would like to cancel or request a refund for my order.',

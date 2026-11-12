@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §8 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112-T10](../implementation/RPT-261112-IVY-T10-Product-Help.md). Trả lời §8: (1) ok; (2) **a**, chủ đề trước; (3) **a**, chính sách ivyusa.com; (4) **a**, Restock alert hỏi AI |
 | Task | [ivy-docs/TASKS.md T10](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-12 · G-16 · BR-17 · Q-04 |
 | Figma | `1006:5588` (menu con): **xem được**, khớp SPEC. `993:2207` / `993:2416` (danh mục): Figma MCP hết lượt gọi. Nếu tiện, gửi ảnh 2 frame này như T04 / T08 |
 | TC | TC-10-01..05 ([e2e/tests/10-product-help.spec.ts](../../e2e/tests/10-product-help.spec.ts)), baseline **1/5** (05 xanh) |

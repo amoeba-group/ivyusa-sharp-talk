@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T09|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T09|@T10|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -43,7 +43,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
 | T08 | 1 / 5 → **6 / 6** ✅ (T08, 2026-11-12; thêm TC-08-06) | tất cả | — |
 | T09 | 1 / 4 → **7 / 7** ✅ (T09, 2026-11-12; thêm TC-09-05..07) | tất cả | — |
-| T10 | 1 / 5 | TC-10-05 | TC-10-01, TC-10-02, TC-10-03, TC-10-04 |
+| T10 | 1 / 5 → **7 / 7** ✅ (T10, 2026-11-12; thêm TC-10-06..07) | tất cả | — |
 | T11 | 0 / 4 | — | TC-11-01, TC-11-02, TC-11-03, TC-11-04 |
 | T12 | 0 / 4 | — | TC-12-01, TC-12-02, TC-12-03, TC-12-04 |
 | T13 | 4 / 4 | TC-13-01, TC-13-02, TC-13-04, TC-13-03 | — |
@@ -279,11 +279,32 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
-| TC-10-01 | Menu con | Usage/How to use · Ingredients · Exchange / Return · Restock alert · Start over | SCR-IVY-12 |
-| TC-10-02 | Danh mục | 11 chip: Hair … K-Beauty | G-16, BR-17 |
-| TC-10-03 | Sản phẩm phổ biến | Nails → "Popular products" → "Gel Polish Starter Set"; có gọi `/products` hoặc `/products/recommendations` | G-16 |
-| TC-10-04 | Chính sách đổi trả | Exchange / Return → câu chứa "7 days" + "unopened" | SCR-IVY-12 |
+| TC-10-01 | Menu con | Trong `product-help`: bong bóng khách "Product inquiry", "What do you need help with?", chip How to use · Ingredients · Exchange / Return · Restock alert · Start over · Popular products; menu đầu (`quick-replies`) vẫn còn | SCR-IVY-12 |
+| TC-10-02 | Danh mục | Popular products → `product-categories`: bong bóng khách "Popular products", 11 chip Hair … K-Beauty + Start over | G-16, BR-17 |
+| TC-10-03 | Sản phẩm phổ biến | Popular products → Nails → "Here are our most popular Nails products" + thẻ "Gel Polish Starter Set" (`product-card`, link trang sản phẩm, tab mới); link "See all Nails on ivyusa.com"; gọi `GET /products/popular?category=nails` | G-16 |
+| TC-10-04 | Chính sách đổi trả | Exchange / Return (API thật, consent **bấm thật**) → bong bóng khách "Exchange / Return", câu chứa "10 days" + "unopened", chip Track delivery · Cancel order · Start over | SCR-IVY-12, PLN-261112-T10 §8-3a |
 | TC-10-05 | Đang gõ (API thật) | trong lúc chờ trả lời thấy "Writing a reply…" | BR-16 |
+| TC-10-06 | Shopify không trả lời | mock `popular: 'unavailable'` → "I couldn't load the popular Lashes products right now.", không có thẻ, có link "See all Lashes on ivyusa.com" | PLN-261112-T10 D3 |
+| TC-10-07 | Chip đã chọn | Popular products `aria-pressed=true`, Ingredients `false`; Nails `true`; "Other categories" → picker thứ 2 ở dưới | PLN-261112-T10 D1 |
+
+**Kết quả (2026-11-12):** 7/7, lặp ×3 (2 worker): 21/21. Cổng CI mới (thêm `@T10`) ×2: 168/168. Toàn bộ desktop: 94 pass / 8 fail, mọi ca đỏ thuộc T11–T12 chưa làm.
+
+> **Đổi so với bản TC ban đầu:** TC-10-02 / 03 bấm Popular products trước (thứ tự §8-2a). TC-10-03 gọi API mới `/products/popular`, không phải `/products`. TC-10-04 kiểm "10 days" theo chính sách thật (§8-3a), không phải "7 days" của thiết kế.
+
+> **Consent thật: dùng `acceptConsent()`** (TC-10-04, TC-09-05).
+> - Trên dev server, widget gọi `/session/ensure` 2–3 lần lúc mở (StrictMode, BUG-003). Lời gọi về sau có thể đổi token **sau khi** đã bấm Accept, nên consent nằm ở phiên bị bỏ.
+> - `acceptConsentIfShown()` còn có thể bỏ qua bước Accept nếu banner chưa hiện. Kết quả là server từ chối kịch bản: 1/21 lần chạy TC-10-04.
+> - `acceptConsent()` chờ mạng yên rồi mới bấm. Sau khi đổi: 16/16 lượt TC-10-04 + TC-09-05.
+
+**Kiểm thử bổ sung cho T10:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit types | `packages/types/src/common/product-category.spec.ts` | Đọc handle từ handle trần hoặc URL cửa hàng; handle chữ Hàn; từ chối khoảng trắng, `..`, quá 100 ký tự |
+| Unit API | `ai-config.service.product-categories.spec.ts` | Lưu giữ `categories` (BUG-022); chuẩn hoá handle; bỏ dòng thiếu tên / handle hỏng / trùng; tối đa 20; chỉ nút Product help; trả tên theo ngôn ngữ phiên |
+| Unit API | `product-popular.service.spec.ts` | Collection đã cấu hình → sản phẩm + link; cache 15 phút; collection lạ / nút tắt → 400; Shopify lỗi / không kết nối → `available: false`, nhớ 60 giây; timeout 4 giây; client lọc DRAFT và sản phẩm không lên cửa hàng, đúng thứ tự best-selling |
+| Unit widget | `apps/widget/test/reply-chips.test.mjs` | `productHelpChips`: Popular products chỉ khi có danh mục, kết thúc bằng Start over; `categoryChips`: giữ thứ tự, phân biệt danh mục với chip điều khiển |
+| Ảnh chụp | thủ công, 380px | KO khớp `1006:5588`: chip 교환 / 반품 viền xanh, bong bóng khách, câu 10일, chip 배송 조회 · 주문 취소 · 처음으로. EN: thẻ sản phẩm + "See all Nails on ivyusa.com" |
 
 ## T11 · Contact (`11-contact.spec.ts`)
 

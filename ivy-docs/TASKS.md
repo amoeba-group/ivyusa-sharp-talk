@@ -34,7 +34,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ✅ | TC-06-01..05 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
-| 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T10-Product-Help.md) | TC-10-01..05 |
+| 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ✅ | TC-10-01..07 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ⬜ | TC-11-01..04 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ⬜ (TC đã xanh 4/4, chỉ còn rà visual/copy) | TC-13-01..04 |
@@ -220,10 +220,20 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Thêm `@T09` vào `test:ci`.
 - **TC:** TC-09-01..07 — **7/7** ✅ (05: Start over ở kịch bản khác; 06: Back từ Order Detail; 07: Track delivery).
 
-### T10 · Product Help — 🟨 chờ duyệt · [PLN](../docs/plan/PLN-261112-IVY-T10-Product-Help.md)
-- **Figma:** `1006:5588`, `993:2207`, `1008:2613`, `1008:2722`. **Gap:** G-16. **BR:** 17.
-- **Việc cần làm:** menu con (Usage · Ingredients · Exchange / Return · Restock alert · **Start over**); nhánh danh mục từ `GET /products/categories` → chip → "Popular products" (`/products/recommendations` hoặc `/products?category=`) → thẻ sản phẩm; Exchange / Return → câu chính sách 7 ngày (copy tenant/KB). Q-04: ẩn 2 chip "??".
-- **TC:** TC-10-01..05.
+### T10 · Product Help — ✅ (2026-11-12) · [PLN](../docs/plan/PLN-261112-IVY-T10-Product-Help.md) · [RPT](../docs/implementation/RPT-261112-IVY-T10-Product-Help.md)
+- **Figma:** `1006:5588` (đối chiếu qua Figma MCP). `993:2207` / `993:2416` không xem được (hết lượt gọi). **Gap:** G-16. **BR:** 17. **Q-04:** chốt bỏ 2 chip "??".
+- **Quyết định của chủ dự án (2026-11-12):**
+  - Chủ đề trước, đúng `1006:5588`. Chip **Popular products** mở 11 danh mục, chọn danh mục thì hiện sản phẩm.
+  - Exchange / Return và Cancel order theo chính sách thật trên ivyusa.com: **10 ngày**, email hello@ivyusa.com để huỷ.
+  - Restock alert giữ là câu hỏi cho AI. Báo hàng về thật để task riêng (G-25).
+- **Đã làm:**
+  - Product inquiry trả lời **trong luồng chat**: bong bóng khách, "What do you need help with?", chip Popular products · How to use · Ingredients · Exchange / Return · Restock alert · Start over. Hàng chip vẫn hiện, chip đã chọn viền xanh (`aria-pressed`).
+  - Danh mục cấu hình trên nút Product inquiry ở console: tên + collection Shopify, tối đa 20. Seed IVY 11 danh mục.
+  - API `GET /products/popular?category=`: 5 sản phẩm "Best selling" của collection, đọc trực tiếp Shopify Admin API. Chỉ nhận collection đã cấu hình; cache 15 phút; Shopify lỗi hoặc chậm 4 giây thì trả link tới collection trên cửa hàng.
+  - Exchange / Return chạy kịch bản `return_exchange` với copy tenant; seed IVY câu chính sách + chip Track delivery · Cancel order.
+  - Thêm `@T10` vào `test:ci`.
+- **TC:** TC-10-01..07 — **7/7** ✅ (06: Shopify không trả lời; 07: chip đã chọn, "Other categories").
+- **Production:** nhập cấu hình theo [GUIDE-261112-IVY-Product-Help-Config](../docs/guide/GUIDE-261112-IVY-Product-Help-Config.md).
 
 ### T11 · Contact Support & form — ⬜ (có thể có migration)
 - **Figma:** `1006:5650`, `1006:6529`, `1006:6597`. **Gap:** G-17, G-18. **BR:** 14, 15.

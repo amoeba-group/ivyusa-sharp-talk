@@ -567,5 +567,16 @@
     "saved": "Answer footer saved",
     "saveError": "Could not save the answer footer"
   },
-  "emoji": "Emoji"
+  "emoji": "Emoji",
+  "scriptProductHelp": "Opens the Product Help menu in the chat: How to use · Ingredients · Exchange / Return · Restock alert, and Popular products when categories are listed below. Exchange / Return speaks the return_exchange script.",
+  "productCategories": {
+    "title": "Product categories",
+    "hint": "Shown under \"Popular products\". Collection is the part after /collections/ in your store URL — pasting the whole URL works too. The widget lists that collection's best sellers.",
+    "name": "Name ({{lang}})",
+    "collection": "Shopify collection",
+    "nameMissing": "Add a name.",
+    "handleInvalid": "Not a collection handle. Use letters, numbers and hyphens, e.g. nails.",
+    "add": "Add category",
+    "fixBeforeSave": "Some product categories need a name or a valid collection. Fix them, then save."
+  }
 }

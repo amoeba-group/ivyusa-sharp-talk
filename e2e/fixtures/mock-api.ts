@@ -9,6 +9,7 @@ import {
   scenarioConfig,
   tracking,
   PRODUCT_CATEGORIES,
+  POPULAR_NAILS,
 } from './ivy-data';
 
 /**
@@ -37,6 +38,8 @@ export interface MockOptions {
   failures?: Record<string, number>;
   /** Order Detail addresses: 'unavailable' = the store refused them (no PCD access, T04). */
   addresses?: 'ok' | 'unavailable';
+  /** Popular products (T10 D3): 'unavailable' = the store could not be asked; the answer offers the store link. */
+  popular?: 'ok' | 'unavailable';
 }
 
 export interface RecordedCall {
@@ -77,6 +80,7 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     emptyFeed: false,
     failures: {},
     addresses: 'ok',
+    popular: 'ok',
     ...opts,
   };
   const state = { notifications: o.emptyFeed ? [] : seedNotifications() };
@@ -205,6 +209,18 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     // ── Products (Product Help, T10) ───────────────────────────────────────────
     if (method === 'GET' && path === '/products/categories') {
       return route.fulfill({ json: ok(PRODUCT_CATEGORIES) });
+    }
+    if (method === 'GET' && path === '/products/popular') {
+      record(req, path, url);
+      const category = url.searchParams.get('category') ?? '';
+      const collectionUrl = `https://ivyusa.com/collections/${category}?sort_by=best-selling`;
+      return route.fulfill({
+        json: ok(
+          o.popular === 'unavailable'
+            ? { available: false, products: [], collectionUrl }
+            : { available: true, products: category === 'nails' ? POPULAR_NAILS : [], collectionUrl },
+        ),
+      });
     }
     if (method === 'GET' && (path === '/products' || path === '/products/recommendations')) {
       record(req, path, url);

@@ -567,5 +567,16 @@
     "saved": "답변 꼬리말을 저장했습니다",
     "saveError": "답변 꼬리말을 저장하지 못했습니다"
   },
-  "emoji": "이모지"
+  "emoji": "이모지",
+  "scriptProductHelp": "채팅에서 제품 도움말 메뉴를 엽니다: 제품 사용법 · 성분 문의 · 교환 / 반품 · 재입고 알림, 아래에 카테고리가 있으면 인기상품도 표시합니다. 교환 / 반품은 return_exchange 스크립트로 답합니다.",
+  "productCategories": {
+    "title": "제품 카테고리",
+    "hint": "\"인기상품\"에 표시됩니다. 컬렉션은 스토어 URL에서 /collections/ 뒤의 부분입니다. URL 전체를 붙여 넣어도 됩니다. 위젯은 해당 컬렉션의 베스트셀러를 보여줍니다.",
+    "name": "이름 ({{lang}})",
+    "collection": "Shopify 컬렉션",
+    "nameMissing": "이름을 입력하세요.",
+    "handleInvalid": "컬렉션 핸들이 아닙니다. 영문, 숫자, 하이픈을 사용하세요. 예: nails",
+    "add": "카테고리 추가",
+    "fixBeforeSave": "이름이나 컬렉션이 올바르지 않은 카테고리가 있습니다. 수정한 뒤 저장하세요."
+  }
 }

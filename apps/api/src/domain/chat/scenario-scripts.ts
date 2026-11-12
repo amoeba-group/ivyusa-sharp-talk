@@ -346,7 +346,9 @@ export function resolveScriptAction(action: string): string {
  * Chip ids the widget handles itself rather than as a script.
  * `end_chat` is styled separately in the thread; the other two open a flow.
  */
-export const CONTROL_FOLLOW_UP_IDS = new Set(['agent_connect', 'my_orders', 'end_chat']);
+// `track_delivery` (ivy-docs T09/T10): the widget opens the shopper's delivery
+// cards — the chip the design puts under the return policy answer.
+export const CONTROL_FOLLOW_UP_IDS = new Set(['agent_connect', 'my_orders', 'end_chat', 'track_delivery']);
 
 /**
  * A follow-up chip only does something if its id names a script or a control.

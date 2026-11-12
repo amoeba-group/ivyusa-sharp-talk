@@ -4,6 +4,7 @@ import { CAPABILITY, CJM_STAGE, Principal } from '@sharptalk/types';
 import { buildPagination, normalizePage } from '@sharptalk/common';
 import { ProductService } from './product.service';
 import { ProductSyncService } from './product-sync.service';
+import { ProductPopularService } from './product-popular.service';
 import { UpdateRoomCountRequest } from './dto/request/product.request';
 import {
   toAdminProductDetailResponse,
@@ -38,6 +39,7 @@ export class ProductController {
     private readonly productService: ProductService,
     private readonly sessionService: SessionService,
     private readonly bus: EventBusService,
+    private readonly popularService: ProductPopularService,
   ) {}
 
   @Get('categories')
@@ -81,6 +83,14 @@ export class ProductController {
       s,
     );
     return rows.map(toProductCardResponse);
+  }
+
+  // Static route — above GET /products/:handle (ivy-docs T10 D3).
+  @Get('popular')
+  @Public()
+  @ApiOperation({ summary: "Best sellers of one of the tenant's Product Help categories (live from the store)" })
+  async popular(@SessionToken() token: string, @Query('category') category?: string) {
+    return this.popularService.popularForSession(token, category);
   }
 
   // Path-param route LAST so it never shadows the static routes above.

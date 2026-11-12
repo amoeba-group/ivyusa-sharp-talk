@@ -71,7 +71,7 @@ test.describe('T09 · Start over on every scenario', () => {
     await widget.goto();
     await widget.open();
     await widget.openChat();
-    await widget.acceptConsentIfShown();
+    await widget.acceptConsent();
     // Exchange & Refund runs the cancel_refund script on the real API.
     await widget.scenarioButton(/Exchange & Refund/).click();
     const startOver = widget.panel.getByRole('button', { name: /^Start over$/ }).last();

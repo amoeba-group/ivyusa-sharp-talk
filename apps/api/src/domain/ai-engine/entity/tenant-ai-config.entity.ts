@@ -27,11 +27,24 @@ export interface ScenarioButton {
   /** Leading emoji on the widget chip (ivy-docs T08 D1); absent = the action's icon. */
   emoji?: string;
   /**
+   * Product Help only (ivy-docs T10 D2): store collections offered under
+   * "Popular products". `id` is the Shopify collection handle; the label has
+   * the same shape as the button's own. Absent = no "Popular products" chip.
+   */
+  categories?: ProductCategory[];
+  /**
    * AI agents this button shows for (REQ-260825 R5). Empty/absent = every
    * agent (the pre-R5 behaviour). Visibility only — the button's behaviour
    * never differs per agent.
    */
   agentIds?: number[];
+}
+
+/** One Product Help category (ivy-docs T10 D2). */
+export interface ProductCategory {
+  /** Shopify collection handle. */
+  id: string;
+  label: string | LocalizedText;
 }
 
 /** Where the widget should take the shopper after a scripted reply (FR-003). */

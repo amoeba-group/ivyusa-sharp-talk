@@ -63,6 +63,14 @@ export interface ScenarioButton {
   message?: string | Partial<Record<ScenarioLang, string>>;
   /** Leading emoji on the widget chip (ivy-docs T08 D1); empty = the action's icon. */
   emoji?: string;
+  /** Product Help only (ivy-docs T10 D2): store collections under "Popular products". */
+  categories?: ProductCategory[];
+}
+
+/** One Product Help category: `id` is the Shopify collection handle. */
+export interface ProductCategory {
+  id: string;
+  label: string | Partial<Record<ScenarioLang, string>>;
 }
 
 /** Session language the console edits copy for — one source of truth with the API. */

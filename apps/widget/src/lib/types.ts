@@ -29,6 +29,9 @@ import type {
   ReviewItemResponse,
   OrderListItemResponse,
   OrderLookupResponse,
+  PopularProductCard,
+  PopularProductsResponse,
+  ProductCategoryOption,
   ScenarioButtonResponse,
   ScenarioFollowUpResponse,
   ScenarioPostActionResponse,
@@ -126,3 +129,7 @@ export type ScenarioActionKey =
   | 'message';
 
 export type ScenarioButton = ScenarioButtonResponse;
+/** Product Help (ivy-docs T10). */
+export type ProductCategory = ProductCategoryOption;
+export type PopularProducts = PopularProductsResponse;
+export type PopularProduct = PopularProductCard;

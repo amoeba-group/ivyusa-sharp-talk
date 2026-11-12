@@ -181,12 +181,20 @@ export const zh: Translation = {
       affiliate: '推广合作',
       myOrders: '我的订单',
     },
+    // Product Help in the thread (ivy-docs T10, SCR-IVY-12; KO from Figma 1006:5588).
     productHelp: {
+      lead: '请问需要什么帮助？\n请选择一个项目 😊',
+      popular: '热门商品',
       usage: '使用方法',
       ingredients: '成分',
-      exchange: '换货 · 退货',
+      exchange: '换货 / 退货',
       restock: '到货通知',
-      back: '返回',
+      pickCategory: '想看哪个分类？😊',
+      popularLead: '这是{{category}}的热门商品 👇',
+      popularEmpty: '目前没有可显示的{{category}}热门商品。',
+      popularUnavailable: '暂时无法加载{{category}}的热门商品。',
+      seeAll: '在 {{store}} 查看全部{{category}}',
+      otherCategories: '其他分类',
     },
     attachment: {
       attach: '添加附件',

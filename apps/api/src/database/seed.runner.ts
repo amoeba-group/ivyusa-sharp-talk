@@ -12,7 +12,7 @@ import { Unit } from '../domain/user/entity/unit.entity';
 import { defaultJobLabels, defaultUnits } from '../domain/user/default-org';
 import { AiEngine } from '../domain/ai-engine/entity/ai-engine.entity';
 import { TenantAiSetting } from '../domain/ai-engine/entity/tenant-ai-setting.entity';
-import { TenantAiConfig, type ScenarioButton } from '../domain/ai-engine/entity/tenant-ai-config.entity';
+import { TenantAiConfig, type ScenarioButton, type ScenarioOverride } from '../domain/ai-engine/entity/tenant-ai-config.entity';
 import { AiAgent } from '../domain/ai-engine/entity/ai-agent.entity';
 import { DEFAULT_PERSONA } from '../domain/ai-engine/ai-config.service';
 import { ContentFilterRule } from '../domain/moderation/entity/content-filter-rule.entity';
@@ -43,6 +43,59 @@ const IVY_GREETING = {
 };
 
 /**
+ * IVY's Product Help categories (ivy-docs T10 D2, BR-17): the design's eleven,
+ * in its order (SPEC SCR-IVY-12), each pointing at the ivyusa.com collection
+ * that page links to. English in every language, as the KO design shows them.
+ */
+const IVY_PRODUCT_CATEGORIES = [
+  { id: 'hair', label: 'Hair' },
+  { id: 'makeup-main', label: 'Makeup' },
+  { id: 'nails', label: 'Nails' },
+  { id: 'face-body-care-main', label: 'Face & Body' },
+  { id: 'lashes', label: 'Lashes' },
+  { id: 'for-men', label: 'For Men' },
+  { id: 'fragrance', label: 'Fragrance' },
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'for-kids', label: 'For Kids' },
+  { id: 'wellness', label: 'Wellness' },
+  { id: 'k-beauty', label: 'K-Beauty' },
+];
+
+/**
+ * IVY's return and cancellation answers (ivy-docs T10 §8-3a), from
+ * ivyusa.com/policies/refund-policy as read on 2026-11-12. The shipped scripts
+ * describe a generic 30-day policy and in-app cancelling, neither of which is
+ * IVY's. Under the return answer, the design's chips: Track delivery · Cancel
+ * order (Start over is added by the widget).
+ */
+const IVY_SCENARIO_OVERRIDES: Record<string, ScenarioOverride> = {
+  return_exchange: {
+    reply: {
+      EN: `Returns are accepted within 10 days of delivery for items bought on ivyusa.com. Products must be unopened, unused, and in their original packaging with all seals intact. To start a return, sign in at account.ivyusa.com and select "Request return" on the order. Return shipping is $6.95, deducted from your refund. Clearance, final-sale, free gift, and opened, used, or swatched items can't be returned.`,
+      ES: 'Aceptamos devoluciones dentro de los 10 días posteriores a la entrega para artículos comprados en ivyusa.com. Los productos deben estar sin abrir, sin usar y en su empaque original con todos los sellos intactos. Para iniciar una devolución, inicia sesión en account.ivyusa.com y selecciona "Request return" en el pedido. El envío de devolución cuesta $6.95 y se descuenta del reembolso. No se aceptan devoluciones de artículos en liquidación o venta final, regalos promocionales ni productos abiertos, usados o probados.',
+      KO: '교환·반품은 수령 후 10일 이내 신청 가능합니다. 제품은 미개봉·미사용 상태로 원래 포장과 씰이 그대로 있어야 합니다. account.ivyusa.com에 로그인해 해당 주문에서 "Request return"을 선택해 주세요. 반품 배송비 $6.95는 환불 금액에서 차감됩니다. 클리어런스·파이널 세일·사은품, 개봉·사용·테스트한 제품은 반품이 불가합니다.',
+      VI: 'Bạn có thể trả hàng trong vòng 10 ngày kể từ khi nhận, với sản phẩm mua trên ivyusa.com. Sản phẩm phải chưa mở, chưa sử dụng, còn nguyên bao bì và tem niêm phong. Để yêu cầu trả hàng, hãy đăng nhập account.ivyusa.com và chọn "Request return" ở đơn hàng. Phí gửi trả $6.95 được trừ vào số tiền hoàn. Hàng thanh lý, hàng final sale, quà tặng khuyến mãi và sản phẩm đã mở, đã dùng hoặc đã thử không được trả lại.',
+      JA: 'ivyusa.comでご購入の商品は、お受け取りから10日以内であれば返品を承ります。商品は未開封・未使用で、シールが付いた元のパッケージのままである必要があります。返品はaccount.ivyusa.comにログインし、該当のご注文で「Request return」を選択してお申し込みください。返送料$6.95は返金額から差し引かれます。クリアランス・ファイナルセール品、プロモーションのギフト、開封・使用・試用済みの商品は返品いただけません。',
+      ZH: '在 ivyusa.com 购买的商品，可在收货后 10 天内申请退货。商品须未开封、未使用，并保持原包装及封条完好。请登录 account.ivyusa.com，在相应订单中选择"Request return"申请退货。退货运费 $6.95 将从退款中扣除。清仓或最终特卖商品、促销赠品，以及已开封、已使用或已试色的商品不支持退货。',
+    },
+    followUps: [
+      { id: 'track_delivery', label: { EN: 'Track delivery', ES: 'Seguir envío', KO: '배송 조회', VI: 'Theo dõi giao hàng', JA: '配送状況', ZH: '查询物流' } },
+      { id: 'cancel_order', label: { EN: 'Cancel order', ES: 'Cancelar pedido', KO: '주문 취소', VI: 'Huỷ đơn hàng', JA: '注文キャンセル', ZH: '取消订单' } },
+    ],
+  },
+  cancel_order: {
+    reply: {
+      EN: "To cancel an order, email hello@ivyusa.com as soon as possible. Orders can't be changed once placed: if you need a change, the order is canceled (when still possible) and you place a new one.",
+      ES: 'Para cancelar un pedido, escribe a hello@ivyusa.com lo antes posible. Los pedidos no se pueden modificar una vez realizados: si necesitas un cambio, se cancela el pedido (si aún es posible) y haces uno nuevo.',
+      KO: '주문을 취소하시려면 가능한 한 빨리 hello@ivyusa.com으로 이메일을 보내 주세요. 주문 후에는 내용을 변경할 수 없어요. 변경이 필요하시면 기존 주문을 취소(가능한 경우)한 뒤 새로 주문해 주세요.',
+      VI: 'Để huỷ đơn, hãy gửi email tới hello@ivyusa.com càng sớm càng tốt. Đơn đã đặt thì không sửa được: nếu cần thay đổi, đơn cũ sẽ được huỷ (nếu còn kịp) và bạn đặt đơn mới.',
+      JA: 'ご注文をキャンセルされる場合は、できるだけ早く hello@ivyusa.com までメールでご連絡ください。ご注文後の内容変更はできません。変更が必要な場合は、ご注文をキャンセル（可能な場合）のうえ、新たにご注文ください。',
+      ZH: '如需取消订单，请尽快发送邮件至 hello@ivyusa.com。订单一经提交便无法修改；如需更改，请先取消原订单（如仍可取消），再重新下单。',
+    },
+  },
+};
+
+/**
  * IVY's seven quick replies, in design order (ivy-docs T08 §4, Figma 1008:2291).
  * KO from the design; EN per SPEC Q-07; the rest translated from EN. The KO
  * design keeps "Contact Support" in English.
@@ -57,7 +110,8 @@ const IVY_SCENARIO_BUTTONS: ScenarioButton[] = [
   { id: 'exchange_refund', action: 'cancel_refund', enabled: true, emoji: '😊',
     label: { EN: 'Exchange & Refund', ES: 'Cambios y reembolsos', KO: '교환 및 환불', VI: 'Đổi trả & hoàn tiền', JA: '交換・返金', ZH: '换货与退款' } },
   { id: 'product_inquiry', action: 'product_help', enabled: true, emoji: '✨',
-    label: { EN: 'Product inquiry', ES: 'Consulta de producto', KO: '제품문의', VI: 'Hỏi về sản phẩm', JA: '商品のお問い合わせ', ZH: '商品咨询' } },
+    label: { EN: 'Product inquiry', ES: 'Consulta de producto', KO: '제품문의', VI: 'Hỏi về sản phẩm', JA: '商品のお問い合わせ', ZH: '商品咨询' },
+    categories: IVY_PRODUCT_CATEGORIES },
   { id: 'feedback', action: 'message', enabled: true, emoji: '💬',
     label: { EN: 'Feedback', ES: 'Comentarios', KO: '피드백', VI: 'Góp ý', JA: 'ご意見', ZH: '意见反馈' } },
   { id: 'contact_support', action: 'contact_support', enabled: true, emoji: '🤝',
@@ -315,8 +369,10 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
           'Answer only from the knowledge base; never invent policies.',
           'Offer to connect a human agent when unsure or out of scope.',
         ],
-        // The seeded tenant is IVY: its seven design quick replies (T08).
+        // The seeded tenant is IVY: its seven design quick replies (T08) and
+        // its own return / cancel answers (T10).
         scenarioButtons: IVY_SCENARIO_BUTTONS,
+        scenarioOverrides: IVY_SCENARIO_OVERRIDES,
       }),
     );
   }

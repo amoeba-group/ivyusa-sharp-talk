@@ -183,12 +183,20 @@ export const ja: Translation = {
       affiliate: 'アフィリエイト',
       myOrders: '注文履歴',
     },
+    // Product Help in the thread (ivy-docs T10, SCR-IVY-12; KO from Figma 1006:5588).
     productHelp: {
+      lead: 'どのようなことでお困りですか？\nご希望の項目をお選びください 😊',
+      popular: '人気商品',
       usage: '使い方',
       ingredients: '成分',
-      exchange: '交換・返品',
+      exchange: '交換 / 返品',
       restock: '再入荷通知',
-      back: '戻る',
+      pickCategory: 'どのカテゴリーをご覧になりますか？😊',
+      popularLead: '{{category}}の人気商品です 👇',
+      popularEmpty: '現在表示できる{{category}}の人気商品はありません。',
+      popularUnavailable: '現在{{category}}の人気商品を読み込めませんでした。',
+      seeAll: '{{store}}で{{category}}をすべて見る',
+      otherCategories: 'ほかのカテゴリー',
     },
     attachment: {
       attach: 'ファイルを添付',

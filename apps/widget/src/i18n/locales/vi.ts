@@ -183,12 +183,20 @@ export const vi: Translation = {
       affiliate: 'Cộng tác viên',
       myOrders: 'Đơn hàng của tôi',
     },
+    // Product Help in the thread (ivy-docs T10, SCR-IVY-12; KO from Figma 1006:5588).
     productHelp: {
+      lead: 'Bạn cần hỗ trợ gì?\nHãy chọn một mục nhé 😊',
+      popular: 'Sản phẩm phổ biến',
       usage: 'Cách dùng',
       ingredients: 'Thành phần',
-      exchange: 'Đổi · Trả hàng',
+      exchange: 'Đổi / Trả hàng',
       restock: 'Báo khi có hàng',
-      back: 'Quay lại',
+      pickCategory: 'Bạn muốn xem danh mục nào? 😊',
+      popularLead: 'Đây là các sản phẩm {{category}} được mua nhiều nhất 👇',
+      popularEmpty: 'Hiện chưa có sản phẩm {{category}} phổ biến để hiển thị.',
+      popularUnavailable: 'Hiện chưa tải được sản phẩm {{category}} phổ biến.',
+      seeAll: 'Xem tất cả {{category}} trên {{store}}',
+      otherCategories: 'Danh mục khác',
     },
     attachment: {
       attach: 'Đính kèm tệp',

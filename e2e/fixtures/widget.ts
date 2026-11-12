@@ -56,6 +56,21 @@ export class Widget {
     await expect(this.panel).toBeVisible();
   }
 
+  /**
+   * Accept the banner a `consent: 'pending'` run shows, so the SERVER session is
+   * consented — tests that run real scripts need that. Waits for the session
+   * bootstrap to finish first: while the widget loads, a slower
+   * `/session/ensure` can still swap the token, and consent given to the token
+   * it drops is lost (ivy-docs BUG-003, dev server only). Waits for the banner instead of
+   * peeking, unlike `acceptConsentIfShown`.
+   */
+  async acceptConsent() {
+    await this.page.waitForLoadState('networkidle');
+    const accept = this.panel.getByRole('button', { name: 'Accept', exact: true });
+    await accept.click();
+    await expect(accept).toBeHidden();
+  }
+
   /** Real-API runs start with a consent banner; design runs patch consent to granted. */
   async acceptConsentIfShown() {
     const accept = this.panel.getByRole('button', { name: 'Accept', exact: true });

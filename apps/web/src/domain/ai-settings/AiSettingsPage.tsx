@@ -18,6 +18,8 @@ import { AnswerReuseSection } from './AnswerReuseSection';
 import { LanguageTabs } from './LanguageTabs';
 import { LANGUAGES } from '../../../../../packages/types/src/common/language';
 import { ScenarioReplyEditor } from './ScenarioReplyEditor';
+import { ProductCategoriesEditor, categoryProblem } from './ProductCategoriesEditor';
+import { toast } from '@/store/toast-store';
 import { Link } from 'react-router-dom';
 import {
   useAiSettings,
@@ -348,15 +350,27 @@ function ScenarioButtonsSection() {
       },
     ]);
 
-  const save = () =>
+  const save = () => {
+    // Product Help categories (ivy-docs T10 D2): a blank row is dropped; a row
+    // with a bad collection or no name stops the save rather than vanishing.
+    const tidied = buttons.map((b) =>
+      b.action === 'product_help' && b.categories
+        ? { ...b, categories: b.categories.filter((c) => c.id.trim() || scenarioLabelText(c.label, labelLang).trim()) }
+        : b,
+    );
+    if (tidied.some((b) => b.action === 'product_help' && (b.categories ?? []).some((c) => categoryProblem(c, labelLang)))) {
+      toast.error(t('productCategories.fixBeforeSave'), { sticky: true });
+      return;
+    }
     updateConfig.mutate(
       {
-        scenario_buttons: buttons.filter((b) => scenarioLabelText(b.label, labelLang).trim().length > 0),
+        scenario_buttons: tidied.filter((b) => scenarioLabelText(b.label, labelLang).trim().length > 0),
         scenario_overrides: overrides,
         note: note.trim() || undefined,
       },
       { onSuccess: () => setNote('') },
     );
+  };
 
   return (
     <Card
@@ -410,7 +424,9 @@ function ScenarioButtonsSection() {
               <p className="w-full -mt-1 text-[11px] text-gray-400">
                 {scriptFor(btn.action)
                   ? t('scriptRuns', { script: scriptFor(btn.action) })
-                  : t('scriptNone')}
+                  : btn.action === 'product_help'
+                    ? t('scriptProductHelp')
+                    : t('scriptNone')}
               </p>
               <div className="min-w-[180px] flex-1">
                 <Label>{t('action')}</Label>
@@ -424,6 +440,13 @@ function ScenarioButtonsSection() {
               </div>
               {/* Only a "send a message" button asks something; for scripted
                   actions the script owns the wording. */}
+              {btn.action === 'product_help' && (
+                <ProductCategoriesEditor
+                  value={btn.categories ?? []}
+                  lang={labelLang}
+                  onChange={(categories) => patch(i, { categories })}
+                />
+              )}
               {btn.action === 'message' && (
                 <div className="w-full">
                   <Label>{t('buttonMessage')}</Label>

@@ -9,7 +9,10 @@ import { Repository } from 'typeorm';
 import type { LocalizedText, ScenarioConfigResponse } from '@sharptalk/types';
 import {
   CALLBACK_CHANNEL_VALUES,
+  PRODUCT_CATEGORY_LABEL_MAX,
+  PRODUCT_CATEGORY_MAX,
   QUEUE_TIMEOUT_MAX,
+  collectionHandleFrom,
   QUEUE_TIMEOUT_MIN,
   SESSION_LANGUAGE_CODES,
   languageBySession,
@@ -17,6 +20,7 @@ import {
 } from '@sharptalk/types';
 import {
   HandoffConfig,
+  ProductCategory,
   ScenarioButton,
   ScenarioOverride,
   TenantAiConfig,
@@ -479,11 +483,19 @@ export class AiConfigService {
       .filter((b) => b.enabled)
       // The button's own question resolves the same way its label does, so the
       // widget receives one string per field and never sees the language map.
-      .map((b) => ({
-        ...b,
-        label: resolveScenarioLabel(b.label, lang),
-        message: resolveScenarioLabel(b.message, lang) || undefined,
-      }));
+      .map((b) => {
+        // Product Help categories (ivy-docs T10 D2) resolve like the label; a
+        // category with no name in any language is not offered.
+        const categories = (b.categories ?? [])
+          .map((c) => ({ id: c.id, label: resolveScenarioLabel(c.label, lang) }))
+          .filter((c) => c.id && c.label.trim());
+        return {
+          ...b,
+          label: resolveScenarioLabel(b.label, lang),
+          message: resolveScenarioLabel(b.message, lang) || undefined,
+          categories: categories.length ? categories : undefined,
+        };
+      });
     const hasScoping = scoped.some((b) => (b.agentIds ?? []).length > 0);
     if (!hasScoping) return { scenarioButtons: scoped };
     let effectiveAgentId = session.aiAgentId != null ? Number(session.aiAgentId) : null;
@@ -617,16 +629,53 @@ export class AiConfigService {
         // Leading emoji (ivy-docs T08 D1): trimmed, at most 16 UTF-16 units —
         // room for a skin-tone or ZWJ sequence, not for a sentence.
         const emoji = typeof b.emoji === 'string' ? capWholeChars(b.emoji.trim(), 16) : '';
+        const action = b.action?.trim() || 'message';
+        // Product Help categories (ivy-docs T10 D2). Like `message` (BUG-022),
+        // a field missing from this rebuild is lost on every console save.
+        const categories = action === 'product_help' ? this.sanitizeCategories(b.categories) : [];
         return {
           id: b.id?.trim() || `btn_${i}`,
           label: this.trimLabel(b.label),
-          action: b.action?.trim() || 'message',
+          action,
           enabled: b.enabled !== false,
           ...(hasMessage ? { message } : {}),
           ...(emoji ? { emoji } : {}),
+          ...(categories.length ? { categories } : {}),
           ...(agentIds.length ? { agentIds } : {}),
         };
       });
+  }
+
+  /**
+   * Product Help categories, normalised (ivy-docs T10 D2): the handle is read
+   * out of whatever was pasted (a bare handle or a store URL), a row without a
+   * usable handle or without a name is dropped, a repeated handle keeps its
+   * first row, and the list stops at PRODUCT_CATEGORY_MAX.
+   */
+  private sanitizeCategories(input: unknown): ProductCategory[] {
+    if (!Array.isArray(input)) return [];
+    const out: ProductCategory[] = [];
+    const seen = new Set<string>();
+    for (const raw of input as Array<Partial<ProductCategory> | null>) {
+      if (out.length >= PRODUCT_CATEGORY_MAX) break;
+      const id = collectionHandleFrom(raw?.id);
+      if (!id || seen.has(id)) continue;
+      // Unvalidated JSON (the DTO does not nest): keep string values only.
+      const rawLabel: unknown = raw?.label;
+      const label =
+        typeof rawLabel === 'string'
+          ? this.trimLabel(rawLabel, PRODUCT_CATEGORY_LABEL_MAX)
+          : rawLabel && typeof rawLabel === 'object'
+            ? this.trimLabel(
+                Object.fromEntries(Object.entries(rawLabel).filter(([, v]) => typeof v === 'string')) as LocalizedText,
+                PRODUCT_CATEGORY_LABEL_MAX,
+              )
+            : '';
+      if (!resolveScenarioLabel(label, null).trim()) continue;
+      seen.add(id);
+      out.push({ id, label });
+    }
+    return out;
   }
 }
 

@@ -567,5 +567,16 @@
     "saved": "Đã lưu chân trang câu trả lời",
     "saveError": "Không lưu được chân trang câu trả lời"
   },
-  "emoji": "Emoji"
+  "emoji": "Emoji",
+  "scriptProductHelp": "Mở menu Hỗ trợ sản phẩm trong chat: Cách dùng · Thành phần · Đổi / Trả hàng · Báo khi có hàng, và Sản phẩm phổ biến khi có danh mục bên dưới. Đổi / Trả hàng trả lời bằng kịch bản return_exchange.",
+  "productCategories": {
+    "title": "Danh mục sản phẩm",
+    "hint": "Hiện ở mục \"Sản phẩm phổ biến\". Collection là phần sau /collections/ trong URL cửa hàng; dán cả URL cũng được. Widget hiện các sản phẩm bán chạy của collection đó.",
+    "name": "Tên ({{lang}})",
+    "collection": "Collection Shopify",
+    "nameMissing": "Nhập tên.",
+    "handleInvalid": "Không phải mã collection. Dùng chữ, số và dấu gạch ngang, ví dụ nails.",
+    "add": "Thêm danh mục",
+    "fixBeforeSave": "Có danh mục thiếu tên hoặc collection không hợp lệ. Sửa rồi lưu lại."
+  }
 }

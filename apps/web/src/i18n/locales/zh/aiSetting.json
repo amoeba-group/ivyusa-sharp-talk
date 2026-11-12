@@ -567,5 +567,16 @@
     "saved": "已保存回答页脚",
     "saveError": "无法保存回答页脚"
   },
-  "emoji": "表情"
+  "emoji": "表情",
+  "scriptProductHelp": "在聊天中打开商品帮助菜单：使用方法 · 成分 · 换货 / 退货 · 到货通知；下方设置了分类时还会显示热门商品。换货 / 退货使用 return_exchange 脚本回答。",
+  "productCategories": {
+    "title": "商品分类",
+    "hint": "显示在\"热门商品\"中。集合是店铺网址中 /collections/ 后面的部分，也可以直接粘贴完整网址。小部件会显示该集合的畅销商品。",
+    "name": "名称（{{lang}}）",
+    "collection": "Shopify 集合",
+    "nameMissing": "请输入名称。",
+    "handleInvalid": "不是有效的集合标识。请使用字母、数字和连字符，例如 nails。",
+    "add": "添加分类",
+    "fixBeforeSave": "有分类缺少名称或集合无效。请修正后再保存。"
+  }
 }

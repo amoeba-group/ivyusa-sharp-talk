@@ -1,5 +1,6 @@
 import { ArrayMaxSize, IsArray, IsBoolean, IsInt, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import type { LocalizedText } from '@sharptalk/types';
 
 class ScenarioButtonDto {
   @IsString() id: string;
@@ -10,6 +11,11 @@ class ScenarioButtonDto {
   @IsOptional() @IsArray() @IsInt({ each: true }) agentIds?: number[];
   /** Leading emoji on the widget chip (ivy-docs T08 D1). */
   @IsOptional() @IsString() @MaxLength(16) emoji?: string;
+  /**
+   * Product Help categories (ivy-docs T10 D2): `{ id: collection handle, label }`.
+   * Normalised and capped in AiConfigService.sanitize, like the rest of a button.
+   */
+  @IsOptional() @IsArray() @ArrayMaxSize(50) categories?: Array<{ id: string; label: string | LocalizedText }>;
 }
 
 /** /ai-setting preview sandbox session (PLN-AiSetting-Preview W1). */

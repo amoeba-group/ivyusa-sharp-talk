@@ -204,6 +204,12 @@ Launcher (góc phải dưới) ─► Panel 380px
 - Menu con: **제품 사용법 · 성분 문의 · 교환 / 반품 · 재입고 알림 · 처음으로**; chọn 교환/반품 → "교환·반품은 수령 후 7일 이내 신청 가능합니다. 제품은 미개봉 상태여야 합니다." + chip 배송 조회 · 주문 취소.
 - Nhánh danh mục: "어떤 도움이 필요하신가요? 원하시는 항목을 선택해주세요 😊" → chip **Hair · Makeup · Nails · Face & Body · Lashes · For Men · Fragrance · Fashion · For Kids · Wellness · K-Beauty** → (vd. Nail) "어떤 안내를 도와드릴까요?" → **인기상품** + 2 chip "??" (chưa chốt — Q-04).
 - Câu hỏi tự do (vd. "제일 인기 많은 상품 추천해줘") → chỉ báo "답변을 작성중입니다..." → câu trả lời AI (dựa KB, đúng ngôn ngữ phiên, qua moderation).
+- **Đã làm (T10, 2026-11-12):** theo `1006:5588`, có thêm nhánh danh mục.
+  - Chip: 인기상품 · 제품 사용법 · 성분 문의 · 교환 / 반품 · 재입고 알림 · 처음으로, trả lời trong luồng chat. Hàng chip vẫn hiện, chip đã chọn viền xanh.
+  - 인기상품 → 11 danh mục (collection ivyusa.com, cấu hình tenant) → 5 sản phẩm bán chạy từ Shopify.
+  - 교환 / 반품 → câu chính sách **10 ngày** theo ivyusa.com, chip 배송 조회 · 주문 취소 · 처음으로. Thiết kế ghi 7 ngày, khác trang chính sách.
+  - 재입고 알림 → câu hỏi cho AI (chưa có báo hàng về thật, G-25).
+  - Q-04: 2 chip "??" bỏ.
 
 ### SCR-IVY-13 · Contact Support & form liên hệ
 - **Figma:** `1006:5650` (kênh), `1006:6529` (form), `1006:6597` (đã gửi).
@@ -324,7 +330,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 ✅ (2026-11-12; placeholder là cấu hình tenant; giữ nút đính kèm) |
 | G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 ✅ (2026-11-12; `disclosurePlacement: bottom` = 1 dòng dưới ô nhập) |
 | G-15 | My Orders: thẻ đơn bấm được + chip 배송 조회 · 주문 취소 · 처음으로 | Thẻ không bấm được; chip ẩn khi đang hiện thẻ (`ChatTab.tsx` 439-445); không có chip "처음으로" ở đâu cả | Thẻ mở Order Detail; luôn hiện follow-up chip; thêm chip **처음으로** (start over) dùng chung cho mọi kịch bản | UI · I18N | T09 ✅ (2026-11-12; Start over là chip widget tự thêm, dùng chung cho T10–T12) |
-| G-16 | Product Help: 11 danh mục + 인기상품; menu con 사용법/성분/교환·반품/재입고 | Menu con có; **thiếu danh mục & sản phẩm phổ biến**; API sẵn có nhưng chưa dùng: `GET /products/categories`, `/products?category=`, `/products/recommendations` | Luồng danh mục → sản phẩm phổ biến; "재입고 알림" gọi `POST /restock/subscribe` | UI | T10 |
+| G-16 | Product Help: 11 danh mục + 인기상품; menu con 사용법/성분/교환·반품/재입고 | Menu con có; **thiếu danh mục & sản phẩm phổ biến**; API sẵn có nhưng chưa dùng: `GET /products/categories`, `/products?category=`, `/products/recommendations` | Luồng danh mục → sản phẩm phổ biến; "재입고 알림" gọi `POST /restock/subscribe` | UI | T10 ✅ (2026-11-12; danh mục = collection cấu hình tenant, popular = Shopify best-selling; restock → G-25) |
 | G-17 | Contact Support: chỉ thẻ email `help@ivy.com` | 3 thẻ (điện thoại 1588-0000, email, live chat) **hard-code trong locale** (`ContactCard.tsx`) | Lấy kênh liên hệ từ cấu hình tenant; IVY chỉ bật email (+ live chat nếu có agent — Q-15) | UI · API · CFG | T11 |
 | G-18 | Form liên hệ Name/Email/Message → "Your message has been sent successfully." | **Không có.** `POST /inquiries` tồn tại nhưng không nhận name/email/message và widget không gọi | Mở rộng DTO/entity inquiry (+console xem được) + thẻ form + thẻ "YOUR INQUIRY". **Có thể cần migration SQL** | API · DB · UI | T11 |
 | G-19 | Affiliate: 3 bước có mô tả + chip 지금 신청하기 · 더 알아보기 · 처음으로 · 종료 | 3 bước chỉ có tiêu đề + 1 nút "지금 신청" (`AffiliateCard.tsx`, `POST /affiliate/apply`) | Mô tả bước qua copy tenant; thêm 3 chip; "종료" → CSAT | UI · I18N · CFG | T12 |
@@ -333,6 +339,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-22 | Copy KO/EN theo thiết kế | i18n 6 ngôn ngữ đã có (`apps/widget/src/i18n/locales/*.ts`) | Thêm/sửa key mới; chạy `npm run i18n:check` | I18N | T14 |
 | G-23 | A11y chip lọc | ~~Chip không có `aria-pressed`~~ → có từ T02; badge tab có `aria-label` "{n} unread" ✓ | Bổ sung theo NFR-02 | UI | T15 |
 | G-24 | Mobile toàn màn hình | Có chế độ `compact=1` / `mode=app` | Kiểm thử 390px, sửa tràn | UI | T15 |
+| G-25 | Báo hàng về thật (재입고 알림) | `POST /restock/subscribe` có, nhưng `notifyRestock` không được gọi ở đâu (không có nguồn báo khi Shopify có hàng lại) và bản đăng ký không lưu tenant | Nguồn báo hàng về (webhook `inventory_levels/update` hoặc product sync) → thông báo trong app; chip Restock alert đăng ký cho sản phẩm cụ thể | API · UI | Task riêng (chủ dự án chốt 2026-11-12, T10 §8-4a) |
 
 **Đã khớp thiết kế (giữ nguyên):** menu 6 ngôn ngữ (`LanguageSwitcher.tsx`), nút Settings/Close, badge tab (99+), nhóm "Today's/Yesterday" (code: "Today's notifications"/"Yesterday"), thẻ giao hàng + stepper ngang (`TrackingStepperH.tsx`), chế độ chọn/xoá, review list + form, typing bubble "답변을 작성 중입니다…", Settings (consent + ngày + version, marketing opt-out, CCPA, export JSON, delete).
 
@@ -347,7 +354,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | Q-01 | Khách vãng lai thấy gì ở header và tab Notifications? | Header "Hi there", giữ cổng Verify identity / Guest order lookup |
 | Q-02 | Từ 2 ngày trở lên hiện **ngày tháng** (ghi chú) hay "2days ago" (thiết kế)? | ✅ **Chốt 2026-11-11:** "{n} days ago" tới 6 ngày, sau đó ngày tháng `MMM d`; ngày theo múi giờ máy khách |
 | Q-03 | Vào chế độ chọn để xoá bằng cách nào (nút "Edit", nhấn giữ…)? | Nút "Select" ở hàng chip |
-| Q-04 | 2 chip "??" sau "인기상품" trong Product Help là gì? | Ẩn, chỉ hiện "인기상품" |
+| Q-04 | 2 chip "??" sau "인기상품" trong Product Help là gì? | Ẩn, chỉ hiện "인기상품" — ✅ T10 (bỏ 2 chip) |
 | Q-05 | "Track Order" mở trang nào (Shopify order status hay link hãng vận chuyển)? | Link tracking của fulfillment, không có thì trang order status của Shopify |
 | Q-06 | "Write Review" mở form trong widget hay trang review của ivyusa.com? | Mở trang sản phẩm trên ivyusa.com ở anchor review |
 | Q-07 | Copy tiếng Anh cho lời chào và 7 quick-reply (thiết kế chỉ có bản KO)? | Dịch: Payment check · Delivery inquiry · Stock inquiry · Exchange & Refund · Product inquiry · Feedback · Contact Support |
