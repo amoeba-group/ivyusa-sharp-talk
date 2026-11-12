@@ -63,6 +63,10 @@ export const vi: Translation = {
     deleted_one: 'Đã xóa {{count}} thông báo',
     deleted_other: 'Đã xóa {{count}} thông báo',
     deleteFailed: 'Không xóa được thông báo. Vui lòng thử lại.',
+    /** Promo coupon code (ivy-docs T05). */
+    copyCode: 'Sao chép mã',
+    codeCopied: 'Đã sao chép mã',
+    copyFailed: 'Không sao chép được mã',
     unreadCount_one: '{{count}} chưa đọc',
     unreadCount_other: '{{count}} chưa đọc',
   },

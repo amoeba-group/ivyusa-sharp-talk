@@ -23,5 +23,13 @@
   "linkUrlHelp": "必须以 https:// 开头。",
   "toastCreated": "已创建活动",
   "toastUpdated": "已更新活动",
-  "toastSent": "活动已发送"
+  "toastSent": "活动已发送",
+  "type": "类型",
+  "typeEvent": "活动",
+  "typeCoupon": "优惠券",
+  "couponCode": "优惠码",
+  "couponCodeHelp": "字母、数字、- 和 _，最多 {{max}} 个字符",
+  "promoLocked": "发送后无法更改",
+  "errorPromoInvalid": "请检查类型和优惠码：只能使用字母、数字、- 和 _。",
+  "errorPromoLocked": "已发送活动的类型和优惠码无法更改。"
 }

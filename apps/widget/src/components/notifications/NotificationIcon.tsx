@@ -16,21 +16,28 @@ const SHAPES: Record<string, Shape> = {
   payment: ORDERISH,
   shipping: ORDERISH,
   review: ORDERISH,
-  // Coupons and store benefits — dark, so a perk reads as distinct from an order.
-  event: { icon: Gift, ring: 'bg-gray-800', glyph: 'text-white' },
+  // An `event` row with no kind and no link: the coupon look (T05 D3).
+  event: { icon: Gift, ring: 'bg-promo-coupon', glyph: 'text-white' },
   chat: { icon: MessageCircle, ring: 'bg-primary-100', glyph: 'text-primary-700' },
   issue: { icon: MessageCircle, ring: 'bg-primary-100', glyph: 'text-primary-700' },
 };
 
-/** Campaign pushes — the loudest treatment, the pink promo rows in frame 34. */
-const CAMPAIGN: Shape = { icon: Sparkles, ring: 'bg-error', glyph: 'text-white' };
+/**
+ * Promo kinds (ivy-docs SPEC §4, T05): a coupon is a white gift on deep navy
+ * #1A2E6B, an event a white sparkle on magenta #E91E8C.
+ */
+const COUPON: Shape = { icon: Gift, ring: 'bg-promo-coupon', glyph: 'text-white' };
+const EVENT: Shape = { icon: Sparkles, ring: 'bg-promo-event', glyph: 'text-white' };
 
 export function NotificationIcon({
   category,
+  kind = null,
   hasLink = false,
   highlighted = false,
 }: {
   category: string;
+  /** Promo kind (lib/promo `promoKind`), when the row is a promo. Wins over the link guess. */
+  kind?: 'coupon' | 'event' | null;
   /**
    * Campaigns and coupons are both stored as `event`, so category alone cannot
    * tell them apart. A campaign is the only `event` that carries a deep link
@@ -40,7 +47,12 @@ export function NotificationIcon({
   hasLink?: boolean;
   highlighted?: boolean;
 }) {
-  const shape = category === 'event' && hasLink ? CAMPAIGN : (SHAPES[category] ?? ORDERISH);
+  const shape =
+    kind === 'coupon'
+      ? COUPON
+      : kind === 'event' || (category === 'event' && hasLink)
+        ? EVENT
+        : (SHAPES[category] ?? ORDERISH);
   const Icon = shape.icon;
   // On the highlighted row the gray ring would vanish into the cream wash, so
   // only the neutral rings get re-tinted — a colored ring already stands out.
@@ -48,6 +60,7 @@ export function NotificationIcon({
   return (
     <span
       aria-hidden="true"
+      data-testid={category === 'event' ? 'promo-icon' : undefined}
       className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${ring}`}
     >
       <Icon className={`h-[18px] w-[18px] ${shape.glyph}`} />

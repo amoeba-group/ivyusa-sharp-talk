@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T07|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T07|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -38,7 +38,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T02 | 0 / 6 → **6 / 6** ✅ (T02, 2026-11-11) | tất cả | — |
 | T03 | 0 / 5 → **5 / 5** ✅ (T03, 2026-11-11) | tất cả | — |
 | T04 | 0 / 5 → 3 / 5 (nhờ T02) → **7 / 7** ✅ (T04, 2026-11-12; thêm TC-04-06, 07) | tất cả | — |
-| T05 | 0 / 4 | — | TC-05-01, TC-05-02, TC-05-03, TC-05-04 |
+| T05 | 0 / 4 → **7 / 7** ✅ (T05, 2026-11-12; thêm TC-05-05..07) | tất cả | — |
 | T06 | 0 / 3 | — | TC-06-01, TC-06-02, TC-06-03 |
 | T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
 | T08 | 1 / 5 | TC-08-05 | TC-08-01, TC-08-02, TC-08-03, TC-08-04 |
@@ -161,8 +161,24 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 |---|---|---|---|
 | TC-05-01 | Coupon vs sự kiện | `promo-item` `data-kind=coupon` / `event`; "Mad Shade" đậm (≥ 600) + "Buy one Get One 50% OFF today !" | G-09, SCR-IVY-07 |
 | TC-05-02 | Màu icon | coupon: navy tối (B > R, tổng < 300); sự kiện: magenta (R > 180, G < 120, B > 60) | §4 |
-| TC-05-03 | Mã coupon | `coupon-code` = SCHOOL20; "Copy" → clipboard = SCHOOL20 | G-09, Q-16 |
-| TC-05-04 | Link sự kiện | bấm "Mad Shade" → tab mới `ivyusa.com/collections/mad-shade` | G-09 |
+| TC-05-03 | Mã coupon | `coupon-code` = SCHOOL20; "Copy" → clipboard = SCHOOL20; toast `status` "Code copied" | G-09, Q-16 |
+| TC-05-04 | Link sự kiện | bấm "Mad Shade" → tab mới `ivyusa.com/collections/mad-shade`. Trang ivyusa.com được giả lập; chờ tab điều hướng xong rồi mới đọc URL (cùng kiểu BUG-017) | G-09 |
+| TC-05-05 | Thông báo cũ (chưa có `kind`) | có link → `data-kind=event`, không link → `coupon`; không có `coupon-code` | PLN-261112-T05 D3 |
+| TC-05-06 | Copy lỗi | clipboard từ chối → `role=alert` "Couldn't copy the code", có nút Close | CLAUDE.md §2 |
+| TC-05-07 | Đang chọn (T07) | bấm ô chọn của "Mad Shade" → được tick, không mở tab mới; không còn nút Copy | PLN-261112-T05 D3 |
+
+**Kết quả (2026-11-12):** 7/7, lặp ×3 (2 worker): 21/21. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T07|@T13`) ×2: 120/120. Toàn bộ desktop: 72 pass / 22 fail, mọi ca đỏ thuộc T06, T08–T12 chưa làm.
+
+**Kiểm thử bổ sung cho T05:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Jest `packages/types` | `common/promo.spec.ts` | 2 loại; mã hợp lệ / không hợp lệ (trống, dấu cách, ký hiệu, > 32); `promoFromContent`: không có `kind` → event, chỉ coupon giữ mã |
+| Jest API | `campaign/campaign.promo.spec.ts` | Coupon giữ mã đã trim; event bỏ mã cũ; content cũ để nguyên; `kind` lạ / thiếu mã / mã sai → E5158; đã gửi → đổi loại / mã → E5159, sửa nội dung khác vẫn được; đổi status về draft không mở khoá; draft đổi được; `send` kiểm lại content cũ; gửi → `refType 'campaign'` + `refId`, mã qua moderation; mã bị chặn / bị che → không gửi, audit `coupon_code_moderated` |
+| Jest API | `notification/notification-promo.service.spec.ts` | Gắn loại + mã cho từng dòng, 1 truy vấn; campaign của tenant khác không dùng; không có dòng campaign → không truy vấn; campaign đã xoá → không có; response có `kind` / `couponCode`, null khi không phải promo |
+| Unit widget | `apps/widget/test/promo.test.mjs` | `promoKind`: loại từ API thắng, đoán theo link cho dòng cũ, chỉ `event` là promo; `safeLink`: chỉ `https` (`http`, `javascript:`, `data:`, đường dẫn tương đối → không có link) |
+| Tích hợp local (API + MySQL + RabbitMQ thật) | thủ công | Tạo campaign Coupon ` SCHOOL20 ` → lưu `SCHOOL20`; mã "TWO WORDS" → E5158; gửi → thông báo `in_app` có `ref_type campaign`; feed widget trả `kind: coupon`, `couponCode: SCHOOL20`; đổi mã sau khi gửi → E5159; sửa nội dung → OK. Đã xoá dữ liệu thử |
+| Ảnh chụp | thủ công | Widget EN / KO / VI chip Promo + toast; console modal: campaign đã gửi (2 ô mờ), campaign mới với mã sai (chữ đỏ, Save mờ) |
 
 ## T06 · Review (`06-review.spec.ts`)
 

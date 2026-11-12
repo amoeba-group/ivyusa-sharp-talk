@@ -12,6 +12,7 @@ export * from './common/chat-close';
 export * from './common/widget-access';
 export * from './common/privacy-notice-copy';
 export * from './common/order-status';
+export * from './common/promo';
 export * from './domain/menu.types';
 export * from './domain/rbac.types';
 export * from './domain/status-map';

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §7 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112-T05](../implementation/RPT-261112-IVY-T05-Promo.md). Trả lời §7: (1) ok; (2) **a**, lưu trong campaign và khoá sau khi gửi; (3) **a**, một mã cho mỗi campaign |
 | Task | [ivy-docs/TASKS.md T05](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-07 · G-09 · Q-16 |
 | Figma | `1006:5284` (EN), `1007:1978` (KO), `993:1618`, bộ icon `993:1254`. Figma MCP vẫn hết lượt gọi; dựa vào SPEC SCR-IVY-07, §4 (màu icon) và màn hiện tại. Nếu cần, mình xin ảnh như T04 |
 | TC | TC-05-01..04 ([e2e/tests/05-promo.spec.ts](../../e2e/tests/05-promo.spec.ts)), baseline **0/4** |

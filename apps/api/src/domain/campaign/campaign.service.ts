@@ -8,7 +8,14 @@ import { CreateCampaignRequest, UpdateCampaignRequest } from './dto/request/camp
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 import { NotificationService } from '../notification/notification.service';
 import { ModerationService } from '../moderation/moderation.service';
-import { MODERATION_DECISION } from '@sharptalk/types';
+import {
+  MODERATION_DECISION,
+  NOTIFICATION_REF,
+  PROMO_KIND,
+  isPromoKind,
+  isValidCouponCode,
+  promoFromContent,
+} from '@sharptalk/types';
 import { AuditService } from '../audit/audit.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -64,7 +71,7 @@ export class CampaignService implements OnModuleInit {
         tenantId,
         name: input.name,
         segmentRef: input.segment_ref ?? null,
-        content: input.content ?? null,
+        content: this.normalizePromo(tenantId, input.content ?? null),
         status: 'draft',
       }),
     );
@@ -74,7 +81,22 @@ export class CampaignService implements OnModuleInit {
     const campaign = await this.requireCampaign(tenantId, id);
     if (input.name !== undefined) campaign.name = input.name;
     if (input.segment_ref !== undefined) campaign.segmentRef = input.segment_ref;
-    if (input.content !== undefined) campaign.content = input.content;
+    if (input.content !== undefined) {
+      const next = this.normalizePromo(tenantId, input.content);
+      // Shoppers already hold a sent campaign's kind and code (their feed reads
+      // them from here), so those two stop being editable. `sentAt`, not
+      // `status`: status is writable, and flipping it back to draft must not
+      // unlock the code (ivy-docs T05 D2).
+      if (campaign.sentAt != null) {
+        const was = promoFromContent(campaign.content);
+        const now = promoFromContent(next);
+        if (was.kind !== now.kind || was.couponCode !== now.couponCode) {
+          this.logger.warn(`campaign ${id} promo change rejected: already sent (tenant ${tenantId})`);
+          throw new BusinessException(ERROR_CODE.CAMPAIGN_PROMO_LOCKED, HttpStatus.BAD_REQUEST);
+        }
+      }
+      campaign.content = next;
+    }
     if (input.status !== undefined) campaign.status = input.status;
     return this.campaignRepo.save(campaign);
   }
@@ -85,6 +107,8 @@ export class CampaignService implements OnModuleInit {
     // surfaces as a 400 instead of failing silently inside the bus consumer.
     const link = this.campaignLink(campaign.content);
     if (link) await this.validateLink(tenantId, link);
+    // Content written before T05 (or straight into the DB) is checked too.
+    campaign.content = this.normalizePromo(tenantId, campaign.content);
     campaign.status = 'sent';
     campaign.sentAt = new Date();
     const saved = await this.campaignRepo.save(campaign);
@@ -112,7 +136,9 @@ export class CampaignService implements OnModuleInit {
     // Masked/rephrased output is what gets sent; a BLOCKED verdict aborts the
     // whole dispatch, audited (fail-safe).
     const rawBody = this.campaignBody(campaign.content);
-    const [modTitle, modBody] = await Promise.all([
+    // The coupon code reaches shoppers too, so it passes the same gate (T05 D1).
+    const { couponCode } = promoFromContent(campaign.content);
+    const [modTitle, modBody, modCode] = await Promise.all([
       this.moderation.moderate({
         tenantId: campaign.tenantId,
         scope: 'agent',
@@ -127,10 +153,23 @@ export class CampaignService implements OnModuleInit {
             text: rawBody,
           })
         : Promise.resolve(null),
+      couponCode != null
+        ? this.moderation.moderate({
+            tenantId: campaign.tenantId,
+            scope: 'agent',
+            authorType: 'agent',
+            text: couponCode,
+          })
+        : Promise.resolve(null),
     ]);
+    // A masked code is a wrong code: sending it would hand shoppers a coupon
+    // that does not work, so it blocks like a refusal does.
+    const codeRejected =
+      modCode != null && (modCode.decision === MODERATION_DECISION.BLOCKED || modCode.text !== couponCode);
     if (
       modTitle.decision === MODERATION_DECISION.BLOCKED ||
-      modBody?.decision === MODERATION_DECISION.BLOCKED
+      modBody?.decision === MODERATION_DECISION.BLOCKED ||
+      codeRejected
     ) {
       this.logger.warn(`campaign ${campaignId} dispatch blocked by moderation`);
       await this.audit.write({
@@ -140,7 +179,7 @@ export class CampaignService implements OnModuleInit {
         action: 'campaign.blocked',
         target: `campaign:${campaignId}`,
         result: 'denied',
-        metadata: { reason: 'moderation_blocked' },
+        metadata: { reason: codeRejected ? 'coupon_code_moderated' : 'moderation_blocked' },
       });
       return;
     }
@@ -167,6 +206,9 @@ export class CampaignService implements OnModuleInit {
             body: modBody ? modBody.text : null,
             linkUrl,
             productHandle,
+            // The feed reads kind + coupon code back from the campaign (T05 D2).
+            refType: NOTIFICATION_REF.CAMPAIGN,
+            refId: campaign.id,
           }),
         ),
       );
@@ -248,6 +290,38 @@ export class CampaignService implements OnModuleInit {
     if (!content) return null;
     const text = content.text ?? content.body ?? content.message;
     return typeof text === 'string' ? text : JSON.stringify(content);
+  }
+
+  /**
+   * Check and tidy `content.kind` / `content.couponCode` (ivy-docs T05 D1).
+   * - no `kind` → an event, as every campaign was before T05; left untouched.
+   * - `kind` must be event | coupon;
+   * - a coupon needs a code of 1–32 of [A-Za-z0-9_-] (trimmed);
+   * - an event carries no code, so a stale one is dropped.
+   * 4xx are not server-logged by default, so rejections warn here.
+   */
+  private normalizePromo(
+    tenantId: number,
+    content: Record<string, unknown> | null,
+  ): Record<string, unknown> | null {
+    if (!content || (!('kind' in content) && !('couponCode' in content))) return content;
+    const kind = content.kind ?? PROMO_KIND.EVENT;
+    if (!isPromoKind(kind)) {
+      this.logger.warn(`campaign promo rejected: unknown kind (tenant ${tenantId})`);
+      throw new BusinessException(ERROR_CODE.CAMPAIGN_PROMO_INVALID, HttpStatus.BAD_REQUEST);
+    }
+    const out: Record<string, unknown> = { ...content, kind };
+    if (kind === PROMO_KIND.COUPON) {
+      const code = typeof content.couponCode === 'string' ? content.couponCode.trim() : '';
+      if (!isValidCouponCode(code)) {
+        this.logger.warn(`campaign promo rejected: invalid coupon code (tenant ${tenantId})`);
+        throw new BusinessException(ERROR_CODE.CAMPAIGN_PROMO_INVALID, HttpStatus.BAD_REQUEST);
+      }
+      out.couponCode = code;
+    } else {
+      delete out.couponCode;
+    }
+    return out;
   }
 
   private async requireCampaign(tenantId: number, id: number): Promise<Campaign> {

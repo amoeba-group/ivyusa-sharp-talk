@@ -64,6 +64,10 @@ export const en = {
     deleted_one: '{{count}} notification deleted',
     deleted_other: '{{count}} notifications deleted',
     deleteFailed: "Couldn't delete notifications. Please try again.",
+    /** Promo coupon code (ivy-docs T05). */
+    copyCode: 'Copy code',
+    codeCopied: 'Code copied',
+    copyFailed: "Couldn't copy the code",
     unreadCount_one: '{{count}} unread',
     unreadCount_other: '{{count}} unread',
   },

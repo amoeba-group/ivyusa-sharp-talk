@@ -16,6 +16,10 @@ export interface CampaignContent {
   message?: string;
   channel?: string;
   link?: CampaignLink;
+  /** Promo kind (ivy-docs T05): event (default) or coupon. Locked once sent. */
+  kind?: 'event' | 'coupon';
+  /** A coupon's shared code, 1–32 of [A-Za-z0-9_-]. Locked once sent. */
+  couponCode?: string;
   [key: string]: unknown;
 }
 
@@ -27,6 +31,8 @@ export interface Campaign {
   audienceSize?: number;
   sentCount?: number;
   createdAt?: string;
+  /** Set the first time the campaign is sent; kind + coupon code lock from then on. */
+  sentAt?: string | null;
   content?: CampaignContent | null;
 }
 

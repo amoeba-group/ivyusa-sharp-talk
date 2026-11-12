@@ -9,15 +9,18 @@ import { OrderCache } from '../order/entity/order-cache.entity';
 import { OrderItem } from '../order/entity/order-item.entity';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
+import { NotificationPromoService } from './notification-promo.service';
+import { Campaign } from '../campaign/entity/campaign.entity';
 
 @Module({
   imports: [
     // Order rows are read (never written) for the feed's order notices (ivy-docs T02 B2).
-    TypeOrmModule.forFeature([Notification, NotificationPref, Session, Tenant, OrderCache, OrderItem]),
+    // Campaigns are read (never written) for promo kind + coupon code (ivy-docs T05).
+    TypeOrmModule.forFeature([Notification, NotificationPref, Session, Tenant, OrderCache, OrderItem, Campaign]),
     SessionModule,
   ],
   controllers: [NotificationController],
-  providers: [NotificationService],
+  providers: [NotificationService, NotificationPromoService],
   exports: [NotificationService],
 })
 export class NotificationModule {}

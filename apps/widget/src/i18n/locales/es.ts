@@ -63,6 +63,10 @@ export const es: Translation = {
     deleted_one: '{{count}} notificación eliminada',
     deleted_other: '{{count}} notificaciones eliminadas',
     deleteFailed: 'No se pudieron eliminar las notificaciones. Inténtalo de nuevo.',
+    /** Promo coupon code (ivy-docs T05). */
+    copyCode: 'Copiar código',
+    codeCopied: 'Código copiado',
+    copyFailed: 'No se pudo copiar el código',
     unreadCount_one: '{{count}} sin leer',
     unreadCount_other: '{{count}} sin leer',
   },

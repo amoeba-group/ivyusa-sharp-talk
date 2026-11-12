@@ -23,5 +23,13 @@
   "linkUrlHelp": "Phải bắt đầu bằng https://.",
   "toastCreated": "Đã tạo chiến dịch",
   "toastUpdated": "Đã cập nhật chiến dịch",
-  "toastSent": "Đã gửi chiến dịch"
+  "toastSent": "Đã gửi chiến dịch",
+  "type": "Loại",
+  "typeEvent": "Sự kiện",
+  "typeCoupon": "Coupon",
+  "couponCode": "Mã coupon",
+  "couponCodeHelp": "Chữ, số, - và _ · tối đa {{max}} ký tự",
+  "promoLocked": "Không đổi được sau khi đã gửi",
+  "errorPromoInvalid": "Kiểm tra loại và mã coupon: chỉ chữ, số, - và _.",
+  "errorPromoLocked": "Không đổi được loại và mã coupon của campaign đã gửi."
 }

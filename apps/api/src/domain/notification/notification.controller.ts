@@ -10,6 +10,7 @@ import {
   UpdatePrefRequest,
 } from './dto/request/notification.request';
 import { toNotificationResponse, toPrefResponse } from './notification.mapper';
+import { NotificationPromoService } from './notification-promo.service';
 import { Public } from '../../global/decorator/public.decorator';
 import { Paginated } from '../../global/interceptor/transform.interceptor';
 import { SessionToken } from '../../global/decorator/session-token.decorator';
@@ -32,7 +33,10 @@ function parseScope(scope?: string): NotificationScope | undefined {
 @ApiTags('Notification')
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly notificationPromoService: NotificationPromoService,
+  ) {}
 
   @Get()
   @Public()
@@ -54,7 +58,12 @@ export class NotificationController {
       s,
       parseScope(scope),
     );
-    return new Paginated(items.map(toNotificationResponse), buildPagination(p, s, total));
+    // Promo kind + coupon code from each row's campaign (ivy-docs T05).
+    const promos = await this.notificationPromoService.forRows(items);
+    return new Paginated(
+      items.map((n) => toNotificationResponse(n, promos.get(String(n.id)))),
+      buildPagination(p, s, total),
+    );
   }
 
   @Get('unread-count')

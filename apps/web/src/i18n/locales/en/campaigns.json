@@ -23,5 +23,13 @@
   "linkUrlHelp": "Must start with https://.",
   "toastCreated": "Campaign created",
   "toastUpdated": "Campaign updated",
-  "toastSent": "Campaign sent"
+  "toastSent": "Campaign sent",
+  "type": "Type",
+  "typeEvent": "Event",
+  "typeCoupon": "Coupon",
+  "couponCode": "Coupon code",
+  "couponCodeHelp": "Letters, numbers, - and _ · up to {{max}} characters",
+  "promoLocked": "Can't be changed after sending",
+  "errorPromoInvalid": "Check the type and the coupon code: letters, numbers, - and _ only.",
+  "errorPromoLocked": "A sent campaign's type and coupon code can't be changed."
 }

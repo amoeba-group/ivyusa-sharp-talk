@@ -155,6 +155,11 @@ Launcher (góc phải dưới) ─► Panel 380px
 - **Figma:** `1006:5284` (EN), `1007:1978` (KO), `993:1618`; bộ icon coupon `993:1254`.
 - 2 loại: **coupon cá nhân** (icon gift nền navy; vd. "Your exclusive 10% off coupon has arrived!") và **sự kiện** (icon sparkle nền magenta; tiêu đề đậm "Mad Shade" + mô tả "Buy one Get One 50% OFF today !", "BACK TO SCHOOL · CODE:SCHOOL20", "Beauty Pro & Student · Exclusive Saving 20% OFF").
 - Sự kiện có thể nhắm theo tag (subscription / IVY member / Beautizen / Round) và có icon khác nhau theo tag (ghi chú trang `0:1`).
+- **Đã làm (T05, 2026-11-12):**
+  - Loại (Event / Coupon) và mã coupon nhập ở console → Campaigns, khoá sau khi gửi.
+  - Thông báo trỏ về campaign (`ref_type 'campaign'`).
+  - Thẻ coupon có ô mã + Copy code; thẻ có link `https` mở tab mới.
+  - Chưa làm: icon theo tag và coupon riêng từng khách.
 
 ### SCR-IVY-08 · Notifications — Review
 - **Figma:** Master `992:192`, `1008:2191` (EN), `1006:5936`.
@@ -270,7 +275,7 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 | Nút xoá | `getByRole('button', { name: 'Delete Selected Notifications' \| 'Delete All Notifications' })` | ✅ (T07) |
 | Xác nhận xoá tất cả | `getByRole('alertdialog')` (+`data-testid="delete-all-confirm"`), nút `Cancel` / `Delete` | ✅ (T07) |
 | Toast | `getByRole('status')` (thành công) / `getByRole('alert')` (lỗi, có nút `Close`); `[data-testid="toast"]` + `data-tone="success\|error"` | ✅ (T07) — dùng chung, T05/T06 dùng lại |
-| Thẻ promo | `[data-testid="promo-item"]` + `data-kind="coupon\|event"`; icon `[data-testid="promo-icon"]`; mã coupon `[data-testid="coupon-code"]` + nút "Copy code" | ➕ (T05) |
+| Thẻ promo | `[data-testid="promo-item"]` + `data-kind="coupon\|event"`; icon `[data-testid="promo-icon"]`; mã coupon `[data-testid="coupon-code"]` + nút "Copy code" | ✅ (T05) |
 | Quick-reply | `[data-testid="quick-replies"]` › `getByRole('button', { name })` | ➕ testid (T08); class `.st-quick-reply` ✅ |
 | Composer | `getByPlaceholder('Ask Anything')`, `getByRole('button', { name: 'Send' })` | ➕ placeholder (T08); Send ✅ |
 | Chip quay về đầu | `getByRole('button', { name: 'Start over' })` | ➕ (T09) |
@@ -296,7 +301,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-06 | Chạm thông báo → mở Order Detail / vị trí giao hàng (BR-07) | Chỉ đánh dấu đã đọc, `linkUrl` không mở (`NotificationsTab.tsx`) | Điều hướng theo `refType/refId` | UI | T02 |
 | G-07 | Stepper **Preparing → Processing → In Transit → Delivered**; "Your order is on the way!" / "Your order is Delivered !"; nút **Track Order** | **Preparing → Shipped → In transit → Delivered** (`packages/types/src/domain/status-map.ts` `DELIVERY_STEPS_BY_LANG`); "Your order is on its way — it will reach you soon!"; "Track shipment" (`ShipmentList.tsx`) | Đổi nhãn bước 2 + copy (lưu ý `status-map.ts` dùng chung với API/console) | I18N | T03 ✅ (2026-11-11; bước 2 ở ES/VI/JA/ZH dịch theo "Processing") |
 | G-08 | Order Detail có **Billing/Shipping address + phone**, nhãn "Information" | Không có địa chỉ/điện thoại trong response (`widget.types.ts` `OrderDetailResponse`), nhãn "Contact information" | Thêm cột order (sync Shopify `shipping_address`, `billing_address`, `phone`) → mapper → UI. **Cần migration SQL** | API · UI | T04 ✅ (2026-11-12; đọc trực tiếp từ Shopify, không migration; hiện khi app có quyền PCD Address/Phone) |
-| G-09 | Promo: coupon (gift navy) vs sự kiện (sparkle magenta), tiêu đề đậm + mô tả, mã coupon | Chỉ là notification `event` với icon gift/sparkle; không có mã/copy; link không bấm được; API không có khái niệm coupon | Thẻ promo theo thiết kế + bấm mở link; hiển thị mã coupon (lấy từ body/metadata) + nút copy | UI (+API tuỳ chọn) | T05 |
+| G-09 | Promo: coupon (gift navy) vs sự kiện (sparkle magenta), tiêu đề đậm + mô tả, mã coupon | Chỉ là notification `event` với icon gift/sparkle; không có mã/copy; link không bấm được; API không có khái niệm coupon | Thẻ promo theo thiết kế + bấm mở link; hiển thị mã coupon (lấy từ body/metadata) + nút copy | UI (+API tuỳ chọn) | T05 ✅ (2026-11-12; loại + mã lưu trong campaign, khoá sau khi gửi; chưa có coupon riêng từng khách) |
 | G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 |
 | G-11 | Chọn nhiều + "Delete Selected Notifications" / "Delete All Notifications" | Đã có: nút "Select", "Delete selected (n)", "Delete all notifications" + `window.confirm` (`NotificationsTab.tsx` 324-333, 391-410) | Copy theo thiết kế; thay `window.confirm` bằng xác nhận trong panel; toast kết quả; (tuỳ chọn) vuốt trái để xoá | UI · I18N · API | T07 ✅ (2026-11-12; "Delete All" chỉ xoá chip đang xem; vuốt trái để xoá → T15) |
 | G-12 | Chat home: chip trắng viền có **emoji**, xếp wrap; lời chào IVY | Lưới 2 cột pill xanh nhạt hoặc thẻ có icon; nút scenario không có trường emoji (`ScenarioMenu.tsx`, `/ai-config/scenario`) | Thêm trường `emoji` cho nút scenario + kiểu hiển thị "chip wrap"; cấu hình 7 nút + lời chào cho tenant | UI · API · CFG | T08 |
@@ -338,6 +343,6 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | Q-13 | Thanh công bố AI ("This chat is AI-powered…") không có trong thiết kế — giữ dạng nào? | Giữ (pháp lý), thu gọn 1 dòng dưới composer |
 | Q-14 | Giữ nút đính kèm file trong composer? | Giữ (thiết kế không cấm) |
 | Q-15 | Contact Support của IVY gồm những kênh nào (thiết kế: chỉ email)? | Email + live chat khi có agent online |
-| Q-16 | Mã coupon lấy từ đâu (Shopify discount code? nhập tay khi gửi campaign?) | Nhập trong campaign console, lưu ở metadata notification |
+| Q-16 | Mã coupon lấy từ đâu (Shopify discount code? nhập tay khi gửi campaign?) | Nhập trong campaign console, lưu ở metadata notification. **Chốt (T05, 2026-11-12):** nhập trong console Campaigns, lưu ở `content.couponCode` của campaign; mỗi campaign một mã. |
 
 **Lỗi chính tả / copy trong Figma cần designer sửa** (không implement theo): "Today’s__" (placeholder), "Todays’__", "KR" lẫn "KO" ở nút ngôn ngữ, "구독 해택" → **혜택**, "4월 전" (nhiều khả năng là **4일 전**), tên frame "02.Pamyent", "03.Delievery".

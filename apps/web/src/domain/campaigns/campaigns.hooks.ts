@@ -5,6 +5,19 @@ import type { CampaignContent } from './campaigns.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
+/**
+ * The promo errors in the console's language (ivy-docs T05): the API answers
+ * in English and the client localizes by code (CLAUDE.md §2).
+ */
+const PROMO_ERROR_KEYS: Record<string, string> = {
+  E5158: 'errorPromoInvalid',
+  E5159: 'errorPromoLocked',
+};
+function errorText(t: (k: string) => string, err: Error): string {
+  const key = PROMO_ERROR_KEYS[(err as Error & { code?: string }).code ?? ''];
+  return key ? t(key) : err.message;
+}
+
 export function useCampaigns() {
   const tenantKey = useTenantKey();
   return useQuery({
@@ -24,7 +37,7 @@ export function useCreateCampaign() {
       qc.invalidateQueries({ queryKey: ['campaigns', tenantKey] });
       toast.success(t('toastCreated'));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(errorText(t, err)),
   });
 }
 
@@ -39,7 +52,7 @@ export function useUpdateCampaign() {
       qc.invalidateQueries({ queryKey: ['campaigns', tenantKey] });
       toast.success(t('toastUpdated'));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(errorText(t, err)),
   });
 }
 
@@ -55,6 +68,6 @@ export function useSendCampaign() {
     },
     // Send-time link validation failures (unknown handle / non-https URL)
     // surface the API 400 message here as a sticky error toast.
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(errorText(t, err)),
   });
 }

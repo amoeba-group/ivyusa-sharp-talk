@@ -19,6 +19,7 @@ import { Badge, toneForStatus } from '../ui/Badge';
 import { StatusPill } from '../ui/StatusPill';
 import { ToastHost } from '../ui/ToastHost';
 import { showToast } from '../../lib/toast';
+import { copyText, promoKind, safeLink } from '../../lib/promo';
 import { Spinner } from '../ui/Spinner';
 import { formatDate, groupByDate, noticeTime, shortDate } from '../../lib/format';
 import { NotificationIcon } from './NotificationIcon';
@@ -105,6 +106,21 @@ function Row({
   const title = order?.orderNumber ?? n.title;
   const summary = order ? orderSummary(t, order) : n.body;
   const time = noticeTimeText(t, n.createdAt, i18n.language);
+  // Promo rows (ivy-docs T05 D3): coupon or event, an https link to open, and
+  // a coupon's code to copy. None of it applies while rows are being picked.
+  const kind = promoKind(n);
+  const link = kind && !selecting ? safeLink(n.linkUrl) : null;
+  const couponCode = kind === 'coupon' && !selecting ? (n.couponCode ?? null) : null;
+  const copyCode = async () => {
+    if (!couponCode) return;
+    if (unread) onRead(n.id);
+    const ok = await copyText(couponCode);
+    showToast(
+      ok
+        ? { tone: 'success', message: t('notifications.codeCopied') }
+        : { tone: 'error', message: t('notifications.copyFailed') },
+    );
+  };
 
   const activate = () => {
     if (selecting) {
@@ -125,31 +141,83 @@ function Row({
         highlighted ? 'bg-highlight' : 'bg-white'
       }`}
     >
-      <NotificationIcon category={n.category} hasLink={!!n.linkUrl} highlighted={highlighted} />
+      {/* Icon + content: the promo card (`promo-item`, SPEC §9) is this pair. */}
+      <div
+        data-testid={kind ? 'promo-item' : undefined}
+        data-kind={kind ?? undefined}
+        className="flex min-w-0 flex-1 items-start gap-3"
+      >
+      <NotificationIcon category={n.category} kind={kind} hasLink={!!n.linkUrl} highlighted={highlighted} />
       {/* The row's own button and the review action are SIBLINGS, never
           nested. A button inside a button is invalid HTML: browsers recover
           from it inconsistently and the inner control's keyboard behaviour
           stops being dependable. */}
       <div className="min-w-0 flex-1">
-        <button
-          type="button"
-          onClick={activate}
-          className="w-full text-left"
-          // A row that only marks itself read says so; one that opens an
-          // order is named by its content.
-          aria-label={unread && !orderId && !selecting ? t('notifications.markRead') : undefined}
-        >
-          <span className="flex items-center gap-2">
-            {title && <span className="truncate text-sm font-bold text-gray-900">{title}</span>}
-            <StatusPill badge={n.statusBadge} />
-          </span>
-          {summary && <span className="mt-0.5 block text-sm text-gray-800">{summary}</span>}
-          {time && (
-            <span data-testid="notif-time" className="mt-1 block text-xs text-gray-400">
-              {time}
+        {(() => {
+          const content = (
+            <>
+              <span className="flex items-center gap-2">
+                {title && (
+                  <span
+                    className={`text-sm font-bold text-gray-900 ${kind ? 'line-clamp-2' : 'truncate'}`}
+                  >
+                    {title}
+                  </span>
+                )}
+                <StatusPill badge={n.statusBadge} />
+              </span>
+              {summary && <span className="mt-0.5 block text-sm text-gray-800">{summary}</span>}
+              {time && (
+                <span data-testid="notif-time" className="mt-1 block text-xs text-gray-400">
+                  {time}
+                </span>
+              )}
+            </>
+          );
+          // A promo with a link opens it in a new tab — a real link, so it
+          // reads as one and the browser treats it as one (T05 D3).
+          return link ? (
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                if (unread) onRead(n.id);
+              }}
+              className="block w-full text-left"
+            >
+              {content}
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={activate}
+              className="w-full text-left"
+              // A row that only marks itself read says so; one that opens an
+              // order is named by its content.
+              aria-label={unread && !orderId && !selecting ? t('notifications.markRead') : undefined}
+            >
+              {content}
+            </button>
+          );
+        })()}
+        {couponCode && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              data-testid="coupon-code"
+              className="rounded-st-sm border border-dashed border-gray-300 bg-gray-50 px-2.5 py-1 font-mono text-sm font-semibold tracking-wide text-gray-900"
+            >
+              {couponCode}
             </span>
-          )}
-        </button>
+            <button
+              type="button"
+              onClick={() => void copyCode()}
+              className="rounded-st-sm border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            >
+              {t('notifications.copyCode')}
+            </button>
+          </div>
+        )}
         {reviewable && (
           <button
             type="button"
@@ -160,6 +228,7 @@ function Row({
             {t('orders.writeReview')}
           </button>
         )}
+      </div>
       </div>
       {selecting ? (
         <button

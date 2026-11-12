@@ -18,6 +18,7 @@
 
 import type { WidgetLoginMode, WidgetTab, WidgetTabPosition } from '../common/enum.types';
 import type { PrivacyNoticeKey } from '../common/privacy-notice-copy';
+import type { PromoKind } from '../common/promo';
 import type { WidgetHeaderControls } from '../common/widget-access';
 import type { WidgetTheme } from '../common/widget-theme';
 
@@ -478,6 +479,14 @@ export interface NotificationResponse {
   read: boolean;
   readAt: string | null;
   createdAt: string;
+  /**
+   * Promo kind (ivy-docs T05): from the campaign this row points at
+   * (`refType 'campaign'`). Null on campaign rows written before T05 and on
+   * every non-promo row — the client then falls back to its own guess.
+   */
+  kind?: PromoKind | null;
+  /** The campaign's shared coupon code, when it is a coupon that has one. */
+  couponCode?: string | null;
 }
 
 export interface NotificationPrefResponse {

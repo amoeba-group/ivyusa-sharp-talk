@@ -22,7 +22,7 @@
 | BUG-014 | E2E chập chờn: "apiResponse.json: Response has been disposed" làm fail test đã pass | E2E harness | 🟡 | Fixed (T01) | T01 |
 | BUG-015 | Feed thông báo hiện mỗi sự kiện **tới 5 lần** (1 dòng cho mỗi kênh in_app/email/sms/web_push/push) và badge đếm cả 5 | API | 🟠 | Fixed (T02) | T02 |
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
-| BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng | E2E harness | 🟡 | Fixed (T03) | T03 |
+| BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng (TC-05-04 cùng lỗi) | E2E harness | 🟡 | Fixed (T03, T05) | T03 · T05 |
 | BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
 | BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
@@ -104,6 +104,7 @@
 - **Hiện tượng:** sau khi bấm Track Order, test lấy `(await popup).url()` và nhận `""`. Tab mới đã mở, nhưng lúc sự kiện `popup` bắn ra thì tab chưa điều hướng tới `ups.com`. Lỗi xảy ra mỗi lần chạy, kể cả khi app mở đúng link.
 - **Fix:** giả lập `https://www.ups.com/**` ở mức context để CI không phụ thuộc mạng ngoài, rồi `waitForURL(/ups\.com\/track/, { waitUntil: 'commit' })` trước khi kiểm tra URL (có `tracknum`). Lặp ×3: 15/15.
 - **Phòng ngừa:** với tab mới hoặc điều hướng, luôn chờ `waitForURL` / `waitForLoadState`. Không đọc `url()` ngay sau sự kiện `popup`.
+- **Lặp lại ở T05:** TC-05-04 có đúng lỗi này, sửa cùng cách (giả lập `https://ivyusa.com/**`).
 
 ## BUG-018 · TC-01-06 đo panel trước khi theme về
 - **Hiện tượng:** cổng CI chạy lặp ×2 có 1 lần đỏ: "Expected <= 382, Received 404". Chạy riêng TC-01-06 ×15 với 4 worker: **11/15 đỏ**. CI chạy 1 worker và có retry nên chưa lộ ra.

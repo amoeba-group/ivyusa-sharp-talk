@@ -4,9 +4,13 @@ import type {
 } from '@sharptalk/types';
 import { Notification } from './entity/notification.entity';
 import { NotificationPref } from './entity/notification-pref.entity';
+import type { NotificationPromo } from './notification-promo.service';
 
-/** Map a notification row to the camelCase response shape (read flag derived). */
-export function toNotificationResponse(n: Notification): NotificationResponse {
+/**
+ * Map a notification row to the camelCase response shape (read flag derived).
+ * `promo` is the row's campaign kind + code, when it points at one (T05).
+ */
+export function toNotificationResponse(n: Notification, promo?: NotificationPromo): NotificationResponse {
   return {
     id: String(n.id),
     category: n.category,
@@ -20,6 +24,8 @@ export function toNotificationResponse(n: Notification): NotificationResponse {
     read: n.readAt != null,
     readAt: n.readAt ? n.readAt.toISOString() : null,
     createdAt: n.createdAt.toISOString(),
+    kind: promo?.kind ?? null,
+    couponCode: promo?.couponCode ?? null,
   };
 }
 

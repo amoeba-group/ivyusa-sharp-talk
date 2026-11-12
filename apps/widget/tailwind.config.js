@@ -65,6 +65,8 @@ export default {
          * disappear into the row behind it (frame 34).
          */
         highlight: { DEFAULT: '#FEF9F3', icon: '#F5E6D3' },
+        /** Promo icon circles (ivy-docs SPEC §4, T05): coupon gift, event sparkle. */
+        promo: { coupon: '#1A2E6B', event: '#E91E8C' },
         gray: {
           50: '#F9FAFB', // date-group band
           100: '#F3F4F6', // bot bubble, idle filter chip

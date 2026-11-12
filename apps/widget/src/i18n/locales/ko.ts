@@ -63,6 +63,10 @@ export const ko: Translation = {
     deleted_one: '알림 {{count}}건을 삭제했습니다',
     deleted_other: '알림 {{count}}건을 삭제했습니다',
     deleteFailed: '알림을 삭제하지 못했습니다. 다시 시도해 주세요.',
+    /** Promo coupon code (ivy-docs T05). */
+    copyCode: '코드 복사',
+    codeCopied: '코드를 복사했습니다',
+    copyFailed: '코드를 복사하지 못했습니다',
     unreadCount_one: '읽지 않음 {{count}}건',
     unreadCount_other: '읽지 않음 {{count}}건',
   },

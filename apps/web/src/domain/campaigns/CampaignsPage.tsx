@@ -14,8 +14,11 @@ import {
   useUpdateCampaign,
 } from './campaigns.hooks';
 import type { Campaign, CampaignContent, CampaignLink } from './campaigns.service';
+// Source path, not '@sharptalk/types': a value import from the package breaks the browser build.
+import { COUPON_CODE_MAX, isValidCouponCode } from '../../../../../packages/types/src/common/promo';
 
 type LinkType = 'none' | 'product' | 'url';
+type PromoKind = 'event' | 'coupon';
 
 export function CampaignsPage() {
   const { t } = useTranslation('campaigns');
@@ -33,6 +36,10 @@ export function CampaignsPage() {
   const [linkType, setLinkType] = useState<LinkType>('none');
   const [linkHandle, setLinkHandle] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
+  // Promo kind + coupon code (ivy-docs T05 D1). Event is the default: a
+  // campaign made the way it always was behaves the way it always did.
+  const [kind, setKind] = useState<PromoKind>('event');
+  const [couponCode, setCouponCode] = useState('');
 
   const close = () => {
     setOpen(false);
@@ -43,6 +50,8 @@ export function CampaignsPage() {
     setLinkType('none');
     setLinkHandle('');
     setLinkUrl('');
+    setKind('event');
+    setCouponCode('');
   };
 
   const openCreate = () => {
@@ -59,8 +68,14 @@ export function CampaignsPage() {
     setLinkType(link?.type === 'product' || link?.type === 'url' ? link.type : 'none');
     setLinkHandle(link?.type === 'product' ? (link.handle ?? '') : '');
     setLinkUrl(link?.type === 'url' ? (link.url ?? '') : '');
+    setKind(r.content?.kind === 'coupon' ? 'coupon' : 'event');
+    setCouponCode(typeof r.content?.couponCode === 'string' ? r.content.couponCode : '');
     setOpen(true);
   };
+
+  // Shoppers already hold a sent campaign's kind and code (the API refuses to
+  // change them — E5159), so the form says so instead of letting a save fail.
+  const promoLocked = !!editing && (editing.sentAt != null || editing.status === 'sent');
 
   const buildLink = (): CampaignLink | undefined => {
     if (linkType === 'product') return { type: 'product', handle: linkHandle.trim() };
@@ -76,8 +91,11 @@ export function CampaignsPage() {
       channel,
       message,
       link: buildLink(),
+      kind,
+      couponCode: couponCode.trim(),
     };
     if (!content.link) delete content.link;
+    if (kind !== 'coupon') delete content.couponCode;
     if (editing) {
       updateCampaign.mutate({ id: editing.id, name, content }, { onSuccess: close });
     } else {
@@ -87,6 +105,7 @@ export function CampaignsPage() {
 
   const linkIncomplete =
     (linkType === 'product' && !linkHandle.trim()) || (linkType === 'url' && !linkUrl.trim());
+  const couponInvalid = kind === 'coupon' && !isValidCouponCode(couponCode.trim());
   const saving = createCampaign.isPending || updateCampaign.isPending;
 
   const columns: Column<Campaign>[] = [
@@ -165,7 +184,7 @@ export function CampaignsPage() {
             <Button variant="ghost" onClick={close}>
               {tc('cancel')}
             </Button>
-            <Button onClick={save} disabled={saving || !name || !message || linkIncomplete}>
+            <Button onClick={save} disabled={saving || !name || !message || linkIncomplete || couponInvalid}>
               {tc('save')}
             </Button>
           </>
@@ -181,6 +200,42 @@ export function CampaignsPage() {
             <option value="kakao">kakao</option>
           </Select>
         </FormRow>
+        <FormRow label={t('type')}>
+          <div className="flex gap-5" role="radiogroup" aria-label={t('type')}>
+            {(['event', 'coupon'] as const).map((k) => (
+              <label key={k} className="flex items-center gap-2 text-sm text-gray-800">
+                <input
+                  type="radio"
+                  name="campaign-kind"
+                  value={k}
+                  checked={kind === k}
+                  disabled={promoLocked}
+                  onChange={() => setKind(k)}
+                />
+                {t(k === 'event' ? 'typeEvent' : 'typeCoupon')}
+              </label>
+            ))}
+          </div>
+          {promoLocked && <p className="mt-1 text-xs text-gray-500">{t('promoLocked')}</p>}
+        </FormRow>
+        {kind === 'coupon' && (
+          <FormRow label={t('couponCode')}>
+            <Input
+              value={couponCode}
+              maxLength={COUPON_CODE_MAX}
+              disabled={promoLocked}
+              aria-invalid={couponCode.trim() !== '' && couponInvalid}
+              onChange={(e) => setCouponCode(e.target.value)}
+            />
+            <p
+              className={`mt-1 text-xs ${
+                couponCode.trim() !== '' && couponInvalid ? 'text-red-600' : 'text-gray-500'
+              }`}
+            >
+              {t('couponCodeHelp', { max: COUPON_CODE_MAX })}
+            </p>
+          </FormRow>
+        )}
         <FormRow label={t('message')}>
           <textarea
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"

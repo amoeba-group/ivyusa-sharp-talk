@@ -63,6 +63,10 @@ export const ja: Translation = {
     deleted_one: '{{count}}件の通知を削除しました',
     deleted_other: '{{count}}件の通知を削除しました',
     deleteFailed: '通知を削除できませんでした。もう一度お試しください。',
+    /** Promo coupon code (ivy-docs T05). */
+    copyCode: 'コードをコピー',
+    codeCopied: 'コードをコピーしました',
+    copyFailed: 'コードをコピーできませんでした',
     unreadCount_one: '未読{{count}}件',
     unreadCount_other: '未読{{count}}件',
   },

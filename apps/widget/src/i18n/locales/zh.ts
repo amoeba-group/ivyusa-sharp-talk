@@ -63,6 +63,10 @@ export const zh: Translation = {
     deleted_one: '已删除 {{count}} 条通知',
     deleted_other: '已删除 {{count}} 条通知',
     deleteFailed: '无法删除通知，请重试。',
+    /** Promo coupon code (ivy-docs T05). */
+    copyCode: '复制代码',
+    codeCopied: '已复制代码',
+    copyFailed: '无法复制代码',
     unreadCount_one: '{{count}} 条未读',
     unreadCount_other: '{{count}} 条未读',
   },

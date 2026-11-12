@@ -102,7 +102,8 @@ export type NotificationScope = (typeof NOTIFICATION_SCOPE)[keyof typeof NOTIFIC
  * widget opens on tap. `order` → Order Detail (ivy-docs T02); `order_item` →
  * the review form (PLN-260817 S5).
  */
-export const NOTIFICATION_REF = { ORDER: 'order', ORDER_ITEM: 'order_item' } as const;
+/** `campaign`: a promo notification's campaign (ivy-docs T05) — kind and coupon code come from it. */
+export const NOTIFICATION_REF = { ORDER: 'order', ORDER_ITEM: 'order_item', CAMPAIGN: 'campaign' } as const;
 export type NotificationRef = (typeof NOTIFICATION_REF)[keyof typeof NOTIFICATION_REF];
 
 /**

@@ -23,5 +23,13 @@
   "linkUrlHelp": "https:// で始まる必要があります。",
   "toastCreated": "キャンペーンを作成しました",
   "toastUpdated": "キャンペーンを更新しました",
-  "toastSent": "キャンペーンを配信しました"
+  "toastSent": "キャンペーンを配信しました",
+  "type": "種類",
+  "typeEvent": "イベント",
+  "typeCoupon": "クーポン",
+  "couponCode": "クーポンコード",
+  "couponCodeHelp": "英数字・-・_ 最大{{max}}文字",
+  "promoLocked": "送信後は変更できません",
+  "errorPromoInvalid": "種類とクーポンコードを確認してください。英数字・-・_のみ使用できます。",
+  "errorPromoLocked": "送信済みキャンペーンの種類とクーポンコードは変更できません。"
 }

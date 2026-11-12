@@ -348,6 +348,12 @@ export const ERROR_CODE = {
   /** An accepted conversation goes back to the AI with "hand back", not the takeover's hand-over. */
   CONVERSATION_ACCEPTED: { code: 'E5157', message: 'This conversation was accepted; hand it back instead' },
 
+  // E5158–E5159 — campaign promo kind + coupon code (ivy-docs T05, PLN-261112-IVY-T05).
+  /** `content.kind` is not event/coupon, or a coupon's code is missing / not 1–32 of [A-Za-z0-9_-]. */
+  CAMPAIGN_PROMO_INVALID: { code: 'E5158', message: 'Campaign type or coupon code is invalid' },
+  /** A sent campaign's kind / coupon code is what shoppers already hold — it cannot change. */
+  CAMPAIGN_PROMO_LOCKED: { code: 'E5159', message: 'Campaign type and coupon code cannot be changed after sending' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },
