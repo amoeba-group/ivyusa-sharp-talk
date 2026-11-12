@@ -30,7 +30,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 3 | T03 | Delivery — thẻ + stepper 4 bước + Track Order | I18N · UI | P0 | T02 | ✅ | TC-03-01..05 |
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N · API | P1 | T02 | ✅ | TC-07-01..07 |
 | 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · UI | P1 | T02 | ✅ code · ⏳ quyền PCD Address/Phone cho app Shopify | TC-04-01..07 |
-| 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI (+API) | P1 | T02 | ⬜ | TC-05-01..04 |
+| 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI (+API) | P1 | T02 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T05-Promo.md) | TC-05-01..04 |
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ⬜ | TC-06-01..03 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ⬜ | TC-08-01..05 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ⬜ | TC-09-01..04 |
@@ -150,7 +150,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Sửa test khớp chữ ở tab bị ẩn (BUG-020). Thêm `@T04` vào `test:ci`.
 - **TC:** TC-04-01..07 — **7/7** ✅ (06, 07 thêm: không có quyền → ẩn khối địa chỉ; không có billing → "-").
 
-### T05 · Promo — ⬜
+### T05 · Promo — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T05-Promo.md)
 - **Figma:** `1006:5284`, `1007:1978`, icon `993:1254`. **Gap:** G-09.
 - **Hợp đồng API đề xuất** (`NotificationResponse`): `kind?: 'coupon' | 'event'`, `couponCode?: string | null` (Q-16: nhập trong campaign console).
 - **Việc cần làm:** thẻ promo (icon gift nền navy `#1A2E6B` cho coupon, sparkle magenta `#E91E8C` cho sự kiện), tiêu đề đậm + mô tả, mã coupon + nút "Copy code" (toast), bấm thẻ có `linkUrl` thì mở tab mới. Test-id `promo-item` (+`data-kind`), `promo-icon`, `coupon-code`.
