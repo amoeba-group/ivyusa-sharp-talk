@@ -71,7 +71,7 @@ Kế hoạch: [PLN-261112-IVY-T09](../plan/PLN-261112-IVY-T09-My-Orders.md), duy
 
 | Mục | Trạng thái |
 |---|---|
-| Commit | ⏳ điền sau khi push lên `deploy/talk-ivyusa` |
-| CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log` |
+| Commit | `4e486a76` trên `deploy/talk-ivyusa` |
+| CI | ✅ run 43184638826, xong 08:42:07Z: verify ✅, e2e gate ✅ (có `@T09`), deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm `Deployed.` cho `4e486a76` |
 | SQL / migration | Không có |
