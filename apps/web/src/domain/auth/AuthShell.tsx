@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Bot, Languages, MessagesSquare, Sparkles } from 'lucide-react';
+import { Bot, Languages, MessagesSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/layouts/Header';
 import { ThemeMenu } from '@/layouts/ThemeMenu';
@@ -48,9 +48,7 @@ export function AuthShell({
           aria-hidden
         />
         <Link to="/" className="relative flex items-center gap-2.5 text-white" aria-label={t('backToHome')}>
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-inset ring-white/25">
-            <Sparkles className="h-5 w-5" aria-hidden />
-          </span>
+          <img src="/ivy-icon.png" alt="" className="h-9 w-9 rounded-full ring-2 ring-white/30" />
           <span className="text-lg font-semibold tracking-tight">SharpTalk</span>
         </Link>
         <div className="relative">
@@ -80,10 +78,10 @@ export function AuthShell({
             <div className="mb-7 flex flex-col items-center text-center">
               <Link
                 to="/"
-                className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-violet-500 text-white shadow-md"
+                className="mb-4 block h-12 w-12 rounded-full shadow-md"
                 aria-label={t('backToHome')}
               >
-                <Sparkles className="h-6 w-6" aria-hidden />
+                <img src="/ivy-icon.png" alt="" className="h-12 w-12 rounded-full" />
               </Link>
               {tenantName ? (
                 <>

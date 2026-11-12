@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { ChevronsLeft, ChevronsRight, Sparkles, X } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth-store';
 import { useUiStore } from '@/store/ui-store';
@@ -24,9 +24,8 @@ function Brand({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () 
         collapsed && 'justify-center px-0',
       )}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-violet-500 text-white shadow-sm">
-        <Sparkles className="h-[18px] w-[18px]" aria-hidden />
-      </span>
+      {/* IVY USA brand mark (public/ivy-icon.png). Decorative: the link is named by aria-label. */}
+      <img src="/ivy-icon.png" alt="" className="h-9 w-9 shrink-0 rounded-full shadow-sm" />
       {!collapsed && (
         <span className="min-w-0 leading-tight">
           {/* Tenant-first: shop name on top, brand underneath, smaller. */}
