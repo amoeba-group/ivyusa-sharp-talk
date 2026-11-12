@@ -34,7 +34,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ✅ | TC-06-01..05 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
-| 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ⬜ | TC-10-01..05 |
+| 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T10-Product-Help.md) | TC-10-01..05 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ⬜ | TC-11-01..04 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ⬜ (TC đã xanh 4/4, chỉ còn rà visual/copy) | TC-13-01..04 |
@@ -220,7 +220,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Thêm `@T09` vào `test:ci`.
 - **TC:** TC-09-01..07 — **7/7** ✅ (05: Start over ở kịch bản khác; 06: Back từ Order Detail; 07: Track delivery).
 
-### T10 · Product Help — ⬜
+### T10 · Product Help — 🟨 chờ duyệt · [PLN](../docs/plan/PLN-261112-IVY-T10-Product-Help.md)
 - **Figma:** `1006:5588`, `993:2207`, `1008:2613`, `1008:2722`. **Gap:** G-16. **BR:** 17.
 - **Việc cần làm:** menu con (Usage · Ingredients · Exchange / Return · Restock alert · **Start over**); nhánh danh mục từ `GET /products/categories` → chip → "Popular products" (`/products/recommendations` hoặc `/products?category=`) → thẻ sản phẩm; Exchange / Return → câu chính sách 7 ngày (copy tenant/KB). Q-04: ẩn 2 chip "??".
 - **TC:** TC-10-01..05.
