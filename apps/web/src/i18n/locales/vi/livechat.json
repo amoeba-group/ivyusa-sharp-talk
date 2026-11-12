@@ -607,7 +607,8 @@
       "saveError": "Không lưu được cài đặt cảnh báo"
     },
     "tab_alarms": "Cảnh báo",
-    "tab_callbacks": "Yêu cầu liên hệ lại"
+    "tab_callbacks": "Yêu cầu liên hệ lại",
+    "tab_inquiries": "Yêu cầu liên hệ"
   },
   "callback": {
     "hint": "Nhân viên liên hệ khách hàng qua thông tin khách để lại. Mỗi lần bấm [Xem] đều được ghi nhật ký kiểm tra.",
@@ -726,5 +727,33 @@
     "resumed": "Đã giao lại cho AI",
     "failed": "Không đổi được trả lời tự động",
     "stillOn": "AI vẫn đang trả lời trong hội thoại này."
+  },
+  "inquiry": {
+    "hint": "Form liên hệ khách gửi từ Contact Support trong widget. Trả lời qua email rồi đánh dấu đã trả lời.",
+    "col": {
+      "received": "Nhận lúc",
+      "name": "Tên",
+      "email": "Email",
+      "message": "Nội dung",
+      "status": "Trạng thái"
+    },
+    "status_open": "Chưa trả lời",
+    "status_answered": "Đã trả lời",
+    "status_all": "Tất cả",
+    "open": "Mở",
+    "empty": "Chưa có yêu cầu nào.",
+    "dialogTitle": "Yêu cầu · {{at}}",
+    "loading": "Đang tải…",
+    "loadError": "Không tải được yêu cầu này.",
+    "reply": "Trả lời qua email",
+    "replySubject": "Re: Yêu cầu của bạn",
+    "replyWrote": "{{name}} đã viết:",
+    "replyHint": "\"Trả lời qua email\" mở ứng dụng mail với địa chỉ của khách và trích nội dung họ gửi. Mỗi lần mở yêu cầu được ghi vào nhật ký kiểm toán.",
+    "markAnswered": "Đánh dấu đã trả lời",
+    "reopen": "Mở lại",
+    "answeredToast": "Đã đánh dấu đã trả lời.",
+    "reopenedToast": "Đã mở lại.",
+    "updateError": "Không cập nhật được yêu cầu.",
+    "openConversation": "Mở cuộc chat #{{id}}"
   }
 }

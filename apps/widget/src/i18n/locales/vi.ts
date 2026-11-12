@@ -275,17 +275,49 @@ export const vi: Translation = {
   },
 
   contact: {
-    title: 'Liên hệ hỗ trợ',
-    phone: '1588-0000',
-    hours: 'Thứ Hai–Thứ Sáu 10:00–18:00',
-    email: 'help@ivy.com',
-    chatAgent: 'Trò chuyện với nhân viên',
+    // Contact Support (ivy-docs T11, SCR-IVY-13). The channels themselves — the
+    // address, a phone number — are the tenant's settings, never text here (BUG-010).
+    title: 'Vui lòng chọn cách bạn muốn liên hệ với chúng tôi.',
     methods: {
-      phone: 'Gọi điện',
-      email: 'Email',
-      chat: 'Chat trực tuyến',
+      email: 'Gửi yêu cầu qua email',
+      phone: 'Điện thoại',
+      chat: 'Chat với nhân viên',
     },
-    emailHours: 'Tiếp nhận 24/7 · phản hồi trong 1 ngày làm việc',
+    emailHours: 'Nhận 24 giờ · Trả lời trong 1 ngày làm việc',
+    phoneHint: 'Chạm để gọi',
+    chatHint: 'Trò chuyện với đội ngũ ngay trong khung chat này',
+    form: {
+      lead: 'Vui lòng nhập thông tin liên hệ và cho chúng tôi biết bạn cần hỗ trợ gì.',
+      name: 'Tên',
+      namePlaceholder: 'Nhập tên của bạn',
+      email: 'Email',
+      emailPlaceholder: 'Nhập email của bạn',
+      message: 'Nội dung',
+      messagePlaceholder: 'Hãy mô tả điều bạn cần hỗ trợ',
+      send: 'Gửi tin nhắn',
+      sending: 'Đang gửi…',
+      errors: {
+        nameRequired: 'Vui lòng nhập tên.',
+        emailRequired: 'Vui lòng nhập email.',
+        emailInvalid: 'Vui lòng nhập email hợp lệ.',
+        messageRequired: 'Vui lòng nhập nội dung.',
+        tooLong: 'Tối đa {{max}} ký tự.',
+        consent: 'Vui lòng đồng ý với thông báo quyền riêng tư ở đầu khung chat trước.',
+        invalid: 'Vui lòng kiểm tra lại tên, email và nội dung.',
+        tooMany: 'Bạn đã gửi nhiều tin trong 1 giờ qua. Vui lòng thử lại sau.',
+        erased: 'Không dùng được địa chỉ email này. Vui lòng nhập địa chỉ khác.',
+        failed: 'Chưa gửi được tin nhắn. Vui lòng thử lại.',
+      },
+    },
+    sent: {
+      title: 'Yêu cầu của bạn',
+      name: 'Tên:',
+      email: 'Email:',
+      message: 'Nội dung:',
+      successTitle: 'Tin nhắn của bạn đã được gửi thành công.',
+      successBody: 'Đội hỗ trợ sẽ xem yêu cầu và trả lời qua địa chỉ email bạn đã cung cấp.',
+      successHint: 'Vui lòng kiểm tra hộp thư để nhận phản hồi.',
+    },
   },
 
   affiliate: {

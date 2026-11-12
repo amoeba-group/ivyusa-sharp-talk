@@ -271,17 +271,49 @@ export const es: Translation = {
   },
 
   contact: {
-    title: 'Contactar con soporte',
-    phone: '1588-0000',
-    hours: 'Lun–Vie 10:00–18:00',
-    email: 'help@ivy.com',
-    chatAgent: 'Chatear con un agente',
+    // Contact Support (ivy-docs T11, SCR-IVY-13). The channels themselves — the
+    // address, a phone number — are the tenant's settings, never text here (BUG-010).
+    title: 'Elige cómo quieres contactarnos.',
     methods: {
+      email: 'Consulta por correo',
       phone: 'Teléfono',
-      email: 'Correo electrónico',
-      chat: 'Chat en vivo',
+      chat: 'Chatear con un agente',
     },
-    emailHours: 'Abierto 24/7 · respuesta en 1 día hábil',
+    emailHours: 'Abierto 24 horas · Respuesta en 1 día hábil',
+    phoneHint: 'Toca para llamar',
+    chatHint: 'Habla con nuestro equipo aquí mismo en el chat',
+    form: {
+      lead: 'Introduce tus datos de contacto y cuéntanos cómo podemos ayudarte.',
+      name: 'Nombre',
+      namePlaceholder: 'Escribe tu nombre',
+      email: 'Correo electrónico',
+      emailPlaceholder: 'Escribe tu correo',
+      message: 'Mensaje',
+      messagePlaceholder: 'Cuéntanos cómo podemos ayudarte',
+      send: 'Enviar mensaje',
+      sending: 'Enviando…',
+      errors: {
+        nameRequired: 'El nombre es obligatorio.',
+        emailRequired: 'El correo es obligatorio.',
+        emailInvalid: 'Introduce un correo electrónico válido.',
+        messageRequired: 'El mensaje es obligatorio.',
+        tooLong: 'Máximo {{max}} caracteres.',
+        consent: 'Primero acepta el aviso de privacidad en la parte superior del chat.',
+        invalid: 'Revisa tu nombre, correo y mensaje.',
+        tooMany: 'Has enviado varios mensajes en la última hora. Inténtalo más tarde.',
+        erased: 'No se puede usar esta dirección de correo. Escribe otra.',
+        failed: 'No se pudo enviar tu mensaje. Inténtalo de nuevo.',
+      },
+    },
+    sent: {
+      title: 'Tu consulta',
+      name: 'Nombre:',
+      email: 'Correo:',
+      message: 'Mensaje:',
+      successTitle: 'Tu mensaje se ha enviado correctamente.',
+      successBody: 'Nuestro equipo de soporte revisará tu consulta y responderá al correo que indicaste.',
+      successHint: 'Revisa tu bandeja de entrada para ver nuestra respuesta.',
+    },
   },
 
   affiliate: {

@@ -16,7 +16,7 @@
 | BUG-007 | `npm audit`: 64 lỗ hổng (4 critical, 26 high) | Security | 🟠 | Open (cần phân loại) | — |
 | BUG-008 | `scripts/manual-screenshots.mjs` trỏ widget sang :5175 (cổng PWA) | Tooling | 🟡 | Open | — |
 | BUG-009 | Lưu review thất bại bị nuốt lỗi, shopper không được báo gì | Widget | 🟠 | Fixed (T06) | T06 |
-| BUG-010 | Điện thoại/email hỗ trợ của IVY hard-code trong cả 6 locale → hiện cho **mọi tenant** | Widget / Multi-tenant | 🟠 | Open | T11 |
+| BUG-010 | Điện thoại/email hỗ trợ của IVY hard-code trong cả 6 locale → hiện cho **mọi tenant** | Widget / Multi-tenant | 🟠 | Fixed (T11, 2026-11-13) | T11 |
 | BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed: feed thông báo (T02), thẻ giao hàng (T03), Order Detail (T04), chip Review (T06), thẻ đơn trong chat + danh sách đơn + feed inquiry (T09) | T02 · T03 · T04 · T06 · T09 |
 | BUG-012 | `radius:check` và `check-migrations --check` báo đỏ trên Windows dù CI (Linux) xanh | Tooling | 🟡 | Open (CI không ảnh hưởng) | T00-d |
 | BUG-014 | E2E chập chờn: "apiResponse.json: Response has been disposed" làm fail test đã pass | E2E harness | 🟡 | Fixed (T01) | T01 |
@@ -24,7 +24,7 @@
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
 | BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng (TC-05-04 cùng lỗi) | E2E harness | 🟡 | Fixed (T03, T05, T06) | T03 · T05 · T06 |
 | BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
-| BUG-024 | Khung trả lời trong chat (My Orders, Contact, Affiliate…) nằm ở **một ô cố định cuối luồng**, nên tin nhắn gửi sau hiện **phía trên** nó | Widget | 🟡 | Fixed cho My Orders + Start over (T09). Contact, Affiliate: T11 / T12 | T09 · T11 · T12 |
+| BUG-024 | Khung trả lời trong chat (My Orders, Contact, Affiliate…) nằm ở **một ô cố định cuối luồng**, nên tin nhắn gửi sau hiện **phía trên** nó | Widget | 🟡 | Fixed cho My Orders + Start over (T09), Product Help (T10), Contact (T11). Affiliate: T12 | T09 · T11 · T12 |
 | BUG-022 | Lưu nút trả lời nhanh trong console **làm mất câu hỏi** (`message`) của nút "Send a message": `sanitize()` dựng lại nút mà không có trường này, nên nút luôn gửi nhãn thay câu đã nhập | API | 🟠 | Fixed (T08) | T08 |
 | BUG-023 | Lần đầu mở Chat (khách đã đăng nhập, chưa có theme cache): menu nút vẽ **kiểu mặc định** (lưới 2 cột xanh) rồi mới đổi sang kiểu của tenant khi session/ensure về | Widget | 🟡 | Fixed (T08) | T08 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
@@ -89,6 +89,8 @@
 ## BUG-010 · Liên hệ hỗ trợ hard-code cho mọi tenant
 - `apps/widget/src/i18n/locales/{en,es,ja,ko,vi,zh}.ts`: `contact.phone: '1588-0000'`, `contact.email: 'help@ivy.com'`, được `ContactCard.tsx:40-41` đọc ra. Hệ quả: tenant khác cũng hiển thị số/email của IVY.
 - **Fix (T11):** lấy kênh liên hệ từ cấu hình tenant; locale chỉ giữ nhãn.
+- **Đã sửa (2026-11-13):** `widgetCopy.supportEmail` / `supportPhone` / `contactLiveChat`, sửa ở console → Settings → Widget → Contact Support. 6 file ngôn ngữ không còn `1588-0000` / `help@ivy.com`. `contactChannels()` chỉ trả kênh tenant đã điền; không điền gì → thẻ live chat. TC-11-01, TC-11-07.
+- **Phòng ngừa:** giá trị của một tenant (số, email, tên cửa hàng, giờ mở cửa) không bao giờ nằm trong file ngôn ngữ — file ngôn ngữ dùng chung cho mọi tenant.
 
 ## BUG-011 · Pill trạng thái chưa dịch
 - `apps/widget/src/components/ui/Badge.tsx` (43-52) đoán màu theo text; text là `statusBadge` / `statusUi` từ server, thường là tiếng Anh. Vì vậy UI tiếng Hàn vẫn hiện "In Transit".
@@ -134,7 +136,9 @@
 ## BUG-024 · Khung trả lời trong chat chen lên trên tin nhắn mới
 - **Hiện tượng:** khung `inline` (My Orders, Contact, Affiliate, đăng nhập…) render **sau** danh sách tin nhắn, ở một ô duy nhất. Bấm My Orders rồi "Cancel order" thì câu trả lời huỷ đơn hiện **phía trên** thẻ đơn.
 - **Fix (T09):** My Orders và menu của Start over là "thread insert" gắn với số tin nhắn lúc xuất hiện (`at`). Chúng render ngay sau tin nhắn thứ `at`, nên tin nhắn sau nằm bên dưới. Chip của insert chỉ hiện khi nó là thứ cuối cùng trong luồng.
-- **Còn:** Contact, Affiliate, Callback… vẫn dùng ô cũ. Chuyển sang insert khi làm T11 / T12.
+- **T10:** Product Help (menu, danh mục, sản phẩm phổ biến) là insert.
+- **T11:** Contact Support và form liên hệ là insert; form gửi xong thành thẻ "YOUR INQUIRY" ngay tại chỗ (`sent` lưu trên insert).
+- **Còn:** Affiliate, Callback… vẫn dùng ô cũ. Chuyển Affiliate sang insert khi làm T12.
 - **Phòng ngừa:** thứ gì "nói" trong luồng chat phải có vị trí trong luồng, không phải một ô cố định cuối luồng.
 
 ## BUG-022 · Lưu nút làm mất câu hỏi của nút

@@ -216,7 +216,8 @@ Launcher (góc phải dưới) ─► Panel 380px
 - Bot: "고객센터 연결 방법을 선택해주세요." → thẻ **📧 이메일 문의 · 24시간 접수 · 1영업일 내 회신 · help@ivy.com** → chip 처음으로.
 - Form: bubble "Please enter your contact information and tell us how we can help." (nhãn "IVY Beauty, just now") → thẻ form **NAME** (Enter your name) · **EMAIL** (điền sẵn email khách) · **MESSAGE** (Please describe how we can help you) · nút **Send Message** (nền đen).
 - Gửi xong: thẻ tối "YOUR INQUIRY · Name · Email · Message" (phía khách) + bubble "Your message has been sent successfully. / Our support team will review your inquiry and reply to the email address you provided. / Please check your inbox for our response."
-- Composer chuyển thành "Type your message" (nút gửi xám khi trống).
+- Composer chuyển thành "Type your message" (nút gửi xám khi trống). **T11 D6:** giữ placeholder của tenant ("Ask Anything").
+- **Đã làm (T11):** email trên thẻ là cấu hình tenant (IVY: hello@ivyusa.com — Q-08). Tên được điền sẵn cùng email khi khách đã đăng nhập. Thẻ "YOUR INQUIRY" và bong bóng xác nhận gắn tại vị trí form.
 
 ### SCR-IVY-14 · Kịch bản Affiliate + CSAT
 - **Figma:** `1006:5990`, `1006:6050`, `1006:6110` (CSAT), `1006:6200`, `1006:6290` (kết thúc).
@@ -331,8 +332,8 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 ✅ (2026-11-12; `disclosurePlacement: bottom` = 1 dòng dưới ô nhập) |
 | G-15 | My Orders: thẻ đơn bấm được + chip 배송 조회 · 주문 취소 · 처음으로 | Thẻ không bấm được; chip ẩn khi đang hiện thẻ (`ChatTab.tsx` 439-445); không có chip "처음으로" ở đâu cả | Thẻ mở Order Detail; luôn hiện follow-up chip; thêm chip **처음으로** (start over) dùng chung cho mọi kịch bản | UI · I18N | T09 ✅ (2026-11-12; Start over là chip widget tự thêm, dùng chung cho T10–T12) |
 | G-16 | Product Help: 11 danh mục + 인기상품; menu con 사용법/성분/교환·반품/재입고 | Menu con có; **thiếu danh mục & sản phẩm phổ biến**; API sẵn có nhưng chưa dùng: `GET /products/categories`, `/products?category=`, `/products/recommendations` | Luồng danh mục → sản phẩm phổ biến; "재입고 알림" gọi `POST /restock/subscribe` | UI | T10 ✅ (2026-11-12; danh mục = collection cấu hình tenant, popular = Shopify best-selling; restock → G-25) |
-| G-17 | Contact Support: chỉ thẻ email `help@ivy.com` | 3 thẻ (điện thoại 1588-0000, email, live chat) **hard-code trong locale** (`ContactCard.tsx`) | Lấy kênh liên hệ từ cấu hình tenant; IVY chỉ bật email (+ live chat nếu có agent — Q-15) | UI · API · CFG | T11 |
-| G-18 | Form liên hệ Name/Email/Message → "Your message has been sent successfully." | **Không có.** `POST /inquiries` tồn tại nhưng không nhận name/email/message và widget không gọi | Mở rộng DTO/entity inquiry (+console xem được) + thẻ form + thẻ "YOUR INQUIRY". **Có thể cần migration SQL** | API · DB · UI | T11 |
+| G-17 | Contact Support: chỉ thẻ email `help@ivy.com` | 3 thẻ (điện thoại 1588-0000, email, live chat) **hard-code trong locale** (`ContactCard.tsx`) | Lấy kênh liên hệ từ cấu hình tenant; IVY chỉ bật email (+ live chat nếu có agent — Q-15) | UI · API · CFG | T11 ✅ (2026-11-13; `widgetCopy.supportEmail` / `supportPhone` / `contactLiveChat`; IVY: hello@ivyusa.com, chỉ email) |
+| G-18 | Form liên hệ Name/Email/Message → "Your message has been sent successfully." | **Không có.** `POST /inquiries` tồn tại nhưng không nhận name/email/message và widget không gọi | Mở rộng DTO/entity inquiry (+console xem được) + thẻ form + thẻ "YOUR INQUIRY". **Có thể cần migration SQL** | API · DB · UI | T11 ✅ (2026-11-13; `sql/261112-inquiry-contact-form.sql`; console → Alerts → Inquiries; mail Reply-To = khách) |
 | G-19 | Affiliate: 3 bước có mô tả + chip 지금 신청하기 · 더 알아보기 · 처음으로 · 종료 | 3 bước chỉ có tiêu đề + 1 nút "지금 신청" (`AffiliateCard.tsx`, `POST /affiliate/apply`) | Mô tả bước qua copy tenant; thêm 3 chip; "종료" → CSAT | UI · I18N · CFG | T12 |
 | G-20 | CSAT **4** mặt + **건너뛰기** | **5** mặt (thang 1–5, cố ý), nút "닫기" (`CsatCard.tsx`) | Quyết định Q-12; đổi "닫기" → "건너뛰기"; dòng "상담이 종료되었습니다" hiện **sau** khi đánh giá (hiện đang ở trên) | UI · I18N | T12 |
 | G-21 | Settings/Privacy | Đã có đủ khối (`PreferencesPanel.tsx`); không có tiêu đề màn | Đối chiếu copy/khoảng cách; header biến thể (Q-09) | UI | T13 |
@@ -358,14 +359,14 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | Q-05 | "Track Order" mở trang nào (Shopify order status hay link hãng vận chuyển)? | Link tracking của fulfillment, không có thì trang order status của Shopify |
 | Q-06 | "Write Review" mở form trong widget hay trang review của ivyusa.com? | Mở trang sản phẩm trên ivyusa.com ở anchor review |
 | Q-07 | Copy tiếng Anh cho lời chào và 7 quick-reply (thiết kế chỉ có bản KO)? | Dịch: Payment check · Delivery inquiry · Stock inquiry · Exchange & Refund · Product inquiry · Feedback · Contact Support |
-| Q-08 | Email hỗ trợ thật (thiết kế ghi `help@ivy.com`)? | Lấy từ cấu hình tenant |
+| Q-08 | Email hỗ trợ thật (thiết kế ghi `help@ivy.com`)? | Lấy từ cấu hình tenant. ✅ **Chốt (T11, 2026-11-12):** hello@ivyusa.com |
 | Q-09 | Header Settings màu xanh (khác các màn khác) là chủ ý? | Theo màu brand của tenant |
 | Q-10 | Có chip "All/전체" không (biến thể `992:246` có, Master không có)? | Không — theo Master |
 | Q-11 | Tab "Orders" hiện tại bỏ hẳn hay ẩn sau chip Order/Delivery? | Bỏ tab qua cấu hình `widget_tabs` (chip tự gộp) |
 | Q-12 | CSAT 4 mặt (thiết kế) hay 5 mặt (code, thang 1–5 đang lưu DB)? | Giữ thang 1–5 trong DB; hiển thị 4 mặt map → 1 · 3 · 4 · 5 |
 | Q-13 | Thanh công bố AI ("This chat is AI-powered…") không có trong thiết kế — giữ dạng nào? | Giữ (pháp lý), thu gọn 1 dòng dưới composer |
 | Q-14 | Giữ nút đính kèm file trong composer? | Giữ (thiết kế không cấm) |
-| Q-15 | Contact Support của IVY gồm những kênh nào (thiết kế: chỉ email)? | Email + live chat khi có agent online |
+| Q-15 | Contact Support của IVY gồm những kênh nào (thiết kế: chỉ email)? | Email + live chat khi có agent online. ✅ **Chốt (T11, 2026-11-12):** chỉ email, đúng thiết kế; tenant bật thêm live chat được ở console |
 | Q-16 | Mã coupon lấy từ đâu (Shopify discount code? nhập tay khi gửi campaign?) | Nhập trong campaign console, lưu ở metadata notification. **Chốt (T05, 2026-11-12):** nhập trong console Campaigns, lưu ở `content.couponCode` của campaign; mỗi campaign một mã. |
 
 **Lỗi chính tả / copy trong Figma cần designer sửa** (không implement theo): "Today’s__" (placeholder), "Todays’__", "KR" lẫn "KO" ở nút ngôn ngữ, "구독 해택" → **혜택**, "4월 전" (nhiều khả năng là **4일 전**), tên frame "02.Pamyent", "03.Delievery".

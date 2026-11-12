@@ -40,6 +40,11 @@ export interface MockOptions {
   addresses?: 'ok' | 'unavailable';
   /** Popular products (T10 D3): 'unavailable' = the store could not be asked; the answer offers the store link. */
   popular?: 'ok' | 'unavailable';
+  /**
+   * Contact Support channels patched into `widgetCopy` (T11 D1). Absent = the
+   * tenant's real ones (seeded: the support email only).
+   */
+  contact?: { supportEmail?: string | null; supportPhone?: string | null; contactLiveChat?: boolean } | null;
 }
 
 export interface RecordedCall {
@@ -81,6 +86,7 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     failures: {},
     addresses: 'ok',
     popular: 'ok',
+    contact: null,
     ...opts,
   };
   const state = { notifications: o.emptyFeed ? [] : seedNotifications() };
@@ -113,7 +119,10 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
         if (o.authenticated) {
           json.data.authenticated = true;
           json.data.customerName = CUSTOMER.fullName;
+          // The contact form's prefill (T11 D2).
+          json.data.customerEmail = CUSTOMER.email;
         }
+        if (o.contact) json.data.widgetCopy = { ...(json.data.widgetCopy ?? {}), ...o.contact };
         if (o.patchTabs) json.data.widgetTabs = ['notifications', 'chat'];
         if (o.consent === 'granted') {
           json.data.consentState = 'granted';

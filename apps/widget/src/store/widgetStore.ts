@@ -48,6 +48,8 @@ interface WidgetState {
   widgetCopy: WidgetCopy | null;
   /** Signed-in shopper's name, once the backend resolves it; null otherwise. */
   customerName: string | null;
+  /** Their address, to prefill the contact form (ivy-docs T11 D2); null for guests. */
+  customerEmail: string | null;
   /**
    * Outcome of the storefront identity handshake (embedded only). 'pending' until
    * the embed loader reports back — the widget must not open a throwaway guest
@@ -133,6 +135,7 @@ interface WidgetState {
   setConsultCategories: (v: Array<{ code: string; label: string }>) => void;
   setCommerceEnabled: (v: boolean) => void;
   setCustomerName: (n: string | null) => void;
+  setCustomerEmail: (e: string | null) => void;
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
   widgetTheme: WidgetTheme | null;
   setWidgetTheme: (t: WidgetTheme | null) => void;
@@ -189,6 +192,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   loginMode: 'redirect',
   widgetCopy: null,
   customerName: null,
+  customerEmail: null,
   embedIdentity: 'pending',
   // Also the `locale` hint sent to session/ensure, so the server derives the
   // session language from the shopper's own preference rather than a hardcoded
@@ -229,6 +233,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setConsultCategories: (v) => set({ consultCategories: v }),
   setCommerceEnabled: (v) => set({ commerceEnabled: v }),
   setCustomerName: (n) => set({ customerName: n }),
+  setCustomerEmail: (e) => set({ customerEmail: e }),
   widgetTheme: null,
   setWidgetTheme: (t) => set({ widgetTheme: t }),
   tenantConfigLoaded: false,

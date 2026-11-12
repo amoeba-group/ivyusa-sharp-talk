@@ -272,17 +272,49 @@ export const zh: Translation = {
   },
 
   contact: {
-    title: '联系客服',
-    phone: '1588-0000',
-    hours: '周一至周五 10:00–18:00',
-    email: 'help@ivy.com',
-    chatAgent: '与客服聊天',
+    // Contact Support (ivy-docs T11, SCR-IVY-13). The channels themselves — the
+    // address, a phone number — are the tenant's settings, never text here (BUG-010).
+    title: '请选择您希望的联系方式。',
     methods: {
-      phone: '电话咨询',
       email: '邮件咨询',
-      chat: '在线客服',
+      phone: '电话',
+      chat: '与客服聊天',
     },
     emailHours: '24 小时受理 · 1 个工作日内回复',
+    phoneHint: '点击拨打',
+    chatHint: '直接在此聊天中与我们的团队交流',
+    form: {
+      lead: '请填写您的联系方式，并告诉我们需要什么帮助。',
+      name: '姓名',
+      namePlaceholder: '请输入您的姓名',
+      email: '邮箱',
+      emailPlaceholder: '请输入您的邮箱',
+      message: '留言',
+      messagePlaceholder: '请描述您需要的帮助',
+      send: '发送留言',
+      sending: '发送中…',
+      errors: {
+        nameRequired: '请输入姓名。',
+        emailRequired: '请输入邮箱。',
+        emailInvalid: '请输入有效的邮箱地址。',
+        messageRequired: '请输入留言内容。',
+        tooLong: '请控制在 {{max}} 个字符以内。',
+        consent: '请先同意聊天顶部的隐私声明。',
+        invalid: '请检查姓名、邮箱和留言。',
+        tooMany: '您在过去一小时内已多次发送，请稍后再试。',
+        erased: '此邮箱地址无法使用，请换一个。',
+        failed: '留言发送失败，请重试。',
+      },
+    },
+    sent: {
+      title: '您的咨询',
+      name: '姓名：',
+      email: '邮箱：',
+      message: '留言：',
+      successTitle: '您的留言已成功发送。',
+      successBody: '客服团队将查看您的咨询，并回复到您提供的邮箱。',
+      successHint: '请留意您的收件箱。',
+    },
   },
 
   affiliate: {

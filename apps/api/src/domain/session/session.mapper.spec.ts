@@ -34,6 +34,7 @@ describe('SessionMapper.toResponse', () => {
       consentState: 'pending',
       authenticated: true,
       customerName: 'Huy Tester',
+      customerEmail: null,
       // Notice predates the flag → read as a store (PLN-261001).
       commerceEnabled: true,
       privacyPolicyUrl: 'https://shop.example/privacy',
@@ -77,6 +78,12 @@ describe('SessionMapper.toResponse', () => {
       delete process.env.EMBED_UNSIGNED_IDENTIFY_TENANT_IDS;
     }
     expect(SessionMapper.toResponse(claimed, on).threadAvailable).toBe(false); // tenant off the list
+  });
+
+  it("carries the session's own address for the contact form (ivy-docs T11 D2)", () => {
+    const res = SessionMapper.toResponse(session({ customerId: 4 }), notice, 'Huy Tester', [], 'huy@example.com');
+    expect(res.customerEmail).toBe('huy@example.com');
+    expect(SessionMapper.toResponse(session(), notice).customerEmail).toBeNull();
   });
 
   it('defaults customerName to null (guest, or profile not resolved yet)', () => {

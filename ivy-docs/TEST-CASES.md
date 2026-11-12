@@ -44,7 +44,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T08 | 1 / 5 → **6 / 6** ✅ (T08, 2026-11-12; thêm TC-08-06) | tất cả | — |
 | T09 | 1 / 4 → **7 / 7** ✅ (T09, 2026-11-12; thêm TC-09-05..07) | tất cả | — |
 | T10 | 1 / 5 → **7 / 7** ✅ (T10, 2026-11-12; thêm TC-10-06..07) | tất cả | — |
-| T11 | 0 / 4 | — | TC-11-01, TC-11-02, TC-11-03, TC-11-04 |
+| T11 | 0 / 4 → **8 / 8** ✅ (T11, 2026-11-13; thêm TC-11-05..08) | tất cả | — |
 | T12 | 0 / 4 | — | TC-12-01, TC-12-02, TC-12-03, TC-12-04 |
 | T13 | 4 / 4 | TC-13-01, TC-13-02, TC-13-04, TC-13-03 | — |
 | T14 | 7 / 8 → 8 / 8 (nhờ T02: chip KO 주문 · 배송 · 프로모 · 리뷰) | TC-14-01 [en], TC-14-01 [es], TC-14-01 [ko], TC-14-01 [vi], TC-14-01 [ja], TC-14-01 [zh], TC-14-03, TC-14-02 [ko] | — |
@@ -310,10 +310,23 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
-| TC-11-01 | Kênh email | help@ivy.com, "24h", "1 business day"; **không** có 1588-0000 | G-17, BUG-010 |
-| TC-11-02 | Form | "Email inquiry" → `contact-form` có Name, Email (= hykim4@ivyent.com), Message | G-18, BR-14 |
-| TC-11-03 | Validate | email sai → báo lỗi; không gửi `POST /inquiries` | BR-14 |
-| TC-11-04 | Gửi | `POST /inquiries {name, email, message}` → "YOUR INQUIRY" + "Your message has been sent successfully." | G-18 |
+| TC-11-01 | Kênh email | "Please choose how you'd like to reach us.", hello@ivyusa.com (§8-2a), "24 hours", "1 business day"; **không** có 1588-0000 / help@ivy.com; không có thẻ live chat; chip Start over | G-17, BUG-010, Q-08, Q-15 |
+| TC-11-02 | Form | "Email inquiry" → câu dẫn + `contact-form` có Name, Email (= hykim4@ivyent.com), Message (placeholder theo thiết kế) | G-18, BR-14 |
+| TC-11-03 | Validate | tên trống, email sai, nội dung trống → báo lỗi dưới từng ô; không gửi `POST /inquiries` | BR-14 |
+| TC-11-04 | Gửi | `POST /inquiries {name, email, message}` → thẻ "YOUR INQUIRY" có đủ 3 giá trị, "Your message has been sent successfully.", "Please check your inbox…"; form biến mất | G-18 |
+| TC-11-05 | Tenant bật live chat | Có cả thẻ Email inquiry và "Chat with an agent" | G-17, Q-15 |
+| TC-11-06 | Gửi lỗi | `POST /inquiries` 500 → toast lỗi "Your message couldn't be sent…"; form giữ nội dung; không có thẻ đã gửi | CLAUDE.md §2 UX feedback |
+| TC-11-07 | Tenant không cấu hình | Chỉ thẻ live chat; không có 1588-0000 / help@ivy.com / hello@ivyusa.com | BUG-010 |
+| TC-11-08 | API thật (khách chưa đăng nhập) | Đồng ý consent → form không điền sẵn → gửi → API trả 201 → bong bóng thành công | G-18, BR-14 |
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit types | `packages/types/src/common/inquiry.spec.ts` | `inquiryProblems` (thiếu / sai / quá dài), `isEmailAddress`, `normalizeInquiry`, `contactChannels` (chỉ kênh đã điền; không điền gì → live chat), `telHref` |
+| Unit API | `inquiry.service.spec.ts` | Khách vãng lai → lead chỉ từ email; khách đăng nhập giữ customer; chỉ gắn cuộc chat của chính phiên; mail tới email hỗ trợ với Reply-To = khách; không SMTP / không email hỗ trợ → không mail; consent / dữ liệu sai / email đã xoá → từ chối, không lưu; 5 lần / giờ; xem chi tiết đúng tenant + audit; đổi trạng thái |
+| Unit API | `tenant.service.spec.ts` | Contact Support: email viết thường, số giữ nguyên, cờ live chat; xoá như các trường khác; email / số sai → 400 |
+| Unit API | `session.mapper.spec.ts` | Phiên trả `customerEmail` |
+| API thật (local) | script ngoài repo | 17 bước: lưu cấu hình, `ensure` có `supportEmail`, 403 khi chưa consent, 400 / 429, DB không có bản rõ, danh sách che email, chi tiết + audit, 404 |
+| Ảnh chụp | thủ công, 380px | KO khớp `1006:5650` (고객센터 연결 방법을 선택해주세요 · 📧 이메일 문의 · 24시간 접수 · 1영업일 내 회신 · 처음으로). EN khớp `1006:6529` / `1006:6597`. Console: khối Contact Support, tab Inquiries, hộp chi tiết |
 
 ## T12 · Affiliate & CSAT (`12-affiliate-csat.spec.ts`)
 

@@ -35,7 +35,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ✅ | TC-10-01..07 |
-| 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T11-Contact-Form.md) | TC-11-01..04 |
+| 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261113-IVY-Contact-Support-Config.md)) | TC-11-01..08 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ⬜ (TC đã xanh 4/4, chỉ còn rà visual/copy) | TC-13-01..04 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ⬜ | TC-14-01..03 |
@@ -235,11 +235,23 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **TC:** TC-10-01..07 — **7/7** ✅ (06: Shopify không trả lời; 07: chip đã chọn, "Other categories").
 - **Production:** nhập cấu hình theo [GUIDE-261112-IVY-Product-Help-Config](../docs/guide/GUIDE-261112-IVY-Product-Help-Config.md).
 
-### T11 · Contact Support & form — 🟨 chờ duyệt · [PLN](../docs/plan/PLN-261112-IVY-T11-Contact-Form.md) (có thể có migration)
-- **Figma:** `1006:5650`, `1006:6529`, `1006:6597`. **Gap:** G-17, G-18. **BR:** 14, 15.
-- **Hợp đồng API đề xuất:** `POST /inquiries` nhận thêm `{ name, email, message }` (snake_case DTO, validate email); console hiển thị được inquiry.
-- **Việc cần làm:** kênh liên hệ lấy từ cấu hình tenant (IVY: email; live chat theo Q-15), bỏ hard-code 1588-0000; thẻ "Email inquiry" mở form (Name / Email điền sẵn / Message, nút **Send Message**); gửi xong hiện thẻ "YOUR INQUIRY" + bubble thành công; validate và hiện lỗi khi thiếu/sai.
-- **TC:** TC-11-01..04.
+### T11 · Contact Support & form — ✅ (2026-11-13) · [PLN](../docs/plan/PLN-261112-IVY-T11-Contact-Form.md) · [RPT](../docs/implementation/RPT-261113-IVY-T11-Contact-Form.md)
+- **Figma:** `1006:5650`, `1006:6529`, `1006:6597` (đối chiếu qua ảnh chủ dự án gửi). **Gap:** G-17, G-18. **BR:** 14, 15. **Q-08, Q-15:** chốt.
+- **Quyết định của chủ dự án (2026-11-12):**
+  - Email hỗ trợ của IVY là **hello@ivyusa.com** (email trên trang chính sách ivyusa.com).
+  - Contact Support của IVY **chỉ có thẻ email**, đúng thiết kế.
+  - Báo cho team bằng mail tới email hỗ trợ, **Reply-To là email khách**. Console có thêm tab Inquiries.
+- **Migration:** `sql/261112-inquiry-contact-form.sql` thêm 4 cột vào `inquiries` (tên, email, nội dung đều mã hoá; ngôn ngữ). **Chạy trên production trước khi push.**
+- **Đã làm:**
+  - Kênh liên hệ là cấu hình tenant (`widgetCopy.supportEmail` / `supportPhone` / `contactLiveChat`), sửa ở console → Settings → Widget → **Contact Support**. Bỏ `1588-0000` và `help@ivy.com` khỏi 6 file ngôn ngữ (**BUG-010 đóng**). Tenant không điền gì thì chỉ có thẻ live chat.
+  - Contact Support trả lời **trong luồng chat** (BUG-024): bong bóng khách, "Please choose how you'd like to reach us.", thẻ 📧 Email inquiry · Open 24 hours · Reply within 1 business day · email, chip Start over.
+  - Thẻ email mở form Name · Email · Message (điền sẵn tên và email khi đã đăng nhập). Lỗi hiện dưới từng ô, không gọi API. Gửi lỗi → toast lỗi, form giữ nội dung. Gửi xong → thẻ tối "YOUR INQUIRY" + bong bóng "Your message has been sent successfully."
+  - API `POST /inquiries { name, email, message }`: cần consent; cùng luật kiểm tra với widget (`inquiryProblems`); khách chưa đăng nhập được tạo lead từ email; tối đa 5 lần / phiên / giờ; email đã xin xoá thì từ chối. Mail tới email hỗ trợ (Reply-To = khách) nếu server có SMTP.
+  - Console → Live chat → Alerts → tab **Inquiries**: danh sách (email che bớt), mở một inquiry (đọc đầy đủ, ghi audit), **Reply by email**, **Mark answered** / Open again.
+  - Xoá dữ liệu cá nhân xoá luôn tên / email / nội dung của inquiry; DSAR xuất 3 trường này.
+  - Thêm `@T11` vào `test:ci`.
+- **TC:** TC-11-01..08 — **8/8** ✅ (05: thẻ live chat khi tenant bật; 06: gửi lỗi; 07: tenant không cấu hình; 08: gửi thật lên API).
+- **Production:** chạy SQL, rồi kiểm cấu hình theo [GUIDE-261113-IVY-Contact-Support-Config](../docs/guide/GUIDE-261113-IVY-Contact-Support-Config.md).
 
 ### T12 · Affiliate + CSAT — ⬜
 - **Figma:** `1006:5990…6290`. **Gap:** G-19, G-20. **BR:** 12, 13.

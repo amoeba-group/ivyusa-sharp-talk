@@ -1020,5 +1020,18 @@
     "saved": "聊天结束条件已保存。",
     "saveError": "无法保存聊天结束条件。",
     "errorRange": "分钟数须在 1 到 60 之间。"
+  },
+  "contactSupport": {
+    "title": "联系客服",
+    "desc": "顾客在小部件中点按 Contact Support 后看到的内容。只显示您填写的项目。",
+    "email": "客服邮箱",
+    "emailHint": "显示在“邮件咨询”卡片上，点按后打开咨询表单。新咨询会发送到此邮箱，回复地址为顾客的邮箱。留空 = 不显示邮件卡片。",
+    "emailInvalid": "请输入有效的邮箱地址，例如 hello@example.com。",
+    "phone": "客服电话",
+    "phoneHint": "显示在电话卡片上。留空 = 不显示电话卡片。",
+    "phoneInvalid": "只能使用数字、空格、+、( )、- 或 .",
+    "liveChat": "显示“与客服聊天”卡片",
+    "liveChatHint": "与上方卡片并列，在聊天中直接为顾客接通客服。",
+    "liveChatFallback": "没有邮箱和电话时，小部件仍会显示此卡片，避免 Contact Support 为空。"
   }
 }

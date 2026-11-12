@@ -13,6 +13,7 @@ import type {
   ChatClosePolicySettings,
   SaveShopifyBody,
   UpdateCredentialBody,
+  ContactSupportDraft,
   WidgetAccessDraft,
   WidgetCopyDraft,
   WidgetDesignDraft,
@@ -44,6 +45,7 @@ export function useSaveWidgetSettings() {
       csatMode?: 'rating' | 'survey';
       widgetLanguages?: string[] | null;
       closeFeedbackPrompt?: boolean;
+      contact?: ContactSupportDraft;
     }) =>
       settingsService.saveWidgetSettings(
         v.loginMode,
@@ -56,6 +58,7 @@ export function useSaveWidgetSettings() {
         v.csatMode,
         v.widgetLanguages,
         v.closeFeedbackPrompt,
+        v.contact,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['widget-settings', tenantKey] });

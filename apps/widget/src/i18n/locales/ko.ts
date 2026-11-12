@@ -271,17 +271,49 @@ export const ko: Translation = {
   },
 
   contact: {
-    title: '고객 지원 문의',
-    phone: '1588-0000',
-    hours: '월–금 10:00–18:00',
-    email: 'help@ivy.com',
-    chatAgent: '상담원과 채팅',
+    // Contact Support (ivy-docs T11, SCR-IVY-13). The channels themselves — the
+    // address, a phone number — are the tenant's settings, never text here (BUG-010).
+    title: '고객센터 연결 방법을 선택해주세요.',
     methods: {
-      phone: '전화 상담',
       email: '이메일 문의',
-      chat: '채팅 상담',
+      phone: '전화 문의',
+      chat: '상담원과 채팅',
     },
     emailHours: '24시간 접수 · 1영업일 내 회신',
+    phoneHint: '눌러서 전화하기',
+    chatHint: '이 채팅에서 바로 상담원과 이야기하세요',
+    form: {
+      lead: '연락처를 입력하고 문의 내용을 알려주세요.',
+      name: '이름',
+      namePlaceholder: '이름을 입력하세요',
+      email: '이메일',
+      emailPlaceholder: '이메일을 입력하세요',
+      message: '문의 내용',
+      messagePlaceholder: '어떤 도움이 필요하신지 적어주세요',
+      send: '문의 보내기',
+      sending: '보내는 중…',
+      errors: {
+        nameRequired: '이름을 입력해 주세요.',
+        emailRequired: '이메일을 입력해 주세요.',
+        emailInvalid: '올바른 이메일 주소를 입력해 주세요.',
+        messageRequired: '문의 내용을 입력해 주세요.',
+        tooLong: '{{max}}자 이내로 입력해 주세요.',
+        consent: '먼저 채팅 상단의 개인정보 안내에 동의해 주세요.',
+        invalid: '이름, 이메일, 문의 내용을 확인해 주세요.',
+        tooMany: '최근 1시간 동안 문의를 여러 번 보내셨습니다. 잠시 후 다시 시도해 주세요.',
+        erased: '이 이메일 주소는 사용할 수 없습니다. 다른 주소를 입력해 주세요.',
+        failed: '문의를 보내지 못했습니다. 다시 시도해 주세요.',
+      },
+    },
+    sent: {
+      title: '나의 문의',
+      name: '이름:',
+      email: '이메일:',
+      message: '내용:',
+      successTitle: '문의가 정상적으로 접수되었습니다.',
+      successBody: '고객센터에서 문의 내용을 확인한 후 입력하신 이메일로 답변드리겠습니다.',
+      successHint: '메일함에서 답변을 확인해 주세요.',
+    },
   },
 
   affiliate: {

@@ -1020,5 +1020,18 @@
     "saved": "Chat close conditions saved.",
     "saveError": "Could not save the chat close conditions.",
     "errorRange": "Minutes must be between 1 and 60."
+  },
+  "contactSupport": {
+    "title": "Contact Support",
+    "desc": "What a shopper sees after tapping Contact Support in the widget. Only what you fill in is shown.",
+    "email": "Support email",
+    "emailHint": "Shown on the \"Email inquiry\" card, which opens the contact form. New inquiries are mailed here, with Reply-To set to the shopper. Empty = no email card.",
+    "emailInvalid": "Enter a valid email address, e.g. hello@example.com.",
+    "phone": "Support phone",
+    "phoneHint": "Shown on a call card. Empty = no phone card.",
+    "phoneInvalid": "Use digits with spaces, +, ( ), - or . only.",
+    "liveChat": "Show a \"Chat with an agent\" card",
+    "liveChatHint": "Connects the shopper to your team in the chat, beside the cards above.",
+    "liveChatFallback": "With no email or phone, the widget still shows this card so Contact Support is never empty."
   }
 }

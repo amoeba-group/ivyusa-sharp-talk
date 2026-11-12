@@ -1020,5 +1020,18 @@
     "saved": "Đã lưu điều kiện kết thúc chat.",
     "saveError": "Không thể lưu điều kiện kết thúc chat.",
     "errorRange": "Số phút phải từ 1 đến 60."
+  },
+  "contactSupport": {
+    "title": "Liên hệ hỗ trợ",
+    "desc": "Nội dung khách thấy khi bấm Contact Support trong widget. Chỉ hiện mục bạn đã điền.",
+    "email": "Email hỗ trợ",
+    "emailHint": "Hiện trên thẻ \"Gửi yêu cầu qua email\"; bấm thẻ sẽ mở form liên hệ. Yêu cầu mới được gửi mail tới địa chỉ này, Reply-To là email của khách. Để trống = không có thẻ email.",
+    "emailInvalid": "Nhập email hợp lệ, ví dụ hello@example.com.",
+    "phone": "Số điện thoại hỗ trợ",
+    "phoneHint": "Hiện trên thẻ gọi điện. Để trống = không có thẻ điện thoại.",
+    "phoneInvalid": "Chỉ dùng chữ số, dấu cách, +, ( ), - hoặc .",
+    "liveChat": "Hiện thẻ \"Chat với nhân viên\"",
+    "liveChatHint": "Nối khách với đội ngũ ngay trong khung chat, cạnh các thẻ ở trên.",
+    "liveChatFallback": "Khi không có email và số điện thoại, widget vẫn hiện thẻ này để Contact Support không bị trống."
   }
 }

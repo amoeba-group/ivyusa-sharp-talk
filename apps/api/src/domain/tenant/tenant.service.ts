@@ -21,6 +21,8 @@ import {
   offeredLanguageCodes,
   normalizeChatClosePolicy,
   readChatClosePolicy,
+  isEmailAddress,
+  SUPPORT_PHONE_RE,
 } from '@sharptalk/types';
 
 /** Real categories the policy may mention ('all' is a query filter, not a kind). */
@@ -1278,8 +1280,28 @@ function mergeWidgetCopy(
     launcherTeaser: { ...(current?.launcherTeaser ?? {}) },
     disclosureLine: { ...(current?.disclosureLine ?? {}) },
     composerPlaceholder: { ...(current?.composerPlaceholder ?? {}) },
+    supportEmail: current?.supportEmail ?? null,
+    supportPhone: current?.supportPhone ?? null,
+    contactLiveChat: current?.contactLiveChat === true,
   };
   if (dto.display_name !== undefined) copy.displayName = dto.display_name?.trim() || null;
+  // ivy-docs T11 D1. A malformed address is refused rather than stored: the
+  // widget would hide the card and the team's notices would bounce, silently.
+  if (dto.support_email !== undefined) {
+    const email = dto.support_email?.trim().toLowerCase() || null;
+    if (email && !isEmailAddress(email)) {
+      throw new BusinessException(ERROR_CODE.SUPPORT_CONTACT_INVALID, HttpStatus.BAD_REQUEST);
+    }
+    copy.supportEmail = email;
+  }
+  if (dto.support_phone !== undefined) {
+    const phone = dto.support_phone?.trim() || null;
+    if (phone && !SUPPORT_PHONE_RE.test(phone)) {
+      throw new BusinessException(ERROR_CODE.SUPPORT_CONTACT_INVALID, HttpStatus.BAD_REQUEST);
+    }
+    copy.supportPhone = phone;
+  }
+  if (dto.contact_live_chat !== undefined) copy.contactLiveChat = dto.contact_live_chat === true;
   const setLang = (bag: Record<string, string>, lang: string, v: string | null | undefined) => {
     if (v === undefined) return;
     const trimmed = v?.trim();
@@ -1350,6 +1372,10 @@ function mergeWidgetCopy(
   for (const key of ['headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser', 'disclosureLine', 'composerPlaceholder'] as const) {
     if (Object.keys(copy[key]!).length === 0) delete copy[key];
   }
+  // Same reason: a tenant that never set Contact Support keeps its old JSON.
+  if (!copy.supportEmail) delete copy.supportEmail;
+  if (!copy.supportPhone) delete copy.supportPhone;
+  if (!copy.contactLiveChat) delete copy.contactLiveChat;
   const empty =
     !copy.displayName &&
     Object.keys(copy.firstVisit!).length === 0 &&
@@ -1360,6 +1386,9 @@ function mergeWidgetCopy(
     !copy.agentSenderName &&
     !copy.launcherTeaser &&
     !copy.disclosureLine &&
-    !copy.composerPlaceholder;
+    !copy.composerPlaceholder &&
+    !copy.supportEmail &&
+    !copy.supportPhone &&
+    !copy.contactLiveChat;
   return empty ? null : copy;
 }

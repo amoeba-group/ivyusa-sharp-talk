@@ -45,6 +45,7 @@ export class SessionController {
       notice,
       await this.sessionService.customerDisplayName(s),
       await this.offeredCategories(s.tenantId, s.language),
+      await this.sessionService.customerContactEmail(s),
     );
   }
 

@@ -607,7 +607,8 @@
       "saveError": "Could not save the alarm settings"
     },
     "tab_alarms": "Alarms",
-    "tab_callbacks": "Callback requests"
+    "tab_callbacks": "Callback requests",
+    "tab_inquiries": "Inquiries"
   },
   "callback": {
     "hint": "An agent contacts the customer at the contact they left. Clicking [Show] is recorded in the audit log.",
@@ -726,5 +727,33 @@
     "resumed": "Handed over to the AI",
     "failed": "Could not change auto-reply",
     "stillOn": "The AI is still answering this conversation."
+  },
+  "inquiry": {
+    "hint": "Contact forms shoppers sent from Contact Support in the widget. Answer by email, then mark them answered.",
+    "col": {
+      "received": "Received",
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "status": "Status"
+    },
+    "status_open": "Open",
+    "status_answered": "Answered",
+    "status_all": "All",
+    "open": "Open",
+    "empty": "No inquiries.",
+    "dialogTitle": "Inquiry · {{at}}",
+    "loading": "Loading…",
+    "loadError": "Couldn't load this inquiry.",
+    "reply": "Reply by email",
+    "replySubject": "Re: Your inquiry",
+    "replyWrote": "{{name}} wrote:",
+    "replyHint": "Reply by email opens your mail app with the customer's address and their message quoted. Opening an inquiry is recorded in the audit log.",
+    "markAnswered": "Mark answered",
+    "reopen": "Open again",
+    "answeredToast": "Marked answered.",
+    "reopenedToast": "Opened again.",
+    "updateError": "Couldn't update the inquiry.",
+    "openConversation": "Open conversation #{{id}}"
   }
 }

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §8 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** (`1. ok 2. a 3. a 4. a`) và đã làm — [RPT-261113](../implementation/RPT-261113-IVY-T11-Contact-Form.md) |
 | Task | [ivy-docs/TASKS.md T11](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-13 · G-17 · G-18 · BR-14 · BR-15 · BUG-010 · BUG-024 (phần Contact) · Q-08 · Q-15 |
 | Figma | `1006:5650` (kênh), `1006:6529` (form), `1006:6597` (đã gửi). Figma MCP hết lượt gọi; dựa vào SPEC. Nếu tiện, gửi ảnh 3 frame này |
 | TC | TC-11-01..04 ([e2e/tests/11-contact.spec.ts](../../e2e/tests/11-contact.spec.ts)), baseline **0/4** |

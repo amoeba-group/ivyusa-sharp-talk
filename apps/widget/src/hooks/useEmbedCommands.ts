@@ -51,6 +51,7 @@ export function useEmbedCommands(): void {
         // claimed session never becomes `authenticated`, so useSessionProfile
         // would not fetch it — take it from the identify answer itself.
         if (res.customerName) store.setCustomerName(res.customerName);
+        if (res.customerEmail) store.setCustomerEmail(res.customerEmail);
         // Earlier conversations of this account (PLN-261022 stage 2).
         store.setThreadAvailable(!!res.threadAvailable);
         // A tenant whose host terms cover AI support records a signed user as
@@ -142,6 +143,7 @@ export function useEmbedCommands(): void {
             store.setSessionToken(null);
             store.setAuthenticated(false);
             store.setCustomerName(null);
+            store.setCustomerEmail(null);
             const fresh = await ensureSession(
               null,
               useWidgetStore.getState().language,

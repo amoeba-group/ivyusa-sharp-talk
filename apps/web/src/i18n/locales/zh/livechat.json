@@ -607,7 +607,8 @@
       "saveError": "无法保存提醒设置"
     },
     "tab_alarms": "提醒",
-    "tab_callbacks": "回电请求"
+    "tab_callbacks": "回电请求",
+    "tab_inquiries": "咨询"
   },
   "callback": {
     "hint": "客服将通过客户留下的联系方式联系客户。点击［查看］会记录在审计日志中。",
@@ -726,5 +727,33 @@
     "resumed": "已交给 AI",
     "failed": "无法更改自动回复",
     "stillOn": "AI 仍在回复此会话。"
+  },
+  "inquiry": {
+    "hint": "顾客在小部件的 Contact Support 中提交的咨询表单。请通过邮件回复，然后标记为已回复。",
+    "col": {
+      "received": "接收时间",
+      "name": "姓名",
+      "email": "邮箱",
+      "message": "内容",
+      "status": "状态"
+    },
+    "status_open": "未回复",
+    "status_answered": "已回复",
+    "status_all": "全部",
+    "open": "打开",
+    "empty": "暂无咨询。",
+    "dialogTitle": "咨询 · {{at}}",
+    "loading": "加载中…",
+    "loadError": "无法加载此咨询。",
+    "reply": "邮件回复",
+    "replySubject": "Re: 您的咨询",
+    "replyWrote": "{{name}} 写道：",
+    "replyHint": "“邮件回复”会打开邮件应用，并填入顾客地址和引用的留言。打开咨询会记录在审计日志中。",
+    "markAnswered": "标记为已回复",
+    "reopen": "重新打开",
+    "answeredToast": "已标记为已回复。",
+    "reopenedToast": "已重新打开。",
+    "updateError": "无法更新此咨询。",
+    "openConversation": "打开会话 #{{id}}"
   }
 }

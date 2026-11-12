@@ -152,6 +152,9 @@ const IVY_WIDGET_PRESET = {
       JA: '何でも聞いてください',
       ZH: '随便问问',
     },
+    // T11 (SCR-IVY-13, §8-2a/3a): the email card only, with the address on the
+    // ivyusa.com policy pages; inquiry notices go there too.
+    supportEmail: 'hello@ivyusa.com',
   },
 };
 

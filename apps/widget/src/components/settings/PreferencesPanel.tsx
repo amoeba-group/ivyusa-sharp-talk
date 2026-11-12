@@ -250,6 +250,8 @@ export function PreferencesPanel({ onBack }: { onBack: () => void }) {
       // keeps greeting the shopper by the name they just asked us to erase and
       // every read 401s. Sign-in is then offered again as usual.
       setCustomerName(null);
+      // The address they just asked us to erase must not prefill the next form.
+      useWidgetStore.getState().setCustomerEmail(null);
       setAuthenticated(false);
       setSessionToken(null);
       queryClient.clear();

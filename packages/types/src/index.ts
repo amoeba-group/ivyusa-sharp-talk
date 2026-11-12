@@ -14,6 +14,7 @@ export * from './common/privacy-notice-copy';
 export * from './common/order-status';
 export * from './common/promo';
 export * from './common/product-category';
+export * from './common/inquiry';
 export * from './domain/menu.types';
 export * from './domain/rbac.types';
 export * from './domain/status-map';

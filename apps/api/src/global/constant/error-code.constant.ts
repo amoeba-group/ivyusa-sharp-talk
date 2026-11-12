@@ -354,6 +354,16 @@ export const ERROR_CODE = {
   /** A sent campaign's kind / coupon code is what shoppers already hold — it cannot change. */
   CAMPAIGN_PROMO_LOCKED: { code: 'E5159', message: 'Campaign type and coupon code cannot be changed after sending' },
 
+  // E5160–E5163 — contact form + Contact Support channels (ivy-docs T11, PLN-261112-IVY-T11).
+  /** Name / email / message missing, malformed or too long (same rules as the widget form). */
+  INQUIRY_INVALID: { code: 'E5160', message: 'Name, email and message are required' },
+  /** More inquiries from this session in the last hour than the limit allows. */
+  INQUIRY_LIMIT: { code: 'E5161', message: 'Too many inquiries — try again later' },
+  /** Unknown id, or another tenant's inquiry. */
+  INQUIRY_NOT_FOUND: { code: 'E5162', message: 'Inquiry not found' },
+  /** Support email / phone in the tenant's Contact Support settings could not be read. */
+  SUPPORT_CONTACT_INVALID: { code: 'E5163', message: 'Invalid support email or phone number' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

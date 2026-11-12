@@ -29,6 +29,14 @@ export interface TenantWidgetCopy {
   disclosureLine?: Record<string, string>;
   /** Chat composer placeholder (ivy-docs T08 D3); absent = the widget's "Type a message…". */
   composerPlaceholder?: Record<string, string>;
+  /**
+   * Contact Support channels (ivy-docs T11 D1, BUG-010): the address the email
+   * card shows and inquiry notices go to, a phone number, and whether the live
+   * chat card is offered beside them. Absent = that card is not shown.
+   */
+  supportEmail?: string | null;
+  supportPhone?: string | null;
+  contactLiveChat?: boolean;
 }
 
 /** tenants — a tenant = a Shopify shop (FR-051). */

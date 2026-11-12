@@ -607,7 +607,8 @@
       "saveError": "알람 설정을 저장하지 못했습니다"
     },
     "tab_alarms": "알람",
-    "tab_callbacks": "콜백 요청"
+    "tab_callbacks": "콜백 요청",
+    "tab_inquiries": "문의"
   },
   "callback": {
     "hint": "고객이 남긴 연락처로 상담원이 연락합니다. [보기]를 누르면 열람 기록이 남습니다.",
@@ -726,5 +727,33 @@
     "resumed": "AI에게 넘겼습니다",
     "failed": "자동응답을 바꾸지 못했습니다",
     "stillOn": "AI가 이 대화에 계속 답하고 있습니다."
+  },
+  "inquiry": {
+    "hint": "위젯의 Contact Support에서 고객이 보낸 문의 양식입니다. 이메일로 답변한 뒤 답변 완료로 표시하세요.",
+    "col": {
+      "received": "접수 시각",
+      "name": "이름",
+      "email": "이메일",
+      "message": "내용",
+      "status": "상태"
+    },
+    "status_open": "미답변",
+    "status_answered": "답변 완료",
+    "status_all": "전체",
+    "open": "열기",
+    "empty": "문의가 없습니다.",
+    "dialogTitle": "문의 · {{at}}",
+    "loading": "불러오는 중…",
+    "loadError": "문의를 불러오지 못했습니다.",
+    "reply": "이메일로 답변",
+    "replySubject": "Re: 문의하신 내용",
+    "replyWrote": "{{name}}님의 문의:",
+    "replyHint": "\"이메일로 답변\"을 누르면 고객 주소와 문의 내용이 인용된 메일 앱이 열립니다. 문의를 열면 감사 로그에 기록됩니다.",
+    "markAnswered": "답변 완료로 표시",
+    "reopen": "다시 열기",
+    "answeredToast": "답변 완료로 표시했습니다.",
+    "reopenedToast": "다시 열었습니다.",
+    "updateError": "문의를 변경하지 못했습니다.",
+    "openConversation": "대화 #{{id}} 열기"
   }
 }

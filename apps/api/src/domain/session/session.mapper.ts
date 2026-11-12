@@ -15,6 +15,7 @@ export class SessionMapper {
     notice: PrivacyNoticeInfo,
     customerName: string | null = null,
     consultCategories: Array<{ code: string; label: string }> = [],
+    customerEmail: string | null = null,
   ): SessionResponse {
     return {
       sessionToken: s.sessionToken,
@@ -24,6 +25,7 @@ export class SessionMapper {
       consentState: s.consentState,
       authenticated: s.customerId != null,
       customerName,
+      customerEmail,
       privacyPolicyUrl: notice.privacyPolicyUrl,
       consentNoticeVersion: notice.consentNoticeVersion,
       privacyNoticeCopy: notice.privacyNoticeCopy,

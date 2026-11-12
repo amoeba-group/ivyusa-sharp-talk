@@ -39,6 +39,8 @@ export function useSessionProfile() {
         if (cancelled) return;
         // Adopt the name; token/auth state stays owned by the paths above.
         if (res.customerName) setCustomerName(res.customerName);
+        // The contact form's prefill (ivy-docs T11 D2).
+        if (res.customerEmail) useWidgetStore.getState().setCustomerEmail(res.customerEmail);
         // Tenant configuration keys off the shop, not the session — adopt all of
         // it here (a storefront-signed-in widget makes no other ensure call).
         adoptTenantConfig(res);

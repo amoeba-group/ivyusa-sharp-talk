@@ -310,6 +310,25 @@ export class SessionService {
   }
 
   /**
+   * The address to prefill the contact form with (ivy-docs T11 D2) — this
+   * session's own customer only, so the widget is told nothing it was not
+   * already told: a bound customer signed in or looked up an order with it, and
+   * a claimed identity's address came from the host page in this same browser.
+   */
+  async customerContactEmail(session: Session): Promise<string | null> {
+    if (session.customerId == null || session.tenantId == null) {
+      if (session.identityLevel !== SESSION_IDENTITY.CLAIMED) return null;
+      const claimed = (session.identityAttributes as Record<string, unknown> | null)?.email;
+      return typeof claimed === 'string' ? claimed.trim() || null : null;
+    }
+    const customer = await this.customerRepo.findOne({
+      where: { id: session.customerId, tenantId: session.tenantId },
+      select: ['id', 'email'],
+    });
+    return customer?.email?.trim() || null;
+  }
+
+  /**
    * Resolve the tenant a new session binds to (multitenancy — POL, CLAUDE.md §6).
    * - `shop_domain` given  → must match a tenant, else reject (no silent binding).
    * - `shop_domain` absent → only default when exactly one tenant exists (single
@@ -707,6 +726,10 @@ export class SessionService {
         launcherTeaser: tenant?.widgetCopy?.launcherTeaser ?? {},
         disclosureLine: tenant?.widgetCopy?.disclosureLine ?? {},
         composerPlaceholder: tenant?.widgetCopy?.composerPlaceholder ?? {},
+        // Contact Support channels (ivy-docs T11 D1) — the tenant's own or none.
+        supportEmail: tenant?.widgetCopy?.supportEmail ?? null,
+        supportPhone: tenant?.widgetCopy?.supportPhone ?? null,
+        contactLiveChat: tenant?.widgetCopy?.contactLiveChat === true,
       },
       // 'base' (the default) has no shopper-facing issue feed (PLN-260923 D-2).
       issueFeed: !!tenant?.workflowMode && tenant.workflowMode !== 'base',

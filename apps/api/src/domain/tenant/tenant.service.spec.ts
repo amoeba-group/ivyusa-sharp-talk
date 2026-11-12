@@ -182,6 +182,34 @@ describe('TenantService.updatePrivacyNotice', () => {
       });
       expect(cleared.widgetCopy).toBeNull();
     });
+
+    it('ivy-docs T11 Contact Support: email lower-cased, phone as typed, live chat flag; cleared like the rest', async () => {
+      const saved = await svc.updateWidgetSettings(1, 7, {
+        login_mode: 'redirect',
+        support_email: ' Hello@IvyUSA.com ',
+        support_phone: '+1 (800) 555-0100',
+        contact_live_chat: true,
+      });
+      expect(saved.widgetCopy).toMatchObject({
+        supportEmail: 'hello@ivyusa.com',
+        supportPhone: '+1 (800) 555-0100',
+        contactLiveChat: true,
+      });
+      // Untouched fields keep their value on a save that does not send them.
+      const kept = await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', contact_live_chat: false });
+      expect(kept.widgetCopy).toEqual({ displayName: null, firstVisit: {}, loginGreeting: {}, supportEmail: 'hello@ivyusa.com', supportPhone: '+1 (800) 555-0100' });
+      const cleared = await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', support_email: '', support_phone: null });
+      expect(cleared.widgetCopy).toBeNull();
+    });
+
+    it('ivy-docs T11 refuses a support address or number it cannot read', async () => {
+      await expect(
+        svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', support_email: 'hello@ivyusa' }),
+      ).rejects.toMatchObject({ status: 400 });
+      await expect(
+        svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', support_phone: 'call us' }),
+      ).rejects.toMatchObject({ status: 400 });
+    });
   });
 
   /**

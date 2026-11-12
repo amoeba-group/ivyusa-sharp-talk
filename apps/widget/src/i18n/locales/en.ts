@@ -273,17 +273,49 @@ export const en = {
   },
 
   contact: {
-    title: 'Contact Support',
-    phone: '1588-0000',
-    hours: 'Mon–Fri 10:00–18:00',
-    email: 'help@ivy.com',
-    chatAgent: 'Chat with an agent',
+    // Contact Support (ivy-docs T11, SCR-IVY-13). The channels themselves — the
+    // address, a phone number — are the tenant's settings, never text here (BUG-010).
+    title: "Please choose how you'd like to reach us.",
     methods: {
+      email: 'Email inquiry',
       phone: 'Phone',
-      email: 'Email',
-      chat: 'Live chat',
+      chat: 'Chat with an agent',
     },
-    emailHours: 'Open 24/7 · reply within 1 business day',
+    emailHours: 'Open 24 hours · Reply within 1 business day',
+    phoneHint: 'Tap to call',
+    chatHint: 'Talk to our team right here in the chat',
+    form: {
+      lead: 'Please enter your contact information and tell us how we can help.',
+      name: 'Name',
+      namePlaceholder: 'Enter your name',
+      email: 'Email',
+      emailPlaceholder: 'Enter your email',
+      message: 'Message',
+      messagePlaceholder: 'Please describe how we can help you',
+      send: 'Send Message',
+      sending: 'Sending…',
+      errors: {
+        nameRequired: 'Name is required.',
+        emailRequired: 'Email is required.',
+        emailInvalid: 'Enter a valid email address.',
+        messageRequired: 'Message is required.',
+        tooLong: 'Keep it under {{max}} characters.',
+        consent: 'Please accept the privacy notice at the top of the chat first.',
+        invalid: 'Please check your name, email and message.',
+        tooMany: "You've sent several messages in the last hour. Please try again later.",
+        erased: "This email address can't be used. Please enter another one.",
+        failed: "Your message couldn't be sent. Please try again.",
+      },
+    },
+    sent: {
+      title: 'Your inquiry',
+      name: 'Name:',
+      email: 'Email:',
+      message: 'Message:',
+      successTitle: 'Your message has been sent successfully.',
+      successBody: 'Our support team will review your inquiry and reply to the email address you provided.',
+      successHint: 'Please check your inbox for our response.',
+    },
   },
 
   affiliate: {

@@ -133,6 +133,10 @@ export interface WidgetSettingsResponse {
   launcherTeaser: Record<string, string>;
   disclosureLine: Record<string, string>;
   composerPlaceholder: Record<string, string>;
+  /** Contact Support channels (ivy-docs T11 D1); null / false = not shown. */
+  supportEmail: string | null;
+  supportPhone: string | null;
+  contactLiveChat: boolean;
   /** Fallback used when displayName is unset (the tenant's name). */
   displayNameFallback: string | null;
 }

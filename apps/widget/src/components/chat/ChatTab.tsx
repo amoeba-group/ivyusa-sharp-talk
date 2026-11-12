@@ -26,7 +26,8 @@ import { ConsultCategoryCard } from './ConsultCategoryCard';
 import { ConsentBanner } from './ConsentBanner';
 import { ScenarioMenu } from './ScenarioMenu';
 import { AuthGate } from './AuthGate';
-import { ContactCard } from './ContactCard';
+import { ContactAnswer } from './ContactCard';
+import { ContactFormAnswer } from './ContactForm';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import {
@@ -39,13 +40,15 @@ import {
 } from './reply-chips';
 import { CategoryPicker, PopularProductsAnswer, ProductHelpAnswer } from './ProductHelp';
 import { ChatChip } from './ChatChip';
+import { ToastHost } from '../ui/ToastHost';
 import { OrderDetailView } from '../orders/OrderDetail';
 import { chipBelongsTo } from '../notifications/tab-chips';
 import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
 // Deep import: a value import from `@sharptalk/types` breaks the browser build (CJS `export *`).
 import { CALLBACK_CHIP_ID } from '../../../../../packages/types/src/common/chat-close';
+import { contactChannels, type InquiryInput } from '../../../../../packages/types/src/common/inquiry';
 
-type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
+type Inline = 'auth' | 'affiliate' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
 
 /**
  * Something the widget adds to the thread itself (ivy-docs T09): the My Orders
@@ -57,10 +60,13 @@ type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'callback' | '
  * Product Help (T10) adds three: its topic menu, the category picker, and a
  * category's popular products. Their chip rows stay on screen; `picked`
  * remembers which chip of the row was tapped, so it stays outlined.
+ *
+ * Contact Support (T11) adds two: the channel cards, and the contact form —
+ * which becomes the shopper's "Your inquiry" card once `sent`.
  */
 type ThreadInsert = {
   key: string;
-  kind: 'orders' | 'menu' | 'product' | 'categories' | 'popular';
+  kind: 'orders' | 'menu' | 'product' | 'categories' | 'popular' | 'contact' | 'contactForm';
   at: number;
   asked?: string | null;
   /** product / categories / popular: the tenant's Product Help categories. */
@@ -68,6 +74,8 @@ type ThreadInsert = {
   /** popular: the category shown. */
   category?: ProductCategory;
   picked?: string;
+  /** contactForm: what was sent from it. */
+  sent?: InquiryInput;
 };
 
 
@@ -77,6 +85,7 @@ export function ChatTab() {
   const sessionToken = useWidgetStore((s) => s.sessionToken);
   const authenticated = useWidgetStore((s) => s.authenticated);
   const customerName = useWidgetStore((s) => s.customerName);
+  const customerEmail = useWidgetStore((s) => s.customerEmail);
   const setAuthenticated = useWidgetStore((s) => s.setAuthenticated);
   const setSessionToken = useWidgetStore((s) => s.setSessionToken);
   const setSettingsOpen = useWidgetStore((s) => s.setSettingsOpen);
@@ -365,7 +374,8 @@ export function ChatTab() {
         openOrAuth('orders', button.label);
         return;
       case 'contact_support':
-        setInline('contact');
+        // In the thread, where it was asked (T11, BUG-024).
+        addInsert('contact', button.label);
         return;
       case 'affiliate':
         setInline('affiliate');
@@ -426,7 +436,7 @@ export function ChatTab() {
         openOrAuth('orders');
         return;
       case 'open_contact':
-        setInline('contact');
+        addInsert('contact');
         return;
       case 'open_affiliate':
         setInline('affiliate');
@@ -465,6 +475,17 @@ export function ChatTab() {
   /** Outline the chip the shopper tapped in an insert's row (T10 D1). */
   function markPicked(key: string, picked: string) {
     setInserts((prev) => prev.map((x) => (x.key === key ? { ...x, picked } : x)));
+  }
+
+  /** The contact form went through: it turns into the "Your inquiry" card (T11 D2). */
+  function markSent(key: string, sent: InquiryInput) {
+    setInserts((prev) => prev.map((x) => (x.key === key ? { ...x, sent } : x)));
+  }
+
+  /** "Chat with an agent" — every route to a person goes through requestAgent. */
+  function contactAgent() {
+    setShowEscalate(false);
+    void requestAgent();
   }
 
   /** A topic in the Product Help menu (T10 D1, Figma 1006:5588). */
@@ -622,6 +643,43 @@ export function ChatTab() {
               startOver();
             }}
           />
+        ) : x.kind === 'contact' ? (
+          <ContactAnswer
+            key={x.key}
+            insertKey={x.key}
+            asked={x.asked}
+            channels={contactChannels(widgetCopy)}
+            picked={x.picked}
+            disabled={sending}
+            onEmail={() => {
+              markPicked(x.key, 'email');
+              addInsert('contactForm');
+            }}
+            onChatAgent={() => {
+              markPicked(x.key, 'chat');
+              contactAgent();
+            }}
+            onStartOver={() => {
+              markPicked(x.key, START_OVER_ID);
+              startOver();
+            }}
+          />
+        ) : x.kind === 'contactForm' ? (
+          <ContactFormAnswer
+            key={x.key}
+            insertKey={x.key}
+            sessionToken={sessionToken}
+            conversationId={conversationId}
+            defaults={{ name: customerName ?? '', email: customerEmail ?? '' }}
+            sent={x.sent}
+            picked={x.picked}
+            disabled={sending}
+            onSent={(form) => markSent(x.key, form)}
+            onStartOver={() => {
+              markPicked(x.key, START_OVER_ID);
+              startOver();
+            }}
+          />
         ) : x.kind === 'popular' && x.category ? (
           <PopularProductsAnswer
             key={x.key}
@@ -723,7 +781,9 @@ export function ChatTab() {
       </div>
       )}
 
-      {/* Thread */}
+      {/* Thread. The wrapper is `relative` for ToastHost: a contact form that
+          could not be sent says so just above the composer (T11 D2). */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         ref={scrollRef}
         role="log"
@@ -897,15 +957,6 @@ export function ChatTab() {
         {inline === 'contactEmail' && (
           <ContactEmailCard sessionToken={sessionToken} onSaved={() => setInline(null)} />
         )}
-        {inline === 'contact' && (
-          <ContactCard
-            onChatAgent={() => {
-              setInline(null);
-              setShowEscalate(true);
-              void requestAgent();
-            }}
-          />
-        )}
         {inline === 'consultCategory' && (
           <ConsultCategoryCard
             mode={categoryMode}
@@ -930,6 +981,8 @@ export function ChatTab() {
             {t('chat.connectAgent')}
           </button>
         )}
+      </div>
+      <ToastHost />
       </div>
 
       {/* Attachment tray: what is uploading, what failed, what is ready to send */}

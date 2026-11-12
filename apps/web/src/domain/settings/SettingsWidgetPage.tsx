@@ -5,6 +5,7 @@ import { WidgetAccessCard } from './WidgetAccessCard';
 import { ChatCloseCard } from './ChatCloseCard';
 import { DesignAssetsCard } from './DesignAssetsCard';
 import { WidgetDesignsCard } from './WidgetDesignsCard';
+import { ContactSupportCard } from './ContactSupportCard';
 
 /** Tenant settings — widget (PLN-260824 B). Composition only; every card moved here unchanged. */
 export function SettingsWidgetPage() {
@@ -21,6 +22,8 @@ export function SettingsWidgetPage() {
       <DesignAssetsCard />
       <WidgetTabsCard />
       <WidgetBehaviorCard />
+      {/* What Contact Support offers in the widget, and where its notices go (ivy-docs T11). */}
+      <ContactSupportCard />
       {/* When a quiet conversation asks for a rating and ends (PLN-261026-Chat-Auto-Close). */}
       <ChatCloseCard />
       {/* Where the widget may be embedded, and how a host proves its visitor

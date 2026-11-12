@@ -275,17 +275,49 @@ export const ja: Translation = {
   },
 
   contact: {
-    title: 'サポートに問い合わせ',
-    phone: '1588-0000',
-    hours: '月–金 10:00–18:00',
-    email: 'help@ivy.com',
-    chatAgent: '担当者とチャット',
+    // Contact Support (ivy-docs T11, SCR-IVY-13). The channels themselves — the
+    // address, a phone number — are the tenant's settings, never text here (BUG-010).
+    title: 'ご希望のお問い合わせ方法をお選びください。',
     methods: {
-      phone: '電話相談',
       email: 'メールでのお問い合わせ',
-      chat: 'チャット相談',
+      phone: '電話',
+      chat: 'スタッフとチャット',
     },
     emailHours: '24時間受付 · 1営業日以内に返信',
+    phoneHint: 'タップして電話をかける',
+    chatHint: 'このチャットでスタッフと直接お話しいただけます',
+    form: {
+      lead: '連絡先とお問い合わせ内容をご入力ください。',
+      name: 'お名前',
+      namePlaceholder: 'お名前を入力',
+      email: 'メールアドレス',
+      emailPlaceholder: 'メールアドレスを入力',
+      message: 'お問い合わせ内容',
+      messagePlaceholder: 'どのようなご用件かご記入ください',
+      send: '送信する',
+      sending: '送信中…',
+      errors: {
+        nameRequired: 'お名前を入力してください。',
+        emailRequired: 'メールアドレスを入力してください。',
+        emailInvalid: '正しいメールアドレスを入力してください。',
+        messageRequired: 'お問い合わせ内容を入力してください。',
+        tooLong: '{{max}}文字以内で入力してください。',
+        consent: '先にチャット上部のプライバシーに関するお知らせに同意してください。',
+        invalid: 'お名前・メールアドレス・お問い合わせ内容をご確認ください。',
+        tooMany: '直近1時間に何度か送信されています。しばらくしてからもう一度お試しください。',
+        erased: 'このメールアドレスは使用できません。別のアドレスを入力してください。',
+        failed: '送信できませんでした。もう一度お試しください。',
+      },
+    },
+    sent: {
+      title: 'お問い合わせ内容',
+      name: 'お名前:',
+      email: 'メール:',
+      message: '内容:',
+      successTitle: 'メッセージは正常に送信されました。',
+      successBody: 'サポートチームが内容を確認し、ご入力のメールアドレスにご返信いたします。',
+      successHint: '返信はメールの受信箱をご確認ください。',
+    },
   },
 
   affiliate: {

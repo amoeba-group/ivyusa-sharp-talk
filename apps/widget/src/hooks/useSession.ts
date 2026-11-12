@@ -363,6 +363,7 @@ export function useEnsureSession() {
         }
         setAuthenticated(!!res.authenticated);
         if (res.customerName) setCustomerName(res.customerName);
+        if (res.customerEmail) useWidgetStore.getState().setCustomerEmail(res.customerEmail);
 
         // Server-side consent is the source of truth for the notice banner
         // (an outdated notice re-prompts regardless of the local cache); a

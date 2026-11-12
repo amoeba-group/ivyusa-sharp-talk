@@ -19,6 +19,8 @@ import { reasonKey, useAlarmText } from './alarm-format';
 import { AlertSettingsModal } from './AlertSettingsModal';
 import { CallbackRequestsTab } from './CallbackRequestsTab';
 import { useCallbackRequests } from './callbacks.hooks';
+import { InquiriesTab } from './InquiriesTab';
+import { useInquiries } from './inquiries.hooks';
 
 const PAGE_SIZE = 20;
 
@@ -30,10 +32,19 @@ const PAGE_SIZE = 20;
 export function AlertsPage() {
   const { t } = useTranslation('livechat');
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'callbacks' ? 'callbacks' : 'alarms';
+  const raw = params.get('tab');
+  const tab = raw === 'callbacks' || raw === 'inquiries' ? raw : 'alarms';
   // Badge = open callback requests; size 1 is enough, the count rides on the pagination.
   const openCallbacks = useCallbackRequests({ status: 'requested', page: 1, size: 1 });
   const openCount = openCallbacks.data?.total ?? 0;
+  // Same for the widget's contact forms not yet answered (ivy-docs T11 D4).
+  const openInquiries = useInquiries({ status: 'open', page: 1, size: 1 }).data?.total ?? 0;
+  const countBadge = (n: number) =>
+    n > 0 && (
+      <span className="min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-[18px] text-white">
+        {n > 99 ? '99+' : n}
+      </span>
+    );
   const tabBtn = (active: boolean) =>
     active
       ? 'inline-flex items-center gap-1.5 border-b-2 border-primary-500 px-3 py-2 text-sm font-medium text-primary-600'
@@ -55,14 +66,21 @@ export function AlertsPage() {
           data-testid="callback-tab"
         >
           {t('alarmCenter.tab_callbacks')}
-          {openCount > 0 && (
-            <span className="min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-[18px] text-white">
-              {openCount > 99 ? '99+' : openCount}
-            </span>
-          )}
+          {countBadge(openCount)}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'inquiries'}
+          className={tabBtn(tab === 'inquiries')}
+          onClick={() => setParams({ tab: 'inquiries' }, { replace: true })}
+          data-testid="inquiry-tab"
+        >
+          {t('alarmCenter.tab_inquiries')}
+          {countBadge(openInquiries)}
         </button>
       </div>
-      {tab === 'callbacks' ? <CallbackRequestsTab /> : <AlarmList />}
+      {tab === 'callbacks' ? <CallbackRequestsTab /> : tab === 'inquiries' ? <InquiriesTab /> : <AlarmList />}
     </div>
   );
 }

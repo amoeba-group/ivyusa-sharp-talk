@@ -442,10 +442,15 @@ export class PrivacyService {
         status: r.status,
         createdAt: r.createdAt,
       })),
+      // What the shopper typed in the contact form is theirs (ivy-docs T11).
       inquiries: inquiries.map((i) => ({
         id: i.id,
         orderId: i.orderId,
         status: i.status,
+        name: i.contactName ?? null,
+        email: i.contactEmail ?? null,
+        message: i.message ?? null,
+        language: i.language ?? null,
         createdAt: i.createdAt,
       })),
     };
@@ -643,8 +648,12 @@ export class PrivacyService {
     // Reviews: null out free-text body.
     await this.reviewRepo.update({ customerId }, { body: null });
 
-    // Inquiries: keep the row but unlink from the customer.
-    await this.inquiryRepo.update({ customerId }, { customerId: null });
+    // Inquiries: keep the row (the team's record that one came in) but unlink it
+    // and clear what the shopper typed — name, address, message (ivy-docs T11).
+    await this.inquiryRepo.update(
+      { customerId },
+      { customerId: null, contactName: null, contactEmail: null, message: null },
+    );
 
     // CJM events: unlink from the customer.
     await this.cjmRepo.update({ customerId }, { customerId: null });

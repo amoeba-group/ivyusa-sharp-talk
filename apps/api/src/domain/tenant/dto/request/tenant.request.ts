@@ -319,6 +319,11 @@ export class UpdateWidgetSettingsRequest {
   @IsOptional() @IsString() @MaxLength(60) composer_placeholder_vi?: string | null;
   @IsOptional() @IsString() @MaxLength(60) composer_placeholder_ja?: string | null;
   @IsOptional() @IsString() @MaxLength(60) composer_placeholder_zh?: string | null;
+  // ivy-docs T11 D1 — Contact Support channels; '' / null hides the card. The
+  // service checks the address / number shape (SUPPORT_CONTACT_INVALID).
+  @IsOptional() @IsString() @MaxLength(254) support_email?: string | null;
+  @IsOptional() @IsString() @MaxLength(32) support_phone?: string | null;
+  @IsOptional() @IsBoolean() contact_live_chat?: boolean;
 }
 
 /**

@@ -607,7 +607,8 @@
       "saveError": "No se pudieron guardar los ajustes de alarmas"
     },
     "tab_alarms": "Alarmas",
-    "tab_callbacks": "Solicitudes de contacto"
+    "tab_callbacks": "Solicitudes de contacto",
+    "tab_inquiries": "Consultas"
   },
   "callback": {
     "hint": "Un agente contacta al cliente con el dato que dejó. Pulsar [Ver] queda registrado en la auditoría.",
@@ -726,5 +727,33 @@
     "resumed": "Conversación pasada a la IA",
     "failed": "No se pudo cambiar la respuesta automática",
     "stillOn": "La IA sigue respondiendo en esta conversación."
+  },
+  "inquiry": {
+    "hint": "Formularios de contacto enviados por clientes desde «Contactar con soporte» en el widget. Responde por correo y márcalos como respondidos.",
+    "col": {
+      "received": "Recibido",
+      "name": "Nombre",
+      "email": "Correo",
+      "message": "Mensaje",
+      "status": "Estado"
+    },
+    "status_open": "Abierta",
+    "status_answered": "Respondida",
+    "status_all": "Todas",
+    "open": "Abrir",
+    "empty": "No hay consultas.",
+    "dialogTitle": "Consulta · {{at}}",
+    "loading": "Cargando…",
+    "loadError": "No se pudo cargar esta consulta.",
+    "reply": "Responder por correo",
+    "replySubject": "Re: Tu consulta",
+    "replyWrote": "{{name}} escribió:",
+    "replyHint": "«Responder por correo» abre tu app de correo con la dirección del cliente y su mensaje citado. Abrir una consulta queda registrado en la auditoría.",
+    "markAnswered": "Marcar como respondida",
+    "reopen": "Abrir de nuevo",
+    "answeredToast": "Marcada como respondida.",
+    "reopenedToast": "Abierta de nuevo.",
+    "updateError": "No se pudo actualizar la consulta.",
+    "openConversation": "Abrir conversación #{{id}}"
   }
 }

@@ -160,6 +160,9 @@ export class TenantMapper {
       launcherTeaser: t.widgetCopy?.launcherTeaser ?? {},
       disclosureLine: t.widgetCopy?.disclosureLine ?? {},
       composerPlaceholder: t.widgetCopy?.composerPlaceholder ?? {},
+      supportEmail: t.widgetCopy?.supportEmail ?? null,
+      supportPhone: t.widgetCopy?.supportPhone ?? null,
+      contactLiveChat: t.widgetCopy?.contactLiveChat === true,
       displayNameFallback: t.name ?? null,
     };
   }

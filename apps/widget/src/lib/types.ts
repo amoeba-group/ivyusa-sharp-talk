@@ -31,6 +31,7 @@ import type {
   OrderLookupResponse,
   PopularProductCard,
   PopularProductsResponse,
+  InquiryCreatedResponse,
   ProductCategoryOption,
   ScenarioButtonResponse,
   ScenarioFollowUpResponse,
@@ -133,3 +134,5 @@ export type ScenarioButton = ScenarioButtonResponse;
 export type ProductCategory = ProductCategoryOption;
 export type PopularProducts = PopularProductsResponse;
 export type PopularProduct = PopularProductCard;
+/** Contact form (ivy-docs T11). */
+export type InquiryCreated = InquiryCreatedResponse;

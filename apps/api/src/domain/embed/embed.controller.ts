@@ -42,6 +42,8 @@ export class EmbedController {
       session,
       notice,
       await this.sessionService.customerDisplayName(session),
+      [],
+      await this.sessionService.customerContactEmail(session),
     );
   }
 }

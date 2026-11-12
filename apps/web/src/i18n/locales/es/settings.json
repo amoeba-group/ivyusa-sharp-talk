@@ -1020,5 +1020,18 @@
     "saved": "Condiciones de cierre guardadas.",
     "saveError": "No se pudieron guardar las condiciones de cierre.",
     "errorRange": "Los minutos deben estar entre 1 y 60."
+  },
+  "contactSupport": {
+    "title": "Contactar con soporte",
+    "desc": "Lo que ve un cliente al tocar «Contactar con soporte» en el widget. Solo se muestra lo que completes.",
+    "email": "Correo de soporte",
+    "emailHint": "Aparece en la tarjeta «Consulta por correo», que abre el formulario de contacto. Las nuevas consultas se envían aquí, con Responder-a el cliente. Vacío = sin tarjeta de correo.",
+    "emailInvalid": "Introduce un correo válido, p. ej. hello@example.com.",
+    "phone": "Teléfono de soporte",
+    "phoneHint": "Aparece en una tarjeta de llamada. Vacío = sin tarjeta de teléfono.",
+    "phoneInvalid": "Usa solo dígitos con espacios, +, ( ), - o .",
+    "liveChat": "Mostrar la tarjeta «Chatear con un agente»",
+    "liveChatHint": "Conecta al cliente con tu equipo en el chat, junto a las tarjetas de arriba.",
+    "liveChatFallback": "Sin correo ni teléfono, el widget muestra esta tarjeta igualmente para que «Contactar con soporte» nunca quede vacío."
   }
 }

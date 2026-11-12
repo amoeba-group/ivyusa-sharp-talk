@@ -141,7 +141,18 @@ export interface WidgetSettings {
   disclosureLine?: Record<string, string>;
   /** ivy-docs T08 chat composer placeholder; absent on an older API = empty. */
   composerPlaceholder?: Record<string, string>;
+  /** ivy-docs T11 Contact Support channels; absent on an older API = none. */
+  supportEmail?: string | null;
+  supportPhone?: string | null;
+  contactLiveChat?: boolean;
   displayNameFallback: string | null;
+}
+
+/** The Contact Support card's fields (ivy-docs T11 D1); '' clears. */
+export interface ContactSupportDraft {
+  supportEmail: string;
+  supportPhone: string;
+  contactLiveChat: boolean;
 }
 
 /** Console-side draft of the widget copy fields (PLN-260808-Widget-Greetings). */
@@ -458,9 +469,17 @@ export const settingsService = {
     csatMode?: 'rating' | 'survey',
     widgetLanguages?: string[] | null,
     closeFeedbackPrompt?: boolean,
+    contact?: ContactSupportDraft,
   ) =>
     apiPatch<WidgetSettings>('/tenants/widget-settings', {
       login_mode: loginMode,
+      ...(contact
+        ? {
+            support_email: contact.supportEmail.trim(),
+            support_phone: contact.supportPhone.trim(),
+            contact_live_chat: contact.contactLiveChat,
+          }
+        : {}),
       ...(closeFeedbackPrompt !== undefined ? { close_feedback_prompt: closeFeedbackPrompt } : {}),
       ...(widgetLanguages !== undefined ? { widget_languages: widgetLanguages } : {}),
       ...(commerceEnabled !== undefined ? { commerce_enabled: commerceEnabled } : {}),

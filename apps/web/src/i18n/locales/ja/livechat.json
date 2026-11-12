@@ -607,7 +607,8 @@
       "saveError": "アラーム設定を保存できませんでした"
     },
     "tab_alarms": "アラーム",
-    "tab_callbacks": "折り返し依頼"
+    "tab_callbacks": "折り返し依頼",
+    "tab_inquiries": "お問い合わせ"
   },
   "callback": {
     "hint": "お客様が残した連絡先にオペレーターが連絡します。［表示］を押すと閲覧記録が残ります。",
@@ -726,5 +727,33 @@
     "resumed": "AIに引き継ぎました",
     "failed": "自動応答を変更できませんでした",
     "stillOn": "AIがこの会話にまだ応答しています。"
+  },
+  "inquiry": {
+    "hint": "ウィジェットの Contact Support からお客様が送信したお問い合わせフォームです。メールで返信し、返信済みにしてください。",
+    "col": {
+      "received": "受信日時",
+      "name": "お名前",
+      "email": "メール",
+      "message": "内容",
+      "status": "ステータス"
+    },
+    "status_open": "未返信",
+    "status_answered": "返信済み",
+    "status_all": "すべて",
+    "open": "開く",
+    "empty": "お問い合わせはありません。",
+    "dialogTitle": "お問い合わせ · {{at}}",
+    "loading": "読み込み中…",
+    "loadError": "お問い合わせを読み込めませんでした。",
+    "reply": "メールで返信",
+    "replySubject": "Re: お問い合わせの件",
+    "replyWrote": "{{name}} 様のお問い合わせ:",
+    "replyHint": "「メールで返信」を押すと、お客様のアドレスと引用された内容でメールアプリが開きます。お問い合わせを開くと監査ログに記録されます。",
+    "markAnswered": "返信済みにする",
+    "reopen": "未返信に戻す",
+    "answeredToast": "返信済みにしました。",
+    "reopenedToast": "未返信に戻しました。",
+    "updateError": "お問い合わせを更新できませんでした。",
+    "openConversation": "会話 #{{id}} を開く"
   }
 }

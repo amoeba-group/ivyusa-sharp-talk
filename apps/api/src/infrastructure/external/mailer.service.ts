@@ -5,6 +5,8 @@ export interface MailMessage {
   to: string;
   subject: string;
   text: string;
+  /** Where "Reply" goes — the shopper, for a contact-form notice (ivy-docs T11). */
+  replyTo?: string;
 }
 
 /**
@@ -53,6 +55,7 @@ export class MailerService {
         to: mail.to,
         subject: mail.subject,
         text: mail.text,
+        ...(mail.replyTo ? { replyTo: mail.replyTo } : {}),
       });
       return true;
     } catch (e) {

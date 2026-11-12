@@ -68,6 +68,14 @@ export interface WidgetCopy {
   disclosureLine?: WidgetCopyText;
   /** Chat composer placeholder (ivy-docs T08 D3); absent = the built-in "Type a message…". */
   composerPlaceholder?: WidgetCopyText;
+  /**
+   * Contact Support channels (ivy-docs T11 D1, BUG-010) — the tenant's own, never
+   * a built-in value. Absent = that card is not shown; see `contactChannels()`.
+   */
+  supportEmail?: string | null;
+  supportPhone?: string | null;
+  /** Show the "Chat with an agent" card next to the others; absent = off. */
+  contactLiveChat?: boolean;
 }
 
 export interface SessionResponse {
@@ -94,6 +102,11 @@ export interface SessionResponse {
   authenticated: boolean;
   /** Bound customer's display name; null for guests and until the profile syncs. */
   customerName: string | null;
+  /**
+   * The session's own customer's address, to prefill the contact form (ivy-docs
+   * T11 D2). Null for guests; absent on an older API.
+   */
+  customerEmail?: string | null;
   /** Tenant's privacy-policy link (null when the tenant has not set one). */
   privacyPolicyUrl: string | null;
   /** Effective consent-notice version (tenant override ?? platform default). */
@@ -562,6 +575,12 @@ export interface PopularProductCard {
  * not be asked (no connection, error, timeout); the widget then offers only
  * `collectionUrl`.
  */
+/** POST /inquiries — the contact form was received (ivy-docs T11 D3). */
+export interface InquiryCreatedResponse {
+  id: string;
+  status: string;
+}
+
 export interface PopularProductsResponse {
   available: boolean;
   products: PopularProductCard[];

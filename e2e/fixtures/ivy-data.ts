@@ -221,4 +221,9 @@ export const POPULAR_NAILS = [
   { handle: 'impress-press-on', title: 'imPRESS Press-on Manicure', vendor: 'KISS', price: 9.99, currency: 'USD', imageUrl: null, productUrl: 'https://ivyusa.com/products/impress-press-on' },
 ];
 
-export const SUPPORT_EMAIL = 'help@ivy.com';
+/**
+ * IVY's support address on the Contact Support card (T11 §8-2a): the one on the
+ * ivyusa.com policy pages, seeded as `widgetCopy.supportEmail`. The design's
+ * `help@ivy.com` is not IVY's real mailbox (Q-08).
+ */
+export const SUPPORT_EMAIL = 'hello@ivyusa.com';
