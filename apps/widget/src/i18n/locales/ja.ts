@@ -371,6 +371,9 @@ export const ja: Translation = {
     placeholder: 'ご感想をお聞かせください…',
     submit: 'レビューを送信',
     thanks: 'レビューありがとうございます。',
+    /** Save failed (ivy-docs T06, BUG-009); `blocked` = the moderation gate refused the text (E4002). */
+    saveFailed: 'レビューを保存できませんでした。もう一度お試しください。',
+    blocked: 'レビューを投稿できませんでした。連絡先や不適切な表現を削除して、もう一度お試しください。',
     stars_one: '星{{count}}つ',
     stars_other: '星{{count}}つ',
   },

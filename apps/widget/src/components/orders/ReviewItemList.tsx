@@ -1,16 +1,17 @@
-import { CheckCircle2, ExternalLink, Package, Star } from 'lucide-react';
+import { CheckCircle2, Package, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore } from '../../store/widgetStore';
 import { useReviewItems } from '../../hooks/useOrders';
-import { formatMoney, relativeTime } from '../../lib/format';
+import { formatMoney } from '../../lib/format';
+import { noticeTimeText } from '../../lib/notice-time-text';
 import { reviewLinkFor } from '../../../../../packages/types/src/common/widget-theme';
-import { Badge } from '../ui/Badge';
+import { StatusPill } from '../ui/StatusPill';
 import { Spinner } from '../ui/Spinner';
 import type { ReviewItem } from '../../lib/types';
 
 /**
- * One purchased line (Figma `05.Review`): order number with a Review badge, the
- * product and its price, then "Write a review" and the date.
+ * One purchased line (SPEC SCR-IVY-08, ivy-docs T06 D1): order number with the
+ * purple Review pill, "title · price", then ⭐ Write Review and the BR-05 time.
  */
 function Row({
   item,
@@ -40,7 +41,7 @@ function Row({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-gray-900">{item.orderNumber}</span>
-          <Badge tone="review">{t('orders.reviewItems.badge')}</Badge>
+          <StatusPill status="review" />
         </div>
         <p className="mt-0.5 truncate text-sm text-gray-800">{meta}</p>
         <div className="mt-1 flex items-center justify-between gap-2">
@@ -54,24 +55,23 @@ function Row({
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-warning-ink hover:underline"
             >
-              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+              <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden />
               {t('orders.writeReview')}
-              <ExternalLink className="h-3 w-3 text-gray-400" />
             </a>
           ) : (
             <button
               type="button"
               onClick={() => onWrite(item.orderItemId)}
-              className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-warning-ink hover:underline"
             >
-              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+              <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden />
               {t('orders.writeReview')}
             </button>
           )}
           <span className="flex-shrink-0 text-xs text-gray-400">
-            {relativeTime(item.orderedAt, i18n.language)}
+            {noticeTimeText(t, item.orderedAt, i18n.language)}
           </span>
         </div>
       </div>

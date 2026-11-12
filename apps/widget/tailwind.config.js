@@ -54,7 +54,9 @@ export default {
           dim: 'rgb(var(--ivy-header-fg) / var(--ivy-header-dim))',
         },
         success: '#00C950', // "Confirmed" badge (frame 34)
-        warning: '#FF6900', // "In Transit" badge + in-progress copy (frame 49)
+        // DEFAULT: "In Transit" badge + in-progress copy (frame 49). `ink` is the same
+        // orange deepened to 4.56:1 on white, for orange TEXT at body size (T06 D1).
+        warning: { DEFAULT: '#FF6900', ink: '#C94F00' },
         error: '#FF385C', // tab count badge, unread dot (frame 34)
         info: '#3B82F6',
         /** "Review" badge — a status colour the old palette had no slot for. */

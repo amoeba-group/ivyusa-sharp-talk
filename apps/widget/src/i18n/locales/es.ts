@@ -367,6 +367,9 @@ export const es: Translation = {
     placeholder: 'Comparte tu experiencia…',
     submit: 'Enviar reseña',
     thanks: '¡Gracias por tu reseña!',
+    /** Save failed (ivy-docs T06, BUG-009); `blocked` = the moderation gate refused the text (E4002). */
+    saveFailed: 'No se pudo guardar tu reseña. Inténtalo de nuevo.',
+    blocked: 'No se pudo publicar tu reseña. Quita datos de contacto o palabras ofensivas e inténtalo de nuevo.',
     stars_one: '{{count}} estrella',
     stars_other: '{{count}} estrellas',
   },

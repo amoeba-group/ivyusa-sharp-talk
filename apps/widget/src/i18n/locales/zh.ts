@@ -364,6 +364,9 @@ export const zh: Translation = {
     placeholder: '分享您的使用体验…',
     submit: '提交评价',
     thanks: '感谢您的评价！',
+    /** Save failed (ivy-docs T06, BUG-009); `blocked` = the moderation gate refused the text (E4002). */
+    saveFailed: '无法保存评价，请重试。',
+    blocked: '评价无法发布。请删除联系方式或不当用语后重试。',
     stars_one: '{{count}} 星',
     stars_other: '{{count}} 星',
   },

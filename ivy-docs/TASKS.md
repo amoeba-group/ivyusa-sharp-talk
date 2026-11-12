@@ -31,7 +31,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 4 | T07 | Chọn & xoá thông báo | UI · I18N · API | P1 | T02 | ✅ | TC-07-01..07 |
 | 5 | T04 | Order Detail (+ địa chỉ, điện thoại) | API · UI | P1 | T02 | ✅ code · ⏳ quyền PCD Address/Phone cho app Shopify | TC-04-01..07 |
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI · API · console | P1 | T02 | ✅ | TC-05-01..07 |
-| 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T06-Review.md) | TC-06-01..03 |
+| 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ✅ | TC-06-01..05 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ⬜ | TC-08-01..05 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ⬜ | TC-09-01..04 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ⬜ | TC-10-01..05 |
@@ -173,10 +173,18 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Ngoài phạm vi:** coupon riêng từng khách (cần quyền Shopify `write_discounts`); icon theo nhóm khách (subscription / IVY member / Beautizen / Round).
 - **TC:** TC-05-01..07 — **7/7** ✅ (05..07 thêm: thông báo cũ, copy lỗi, chế độ chọn).
 
-### T06 · Review — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T06-Review.md)
-- **Figma:** `992:192`, `1008:2191`. **Gap:** G-10. **Bug:** BUG-009.
-- **Việc cần làm:** copy "Write Review"; tóm tắt "{title} · {price}"; `ReviewForm.tsx` hiện toast lỗi/thành công khi `POST /reviews`.
-- **TC:** TC-06-01..03.
+### T06 · Review — ✅ (2026-11-12) · [PLN](../docs/plan/PLN-261112-IVY-T06-Review.md) · [RPT](../docs/implementation/RPT-261112-IVY-T06-Review.md)
+- **Figma:** `992:192`, `1008:2191` (chưa mở được, dựa vào SPEC). **Gap:** G-10. **Bug:** BUG-009 (đã sửa).
+- **Quyết định của chủ dự án (2026-11-12):** giữ cách mở review (Q-06): có link sản phẩm → trang ivyusa.com; không có → form trong widget.
+- **Đã làm:**
+  - Dòng review theo SCR-IVY-08: pill tím **Review** (`StatusPill`), "title · price", ⭐ **Write Review** chữ cam, thời gian BR-05 (dùng chung với feed).
+    - Chữ cam là `#C94F00` (4.56:1); cam thiết kế `#FF6900` chỉ đạt 2.89:1, vẫn dùng cho ngôi sao.
+    - Bỏ icon ↗.
+  - Lưu review lỗi → toast lỗi, form giữ số sao và nội dung. Bị bộ lọc nội dung chặn (E4002) → câu chỉ rõ phải bỏ gì. Thành công → màn "Thanks".
+  - `ToastHost` gắn ở màn review riêng và trong Order Detail.
+  - EN "Write Review" dùng chung ở chip Review, Order Detail và dòng thông báo.
+  - Sửa TC-06-02 (đọc URL tab mới quá sớm, BUG-017) và TC-06-03 (trước luôn bị skip). Thêm `@T06` vào `test:ci`.
+- **TC:** TC-06-01..05 — **5/5** ✅ (04: gửi lại sau lỗi thì lưu được; 05: bị chặn E4002).
 
 ### T08 · Chat home — ⬜
 - **Figma:** `1008:2291`, `993:1993`. **Gap:** G-12, G-13, G-14.

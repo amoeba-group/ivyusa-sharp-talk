@@ -6,6 +6,7 @@ import { isAuthError } from '../../lib/errors';
 import { useOrder, useOrderAddresses, useTracking } from '../../hooks/useOrders';
 import { useAnalytics } from '../../lib/analytics';
 import { StatusPill } from '../ui/StatusPill';
+import { ToastHost } from '../ui/ToastHost';
 import { Spinner } from '../ui/Spinner';
 import { formatMoney } from '../../lib/format';
 import { addressLines, displayOrderNumber } from '../../lib/address';
@@ -224,7 +225,9 @@ export function OrderDetailView({
         <span className="h-6 w-6" aria-hidden="true" />
       </header>
 
-      <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      {/* `relative` + ToastHost: the in-detail review form reports here (T06 D3). */}
+      <div className="relative min-h-0 flex-1">
+      <div className="scroll-thin h-full overflow-y-auto px-4 py-3">
         {/* Order number + status. The design shows the number alone, but the
             badge stays: the list row that led here shows one, and dropping it
             here makes the same order look like two (PLN §2-1). */}
@@ -271,9 +274,9 @@ export function OrderDetailView({
                   {delivered && it.id && (
                     <button
                       onClick={() => setReviewItemId(it.id!)}
-                      className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
+                      className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-warning-ink hover:underline"
                     >
-                      <Star className="h-3.5 w-3.5" />
+                      <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden />
                       {t('orders.writeReview')}
                     </button>
                   )}
@@ -411,6 +414,8 @@ export function OrderDetailView({
             />
           </div>
         </div>
+      </div>
+      <ToastHost />
       </div>
     </div>
   );

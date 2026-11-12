@@ -367,6 +367,9 @@ export const ko: Translation = {
     placeholder: '이용 경험을 들려주세요…',
     submit: '리뷰 등록',
     thanks: '리뷰를 남겨 주셔서 감사합니다!',
+    /** Save failed (ivy-docs T06, BUG-009); `blocked` = the moderation gate refused the text (E4002). */
+    saveFailed: '리뷰를 저장하지 못했습니다. 다시 시도해 주세요.',
+    blocked: '리뷰를 게시할 수 없습니다. 연락처나 부적절한 표현을 빼고 다시 시도해 주세요.',
     stars_one: '별 {{count}}개',
     stars_other: '별 {{count}}개',
   },

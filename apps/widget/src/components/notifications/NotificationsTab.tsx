@@ -21,7 +21,8 @@ import { ToastHost } from '../ui/ToastHost';
 import { showToast } from '../../lib/toast';
 import { copyText, promoKind, safeLink } from '../../lib/promo';
 import { Spinner } from '../ui/Spinner';
-import { formatDate, groupByDate, noticeTime, shortDate } from '../../lib/format';
+import { formatDate, groupByDate } from '../../lib/format';
+import { noticeTimeText } from '../../lib/notice-time-text';
 import { NotificationIcon } from './NotificationIcon';
 import { DateGroupHeader } from './DateGroupHeader';
 import { ShipmentList } from './ShipmentList';
@@ -41,22 +42,6 @@ import { NOTIFICATION_SCOPE } from '../../lib/widget-tabs';
 // Source path, not '@sharptalk/types': see lib/widget-tabs.ts.
 import { NOTIFICATION_REF } from '../../../../../packages/types/src/common/enum.types';
 import type { NotificationItem, OrderSummary } from '../../lib/types';
-
-/** "Just now" / "10mins ago" / "3h ago" / "Yesterday" / "4 days ago" / "Nov 3" (SPEC BR-05). */
-function noticeTimeText(t: TFunction, iso: string, lng: string): string {
-  const p = noticeTime(iso);
-  if (!p) return '';
-  switch (p.unit) {
-    case 'justNow':
-      return t('notifications.time.justNow');
-    case 'yesterday':
-      return t('notifications.time.yesterday');
-    case 'date':
-      return shortDate(iso, lng, !p.sameYear);
-    default:
-      return t(`notifications.time.${p.unit}`, { count: p.count });
-  }
-}
 
 /** "Hydrating Face Mask (10pcs) + 2 items" (SPEC BR-08), in the UI language. */
 function orderSummary(t: TFunction, o: OrderSummary): string | null {
@@ -222,9 +207,9 @@ function Row({
           <button
             type="button"
             onClick={() => onReview(n.refId!)}
-            className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:underline"
+            className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-warning-ink hover:underline"
           >
-            <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+            <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden />
             {t('orders.writeReview')}
           </button>
         )}
@@ -498,7 +483,9 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
 
   if (reviewItem) {
     return (
-      <div className="h-full overflow-y-auto p-4">
+      // `relative` + ToastHost: a failed save is said here, where the form is (T06 D3).
+      <div className="relative h-full">
+        <div className="h-full overflow-y-auto p-4">
         <ReviewForm
           sessionToken={sessionToken}
           orderItemId={reviewItem}
@@ -508,6 +495,8 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             void queryClient.invalidateQueries({ queryKey: ['review-items'] });
           }}
         />
+        </div>
+        <ToastHost />
       </div>
     );
   }

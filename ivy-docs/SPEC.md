@@ -165,6 +165,10 @@ Launcher (góc phải dưới) ─► Panel 380px
 - **Figma:** Master `992:192`, `1008:2191` (EN), `1006:5936`.
 - Mã đơn + pill tím **Review** · "Rose Hip Facial Oil 30ml · $55.00" · ⭐ **Write Review** (chữ cam) · thời gian.
 - Chỉ sinh cho đơn đã **Delivered**.
+- **Đã làm (T06, 2026-11-12):**
+  - Pill `StatusPill` Review; "Write Review" chữ cam đậm `#C94F00` cho đủ tương phản (BUG-021); thời gian BR-05.
+  - Lưu review lỗi có toast (BUG-009).
+  - Mở review: có link sản phẩm → trang ivyusa.com, không có → form trong widget (Q-06 giữ nguyên).
 
 ### SCR-IVY-09 · Chế độ chọn & xoá thông báo
 - **Figma:** Master `992:526`, `1006:2814` (EN), `1006:2698` (KO).
@@ -302,7 +306,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-07 | Stepper **Preparing → Processing → In Transit → Delivered**; "Your order is on the way!" / "Your order is Delivered !"; nút **Track Order** | **Preparing → Shipped → In transit → Delivered** (`packages/types/src/domain/status-map.ts` `DELIVERY_STEPS_BY_LANG`); "Your order is on its way — it will reach you soon!"; "Track shipment" (`ShipmentList.tsx`) | Đổi nhãn bước 2 + copy (lưu ý `status-map.ts` dùng chung với API/console) | I18N | T03 ✅ (2026-11-11; bước 2 ở ES/VI/JA/ZH dịch theo "Processing") |
 | G-08 | Order Detail có **Billing/Shipping address + phone**, nhãn "Information" | Không có địa chỉ/điện thoại trong response (`widget.types.ts` `OrderDetailResponse`), nhãn "Contact information" | Thêm cột order (sync Shopify `shipping_address`, `billing_address`, `phone`) → mapper → UI. **Cần migration SQL** | API · UI | T04 ✅ (2026-11-12; đọc trực tiếp từ Shopify, không migration; hiện khi app có quyền PCD Address/Phone) |
 | G-09 | Promo: coupon (gift navy) vs sự kiện (sparkle magenta), tiêu đề đậm + mô tả, mã coupon | Chỉ là notification `event` với icon gift/sparkle; không có mã/copy; link không bấm được; API không có khái niệm coupon | Thẻ promo theo thiết kế + bấm mở link; hiển thị mã coupon (lấy từ body/metadata) + nút copy | UI (+API tuỳ chọn) | T05 ✅ (2026-11-12; loại + mã lưu trong campaign, khoá sau khi gửi; chưa có coupon riêng từng khách) |
-| G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 |
+| G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 ✅ (2026-11-12) |
 | G-11 | Chọn nhiều + "Delete Selected Notifications" / "Delete All Notifications" | Đã có: nút "Select", "Delete selected (n)", "Delete all notifications" + `window.confirm` (`NotificationsTab.tsx` 324-333, 391-410) | Copy theo thiết kế; thay `window.confirm` bằng xác nhận trong panel; toast kết quả; (tuỳ chọn) vuốt trái để xoá | UI · I18N · API | T07 ✅ (2026-11-12; "Delete All" chỉ xoá chip đang xem; vuốt trái để xoá → T15) |
 | G-12 | Chat home: chip trắng viền có **emoji**, xếp wrap; lời chào IVY | Lưới 2 cột pill xanh nhạt hoặc thẻ có icon; nút scenario không có trường emoji (`ScenarioMenu.tsx`, `/ai-config/scenario`) | Thêm trường `emoji` cho nút scenario + kiểu hiển thị "chip wrap"; cấu hình 7 nút + lời chào cho tenant | UI · API · CFG | T08 |
 | G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 |

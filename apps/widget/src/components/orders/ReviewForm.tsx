@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Star, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createReview } from '../../services/miscService';
+import { showToast } from '../../lib/toast';
+import { reviewErrorKey } from '../../lib/review-error';
 
 export function ReviewForm({
   sessionToken,
@@ -25,8 +27,12 @@ export function ReviewForm({
     try {
       await createReview(sessionToken, orderItemId, rating, body);
       setDone(true);
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // BUG-009: a failed save used to be swallowed, so the shopper believed it
+      // was sent. Say so and keep the stars and the text, so trying again is
+      // one tap (ivy-docs T06 D3). Success needs no toast: the thanks card
+      // replaces the form.
+      showToast({ tone: 'error', message: t(reviewErrorKey(err)) });
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §7 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112-T06](../implementation/RPT-261112-IVY-T06-Review.md). Trả lời §7: (1) ok; (2) **a**, giữ cách mở review hiện tại |
 | Task | [ivy-docs/TASKS.md T06](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-08 · G-10 · BR-10 · Q-06 · **BUG-009** |
 | Figma | Master `992:192`, `1008:2191` (EN), `1006:5936`. Figma MCP vẫn hết lượt gọi; dựa vào SPEC SCR-IVY-08 |
 | TC | TC-06-01..03 ([e2e/tests/06-review.spec.ts](../../e2e/tests/06-review.spec.ts)), baseline **0/3** |

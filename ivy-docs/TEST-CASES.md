@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T07|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -39,7 +39,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T03 | 0 / 5 → **5 / 5** ✅ (T03, 2026-11-11) | tất cả | — |
 | T04 | 0 / 5 → 3 / 5 (nhờ T02) → **7 / 7** ✅ (T04, 2026-11-12; thêm TC-04-06, 07) | tất cả | — |
 | T05 | 0 / 4 → **7 / 7** ✅ (T05, 2026-11-12; thêm TC-05-05..07) | tất cả | — |
-| T06 | 0 / 3 | — | TC-06-01, TC-06-02, TC-06-03 |
+| T06 | 0 / 3 → **5 / 5** ✅ (T06, 2026-11-12; thêm TC-06-04, 05) | tất cả | — |
 | T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
 | T08 | 1 / 5 | TC-08-05 | TC-08-01, TC-08-02, TC-08-03, TC-08-04 |
 | T09 | 1 / 4 | TC-09-01 | TC-09-02, TC-09-03, TC-09-04 |
@@ -185,8 +185,20 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
 | TC-06-01 | Dòng review | IVY-39875; pill Review; "Rose Hip Facial Oil 30ml · $55.00"; nút/link "Write Review" | SCR-IVY-08 |
-| TC-06-02 | Write Review | mở trang sản phẩm ivyusa.com **hoặc** form trong widget (có nút Submit) | BR-10, Q-06 |
-| TC-06-03 | Lỗi lưu | `POST /reviews` 500 → hiện `role=alert` "could not / failed / try again" | BUG-009 |
+| TC-06-02 | Write Review | mở trang sản phẩm ivyusa.com **hoặc** form trong widget (có nút Submit). Trang ivyusa.com giả lập; chờ tab mới điều hướng rồi mới đọc URL (BUG-017) | BR-10, Q-06 |
+| TC-06-03 | Lỗi lưu | Dòng **không có link** (để luôn mở form); `POST /reviews` 500 → `role=alert` "Couldn't save… try again"; ô chữ vẫn "Love it", nút Submit bấm được | BUG-009 |
+| TC-06-04 | Gửi lại | Lần 1 → 500 (toast lỗi), lần 2 → 201 → "Thanks for your review!" | PLN-261112-T06 D3 |
+| TC-06-05 | Bị chặn | `POST /reviews` 422 `E4002` → toast "…Remove contact details or offensive words…" | PLN-261112-T06 D3 |
+
+**Kết quả (2026-11-12):** 5/5, lặp ×3 (2 worker): 15/15. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T13`) ×2: 130/130. Toàn bộ desktop: 77 pass / 19 fail, mọi ca đỏ thuộc T08–T12 chưa làm.
+
+**Kiểm thử bổ sung cho T06:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit widget | `apps/widget/test/review-error.test.mjs` | E4002 → `review.blocked`; lỗi mạng, mã khác, null → `review.saveFailed` |
+| Tích hợp local (API thật) | thủ công | `GET /orders/review-items` → dòng "IVY Repair Serum" (không có link, nên mở form). `POST /reviews` → 201, dòng chuyển `reviewed: true`. Đã xoá review thử. Ghi nhận: tenant local không có luật che email, nên email trong nội dung review không bị che (xem RPT §3) |
+| Ảnh chụp | thủ công, 380px | EN / KO / VI chip Review; EN form + toast lỗi (form giữ 4 sao và nội dung) |
 
 ## T07 · Chọn & xoá (`07-select-delete.spec.ts`) — test fail nếu xuất hiện `window.confirm/alert`
 

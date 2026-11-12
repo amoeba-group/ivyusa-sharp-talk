@@ -15,15 +15,16 @@
 | BUG-006 | `npm install` ở root viết lại `package-lock.json` (npm 10.9.2) | Tooling | 🟡 | Workaround | — |
 | BUG-007 | `npm audit`: 64 lỗ hổng (4 critical, 26 high) | Security | 🟠 | Open (cần phân loại) | — |
 | BUG-008 | `scripts/manual-screenshots.mjs` trỏ widget sang :5175 (cổng PWA) | Tooling | 🟡 | Open | — |
-| BUG-009 | Lưu review thất bại bị nuốt lỗi, shopper không được báo gì | Widget | 🟠 | Open | T06 |
+| BUG-009 | Lưu review thất bại bị nuốt lỗi, shopper không được báo gì | Widget | 🟠 | Fixed (T06) | T06 |
 | BUG-010 | Điện thoại/email hỗ trợ của IVY hard-code trong cả 6 locale → hiện cho **mọi tenant** | Widget / Multi-tenant | 🟠 | Open | T11 |
-| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed: feed thông báo (T02), thẻ giao hàng (T03), Order Detail (T04). Còn: danh sách đơn, feed inquiry (T09) | T02 · T03 · T04 · T09 |
+| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed: feed thông báo (T02), thẻ giao hàng (T03), Order Detail (T04), chip Review (T06). Còn: danh sách đơn, feed inquiry (T09) | T02 · T03 · T04 · T06 · T09 |
 | BUG-012 | `radius:check` và `check-migrations --check` báo đỏ trên Windows dù CI (Linux) xanh | Tooling | 🟡 | Open (CI không ảnh hưởng) | T00-d |
 | BUG-014 | E2E chập chờn: "apiResponse.json: Response has been disposed" làm fail test đã pass | E2E harness | 🟡 | Fixed (T01) | T01 |
 | BUG-015 | Feed thông báo hiện mỗi sự kiện **tới 5 lần** (1 dòng cho mỗi kênh in_app/email/sms/web_push/push) và badge đếm cả 5 | API | 🟠 | Fixed (T02) | T02 |
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
-| BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng (TC-05-04 cùng lỗi) | E2E harness | 🟡 | Fixed (T03, T05) | T03 · T05 |
+| BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng (TC-05-04 cùng lỗi) | E2E harness | 🟡 | Fixed (T03, T05, T06) | T03 · T05 · T06 |
 | BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
+| BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
 | BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
 | BUG-013 | Repo **public**: cài đặt PR từ fork chỉ duyệt người đóng góp lần đầu; `env/backend/.env.development` (secret dev) và IP/SSH user staging nằm trong repo công khai | Security | 🟠 | Need info | T00-e |
@@ -72,7 +73,8 @@
 
 ## BUG-009 · Lỗi lưu review bị nuốt
 - `apps/widget/src/components/orders/ReviewForm.tsx:28`: `catch { /* ignore */ }`. Khi `POST /reviews` lỗi, nút trở lại bình thường mà không có thông báo. Điều này vi phạm quy tắc "UX feedback (MUST)" của CLAUDE.md §2.
-- **Fix (T06):** toast lỗi (đóng thủ công) và toast thành công. Đã có TC-06-03.
+- **Fix (T06):** toast lỗi (đóng thủ công), form giữ số sao + nội dung để gửi lại. Bị bộ lọc nội dung chặn (E4002) → câu chỉ rõ phải bỏ gì. Thành công → màn "Thanks" (thay toast, vì kết quả hiện ngay). TC-06-03..05.
+- **Phòng ngừa:** không bao giờ `catch {}` rỗng quanh một lần lưu của khách: luôn `showToast({ tone: 'error' })` với câu theo mã lỗi.
 
 ## BUG-010 · Liên hệ hỗ trợ hard-code cho mọi tenant
 - `apps/widget/src/i18n/locales/{en,es,ja,ko,vi,zh}.ts`: `contact.phone: '1588-0000'`, `contact.email: 'help@ivy.com'`, được `ContactCard.tsx:40-41` đọc ra. Hệ quả: tenant khác cũng hiển thị số/email của IVY.
@@ -118,6 +120,11 @@
 - **Nguyên nhân:** tab đã mở thì vẫn được gắn trong trang, chỉ bị ẩn (`WidgetPanel`, để giữ cuộc chat). Strict mode của Playwright đếm cả phần tử bị ẩn, và `getByText` mặc định so khớp một phần chuỗi.
 - **Fix:** TC-04-04 tìm trong `getByRole('tabpanel')`, tức chỉ tab đang hiện. TC-04-03 dùng `exact: true`. T04 ×3: 21/21.
 - **Phòng ngừa:** chữ có thể xuất hiện ở tab khác thì thu phạm vi vào tab đang hiện, hoặc so khớp chính xác.
+
+## BUG-021 · Chữ cam không đủ tương phản
+- **Hiện tượng:** cam thiết kế `#FF6900` trên nền trắng = 2.89:1, dưới chuẩn WCAG AA cho chữ thường (4.5:1). Màu này đang dùng làm chữ ở câu "Your order is on the way!" của thẻ giao hàng (T03, đậm 14px, chưa phải "chữ lớn").
+- **Đã có:** token `warning-ink` `#C94F00` (4.56:1, vẫn là màu cam). T06 dùng nó cho "Write Review"; ngôi sao vẫn `#FF6900`.
+- **Đề xuất (T15):** chuyển câu của T03 sang `text-warning-ink`; rà các chỗ khác dùng `text-warning` cho chữ.
 
 ## BUG-019 · Test đọc danh sách DOM không chờ
 - **Hiện tượng:** khi chạy toàn bộ desktop lúc làm T07, TC-02-04 đỏ: "Expected: > 0, Received: 0". Ảnh lúc fail cho thấy dòng và thời gian ("Just now", "10mins ago") đã hiện, chỉ là sau lúc test đọc. Trong cổng CI ×2 nó vẫn xanh, nên đây là lỗi chập chờn theo tải máy, không do T07.

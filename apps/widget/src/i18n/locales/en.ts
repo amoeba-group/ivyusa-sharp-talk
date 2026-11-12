@@ -334,7 +334,7 @@ export const en = {
     detail: 'Order Detail',
     items: 'Items',
     total: 'Total',
-    writeReview: 'Write a review',
+    writeReview: 'Write Review',
     reviewItems: {
       badge: 'Review',
       reviewed: 'Reviewed',
@@ -369,6 +369,9 @@ export const en = {
     placeholder: 'Share your experience…',
     submit: 'Submit review',
     thanks: 'Thanks for your review!',
+    /** Save failed (ivy-docs T06, BUG-009); `blocked` = the moderation gate refused the text (E4002). */
+    saveFailed: "Couldn't save your review. Please try again.",
+    blocked: "Your review couldn't be posted. Remove contact details or offensive words and try again.",
     stars_one: '{{count}} star',
     stars_other: '{{count}} stars',
   },

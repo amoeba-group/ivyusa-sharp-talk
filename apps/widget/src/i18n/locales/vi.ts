@@ -371,6 +371,9 @@ export const vi: Translation = {
     placeholder: 'Chia sẻ trải nghiệm của bạn…',
     submit: 'Gửi đánh giá',
     thanks: 'Cảm ơn bạn đã đánh giá!',
+    /** Save failed (ivy-docs T06, BUG-009); `blocked` = the moderation gate refused the text (E4002). */
+    saveFailed: 'Không lưu được đánh giá. Vui lòng thử lại.',
+    blocked: 'Không đăng được đánh giá. Hãy bỏ thông tin liên hệ hoặc từ ngữ xúc phạm rồi thử lại.',
     stars_one: '{{count}} sao',
     stars_other: '{{count}} sao',
   },
