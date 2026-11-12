@@ -176,7 +176,7 @@ export function CommandPalette() {
     const items = filtered.filter((e) => e.section === s.key);
     if (!items.length) continue;
     rows.push(
-      <li key={`h-${s.key}`} className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400" role="presentation">
+      <li key={`h-${s.key}`} className="px-3 pb-1 pt-3 text-xs font-medium text-gray-400" role="presentation">
         {s.title}
       </li>,
     );

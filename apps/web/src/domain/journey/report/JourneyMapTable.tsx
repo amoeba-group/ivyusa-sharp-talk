@@ -53,10 +53,10 @@ export function JourneyMapTable({
                 <th
                   key={s}
                   scope="col"
-                  className={`border-b border-gray-200 p-1.5 text-left font-semibold ${active(s) ? 'text-indigo-700' : 'text-gray-600'}`}
+                  className={`border-b border-gray-200 p-1.5 text-left font-semibold ${active(s) ? 'text-primary-700' : 'text-gray-600'}`}
                 >
                   {t(`fiveA.${s}`)}
-                  {active(s) && <span className="ml-1 text-indigo-500">●</span>}
+                  {active(s) && <span className="ml-1 text-primary-500">●</span>}
                 </th>
               ))}
             </tr>
@@ -75,7 +75,7 @@ export function JourneyMapTable({
       {/* Narrow: one card per step — a five-column table does not fit a phone. */}
       <ol className="space-y-2 sm:hidden print:hidden">
         {STAGES.map((s) => (
-          <li key={s} className={`rounded-lg border p-2.5 ${active(s) ? 'border-indigo-200 bg-indigo-50/50' : 'border-gray-200'}`}>
+          <li key={s} className={`rounded-lg border p-2.5 ${active(s) ? 'border-primary-200 bg-primary-50/50' : 'border-gray-200'}`}>
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-gray-800">{t(`fiveA.${s}`)}</span>
               <span className="text-gray-500">{observed(s)}</span>

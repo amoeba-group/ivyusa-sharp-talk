@@ -60,7 +60,7 @@ export function AutoReplyControl({
           awaitingApproval
             ? 'bg-amber-100 text-amber-800'
             : aiAnswering
-              ? 'bg-primary-500/10 text-primary-700'
+              ? 'bg-lavender-50 text-lavender-700'
               : 'bg-gray-100 text-gray-500',
         )}
         title={agentOwns ? t('autoReply.agentOwnsHint') : undefined}

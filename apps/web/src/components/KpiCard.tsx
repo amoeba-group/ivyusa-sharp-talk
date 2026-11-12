@@ -46,7 +46,7 @@ export function KpiCard({ label, value, icon: Icon, hint, to, trend, footer, loa
       {loading ? (
         <div className="mt-2 h-8 w-24 animate-pulse rounded-md bg-gray-100" aria-hidden />
       ) : (
-        <p className="mt-1 text-[28px] font-semibold leading-tight tracking-tight text-gray-900 tabular-nums">
+        <p className="mt-1 text-[28px] font-semibold leading-tight tracking-tight text-title tabular-nums">
           {value}
         </p>
       )}

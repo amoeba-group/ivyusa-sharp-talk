@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-type Tone = 'gray' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+type Tone = 'gray' | 'primary' | 'ai' | 'success' | 'warning' | 'error' | 'info';
 
 // Tinted fill + hairline ring: readable on white and on the dark surface
 // (the tint and the text each have their own dark-mode step).
 const tones: Record<Tone, string> = {
   gray: 'bg-gray-100 text-gray-600 ring-gray-500/15',
   primary: 'bg-primary-50 text-primary-700 ring-primary-600/20',
+  // Lavender = something the AI did (PLN-261112 §4-2).
+  ai: 'bg-lavender-50 text-lavender-700 ring-lavender-600/20',
   success: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
   warning: 'bg-amber-50 text-amber-700 ring-amber-600/25',
   error: 'bg-red-50 text-red-700 ring-red-600/20',

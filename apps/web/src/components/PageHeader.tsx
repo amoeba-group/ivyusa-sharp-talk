@@ -26,7 +26,7 @@ export function PageHeader({
             {backTo.label}
           </Link>
         )}
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-title">{title}</h1>
         {subtitle && <p className="mt-1 max-w-3xl text-sm text-gray-500">{subtitle}</p>}
       </div>
       {action && <div className="flex flex-wrap items-center gap-2">{action}</div>}

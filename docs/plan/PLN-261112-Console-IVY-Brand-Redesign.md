@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt** phần thiết kế lại (§7). Phần 0 đã làm và đã push (`ef496f81`) |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112](../implementation/RPT-261112-Console-IVY-Brand-Redesign.md). Trả lời §7: (1) ok; (2) **a**, bảng màu + khung + component dùng chung; (3) **a**, widget giữ nguyên |
 | Yêu cầu | Chủ dự án, 2026-11-12: lấy favicon ivyusa.com làm logo dashboard và favicon; cài skill frontend-design; dùng nó làm lại giao diện "đẹp mắt, hiện đại", **màu chủ đạo theo favicon**. Sau đó làm tiếp T06 |
 | Skill | `.claude/skills/frontend-design` (bản chính thức của Anthropic, xem `SOURCE.md`). Kế hoạch này theo quy trình của skill: token → tự rà lại → code → chụp ảnh tự soát |
 | Migration | Không có. Chỉ đổi `apps/web` (console) |

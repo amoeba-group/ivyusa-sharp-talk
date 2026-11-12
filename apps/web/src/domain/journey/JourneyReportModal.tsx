@@ -108,7 +108,7 @@ export function JourneyReportModal({
                   onClick={() => setTab(key)}
                   className={`-mb-px border-b-2 px-3 py-1.5 text-sm ${
                     tab === key
-                      ? 'border-indigo-500 font-medium text-indigo-700'
+                      ? 'border-primary-500 font-medium text-primary-700'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >

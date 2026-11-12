@@ -31,7 +31,7 @@ export function JourneyReportDiagnosis({
 
   return (
     <div className="space-y-5 text-sm text-gray-800">
-      <header className="rounded-lg border-l-4 border-indigo-500 bg-indigo-50/60 px-4 py-3">
+      <header className="rounded-lg border-l-4 border-primary-500 bg-primary-50/60 px-4 py-3">
         <p className="text-base font-semibold leading-snug text-gray-900">{content.headline}</p>
         {content.subline && <p className="mt-1 text-gray-600">{content.subline}</p>}
         {summary && <p className="mt-2 text-gray-700">{summary}</p>}

@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import plugin from 'tailwindcss/plugin.js';
-import { buildPalette, gray, primary } from './theme.palette.js';
+import { buildPalette, gray, lavender, primary } from './theme.palette.js';
 
 // Light/dark colour system — see theme.palette.js for the why.
 const { themeColors, lightVars, darkVars } = buildPalette();
@@ -26,6 +26,9 @@ export default {
       },
       colors: {
         primary,
+        lavender,
+        // Page titles (IVY navy / dark ink) — PLN-261112 brand redesign.
+        title: 'rgb(var(--st-title) / <alpha-value>)',
         success: '#10B981',
         warning: '#F59E0B',
         error: '#EF4444',
@@ -70,7 +73,9 @@ export default {
         'sidebar-collapsed': '64px',
       },
       boxShadow: {
-        card: '0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.04)',
+        // Cards sit on a hairline border, not a shadow (PLN-261112 §4-3): the
+        // console is read for hours, and shadows are kept for what floats.
+        card: '0 0 #0000',
         pop: '0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.08)',
       },
       keyframes: {

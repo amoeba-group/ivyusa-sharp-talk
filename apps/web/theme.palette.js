@@ -22,20 +22,50 @@
  */
 import defaultColors from 'tailwindcss/colors.js';
 
-// ---- brand + neutral scales (light values = what the console always used) --
+// ---- brand + neutral scales ------------------------------------------------
+/**
+ * IVY periwinkle (PLN-261112-Console-IVY-Brand-Redesign §2): 500 is the middle
+ * of the ivyusa.com favicon gradient. The deep steps are hand-tuned to stay
+ * periwinkle instead of sliding into royal blue, and 600 — the button fill —
+ * keeps white text at 4.79:1 (WCAG AA).
+ */
 export const primary = {
-  50: '#EEF2FF',
-  100: '#E0E7FF',
-  200: '#C7D2FE',
-  300: '#A5B4FC',
-  400: '#818CF8',
-  500: '#6366F1',
-  600: '#4F46E5',
-  700: '#4338CA',
-  800: '#3730A3',
-  900: '#312E81',
-  950: '#1E1B4B',
+  50: '#F1F4FE',
+  100: '#E3E9FD',
+  200: '#CAD6FA',
+  300: '#A6BAF6',
+  400: '#829EF2',
+  500: '#6A90EF',
+  600: '#4A6ADC',
+  700: '#3F5BC9',
+  800: '#344BA3',
+  900: '#2C3F80',
+  950: '#1C2752',
 };
+
+/**
+ * IVY lavender — the favicon gradient's first colour, and in the console the
+ * colour of everything the AI does (PLN §4-2: lavender = AI, blue = people).
+ * Text uses 700 (5.2:1 on the 50 tint).
+ */
+export const lavender = {
+  50: '#F6F2FD',
+  100: '#EDE5FB',
+  200: '#DCCDF7',
+  300: '#C7AFF2',
+  400: '#B79BEE',
+  500: '#AD8CEC',
+  600: '#8E68DC',
+  700: '#7550C2',
+  800: '#5E3F9E',
+  900: '#4A327B',
+  950: '#2E1F4D',
+};
+
+/** IVY navy — page titles; the coupon navy of the IVY widget design (SPEC §4). */
+export const NAVY = '#1A2E6B';
+/** Page background: a faint periwinkle-tinted white instead of neutral gray-50. */
+export const MIST = '#F5F6FB';
 
 export const gray = {
   50: '#F9FAFB',
@@ -125,12 +155,13 @@ function mix(a, b, t) {
 // ---- which hues get dark-mode treatment ----------------------------------
 const HUES = [
   'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan',
-  'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
+  'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose', 'lavender',
 ];
 
 /** Scale lookup for any hue we theme (brand + Tailwind defaults). */
 function scaleOf(hue) {
   if (hue === 'primary') return primary;
+  if (hue === 'lavender') return lavender;
   return defaultColors[hue];
 }
 
@@ -204,7 +235,7 @@ export function buildPalette() {
 
   // Semantic tokens the shell and new components use directly.
   const semantic = {
-    '--st-page': [gray[50], DARK_GRAY.bg[50]],
+    '--st-page': [MIST, DARK_GRAY.bg[50]],
     '--st-surface': ['#FFFFFF', DARK_SURFACE],
     '--st-surface-2': [gray[50], '#11141B'],
     '--st-sidebar': ['#FFFFFF', '#10131A'],
@@ -213,6 +244,8 @@ export function buildPalette() {
     '--st-ink': [gray[900], DARK_GRAY.text[900]],
     '--st-ink-2': [gray[600], DARK_GRAY.text[600]],
     '--st-ink-3': [gray[400], DARK_GRAY.text[400]],
+    // Page titles: IVY navy in light mode, the regular ink in dark mode.
+    '--st-title': [NAVY, DARK_GRAY.text[900]],
     // Chart surfaces (dataviz): grid + axis ink, recessive in both modes.
     '--st-grid': [gray[100], '#232835'],
     '--st-axis': [gray[400], '#7D8595'],

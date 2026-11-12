@@ -37,14 +37,16 @@ export function AuthShell({
   return (
     <div className="flex min-h-screen bg-page">
       {/* Brand panel (lg+). */}
-      {/* Pinned light: its white tints are glass on the gradient, not surfaces. */}
-      <aside data-theme="light" className="relative hidden w-[44%] max-w-[640px] flex-col justify-between overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-violet-800 p-12 text-white lg:flex">
+      {/* The console's one bold moment (PLN-261112 §4-1): the ivyusa.com favicon
+          gradient, lavender → periwinkle → blue, with its sky end as a glow in the
+          corner no text sits on. Steps are the deep ones so white text stays
+          ≥ 4:1. Pinned light: its white tints are glass on the gradient. */}
+      <aside
+        data-theme="light"
+        className="relative hidden w-[44%] max-w-[640px] flex-col justify-between overflow-hidden bg-gradient-to-br from-lavender-600 via-primary-600 to-[#2A7BC8] p-12 text-white lg:flex"
+      >
         <div
-          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-violet-400/20 blur-3xl"
+          className="pointer-events-none absolute -bottom-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(closest-side,rgba(124,218,255,0.55),transparent)]"
           aria-hidden
         />
         <Link to="/" className="relative flex items-center gap-2.5 text-white" aria-label={t('backToHome')}>
@@ -64,7 +66,7 @@ export function AuthShell({
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-white/60">{tl('footerCopy')}</p>
+        <p className="relative text-xs text-white/80">{tl('footerCopy')}</p>
       </aside>
 
       {/* Form. */}

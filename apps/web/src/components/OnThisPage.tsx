@@ -71,7 +71,7 @@ export function OnThisPage({ minSections = 4, className }: { minSections?: numbe
           aria-label={t('onThisPage')}
           className="flex items-center gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white/90 p-1 shadow-card backdrop-blur supports-[backdrop-filter]:bg-white/80"
         >
-          <span className="hidden shrink-0 px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 md:block">
+          <span className="hidden shrink-0 px-2 text-xs font-medium text-gray-400 md:block">
             {t('onThisPage')}
           </span>
           {sections.map((s) => (

@@ -1434,11 +1434,11 @@ export function LiveChatPage() {
                         )}
                       >
                         {m.senderType === 'ai' && (
-                          <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700">
+                          <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-lavender-700">
                             <Bot className="h-3 w-3" /> {t('bubble.autoReply')}
                             {/* The AI agent is per conversation; a merged room mixes conversations. */}
                             {convo?.aiAgentName && (!m.conversationId || m.conversationId === selected) && (
-                              <span className="font-normal text-emerald-600">· {convo.aiAgentName}</span>
+                              <span className="font-normal text-lavender-600">· {convo.aiAgentName}</span>
                             )}
                           </span>
                         )}

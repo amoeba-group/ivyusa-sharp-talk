@@ -32,7 +32,7 @@ export function BriefingCard({ conversationId }: { conversationId: string | null
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-          <Sparkles className="h-4 w-4 text-primary-500" /> {t('aiBriefing')}
+          <Sparkles className="h-4 w-4 text-lavender-600" /> {t('aiBriefing')}
         </div>
         {stored && (
           <Button

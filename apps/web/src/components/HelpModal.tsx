@@ -52,7 +52,7 @@ export function HelpModal({
 export function HelpSection({ heading, children }: { heading: string; children: ReactNode }) {
   return (
     <section>
-      <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <h4 className="mb-1 text-xs font-semibold text-gray-500">
         {heading}
       </h4>
       <div className="space-y-1 text-sm text-gray-700">{children}</div>

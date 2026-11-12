@@ -70,14 +70,15 @@ export function Table<T>({
               <th
                 key={c.key}
                 scope="col"
-                className={`whitespace-nowrap px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500 ${c.className ?? ''}`}
+                className={`whitespace-nowrap px-4 py-2.5 text-xs font-medium text-gray-500 ${c.className ?? ''}`}
               >
                 {c.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        {/* Tabular figures: amounts and counts line up down a column (PLN-261112 §2). */}
+        <tbody className="divide-y divide-gray-100 tabular-nums">
           {loading && <SkeletonRows cols={columns.length} />}
           {loading && (
             <tr className="sr-only">

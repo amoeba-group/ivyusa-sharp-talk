@@ -1,6 +1,6 @@
 import { Badge } from './Badge';
 
-const MAP: Record<string, { tone: 'gray' | 'success' | 'warning' | 'error' | 'info' | 'primary'; label?: string }> = {
+const MAP: Record<string, { tone: 'gray' | 'success' | 'warning' | 'error' | 'info' | 'primary' | 'ai'; label?: string }> = {
   active: { tone: 'success' },
   enabled: { tone: 'success' },
   online: { tone: 'success' },
@@ -26,7 +26,8 @@ const MAP: Record<string, { tone: 'gray' | 'success' | 'warning' | 'error' | 'in
   live: { tone: 'primary' },
   // Live-chat conversation statuses (REQ-260824 R1) — previously fell through
   // to gray, which made "AI answering" and "agent handling" indistinguishable.
-  ai_active: { tone: 'info' },
+  // Lavender = the AI, blue = a person (PLN-261112-Console-IVY-Brand-Redesign §4-2).
+  ai_active: { tone: 'ai' },
   agent: { tone: 'primary' },
   // Cafe24 order statuses (PLN-260807).
   'pending payment': { tone: 'warning' },

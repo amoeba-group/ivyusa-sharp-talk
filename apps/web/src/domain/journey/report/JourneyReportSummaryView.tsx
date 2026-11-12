@@ -181,10 +181,10 @@ function StageCell({ stage, events, state }: { stage: FiveAStage; events: number
   return (
     <li
       className={`rounded-md border px-2 py-1.5 text-center ${
-        observed ? 'border-indigo-200 bg-indigo-50' : 'border-gray-200 bg-white'
+        observed ? 'border-primary-200 bg-primary-50' : 'border-gray-200 bg-white'
       }`}
     >
-      <p className={`text-xs font-medium ${observed ? 'text-indigo-700' : 'text-gray-600'}`}>
+      <p className={`text-xs font-medium ${observed ? 'text-primary-700' : 'text-gray-600'}`}>
         {t(`fiveA.${stage}`)}
       </p>
       <p className="mt-0.5 text-[11px] text-gray-500">
