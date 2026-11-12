@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T07|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -40,7 +40,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T04 | 0 / 5 → 3 / 5 (nhờ T02: chạm dòng mở Order Detail) | TC-04-01, TC-04-02, TC-04-05 | TC-04-03, TC-04-04 |
 | T05 | 0 / 4 | — | TC-05-01, TC-05-02, TC-05-03, TC-05-04 |
 | T06 | 0 / 3 | — | TC-06-01, TC-06-02, TC-06-03 |
-| T07 | 1 / 3 | TC-07-03 | TC-07-01, TC-07-02 |
+| T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
 | T08 | 1 / 5 | TC-08-05 | TC-08-01, TC-08-02, TC-08-03, TC-08-04 |
 | T09 | 1 / 4 | TC-09-01 | TC-09-02, TC-09-03, TC-09-04 |
 | T10 | 1 / 5 | TC-10-05 | TC-10-01, TC-10-02, TC-10-03, TC-10-04 |
@@ -166,6 +166,23 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-07-01 | Xoá đã chọn | Select → tick 2 → "Delete Selected Notifications" → `DELETE /notifications {ids}` đúng 2 id; còn n−2 dòng; toast "deleted" | G-11, BR-09 |
 | TC-07-02 | Xoá tất cả | "Delete All Notifications" → xác nhận **trong panel** → `DELETE {all:true}` → 0 dòng | G-11 |
 | TC-07-03 | Huỷ | Cancel → hết checkbox; không có request DELETE | SCR-IVY-09 |
+| TC-07-04 | Phạm vi "Delete All" | Ở chip Order: hộp xác nhận nhắc "Order" → `DELETE {all:true, categories:['payment','shipping']}`; toast "3 notifications deleted"; chip Promo vẫn còn 3 dòng | PLN-261111 §7-2a |
+| TC-07-05 | Bàn phím | Hộp xác nhận mở với focus ở Cancel; Esc đóng hộp xác nhận, **không** đóng widget; focus về "Delete All Notifications"; không có DELETE | PLN-261111 D2 |
+| TC-07-06 | Tên ô chọn | ô chọn của dòng IVY-39891 tên "Select IVY-39891" | PLN-261111 D4 |
+| TC-07-07 | Xoá lỗi | `DELETE /notifications` 500 → `role=alert` "Couldn't delete notifications"; dòng vẫn được tick, số dòng không đổi; sau 3,5 giây vẫn còn; nút Close đóng nó | CLAUDE.md §2, PLN-261111 D3 |
+
+**Kết quả (2026-11-12):** 7/7, lặp ×3 (2 worker): 21/21. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T07|@T13`) ×2: 92/92. Toàn bộ desktop: 60 pass / 29 fail. 28 ca đỏ thuộc T04–T12 chưa làm; ca còn lại là TC-02-04 đọc DOM không chờ, đã sửa (BUG-019), chạy lại `@T02|@T03` ×3 với 4 worker: 33/33.
+
+**Kiểm thử bổ sung cho T07:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit widget | `apps/widget/test/tab-chips.test.mjs` | `deleteAllFilter`: chip Order → payment + shipping (không dùng scope `order` vì có cả review); Promo/Event → `event`; All → `scope` khi 2 tab danh sách, cả feed khi 1 tab |
+| Unit widget | `apps/widget/test/toast.test.mjs` | Toast thành công tự tắt đúng 3 giây; toast lỗi không tự tắt, đóng bằng `dismiss`; cùng một câu không hiện 2 lần; tối đa 3 toast |
+| Jest API | `notification.service.spec.ts` | `all` chỉ xoá kênh `in_app` của chính khách; `categories` → đúng các loại đó; `scope` → cùng nửa feed như `list()`; `categories` thắng `scope`; `'all'` không phải loại; xoá theo id không bị `categories`/`scope` ảnh hưởng |
+| Jest API | `dto/request/notification.request.spec.ts` | Body cũ (`ids`, `all`) vẫn hợp lệ; `categories`/`scope` hợp lệ; loại lạ, `'all'`, scope lạ → 400 |
+| Tích hợp local (API + MySQL thật) | thủ công | `DELETE {all, categories:['event']}` → `deleted: 1`: chỉ dòng event `in_app` của khách bị xoá; dòng email cùng sự kiện, dòng của khách khác và thông báo đơn hàng còn nguyên. API dev trả 400 cho `scope`/`categories` sai |
+| Ảnh chụp | thủ công, 380px | EN / KO / VI: chế độ chọn (ô xanh / xám), hộp xác nhận, toast |
 
 ## T08 · Chat home (`08-chat-home.spec.ts`)
 

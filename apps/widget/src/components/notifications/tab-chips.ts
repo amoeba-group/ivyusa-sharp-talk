@@ -96,6 +96,28 @@ export function orderFeedRows<T extends { category: string }>(rows: readonly T[]
   return rows.filter((n) => ORDER_FEED_CATEGORIES.includes(n.category));
 }
 
+/** What "Delete All" sends besides `all: true` — see deleteAllFilter. */
+export interface DeleteAllFilter {
+  categories?: string[];
+  scope?: string;
+}
+
+/**
+ * What "Delete All Notifications" deletes on a chip: exactly the rows that chip
+ * lists, never another chip's (ivy-docs T07 §7-2a).
+ *
+ * - Order chip → its categories (payment + shipping). Not the `order` scope:
+ *   that also holds review notices, which this bar does not list anywhere.
+ * - `all` → what the list asked for: the tab's half of the feed when two list
+ *   tabs split it (`scope`), the whole feed otherwise.
+ * - any other notification chip (`event`) → that one category.
+ */
+export function deleteAllFilter(chip: string, scope?: string): DeleteAllFilter {
+  if (chip === ORDER_FEED_CHIP) return { categories: [...ORDER_FEED_CATEGORIES] };
+  if (chip === 'all') return scope ? { scope } : {};
+  return { categories: [chip] };
+}
+
 /** True when `filter` is one this tab actually renders. */
 export function chipBelongsTo(
   filter: string,

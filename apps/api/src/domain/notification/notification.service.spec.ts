@@ -501,13 +501,59 @@ describe('NotificationService.remove', () => {
     expect(redis.del).toHaveBeenCalled();
   });
 
-  it('all=true deletes everything the caller has; nothing selected and not all is a no-op', async () => {
+  it('all=true deletes the whole in_app feed of the caller; nothing selected and not all is a no-op', async () => {
     const { svc, update } = build();
     await svc.remove('tok', { all: true });
-    expect(update.mock.calls[0][0]).not.toHaveProperty('id');
+    const where = update.mock.calls[0][0];
+    expect(where).toMatchObject({ customerId: 42, channel: 'in_app' });
+    expect(where).not.toHaveProperty('id');
+    expect(where).not.toHaveProperty('category');
     update.mockClear();
     await expect(svc.remove('tok', {})).resolves.toBe(0);
     expect(update).not.toHaveBeenCalled();
+  });
+
+  /** ivy-docs T07 §7-2a — "Delete All" deletes the chip the shopper is on, nothing else. */
+  describe('all=true narrowed to one chip', () => {
+    const operator = (v: unknown) => v as { type: string; value: unknown };
+
+    it('categories: only those categories (Order chip = payment + shipping)', async () => {
+      const { svc, update } = build();
+      await svc.remove('tok', { all: true, categories: ['payment', 'shipping'] });
+      const where = update.mock.calls[0][0];
+      expect(where).toMatchObject({ customerId: 42, channel: 'in_app' });
+      expect(operator(where.category).type).toBe('in');
+      expect(operator(where.category).value).toEqual(['payment', 'shipping']);
+    });
+
+    it('scope: the same half of the feed list() reads', async () => {
+      const { svc, update } = build();
+      await svc.remove('tok', { all: true, scope: 'order' });
+      const order = update.mock.calls[0][0].category;
+      expect(operator(order).type).toBe('in');
+      expect(operator(order).value).toEqual(['payment', 'shipping', 'review']);
+
+      await svc.remove('tok', { all: true, scope: 'notice' });
+      const notice = operator(update.mock.calls[1][0].category);
+      expect(notice.type).toBe('not');
+      // FindOperator.value unwraps a nested operator: Not(In(x)).value === x.
+      expect(notice.value).toEqual(['payment', 'shipping', 'review']);
+    });
+
+    it('categories win over scope; the "all" sentinel is not a category', async () => {
+      const { svc, update } = build();
+      await svc.remove('tok', { all: true, scope: 'notice', categories: ['all', 'event'] });
+      expect(operator(update.mock.calls[0][0].category).value).toEqual(['event']);
+    });
+
+    it('selected ids ignore categories/scope and stay owner-scoped', async () => {
+      const { svc, update } = build();
+      await svc.remove('tok', { ids: [7], categories: ['event'], scope: 'order' });
+      const where = update.mock.calls[0][0];
+      expect(where).toMatchObject({ customerId: 42 });
+      expect(where).not.toHaveProperty('category');
+      expect(operator(where.id).value).toEqual([7]);
+    });
   });
 });
 

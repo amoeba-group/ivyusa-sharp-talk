@@ -503,13 +503,28 @@ export class NotificationService implements OnModuleInit {
    * the widget's "delete selected / delete all" is one round trip. Returns how
    * many rows changed; ids that are not the caller's are silently skipped
    * rather than leaking whether they exist.
+   *
+   * `all` deletes the feed the shopper is looking at (ivy-docs T07 §7-2a):
+   * - `categories` → those categories only (the Order chip sends payment +
+   *   shipping, Promo sends event);
+   * - `scope` → that half of the feed, as `list()` reads it;
+   * - neither → the whole feed, as before.
+   * It touches the in_app rows only, the same rows the feed shows: the
+   * email/SMS/push copies are delivery records the shopper never sees
+   * (BUG-015), so a delete has nothing to say about them.
    */
-  async remove(token: string, input: { ids?: number[]; all?: boolean }): Promise<number> {
+  async remove(
+    token: string,
+    input: { ids?: number[]; all?: boolean; categories?: string[]; scope?: NotificationScope },
+  ): Promise<number> {
     const customerId = await this.requireCustomerId(token);
     const ids = (input.ids ?? []).map(Number).filter((n) => Number.isFinite(n) && n > 0);
     if (!input.all && ids.length === 0) return 0;
-    const where: Record<string, unknown> = { customerId, deletedAt: IsNull() };
-    if (!input.all) where.id = In(ids);
+    const categories = (input.categories ?? []).filter((c) => c && c !== 'all');
+    const where: Record<string, unknown> = input.all
+      ? scopedWhere(customerId, undefined, input.scope)
+      : { customerId, deletedAt: IsNull(), id: In(ids) };
+    if (input.all && categories.length > 0) where.category = In(categories);
     const result = await this.notifRepo.update(where, { deletedAt: new Date() });
     await Promise.all(unreadCacheKeys(customerId).map((k) => this.redis.del(k)));
     return result.affected ?? 0;

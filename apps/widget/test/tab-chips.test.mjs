@@ -22,7 +22,7 @@ const { outputFiles } = buildSync({
   platform: 'neutral',
 });
 const mod = await import(`data:text/javascript,${encodeURIComponent(outputFiles[0].text)}`);
-const { chipsFor, defaultChip, chipBelongsTo, orderFeedRows } = mod;
+const { chipsFor, defaultChip, chipBelongsTo, orderFeedRows, deleteAllFilter } = mod;
 
 const keys = (chips) => chips.map((c) => c.key);
 const labels = (chips) => chips.map((c) => c.labelKey);
@@ -68,4 +68,21 @@ test('both list tabs: split bars unchanged, Orders label kept', () => {
 test('the Order chip shows payment and shipping notices only', () => {
   const rows = ['payment', 'shipping', 'event', 'review', 'chat'].map((category, i) => ({ id: String(i), category }));
   assert.deepEqual(orderFeedRows(rows).map((r) => r.category), ['payment', 'shipping']);
+});
+
+// ivy-docs T07 §7-2a: "Delete All" deletes the chip on screen and nothing else.
+test('Delete All on the Order chip names its categories, not the order scope (which holds reviews)', () => {
+  assert.deepEqual(deleteAllFilter('order', 'order'), { categories: ['payment', 'shipping'] });
+});
+
+test('Delete All on Promo / Event deletes that one category', () => {
+  assert.deepEqual(deleteAllFilter('event'), { categories: ['event'] });
+  assert.deepEqual(deleteAllFilter('event', 'notice'), { categories: ['event'] });
+});
+
+test('Delete All on "All" deletes what the list asked for', () => {
+  // Both list tabs: Notifications' half of the feed only.
+  assert.deepEqual(deleteAllFilter('all', 'notice'), { scope: 'notice' });
+  // One list tab: the whole feed, as before.
+  assert.deepEqual(deleteAllFilter('all'), {});
 });

@@ -24,6 +24,7 @@
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
 | BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng | E2E harness | 🟡 | Fixed (T03) | T03 |
 | BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
+| BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
 | BUG-013 | Repo **public**: cài đặt PR từ fork chỉ duyệt người đóng góp lần đầu; `env/backend/.env.development` (secret dev) và IP/SSH user staging nằm trong repo công khai | Security | 🟠 | Need info | T00-e |
 
 ---
@@ -109,6 +110,12 @@
 - **Fix (test):** `expect.poll` chờ độ rộng ≤ 382 rồi mới kiểm tra ≥ 378, giống TC-01-08. Sau fix: 15/15 với 4 worker.
 - **Còn mở (mức thấp):** nếu khách mở widget trước khi cấu hình tenant về, panel có thể chớp từ 404px xuống 380px. Thực tế hiếm vì cấu hình tải ngay khi trang nạp. Có thể xử lý ở T15 bằng cách chờ theme rồi mới cho mở, hoặc đổi mặc định sang 380px.
 - **Phòng ngừa:** mọi phép đo hình học phụ thuộc cấu hình tenant phải dùng `expect.poll` hoặc assertion tự chờ.
+
+## BUG-019 · Test đọc danh sách DOM không chờ
+- **Hiện tượng:** khi chạy toàn bộ desktop lúc làm T07, TC-02-04 đỏ: "Expected: > 0, Received: 0". Ảnh lúc fail cho thấy dòng và thời gian ("Just now", "10mins ago") đã hiện, chỉ là sau lúc test đọc. Trong cổng CI ×2 nó vẫn xanh, nên đây là lỗi chập chờn theo tải máy, không do T07.
+- **Nguyên nhân:** `locator.allInnerTexts()` và `evaluateAll()` **không tự chờ**: chúng đọc DOM ngay lúc gọi. TC-02-04 gọi ngay sau khi mở tab, trước khi feed tải xong. TC-03-03/04 có cùng rủi ro: pill có thể hiện theo trạng thái đơn trước khi dữ liệu tracking về, rồi test đọc `data-state` của các bước còn thiếu.
+- **Fix:** TC-02-04 chờ `notif-time` đầu tiên hiện rồi mới đọc. TC-03-03/04 đọc `data-state` bằng `expect.poll`. Sau fix: `@T02|@T03` ×3 với 4 worker: 33/33.
+- **Phòng ngừa:** trước `allInnerTexts()` / `allTextContents()` / `evaluateAll()` luôn có một assertion tự chờ (`toBeVisible`, `toHaveCount`), hoặc bọc trong `expect.poll`.
 
 ## BUG-012 · Kiểm tra CI báo đỏ trên Windows
 - **`npm run radius:check`** crash với đường dẫn `D:\D:\…\apps\widget\src`. Nguyên nhân: `scripts/check-radius-tokens.mjs:26` dùng `new URL('..', import.meta.url).pathname`, trên Windows trả về `/D:/…`. Fix: `fileURLToPath(new URL('..', import.meta.url))`.

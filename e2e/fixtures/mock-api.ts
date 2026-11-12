@@ -137,7 +137,19 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
       record(req, path, url);
       const body = req.postDataJSON() ?? {};
       const before = state.notifications.length;
-      state.notifications = body.all ? [] : state.notifications.filter((n) => !(body.ids ?? []).map(String).includes(n.id));
+      // Same narrowing as the API (T07 §7-2a): `all` deletes one chip's rows.
+      const ORDER_CATS = ['payment', 'shipping', 'review'];
+      const inChip = (n: any): boolean =>
+        body.categories?.length
+          ? body.categories.includes(n.category)
+          : body.scope === 'order'
+            ? ORDER_CATS.includes(n.category)
+            : body.scope === 'notice'
+              ? !ORDER_CATS.includes(n.category)
+              : true;
+      state.notifications = body.all
+        ? state.notifications.filter((n) => !inChip(n))
+        : state.notifications.filter((n) => !(body.ids ?? []).map(String).includes(n.id));
       return route.fulfill({ json: ok({ deleted: before - state.notifications.length }) });
     }
     const readMatch = path.match(/^\/notifications\/(\w+)\/read$/);

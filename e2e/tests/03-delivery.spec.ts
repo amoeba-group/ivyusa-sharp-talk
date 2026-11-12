@@ -2,6 +2,10 @@ import { test, expect, type Widget } from '../fixtures/widget';
 import type { Locator } from '@playwright/test';
 import { DELIVERY_STEPS, ORDERS } from '../fixtures/ivy-data';
 
+/** data-state of each step on a card, in order. Not auto-waiting: poll it. */
+const stepStates = (c: Locator) =>
+  c.getByTestId('delivery-step').evaluateAll((els) => els.map((e) => e.getAttribute('data-state')));
+
 /** T03 — delivery tracking cards with the 4-step stepper (SCR-IVY-05, G-07, BR-06). */
 test.describe('T03 · Notifications — Delivery', () => {
   test.beforeEach(async ({ widget }) => {
@@ -27,16 +31,16 @@ test.describe('T03 · Notifications — Delivery', () => {
   test('TC-03-03 in-transit card: 3rd step current, orange pill, "Your order is on the way!" @T03 @design', async ({ widget }) => {
     const c = card(widget, ORDERS.inTransit.orderNumber);
     await expect(widget.statusPill(c)).toHaveText('In Transit');
-    const states = await c.getByTestId('delivery-step').evaluateAll((els) => els.map((e) => e.getAttribute('data-state')));
-    expect(states).toEqual(['done', 'done', 'current', 'todo']);
+    // Polled: the pill can show from the order before tracking arrives (BUG-019).
+    await expect.poll(() => stepStates(c)).toEqual(['done', 'done', 'current', 'todo']);
     await expect(c).toContainText('Your order is on the way!');
   });
 
   test('TC-03-04 delivered card: all steps done, "Your order is Delivered !" @T03 @design', async ({ widget }) => {
     const c = card(widget, ORDERS.delivered.orderNumber);
     await expect(widget.statusPill(c)).toHaveText('Delivered');
-    const states = await c.getByTestId('delivery-step').evaluateAll((els) => els.map((e) => e.getAttribute('data-state')));
-    expect(states).toEqual(['done', 'done', 'done', 'done']);
+    // Polled: the pill can show from the order before tracking arrives (BUG-019).
+    await expect.poll(() => stepStates(c)).toEqual(['done', 'done', 'done', 'done']);
     await expect(c).toContainText(/Your order is Delivered\s?!/);
   });
 

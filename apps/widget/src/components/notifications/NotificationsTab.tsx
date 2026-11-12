@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { BellOff, Check, ExternalLink, Lock, Star } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,8 @@ import {
 import { myPageOrdersUrl } from '../../lib/platform';
 import { Badge, toneForStatus } from '../ui/Badge';
 import { StatusPill } from '../ui/StatusPill';
+import { ToastHost } from '../ui/ToastHost';
+import { showToast } from '../../lib/toast';
 import { Spinner } from '../ui/Spinner';
 import { formatDate, groupByDate, noticeTime, shortDate } from '../../lib/format';
 import { NotificationIcon } from './NotificationIcon';
@@ -31,6 +33,7 @@ import {
   chipBelongsTo,
   chipsFor,
   defaultChip,
+  deleteAllFilter,
   orderFeedRows,
 } from './tab-chips';
 import { NOTIFICATION_SCOPE } from '../../lib/widget-tabs';
@@ -163,13 +166,15 @@ function Row({
           type="button"
           role="checkbox"
           aria-checked={selected}
-          aria-label={t('notifications.select')}
+          // Named by its row, so a screen reader hears which one (T07 D4).
+          aria-label={title ? t('notifications.selectRow', { title }) : t('notifications.select')}
           onClick={() => onToggle?.(n.id)}
-          className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border ${
-            selected ? 'border-primary-500 bg-primary-500 text-on-primary' : 'border-gray-300 bg-white text-transparent'
+          // Design: a check circle either way — gray when off, brand blue when on.
+          className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
+            selected ? 'bg-primary-500 text-on-primary' : 'bg-gray-300 text-white'
           }`}
         >
-          <Check className="h-3 w-3" />
+          <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
         </button>
       ) : (
         unread && (
@@ -312,20 +317,69 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
   const removeNotifications = useDeleteNotifications(sessionToken);
   const [selecting, setSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // "Delete All" asks first, inside the panel (T07 D2) — never window.confirm,
+  // which is grey, follows the browser's language and is outside the design.
+  const [confirmingAll, setConfirmingAll] = useState(false);
+  const deleteAllRef = useRef<HTMLButtonElement>(null);
+  const confirmCancelRef = useRef<HTMLButtonElement>(null);
+  const confirmId = useId();
+  const isActiveTab = useWidgetStore((s) => s.activeTab) === tab;
   const toggleSelected = (id: string) =>
     setSelectedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
   const exitSelecting = () => {
     setSelecting(false);
     setSelectedIds([]);
+    setConfirmingAll(false);
+  };
+  const closeConfirm = () => {
+    setConfirmingAll(false);
+    // Back to the button that opened it, not to the top of the panel.
+    requestAnimationFrame(() => deleteAllRef.current?.focus());
+  };
+  // Every delete says how it went (CLAUDE.md §2). On failure the selection
+  // stays, so trying again is one tap.
+  const onDeleted = ({ deleted }: { deleted: number }) => {
+    exitSelecting();
+    showToast({ tone: 'success', message: t('notifications.deleted', { count: deleted }) });
+  };
+  const onDeleteFailed = () => {
+    setConfirmingAll(false);
+    showToast({ tone: 'error', message: t('notifications.deleteFailed') });
   };
   const deleteSelected = () => {
     if (selectedIds.length === 0) return;
-    removeNotifications.mutate({ ids: selectedIds }, { onSuccess: exitSelecting });
+    removeNotifications.mutate({ ids: selectedIds }, { onSuccess: onDeleted, onError: onDeleteFailed });
   };
   const deleteAll = () => {
-    if (!window.confirm(t('notifications.deleteAllConfirm'))) return;
-    removeNotifications.mutate({ all: true }, { onSuccess: exitSelecting });
+    // Only the chip on screen (T07 §7-2a): Delete All on Promo keeps the order notices.
+    removeNotifications.mutate(
+      { all: true, ...deleteAllFilter(notifFilter, scope) },
+      { onSuccess: onDeleted, onError: onDeleteFailed },
+    );
   };
+  // A selection belongs to the chip it was made on: switching chips must not
+  // leave hidden rows ticked for the next "Delete Selected".
+  useEffect(() => {
+    setSelecting(false);
+    setSelectedIds([]);
+    setConfirmingAll(false);
+  }, [notifFilter]);
+  // The confirm opens on its safe answer, Cancel.
+  useEffect(() => {
+    if (confirmingAll) confirmCancelRef.current?.focus();
+  }, [confirmingAll]);
+  // Esc closes the confirm only. Captured before WidgetPanel's own Esc
+  // listener, which would otherwise close the whole widget.
+  useEffect(() => {
+    if (!confirmingAll || !isActiveTab) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      closeConfirm();
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [confirmingAll, isActiveTab]);
 
   const {
     data: issueFeed,
@@ -431,7 +485,10 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
         )}
       </div>
 
-      <div className="scroll-thin flex-1 overflow-y-auto">
+      {/* The toast host sits over the bottom of the list, just above the
+          bottom bar, outside the scroller so it does not scroll away. */}
+      <div className="relative min-h-0 flex-1">
+        <div className="scroll-thin h-full overflow-y-auto">
         {isOrderList ? (
           <OrderList sessionToken={sessionToken} onOpenOrder={setOpenOrder} />
         ) : isShipping ? (
@@ -481,6 +538,8 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             ))}
           </>
         )}
+        </div>
+        <ToastHost />
       </div>
 
       {/* The widget shows a bounded recent window inline (10 orders / 30 days);
@@ -489,8 +548,9 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
           once its window is actually full, and two links to the same place —
           one of them promising "more" to someone already seeing everything —
           is worse than either alone. */}
-      {/* Selection-mode actions (design: filled "delete selected", outlined "delete all"). */}
-      {selecting && (
+      {/* Selection-mode actions (design: filled "delete selected", outlined "delete all").
+          "Delete All" swaps them for an in-panel confirm (T07 D2). */}
+      {selecting && !confirmingAll && (
         <div className="space-y-2 border-t border-gray-100 px-4 py-3">
           <button
             type="button"
@@ -498,16 +558,54 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             disabled={selectedIds.length === 0 || removeNotifications.isPending}
             className="w-full rounded-st-md bg-primary-500 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-40"
           >
-            {t('notifications.deleteSelected', { count: selectedIds.length })}
+            {t('notifications.deleteSelected')}
           </button>
           <button
+            ref={deleteAllRef}
             type="button"
-            onClick={deleteAll}
+            onClick={() => setConfirmingAll(true)}
             disabled={removeNotifications.isPending}
             className="w-full rounded-st-md border border-primary-500 py-2.5 text-sm font-medium text-primary-600 hover:bg-primary-50 disabled:opacity-40"
           >
             {t('notifications.deleteAll')}
           </button>
+        </div>
+      )}
+      {selecting && confirmingAll && (
+        <div
+          role="alertdialog"
+          aria-labelledby={`${confirmId}-title`}
+          aria-describedby={`${confirmId}-desc`}
+          data-testid="delete-all-confirm"
+          className="border-t border-gray-100 px-4 py-3"
+        >
+          <p id={`${confirmId}-title`} className="text-sm font-bold text-gray-900">
+            {t('notifications.deleteAllTitle')}
+          </p>
+          <p id={`${confirmId}-desc`} className="mt-1 text-sm text-gray-600">
+            {t('notifications.deleteAllScope', {
+              chip: t(chips.find((c) => c.key === notifFilter)?.labelKey ?? 'notifications.filters.all'),
+            })}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              ref={confirmCancelRef}
+              type="button"
+              onClick={closeConfirm}
+              disabled={removeNotifications.isPending}
+              className="flex-1 rounded-st-md border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+            >
+              {t('notifications.deleteCancel')}
+            </button>
+            <button
+              type="button"
+              onClick={deleteAll}
+              disabled={removeNotifications.isPending}
+              className="flex-1 rounded-st-md bg-primary-500 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-40"
+            >
+              {t('notifications.deleteConfirm')}
+            </button>
+          </div>
         </div>
       )}
 

@@ -42,4 +42,58 @@ test.describe('T07 · Select & delete notifications', () => {
     await expect(widget.notifItems.getByRole('checkbox')).toHaveCount(0);
     expect(mocks!.callsTo('DELETE', '/notifications')).toHaveLength(0);
   });
+
+  test('TC-07-04 Delete All on the Order chip keeps the other chips (PLN §7-2a) @T07', async ({ widget, mocks }) => {
+    await widget.panel.getByRole('button', { name: 'Delete All Notifications' }).click();
+    const confirm = widget.panel.getByRole('alertdialog');
+    await expect(confirm).toContainText('Order');
+    await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect.poll(() => mocks!.callsTo('DELETE', '/notifications').length).toBe(1);
+    expect(mocks!.callsTo('DELETE', '/notifications')[0].body).toMatchObject({ all: true, categories: ['payment', 'shipping'] });
+    await expect(widget.page.getByRole('status')).toHaveText('3 notifications deleted');
+    await expect(widget.notifItems).toHaveCount(0);
+    await widget.chip('Promo').click();
+    await expect(widget.notifItems).toHaveCount(3);
+  });
+
+  test('TC-07-05 the confirm opens on Cancel and Esc closes only the confirm @T07', async ({ widget, mocks }) => {
+    await widget.panel.getByRole('button', { name: 'Delete All Notifications' }).click();
+    const confirm = widget.panel.getByRole('alertdialog');
+    await expect(confirm.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+    await widget.page.keyboard.press('Escape');
+    await expect(confirm).toHaveCount(0);
+    await expect(widget.panel).toBeVisible();
+    await expect(widget.panel.getByRole('button', { name: 'Delete All Notifications' })).toBeFocused();
+    await expect(widget.notifItems.getByRole('checkbox').first()).toBeVisible();
+    expect(mocks!.callsTo('DELETE', '/notifications')).toHaveLength(0);
+  });
+
+  test('TC-07-06 each checkbox is named by its row @T07', async ({ widget }) => {
+    await expect(widget.notifItems.getByRole('checkbox', { name: 'Select IVY-39891' })).toHaveCount(1);
+  });
+});
+
+test.describe('T07 · Delete fails', () => {
+  test.use({ mockOptions: { failures: { 'DELETE /notifications': 500 } } });
+
+  test('TC-07-07 a failed delete says so and keeps the selection @T07', async ({ widget, mocks }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.openNotifications();
+    await widget.panel.getByRole('button', { name: 'Select', exact: true }).click();
+    const before = await widget.notifItems.count();
+    const first = widget.notifItems.getByRole('checkbox').first();
+    await first.click();
+    await widget.panel.getByRole('button', { name: 'Delete Selected Notifications' }).click();
+    const alert = widget.page.getByRole('alert');
+    await expect(alert).toContainText("Couldn't delete notifications");
+    expect(mocks!.callsTo('DELETE', '/notifications')).toHaveLength(1);
+    await expect(first).toHaveAttribute('aria-checked', 'true');
+    await expect(widget.notifItems).toHaveCount(before);
+    // An error waits for the shopper, then goes when closed.
+    await widget.page.waitForTimeout(3_500);
+    await expect(alert).toBeVisible();
+    await alert.getByRole('button', { name: 'Close' }).click();
+    await expect(alert).toHaveCount(0);
+  });
 });

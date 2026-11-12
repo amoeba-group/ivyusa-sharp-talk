@@ -29,14 +29,28 @@ export function markRead(
   });
 }
 
-/** Shopper-side delete: selected ids, or everything (PLN-260916 P3). */
+/** What a delete asks for: selected ids, or all of one chip (tab-chips deleteAllFilter). */
+export interface DeleteNotificationsInput {
+  ids?: string[];
+  all?: boolean;
+  categories?: string[];
+  scope?: string;
+}
+
+/** Shopper-side delete: selected ids, or all of the chip on screen (PLN-260916 P3, T07). */
 export function deleteNotifications(
-  input: { ids?: string[]; all?: boolean },
+  input: DeleteNotificationsInput,
   sessionToken: string,
 ): Promise<{ deleted: number }> {
   return apiClient.delete<{ deleted: number }>('/notifications', {
     session_token: sessionToken,
-    ...(input.all ? { all: true } : { ids: (input.ids ?? []).map(Number) }),
+    ...(input.all
+      ? {
+          all: true,
+          ...(input.categories?.length ? { categories: input.categories } : {}),
+          ...(input.scope ? { scope: input.scope } : {}),
+        }
+      : { ids: (input.ids ?? []).map(Number) }),
   });
 }
 

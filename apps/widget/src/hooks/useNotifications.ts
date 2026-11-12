@@ -9,6 +9,7 @@ import {
   listNotifications,
   deleteNotifications, markRead,
   setMarketingOptOut,
+  type DeleteNotificationsInput,
   setPref,
   unreadCount,
 } from '../services/notificationService';
@@ -62,7 +63,7 @@ export function useMarkRead(sessionToken: string | null) {
 export function useDeleteNotifications(sessionToken: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { ids?: string[]; all?: boolean }) => deleteNotifications(input, sessionToken!),
+    mutationFn: (input: DeleteNotificationsInput) => deleteNotifications(input, sessionToken!),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] });
       qc.invalidateQueries({ queryKey: ['unread-count'] });

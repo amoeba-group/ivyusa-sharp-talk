@@ -161,6 +161,7 @@ Launcher (góc phải dưới) ─► Panel 380px
 - Mỗi dòng có nút tròn ✓ (xám = chưa chọn, xanh = đã chọn) · đáy panel: **Delete Selected Notifications** (KO 선택 알림 삭제) + **Delete All Notifications** (KO 전체 알림 삭제).
 - Cách vào chế độ chọn **chưa được vẽ** (Q-03). Ghi chú trang `0:1` gợi ý thêm vuốt trái để xoá trên mobile.
 - Xoá phải có phản hồi thành công/lỗi (quy tắc UX của repo — toast).
+- **Đã làm (T07, 2026-11-12):** "Delete All" xác nhận ngay trong panel (Cancel / Delete, focus ở Cancel, Esc chỉ đóng hộp xác nhận) và chỉ xoá **chip đang xem**. Toast: thành công tự tắt ~3 giây, lỗi đóng tay và giữ nguyên các dòng đã tick. Vuốt trái để xoá: chưa làm, để T15.
 
 ### SCR-IVY-10 · Chat — màn đầu
 - **Figma:** `1008:2291` (KO), `993:1993` (EN).
@@ -260,8 +261,10 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 | Pill trạng thái | `[data-testid="status-pill"]` + `data-status="confirmed\|in_transit\|delivered\|review"` (ngoài ra `pending_payment`, `cancel_requested`; chữ lạ → `other`) | ✅ (T02) — mới có trong feed thông báo; thẻ Delivery ✅ (T03, mã lấy từ bước tracking); Review ở T06 |
 | Thẻ giao hàng | `[data-testid="delivery-card"]` (+`data-id`); bước `[data-testid="delivery-step"]` + `data-state="done\|current\|todo"` (đã giao: cả 4 `done`) | ✅ (T03) |
 | Order Detail | `getByRole('heading', { name: 'Order Detail' })` | ➕ copy (T04) |
-| Chọn từng dòng | `getByRole('checkbox')` trong `notif-item` | ✅ `role="checkbox"` + `aria-checked` |
-| Nút xoá | `getByRole('button', { name: 'Delete Selected Notifications' \| 'Delete All Notifications' })` | ➕ copy (T07) |
+| Chọn từng dòng | `getByRole('checkbox')` trong `notif-item`; tên theo dòng: `Select IVY-39891` | ✅ `role="checkbox"` + `aria-checked` (tên theo dòng: T07) |
+| Nút xoá | `getByRole('button', { name: 'Delete Selected Notifications' \| 'Delete All Notifications' })` | ✅ (T07) |
+| Xác nhận xoá tất cả | `getByRole('alertdialog')` (+`data-testid="delete-all-confirm"`), nút `Cancel` / `Delete` | ✅ (T07) |
+| Toast | `getByRole('status')` (thành công) / `getByRole('alert')` (lỗi, có nút `Close`); `[data-testid="toast"]` + `data-tone="success\|error"` | ✅ (T07) — dùng chung, T05/T06 dùng lại |
 | Thẻ promo | `[data-testid="promo-item"]` + `data-kind="coupon\|event"`; icon `[data-testid="promo-icon"]`; mã coupon `[data-testid="coupon-code"]` + nút "Copy code" | ➕ (T05) |
 | Quick-reply | `[data-testid="quick-replies"]` › `getByRole('button', { name })` | ➕ testid (T08); class `.st-quick-reply` ✅ |
 | Composer | `getByPlaceholder('Ask Anything')`, `getByRole('button', { name: 'Send' })` | ➕ placeholder (T08); Send ✅ |
@@ -290,7 +293,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-08 | Order Detail có **Billing/Shipping address + phone**, nhãn "Information" | Không có địa chỉ/điện thoại trong response (`widget.types.ts` `OrderDetailResponse`), nhãn "Contact information" | Thêm cột order (sync Shopify `shipping_address`, `billing_address`, `phone`) → mapper → UI. **Cần migration SQL** | API · DB · UI | T04 |
 | G-09 | Promo: coupon (gift navy) vs sự kiện (sparkle magenta), tiêu đề đậm + mô tả, mã coupon | Chỉ là notification `event` với icon gift/sparkle; không có mã/copy; link không bấm được; API không có khái niệm coupon | Thẻ promo theo thiết kế + bấm mở link; hiển thị mã coupon (lấy từ body/metadata) + nút copy | UI (+API tuỳ chọn) | T05 |
 | G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 |
-| G-11 | Chọn nhiều + "Delete Selected Notifications" / "Delete All Notifications" | Đã có: nút "Select", "Delete selected (n)", "Delete all notifications" + `window.confirm` (`NotificationsTab.tsx` 324-333, 391-410) | Copy theo thiết kế; thay `window.confirm` bằng xác nhận trong panel; toast kết quả; (tuỳ chọn) vuốt trái để xoá | UI · I18N | T07 |
+| G-11 | Chọn nhiều + "Delete Selected Notifications" / "Delete All Notifications" | Đã có: nút "Select", "Delete selected (n)", "Delete all notifications" + `window.confirm` (`NotificationsTab.tsx` 324-333, 391-410) | Copy theo thiết kế; thay `window.confirm` bằng xác nhận trong panel; toast kết quả; (tuỳ chọn) vuốt trái để xoá | UI · I18N · API | T07 ✅ (2026-11-12; "Delete All" chỉ xoá chip đang xem; vuốt trái để xoá → T15) |
 | G-12 | Chat home: chip trắng viền có **emoji**, xếp wrap; lời chào IVY | Lưới 2 cột pill xanh nhạt hoặc thẻ có icon; nút scenario không có trường emoji (`ScenarioMenu.tsx`, `/ai-config/scenario`) | Thêm trường `emoji` cho nút scenario + kiểu hiển thị "chip wrap"; cấu hình 7 nút + lời chào cho tenant | UI · API · CFG | T08 |
 | G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 |
 | G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 |

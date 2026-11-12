@@ -41,6 +41,8 @@ test.describe('T02 · Notifications — Order', () => {
   });
 
   test('TC-02-04 relative times use the design wording @T02 @design', async ({ widget }) => {
+    // allInnerTexts() does not wait: read once the rows are there (BUG-019).
+    await expect(widget.panel.getByTestId('notif-time').first()).toBeVisible();
     const times = await widget.panel.getByTestId('notif-time').allInnerTexts();
     expect(times.length).toBeGreaterThan(0);
     for (const t of times) {

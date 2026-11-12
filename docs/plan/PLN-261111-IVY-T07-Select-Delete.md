@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §7 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112-T07](../implementation/RPT-261112-IVY-T07-Select-Delete.md). Trả lời §7: (1) ok; (2) **a**, "Delete All" chỉ xoá chip đang xem; (3) **a**, vuốt trái để xoá để T15 |
 | Task | [ivy-docs/TASKS.md T07](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-09 · G-11 · BR-09 · Q-03 (vào chế độ chọn bằng nút "Select" ở hàng chip, đã có) |
 | Figma | Master `992:526`, `1006:2814` (EN), `1006:2698` (KO). Chưa mở được vì Figma MCP hết lượt gọi (gói Starter); dựa vào SPEC SCR-IVY-09 + §4 và ảnh màn hiện tại |
 | TC | TC-07-01..03 ([e2e/tests/07-select-delete.spec.ts](../../e2e/tests/07-select-delete.spec.ts)), baseline 1/3. Test **fail nếu xuất hiện hộp thoại `confirm/alert` của trình duyệt** |

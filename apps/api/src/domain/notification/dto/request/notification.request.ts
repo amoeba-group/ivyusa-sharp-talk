@@ -1,4 +1,5 @@
 import { IsBoolean, IsIn, IsOptional, IsString, IsArray, ArrayMaxSize } from 'class-validator';
+import { NOTIFICATION_CATEGORY, NOTIFICATION_SCOPE } from '@sharptalk/types';
 
 /** Channels notifications can be delivered on. in_app is always-on/transactional. */
 export const NOTIFICATION_CHANNELS = ['in_app', 'email', 'sms', 'web_push'] as const;
@@ -7,11 +8,23 @@ export class ReadNotificationRequest {
   @IsString() session_token: string;
 }
 
-/** Widget bulk delete (PLN-260916 P3): explicit ids, or everything the shopper has. */
+/** Real categories a delete may name — not the 'all' sentinel, which is a list filter. */
+const DELETABLE_CATEGORIES = Object.values(NOTIFICATION_CATEGORY).filter((c) => c !== 'all');
+
+/**
+ * Widget bulk delete (PLN-260916 P3): explicit ids, or everything the shopper has.
+ *
+ * With `all`, `categories` or `scope` narrows "everything" to the chip the
+ * shopper is looking at (ivy-docs T07 §7-2a). `categories` wins when both are
+ * sent. Neither = the whole feed, which is what older clients still ask for.
+ */
 export class DeleteNotificationsRequest {
   @IsString() session_token: string;
   @IsOptional() @IsArray() @ArrayMaxSize(200) ids?: number[];
   @IsOptional() @IsBoolean() all?: boolean;
+  @IsOptional() @IsArray() @ArrayMaxSize(DELETABLE_CATEGORIES.length) @IsIn(DELETABLE_CATEGORIES, { each: true })
+  categories?: string[];
+  @IsOptional() @IsString() @IsIn(Object.values(NOTIFICATION_SCOPE)) scope?: string;
 }
 
 export class UpdatePrefRequest {

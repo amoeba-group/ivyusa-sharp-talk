@@ -110,9 +110,14 @@ export class NotificationController {
 
   @Delete()
   @Public()
-  @ApiOperation({ summary: 'Delete notifications (selected ids or all) — shopper-side soft delete (PLN-260916 P3)' })
+  @ApiOperation({ summary: 'Delete notifications (selected ids, or all of one chip via categories/scope) — shopper-side soft delete (PLN-260916 P3, ivy-docs T07)' })
   async remove(@Body() body: DeleteNotificationsRequest) {
-    const deleted = await this.notificationService.remove(body.session_token, { ids: body.ids, all: body.all });
+    const deleted = await this.notificationService.remove(body.session_token, {
+      ids: body.ids,
+      all: body.all,
+      categories: body.categories,
+      scope: parseScope(body.scope),
+    });
     return { deleted };
   }
 
