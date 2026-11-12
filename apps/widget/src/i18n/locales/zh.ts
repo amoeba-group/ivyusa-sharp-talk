@@ -85,6 +85,15 @@ export const zh: Translation = {
     citations: '参考资料',
     watchVideo: '观看视频',
     inputPlaceholder: '输入消息…',
+    /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
+    startOver: '重新开始',
+    startOverLead: '还有什么可以帮您？',
+    /** After the My Orders answer (SCR-IVY-11). */
+    orderAnswer: {
+      followUp: '还需要其他帮助吗？',
+      trackDelivery: '查看配送',
+      cancelOrder: '取消订单',
+    },
     send: '发送',
     sendFailed: '抱歉，消息发送失败。请重试。',
     endChat: '结束聊天',

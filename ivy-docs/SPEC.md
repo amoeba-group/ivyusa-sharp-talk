@@ -191,6 +191,13 @@ Launcher (góc phải dưới) ─► Panel 380px
 ### SCR-IVY-11 · Kịch bản My Orders
 - **Figma:** `1006:5530`.
 - Bot: "주문 내역을 조회해드릴게요! 최근 주문입니다 👇" → thẻ đơn gần đây (mã, pill, tóm tắt) → "더 도움이 필요하신가요?" → chip **배송 조회 · 주문 취소 · 처음으로**.
+- **Đã làm (T09, 2026-11-12):** đối chiếu ảnh chủ dự án gửi.
+  - Có bong bóng khách "My Orders".
+  - Thẻ bấm được → Order Detail đè lên chat.
+  - 배송 조회 → tab Notifications, chip Delivery.
+  - 주문 취소 → kịch bản `cancel_order`.
+  - 처음으로 → menu hiện lại ở cuối cuộc chat.
+  - Tóm tắt giữ "+ 2 items" theo BR-08 (thiết kế ghi "+ 2 Others").
 
 ### SCR-IVY-12 · Kịch bản Product Help
 - **Figma:** `1006:5588` (menu con), `993:2207` / `993:2416` (danh mục), `1008:2613` (đang gõ), `1008:2722` (AI trả lời).
@@ -316,7 +323,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-12 | Chat home: chip trắng viền có **emoji**, xếp wrap; lời chào IVY | Lưới 2 cột pill xanh nhạt hoặc thẻ có icon; nút scenario không có trường emoji (`ScenarioMenu.tsx`, `/ai-config/scenario`) | Thêm trường `emoji` cho nút scenario + kiểu hiển thị "chip wrap"; cấu hình 7 nút + lời chào cho tenant | UI · API · CFG | T08 ✅ (2026-11-12; emoji + chip trắng; nút / lời chào là cấu hình tenant) |
 | G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 ✅ (2026-11-12; placeholder là cấu hình tenant; giữ nút đính kèm) |
 | G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 ✅ (2026-11-12; `disclosurePlacement: bottom` = 1 dòng dưới ô nhập) |
-| G-15 | My Orders: thẻ đơn bấm được + chip 배송 조회 · 주문 취소 · 처음으로 | Thẻ không bấm được; chip ẩn khi đang hiện thẻ (`ChatTab.tsx` 439-445); không có chip "처음으로" ở đâu cả | Thẻ mở Order Detail; luôn hiện follow-up chip; thêm chip **처음으로** (start over) dùng chung cho mọi kịch bản | UI · I18N | T09 |
+| G-15 | My Orders: thẻ đơn bấm được + chip 배송 조회 · 주문 취소 · 처음으로 | Thẻ không bấm được; chip ẩn khi đang hiện thẻ (`ChatTab.tsx` 439-445); không có chip "처음으로" ở đâu cả | Thẻ mở Order Detail; luôn hiện follow-up chip; thêm chip **처음으로** (start over) dùng chung cho mọi kịch bản | UI · I18N | T09 ✅ (2026-11-12; Start over là chip widget tự thêm, dùng chung cho T10–T12) |
 | G-16 | Product Help: 11 danh mục + 인기상품; menu con 사용법/성분/교환·반품/재입고 | Menu con có; **thiếu danh mục & sản phẩm phổ biến**; API sẵn có nhưng chưa dùng: `GET /products/categories`, `/products?category=`, `/products/recommendations` | Luồng danh mục → sản phẩm phổ biến; "재입고 알림" gọi `POST /restock/subscribe` | UI | T10 |
 | G-17 | Contact Support: chỉ thẻ email `help@ivy.com` | 3 thẻ (điện thoại 1588-0000, email, live chat) **hard-code trong locale** (`ContactCard.tsx`) | Lấy kênh liên hệ từ cấu hình tenant; IVY chỉ bật email (+ live chat nếu có agent — Q-15) | UI · API · CFG | T11 |
 | G-18 | Form liên hệ Name/Email/Message → "Your message has been sent successfully." | **Không có.** `POST /inquiries` tồn tại nhưng không nhận name/email/message và widget không gọi | Mở rộng DTO/entity inquiry (+console xem được) + thẻ form + thẻ "YOUR INQUIRY". **Có thể cần migration SQL** | API · DB · UI | T11 |

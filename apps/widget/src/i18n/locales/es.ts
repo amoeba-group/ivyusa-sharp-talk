@@ -85,6 +85,15 @@ export const es: Translation = {
     citations: 'Conocimiento consultado',
     watchVideo: 'Ver video',
     inputPlaceholder: 'Escribe un mensaje…',
+    /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
+    startOver: 'Volver al inicio',
+    startOverLead: '¿En qué más puedo ayudarte?',
+    /** After the My Orders answer (SCR-IVY-11). */
+    orderAnswer: {
+      followUp: '¿Necesitas algo más?',
+      trackDelivery: 'Rastrear envío',
+      cancelOrder: 'Cancelar pedido',
+    },
     send: 'Enviar',
     sendFailed: 'Lo sentimos, no se pudo enviar. Inténtalo de nuevo.',
     attachment: {

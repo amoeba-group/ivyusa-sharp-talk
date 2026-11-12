@@ -13,7 +13,7 @@ npm run db:up && npm run dev            # API :3000 · widget :5174 (cần apps/
 cd e2e
 npm install && npx playwright install chromium   # lần đầu
 npm run test:smoke                     # @smoke — phải luôn xanh
-npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T13)
+npm run test:ci                        # cổng CI: @smoke + các task đã xong (hiện @T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T09|@T13)
 npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
@@ -42,7 +42,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T06 | 0 / 3 → **5 / 5** ✅ (T06, 2026-11-12; thêm TC-06-04, 05) | tất cả | — |
 | T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
 | T08 | 1 / 5 → **6 / 6** ✅ (T08, 2026-11-12; thêm TC-08-06) | tất cả | — |
-| T09 | 1 / 4 | TC-09-01 | TC-09-02, TC-09-03, TC-09-04 |
+| T09 | 1 / 4 → **7 / 7** ✅ (T09, 2026-11-12; thêm TC-09-05..07) | tất cả | — |
 | T10 | 1 / 5 | TC-10-05 | TC-10-01, TC-10-02, TC-10-03, TC-10-04 |
 | T11 | 0 / 4 | — | TC-11-01, TC-11-02, TC-11-03, TC-11-04 |
 | T12 | 0 / 4 | — | TC-12-01, TC-12-02, TC-12-03, TC-12-04 |
@@ -254,10 +254,26 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
-| TC-09-01 | Danh sách đơn | "…recent orders…" + thẻ IVY-39891 | SCR-IVY-11 |
+| TC-09-01 | Danh sách đơn | bong bóng khách "My Orders" (`.st-message-user`) + "…recent orders…" + thẻ IVY-39891 | SCR-IVY-11 |
 | TC-09-02 | Chip tiếp theo | Track delivery · Cancel order · Start over | G-15, BR-12 |
 | TC-09-03 | Thẻ bấm được | bấm thẻ → "Order Detail" | G-15 |
 | TC-09-04 | Start over | quay về menu quick-reply (có "Payment check") | BR-12 |
+| TC-09-05 | Start over ở kịch bản khác | Exchange & Refund (kịch bản `cancel_refund`, API thật, consent **bấm thật**) → có chip Start over → bấm → "What else can I help you with?" + 2 khối `quick-replies` | BR-12 |
+| TC-09-06 | Back từ Order Detail | Back → tab Chat, câu trả lời My Orders và chip Track delivery vẫn còn | PLN-261112-T09 D1 |
+| TC-09-07 | Track delivery | → tab Notifications, chip Delivery `aria-pressed=true`, có `delivery-card` | PLN-261112-T09 §7-2a |
+
+**Kết quả (2026-11-12):** 7/7, lặp ×3 (2 worker): 21/21. Cổng CI mới (thêm `@T09`) ×2: 154/154. Toàn bộ desktop: 88 pass / 12 fail, mọi ca đỏ thuộc T10–T12 chưa làm.
+
+> **Consent trong test có kịch bản chạy trên API thật.**
+> - Mock mặc định chỉ sửa câu trả lời `session/ensure` thành "đã đồng ý". Phiên trên server thì **chưa** có consent, nên `/chat/scenario` trả câu từ chối và không có chip.
+> - Test cần kịch bản thật thì dùng `consent: 'pending'` rồi `acceptConsentIfShown()`, như TC-09-05.
+
+**Kiểm thử bổ sung cho T09:**
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit widget | `apps/widget/test/reply-chips.test.mjs` | `withStartOver`: thêm 1 lần, không thêm vào câu trả lời không có chip; `orderAnswerChips`: 3 chip khi có đơn, chỉ Start over khi không có |
+| Ảnh chụp | thủ công, 380px | KO / EN khớp ảnh thiết kế: thẻ thụt vào, pill 주문확인 / 배송중 / 배송완료, "더 도움이 필요하신가요?", chip 배송 조회 · 주문 취소 · 처음으로; menu hiện lại sau Start over |
 
 ## T10 · Product Help (`10-product-help.spec.ts`)
 

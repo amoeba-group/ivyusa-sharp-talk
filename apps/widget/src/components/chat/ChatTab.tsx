@@ -28,12 +28,24 @@ import { AuthGate } from './AuthGate';
 import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
-import { replyChips } from './reply-chips';
+import { replyChips, START_OVER_ID, TRACK_DELIVERY_ID, withStartOver } from './reply-chips';
+import { ChatChip } from './ChatChip';
+import { OrderDetailView } from '../orders/OrderDetail';
+import { chipBelongsTo } from '../notifications/tab-chips';
 import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
 // Deep import: a value import from `@sharptalk/types` breaks the browser build (CJS `export *`).
 import { CALLBACK_CHIP_ID } from '../../../../../packages/types/src/common/chat-close';
 
 type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
+
+/**
+ * Something the widget adds to the thread itself (ivy-docs T09): the My Orders
+ * answer, or the menu "Start over" brings back. `at` is how many messages the
+ * thread had when it appeared, so it stays where it was asked and a later reply
+ * lands below it — the single `inline` slot always sat at the bottom, under
+ * whatever came after.
+ */
+type ThreadInsert = { key: string; kind: 'orders' | 'menu'; at: number; asked?: string | null };
 
 
 export function ChatTab() {
@@ -116,6 +128,17 @@ export function ChatTab() {
   // it, AuthGate's success handler just cleared `inline` and they landed back on
   // the menu having to pick "My orders" a second time.
   const [afterAuth, setAfterAuth] = useState<Inline>(null);
+  const [inserts, setInserts] = useState<ThreadInsert[]>([]);
+  const insertSeq = useRef(0);
+  // The label to echo when the My Orders answer has to wait for a sign-in.
+  const askedOrdersRef = useRef<string | null>(null);
+  // Order Detail opened from a card in the thread, drawn over the chat (T09 D1).
+  const [openOrder, setOpenOrder] = useState<string | null>(null);
+  // Track delivery jumps to the Delivery chip of whichever list tab has it.
+  const visibleTabsForChips = useWidgetStore((s) => s.visibleTabs);
+  const issueFeedForChips = useWidgetStore((s) => s.issueFeed);
+  const setActiveTabFromChat = useWidgetStore((s) => s.setActiveTab);
+  const setNotificationFilterFromChat = useWidgetStore((s) => s.setNotificationFilter);
   // Attachments the shopper picked but has not sent yet (PLN-260814 S3).
   const uploads = useAttachmentUpload(sessionToken);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
@@ -220,12 +243,15 @@ export function ChatTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerName]);
 
-  useEffect(() => {
+  const scrollToEnd = () =>
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: 'smooth',
     });
-  }, [messages, inline, showEscalate, waitMode, endConfirm, status]);
+  useEffect(() => {
+    scrollToEnd();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, inline, inserts, showEscalate, waitMode, endConfirm, status]);
 
   /**
    * Chat tab badge (PLN-260817 W-1). The thread keeps polling while the shopper
@@ -313,7 +339,7 @@ export function ChatTab() {
       case 'my_orders':
         // Answer in the thread (frame 57) rather than throwing the shopper into
         // another tab — which no longer exists anyway (PLN-260817 S3).
-        openOrAuth('orders');
+        openOrAuth('orders', button.label);
         return;
       case 'contact_support':
         setInline('contact');
@@ -389,13 +415,50 @@ export function ChatTab() {
   }
 
   /** Show `target`, or the sign-in card first and `target` once that succeeds. */
-  function openOrAuth(target: Inline) {
+  function openOrAuth(target: Inline, asked?: string | null) {
+    if (target === 'orders') askedOrdersRef.current = asked ?? null;
     if (authenticated) {
-      setInline(target);
+      if (target === 'orders') showOrders();
+      else setInline(target);
       return;
     }
     setAfterAuth(target);
     setInline('auth');
+  }
+
+  function addInsert(kind: ThreadInsert['kind'], asked?: string | null) {
+    insertSeq.current += 1;
+    setInserts((prev) => [...prev, { key: `${kind}-${insertSeq.current}`, kind, at: messages.length, asked }]);
+  }
+
+  /** The My Orders answer, pinned here in the thread (T09). */
+  function showOrders() {
+    addInsert('orders', askedOrdersRef.current);
+    askedOrdersRef.current = null;
+  }
+
+  /** "Start over" (BR-12): the opening menu again, at the end of the thread (T09 §7-3a). */
+  function startOver() {
+    setInline(null);
+    addInsert('menu');
+  }
+
+  /**
+   * "Track delivery" (T09 §7-2a): the shopper's real delivery cards — the
+   * Delivery chip of whichever list tab carries it. The chat stays as it is.
+   * A tenant with no such tab gets the shipping script instead.
+   */
+  function trackDelivery(label: string) {
+    const opts = { inquiries: issueFeedForChips };
+    const tab = (['notifications', 'orders'] as const).find(
+      (k) => visibleTabsForChips.includes(k) && chipBelongsTo('shipping', k, visibleTabsForChips, opts),
+    );
+    if (tab) {
+      setNotificationFilterFromChat('shipping');
+      setActiveTabFromChat(tab);
+      return;
+    }
+    void scenario('shipping_policy', label).then(runPostAction);
   }
 
   function handleSubAction(a: SubAction) {
@@ -425,7 +488,13 @@ export function ChatTab() {
         void requestAgent();
         return;
       case 'my_orders':
-        openOrAuth('orders');
+        openOrAuth('orders', label);
+        return;
+      case START_OVER_ID:
+        startOver();
+        return;
+      case TRACK_DELIVERY_ID:
+        trackDelivery(label);
         return;
       default:
         void scenario(id, label).then(runPostAction);
@@ -440,13 +509,50 @@ export function ChatTab() {
    * about an order hits a dead end. Ids match handleQuickReply/scenario handling.
    */
   const lastMessage = messages[messages.length - 1];
+  // Something the widget added after the last message owns the end of the
+  // thread: its own chips, not the last message's or the fallback row.
+  const insertAtEnd = inserts.some((x) => x.at === messages.length);
+  const lastInsert = inserts[inserts.length - 1];
   const showFallbackActions =
     !!lastMessage &&
     lastMessage.senderType !== 'user' &&
     !lastMessage.quickReplies?.length &&
     !sending &&
     !showEscalate &&
-    inline === null;
+    inline === null &&
+    !insertAtEnd;
+
+  const renderInserts = (at: number) =>
+    inserts
+      .filter((x) => x.at === at)
+      .map((x) =>
+        x.kind === 'orders' ? (
+          <InlineOrdersAnswer
+            key={x.key}
+            sessionToken={sessionToken}
+            asked={x.asked}
+            active={x === lastInsert && x.at === messages.length && !sending}
+            onOpenOrder={setOpenOrder}
+            onChip={handleQuickReply}
+            // The cards arrive after the answer mounts; follow them down.
+            onSettled={scrollToEnd}
+          />
+        ) : (
+          <div key={x.key} className="space-y-2">
+            <MessageBubble
+              message={{ id: x.key, senderType: 'ai', body: t('chat.startOverLead'), createdAt: new Date().toISOString() }}
+            />
+            {scenarioButtons.length > 0 && (
+              <ScenarioMenu
+                buttons={scenarioButtons}
+                onScenario={handleScenario}
+                onSubAction={handleSubAction}
+                style={quickReplyStyle}
+              />
+            )}
+          </div>
+        ),
+      );
   const fallbackActions = replyChips(commerceEnabled, scenarioButtons, {
     myOrders: t('chat.nextActions.myOrders'),
     shipping: t('chat.nextActions.shipping'),
@@ -471,6 +577,22 @@ export function ChatTab() {
     const problem = await uploads.add(Array.from(files));
     // Rejections are reported, never swallowed (dev-kit §4.3).
     if (problem) setUploadNotice(problem);
+  }
+
+  // Order Detail from a card in the thread (T09 D1). The thread's state lives in
+  // this component, so coming back finds the conversation exactly as it was.
+  if (openOrder) {
+    return (
+      <OrderDetailView
+        orderId={openOrder}
+        sessionToken={sessionToken}
+        onBack={() => setOpenOrder(null)}
+        onAsk={(orderNumber) => {
+          setOpenOrder(null);
+          void doSend(t('orders.askMessage', { orderNumber }));
+        }}
+      />
+    );
   }
 
   return (
@@ -551,30 +673,27 @@ export function ChatTab() {
           />
         )}
 
+        {renderInserts(0)}
+
         {messages.map((m, i) => (
           <div key={m.id} className="space-y-2">
             <MessageBubble message={m} />
-            {/* Scenario follow-up chips on the latest message only (FR-S1). */}
-            {i === messages.length - 1 && !!m.quickReplies?.length && (
+            {/* Scenario follow-up chips on the latest message only (FR-S1),
+                plus the shared Start over (BR-12, T09 D3). */}
+            {i === messages.length - 1 && !insertAtEnd && !!m.quickReplies?.length && (
               <div className="flex flex-wrap gap-1.5 pl-1">
-                {m.quickReplies.map((q) => (
-                  <button
+                {withStartOver(m.quickReplies, t('chat.startOver')).map((q) => (
+                  <ChatChip
                     key={q.id}
+                    label={q.label}
                     onClick={() => handleQuickReply(q.id, q.label)}
                     disabled={sending}
-                    className={`st-quick-reply rounded-full border bg-white px-3.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-40 ${
-                      /* The design outlines only the conversation-ending chip in
-                         blue (frame 65) — everything else is a quiet gray pill. */
-                      q.id === 'end_chat'
-                        ? 'border-primary-400 text-primary-600 hover:bg-primary-50'
-                        : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {q.label}
-                  </button>
+                    emphasis={q.id === 'end_chat'}
+                  />
                 ))}
               </div>
             )}
+            {renderInserts(i + 1)}
           </div>
         ))}
 
@@ -658,7 +777,12 @@ export function ChatTab() {
             sessionToken={sessionToken}
             onSuccess={() => {
               setAuthenticated(true);
-              setInline(afterAuth);
+              if (afterAuth === 'orders') {
+                setInline(null);
+                showOrders();
+              } else {
+                setInline(afterAuth);
+              }
               setAfterAuth(null);
             }}
             onCancel={() => {
@@ -698,7 +822,6 @@ export function ChatTab() {
         {inline === 'affiliate' && (
           <AffiliateCard sessionToken={sessionToken} />
         )}
-        {inline === 'orders' && <InlineOrdersAnswer sessionToken={sessionToken} />}
 
         {showEscalate && (
           <button

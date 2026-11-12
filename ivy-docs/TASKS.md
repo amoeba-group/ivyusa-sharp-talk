@@ -33,7 +33,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI · API · console | P1 | T02 | ✅ | TC-05-01..07 |
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ✅ | TC-06-01..05 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
-| 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T09-My-Orders.md) | TC-09-01..04 |
+| 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ⬜ | TC-10-01..05 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ⬜ | TC-11-01..04 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
@@ -203,10 +203,22 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Việc của chủ dự án:** nhập cấu hình theo [GUIDE-261112-IVY-Chat-Home-Config](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md) (khoảng 15 phút).
 - **TC:** TC-08-01..06 — **6/6** ✅.
 
-### T09 · My Orders — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T09-My-Orders.md)
-- **Figma:** `1006:5530`. **Gap:** G-15. **BR:** 12.
-- **Việc cần làm:** `InlineOrderCard` bấm được → Order Detail; follow-up chip **Track delivery · Cancel order · Start over** luôn hiện; chip **Start over** dùng chung cho mọi kịch bản (quay lại menu quick-reply).
-- **TC:** TC-09-01..04.
+### T09 · My Orders — ✅ (2026-11-12) · [PLN](../docs/plan/PLN-261112-IVY-T09-My-Orders.md) · [RPT](../docs/implementation/RPT-261112-IVY-T09-My-Orders.md)
+- **Figma:** `1006:5530` (đối chiếu qua ảnh chủ dự án gửi). **Gap:** G-15. **BR:** 12. **Bug:** BUG-011 (phần còn lại).
+- **Quyết định của chủ dự án (2026-11-12):**
+  - **Track delivery** → tab Notifications, chip Delivery (thẻ giao hàng thật).
+  - **Start over** → menu 7 nút hiện lại ở cuối cuộc chat.
+- **Đã làm:**
+  - Câu trả lời My Orders theo thiết kế:
+    - bong bóng của khách "My Orders";
+    - câu dẫn;
+    - tối đa 3 thẻ đơn **bấm được** (mở Order Detail đè lên chat, Back về đúng chỗ), pill theo mã;
+    - "Do you need anything else?" + chip **Track delivery · Cancel order · Start over**.
+  - Câu trả lời này và menu của Start over **gắn vào đúng vị trí** trong luồng chat (BUG-024): tin nhắn sau hiện bên dưới, không chen lên trên.
+  - Chip **Start over** do widget tự thêm vào mọi câu trả lời kịch bản có chip (BR-12).
+  - Pill theo mã ở danh sách đơn; màu cố định theo trạng thái ở feed inquiry. **BUG-011 đóng.**
+  - Thêm `@T09` vào `test:ci`.
+- **TC:** TC-09-01..07 — **7/7** ✅ (05: Start over ở kịch bản khác; 06: Back từ Order Detail; 07: Track delivery).
 
 ### T10 · Product Help — ⬜
 - **Figma:** `1006:5588`, `993:2207`, `1008:2613`, `1008:2722`. **Gap:** G-16. **BR:** 17.

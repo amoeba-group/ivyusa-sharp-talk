@@ -15,7 +15,7 @@ import {
   type IssueFeedItem,
 } from '../../services/orderService';
 import { myPageOrdersUrl } from '../../lib/platform';
-import { Badge, toneForStatus } from '../ui/Badge';
+import { Badge } from '../ui/Badge';
 import { StatusPill } from '../ui/StatusPill';
 import { ToastHost } from '../ui/ToastHost';
 import { showToast } from '../../lib/toast';
@@ -241,6 +241,19 @@ function Row({
   );
 }
 
+/**
+ * Inquiry pill colour by status CODE (BUG-011, ivy-docs T09 D4). These five
+ * are the whole vocabulary; guessing from the word coloured "resolved" gray
+ * and "in_progress" like a fresh inquiry.
+ */
+const ISSUE_STATUS_TONE: Record<string, 'default' | 'warning' | 'success' | 'error' | 'neutral'> = {
+  received: 'default',
+  in_progress: 'warning',
+  resolved: 'success',
+  rejected: 'error',
+  closed: 'neutral',
+};
+
 function IssueFeed({
   issues,
   isLoading,
@@ -274,7 +287,7 @@ function IssueFeed({
             <span className="text-sm font-bold text-gray-900">
               #{i.issueNo} · {t(`orders.issues.type.${i.type}`, { defaultValue: i.type })}
             </span>
-            <Badge tone={toneForStatus(i.status)}>
+            <Badge tone={ISSUE_STATUS_TONE[i.status] ?? 'default'}>
               {t(`orders.issues.status.${i.status}`, { defaultValue: i.status })}
             </Badge>
           </div>

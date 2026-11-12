@@ -19,7 +19,7 @@ const { outputFiles } = buildSync({
   write: false,
   platform: 'neutral',
 });
-const { replyChips, NON_COMMERCE_REPLY_CHIPS } = await import(
+const { replyChips, NON_COMMERCE_REPLY_CHIPS, withStartOver, orderAnswerChips, START_OVER_ID } = await import(
   `data:text/javascript,${encodeURIComponent(outputFiles[0].text)}`
 );
 
@@ -63,4 +63,23 @@ test('no scenario buttons → only the agent chip, never the store chips', () =>
 test('a disabled button is not offered', () => {
   const chips = replyChips(false, [{ ...PARTNER[0], enabled: false }, PARTNER[1]], LABELS);
   assert.deepEqual(ids(chips), ['partner_check_in', 'agent_connect']);
+});
+
+// ivy-docs T09 D3 (SPEC BR-12): every scripted step ends with a way back to the menu.
+test('withStartOver appends Start over to a scripted reply, once', () => {
+  const chips = [{ id: 'refund_policy', label: 'Refund policy' }];
+  assert.deepEqual(withStartOver(chips, 'Start over').map((c) => c.id), ['refund_policy', START_OVER_ID]);
+  const again = withStartOver(withStartOver(chips, 'Start over'), 'Start over');
+  assert.equal(again.filter((c) => c.id === START_OVER_ID).length, 1);
+});
+
+test('withStartOver leaves a reply without chips alone (a plain answer is not a scenario step)', () => {
+  assert.deepEqual(withStartOver([], 'Start over'), []);
+});
+
+// SCR-IVY-11: Track delivery · Cancel order · Start over.
+test('orderAnswerChips: three chips with orders, only Start over without', () => {
+  const labels = { track: 'Track delivery', cancel: 'Cancel order', startOver: 'Start over' };
+  assert.deepEqual(orderAnswerChips(true, labels).map((c) => c.label), ['Track delivery', 'Cancel order', 'Start over']);
+  assert.deepEqual(orderAnswerChips(false, labels).map((c) => c.id), [START_OVER_ID]);
 });

@@ -85,6 +85,15 @@ export const ja: Translation = {
     citations: '参照した情報',
     watchVideo: '動画を見る',
     inputPlaceholder: 'メッセージを入力…',
+    /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
+    startOver: '最初に戻る',
+    startOverLead: 'ほかに何をお手伝いしましょうか？',
+    /** After the My Orders answer (SCR-IVY-11). */
+    orderAnswer: {
+      followUp: 'ほかにお手伝いできることはありますか？',
+      trackDelivery: '配送状況を確認',
+      cancelOrder: '注文をキャンセル',
+    },
     send: '送信',
     sendFailed: '申し訳ございません。送信できませんでした。もう一度お試しください。',
     endChat: 'チャットを終了',

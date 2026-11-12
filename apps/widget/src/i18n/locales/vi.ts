@@ -85,6 +85,15 @@ export const vi: Translation = {
     citations: 'Nguồn tham khảo',
     watchVideo: 'Xem video',
     inputPlaceholder: 'Nhập tin nhắn…',
+    /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
+    startOver: 'Bắt đầu lại',
+    startOverLead: 'Tôi có thể giúp gì thêm cho bạn?',
+    /** After the My Orders answer (SCR-IVY-11). */
+    orderAnswer: {
+      followUp: 'Bạn cần hỗ trợ thêm gì không?',
+      trackDelivery: 'Theo dõi giao hàng',
+      cancelOrder: 'Huỷ đơn hàng',
+    },
     send: 'Gửi',
     sendFailed: 'Rất tiếc, tin nhắn chưa gửi được. Vui lòng thử lại.',
     endChat: 'Kết thúc',

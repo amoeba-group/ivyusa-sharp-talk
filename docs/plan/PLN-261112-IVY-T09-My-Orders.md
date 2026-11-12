@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt.** Chưa sửa code. Câu hỏi ở §7 |
+| Trạng thái | ✅ **Đã duyệt 2026-11-12** và đã làm, xem [RPT-261112-T09](../implementation/RPT-261112-IVY-T09-My-Orders.md). Trả lời §7: (1) ok; (2) **a**, Track delivery → chip Delivery; (3) **a**, menu hiện lại ở cuối; chủ dự án gửi ảnh `1006:5530` |
 | Task | [ivy-docs/TASKS.md T09](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-11 · G-15 · BR-12 · phần còn lại của **BUG-011** (danh sách đơn, feed inquiry) |
 | Figma | `1006:5530`. Figma MCP vẫn hết lượt gọi; dựa vào SPEC. Nếu tiện, gửi ảnh frame này như T04 / T08 |
 | TC | TC-09-01..04 ([e2e/tests/09-my-orders.spec.ts](../../e2e/tests/09-my-orders.spec.ts)), baseline **1/4** (01 xanh) |

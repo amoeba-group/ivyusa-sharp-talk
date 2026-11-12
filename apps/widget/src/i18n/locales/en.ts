@@ -86,6 +86,15 @@ export const en = {
     citations: 'Knowledge referenced',
     watchVideo: 'Watch video',
     inputPlaceholder: 'Type a message…',
+    /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
+    startOver: 'Start over',
+    startOverLead: 'What else can I help you with?',
+    /** After the My Orders answer (SCR-IVY-11). */
+    orderAnswer: {
+      followUp: 'Do you need anything else?',
+      trackDelivery: 'Track delivery',
+      cancelOrder: 'Cancel order',
+    },
     send: 'Send',
     sendFailed: "Sorry, that didn't go through. Please try again.",
     attachment: {

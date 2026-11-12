@@ -85,6 +85,15 @@ export const ko: Translation = {
     citations: '지식참조',
     watchVideo: '영상 보기',
     inputPlaceholder: '메시지를 입력하세요…',
+    /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
+    startOver: '처음으로',
+    startOverLead: '무엇을 더 도와드릴까요?',
+    /** After the My Orders answer (SCR-IVY-11). */
+    orderAnswer: {
+      followUp: '더 도움이 필요하신가요?',
+      trackDelivery: '배송 조회',
+      cancelOrder: '주문 취소',
+    },
     send: '보내기',
     sendFailed: '전송하지 못했습니다. 다시 시도해 주세요.',
     attachment: {

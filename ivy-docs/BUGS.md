@@ -17,13 +17,14 @@
 | BUG-008 | `scripts/manual-screenshots.mjs` trỏ widget sang :5175 (cổng PWA) | Tooling | 🟡 | Open | — |
 | BUG-009 | Lưu review thất bại bị nuốt lỗi, shopper không được báo gì | Widget | 🟠 | Fixed (T06) | T06 |
 | BUG-010 | Điện thoại/email hỗ trợ của IVY hard-code trong cả 6 locale → hiện cho **mọi tenant** | Widget / Multi-tenant | 🟠 | Open | T11 |
-| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed: feed thông báo (T02), thẻ giao hàng (T03), Order Detail (T04), chip Review (T06). Còn: danh sách đơn, feed inquiry (T09) | T02 · T03 · T04 · T06 · T09 |
+| BUG-011 | Pill trạng thái hiển thị text server **chưa dịch**, màu đoán theo chữ | Widget / i18n | 🟡 | Fixed: feed thông báo (T02), thẻ giao hàng (T03), Order Detail (T04), chip Review (T06), thẻ đơn trong chat + danh sách đơn + feed inquiry (T09) | T02 · T03 · T04 · T06 · T09 |
 | BUG-012 | `radius:check` và `check-migrations --check` báo đỏ trên Windows dù CI (Linux) xanh | Tooling | 🟡 | Open (CI không ảnh hưởng) | T00-d |
 | BUG-014 | E2E chập chờn: "apiResponse.json: Response has been disposed" làm fail test đã pass | E2E harness | 🟡 | Fixed (T01) | T01 |
 | BUG-015 | Feed thông báo hiện mỗi sự kiện **tới 5 lần** (1 dòng cho mỗi kênh in_app/email/sms/web_push/push) và badge đếm cả 5 | API | 🟠 | Fixed (T02) | T02 |
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
 | BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng (TC-05-04 cùng lỗi) | E2E harness | 🟡 | Fixed (T03, T05, T06) | T03 · T05 · T06 |
 | BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
+| BUG-024 | Khung trả lời trong chat (My Orders, Contact, Affiliate…) nằm ở **một ô cố định cuối luồng**, nên tin nhắn gửi sau hiện **phía trên** nó | Widget | 🟡 | Fixed cho My Orders + Start over (T09). Contact, Affiliate: T11 / T12 | T09 · T11 · T12 |
 | BUG-022 | Lưu nút trả lời nhanh trong console **làm mất câu hỏi** (`message`) của nút "Send a message": `sanitize()` dựng lại nút mà không có trường này, nên nút luôn gửi nhãn thay câu đã nhập | API | 🟠 | Fixed (T08) | T08 |
 | BUG-023 | Lần đầu mở Chat (khách đã đăng nhập, chưa có theme cache): menu nút vẽ **kiểu mặc định** (lưới 2 cột xanh) rồi mới đổi sang kiểu của tenant khi session/ensure về | Widget | 🟡 | Fixed (T08) | T08 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
@@ -122,6 +123,12 @@
 - **Nguyên nhân:** tab đã mở thì vẫn được gắn trong trang, chỉ bị ẩn (`WidgetPanel`, để giữ cuộc chat). Strict mode của Playwright đếm cả phần tử bị ẩn, và `getByText` mặc định so khớp một phần chuỗi.
 - **Fix:** TC-04-04 tìm trong `getByRole('tabpanel')`, tức chỉ tab đang hiện. TC-04-03 dùng `exact: true`. T04 ×3: 21/21.
 - **Phòng ngừa:** chữ có thể xuất hiện ở tab khác thì thu phạm vi vào tab đang hiện, hoặc so khớp chính xác.
+
+## BUG-024 · Khung trả lời trong chat chen lên trên tin nhắn mới
+- **Hiện tượng:** khung `inline` (My Orders, Contact, Affiliate, đăng nhập…) render **sau** danh sách tin nhắn, ở một ô duy nhất. Bấm My Orders rồi "Cancel order" thì câu trả lời huỷ đơn hiện **phía trên** thẻ đơn.
+- **Fix (T09):** My Orders và menu của Start over là "thread insert" gắn với số tin nhắn lúc xuất hiện (`at`). Chúng render ngay sau tin nhắn thứ `at`, nên tin nhắn sau nằm bên dưới. Chip của insert chỉ hiện khi nó là thứ cuối cùng trong luồng.
+- **Còn:** Contact, Affiliate, Callback… vẫn dùng ô cũ. Chuyển sang insert khi làm T11 / T12.
+- **Phòng ngừa:** thứ gì "nói" trong luồng chat phải có vị trí trong luồng, không phải một ô cố định cuối luồng.
 
 ## BUG-022 · Lưu nút làm mất câu hỏi của nút
 - **Hiện tượng:** console → AI Settings → nút có Action "Send a message" có ô câu hỏi (PLN-261001). Nhập câu hỏi rồi Save thì câu hỏi biến mất. Đã thử thật ở local: `PUT /ai-config` có `message`, DB lưu nút **không có** `message`.

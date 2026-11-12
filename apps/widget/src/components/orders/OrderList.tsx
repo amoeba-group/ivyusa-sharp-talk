@@ -11,6 +11,7 @@ import { useOrders } from '../../hooks/useOrders';
 import { myPageOrdersUrl } from '../../lib/platform';
 import { formatMoney } from '../../lib/format';
 import { Badge, toneForStatus } from '../ui/Badge';
+import { StatusPill } from '../ui/StatusPill';
 import { Spinner } from '../ui/Spinner';
 import { TrackingStepperH } from './TrackingStepperH';
 import { isInTransit, statusLabel } from './order-status';
@@ -64,7 +65,14 @@ function OrderRow({
     >
       <div className="flex w-full items-start justify-between gap-2">
         <span className="text-base font-bold text-gray-900">{order.orderNumber}</span>
-        {label && <Badge tone={toneForStatus(order.statusInternal ?? order.statusUi)}>{label}</Badge>}
+        {/* By status code, translated — the pill every other screen uses
+            (BUG-011, ivy-docs T09 D4). The old guess only for a row the API
+            sent without a UI status. */}
+        {order.statusUi ? (
+          <StatusPill badge={order.statusUi} />
+        ) : (
+          label && <Badge tone={toneForStatus(order.statusInternal)}>{label}</Badge>
+        )}
       </div>
 
       <p className="mt-1 text-sm text-gray-700">{summary}</p>
