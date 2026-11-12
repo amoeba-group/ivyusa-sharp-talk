@@ -35,7 +35,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ✅ | TC-10-01..07 |
-| 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ⬜ | TC-11-01..04 |
+| 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T11-Contact-Form.md) | TC-11-01..04 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ⬜ (TC đã xanh 4/4, chỉ còn rà visual/copy) | TC-13-01..04 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ⬜ | TC-14-01..03 |
@@ -235,7 +235,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **TC:** TC-10-01..07 — **7/7** ✅ (06: Shopify không trả lời; 07: chip đã chọn, "Other categories").
 - **Production:** nhập cấu hình theo [GUIDE-261112-IVY-Product-Help-Config](../docs/guide/GUIDE-261112-IVY-Product-Help-Config.md).
 
-### T11 · Contact Support & form — ⬜ (có thể có migration)
+### T11 · Contact Support & form — 🟨 chờ duyệt · [PLN](../docs/plan/PLN-261112-IVY-T11-Contact-Form.md) (có thể có migration)
 - **Figma:** `1006:5650`, `1006:6529`, `1006:6597`. **Gap:** G-17, G-18. **BR:** 14, 15.
 - **Hợp đồng API đề xuất:** `POST /inquiries` nhận thêm `{ name, email, message }` (snake_case DTO, validate email); console hiển thị được inquiry.
 - **Việc cần làm:** kênh liên hệ lấy từ cấu hình tenant (IVY: email; live chat theo Q-15), bỏ hard-code 1588-0000; thẻ "Email inquiry" mở form (Name / Email điền sẵn / Message, nút **Send Message**); gửi xong hiện thẻ "YOUR INQUIRY" + bubble thành công; validate và hiện lỗi khi thiếu/sai.
