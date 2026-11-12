@@ -33,7 +33,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 6 | T05 | Promo — coupon/sự kiện, mã coupon, link | UI · API · console | P1 | T02 | ✅ | TC-05-01..07 |
 | 7 | T06 | Review — copy + toast lỗi lưu review | UI · I18N | P2 | T02 | ✅ | TC-06-01..05 |
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
-| 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ⬜ | TC-09-01..04 |
+| 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | 🟨 chờ duyệt [PLN](../docs/plan/PLN-261112-IVY-T09-My-Orders.md) | TC-09-01..04 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ⬜ | TC-10-01..05 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ⬜ | TC-11-01..04 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
@@ -203,7 +203,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Việc của chủ dự án:** nhập cấu hình theo [GUIDE-261112-IVY-Chat-Home-Config](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md) (khoảng 15 phút).
 - **TC:** TC-08-01..06 — **6/6** ✅.
 
-### T09 · My Orders — ⬜
+### T09 · My Orders — 🟨 chờ duyệt PLN · [PLN](../docs/plan/PLN-261112-IVY-T09-My-Orders.md)
 - **Figma:** `1006:5530`. **Gap:** G-15. **BR:** 12.
 - **Việc cần làm:** `InlineOrderCard` bấm được → Order Detail; follow-up chip **Track delivery · Cancel order · Start over** luôn hiện; chip **Start over** dùng chung cho mọi kịch bản (quay lại menu quick-reply).
 - **TC:** TC-09-01..04.
