@@ -8,6 +8,7 @@ import { Bot, User } from 'lucide-react';
 import { useWidgetStore } from '../../store/widgetStore';
 import { assetUrl } from '../../lib/branding';
 import { pickCopy } from '../../lib/copy';
+import { splitScriptSteps } from '../../lib/script-steps';
 
 /**
  * Citation URLs come from tenant-editable KB sources — only allow http(s) so a
@@ -46,6 +47,28 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
     : isAgent
       ? message.senderName ?? pickCopy(widgetCopy?.agentSenderName, language) ?? null
       : null;
+  // Step cards (ivy-docs T12): only a scripted turn — the one kind that carries
+  // chips. An AI or agent answer that numbers its points keeps its plain list.
+  const steps = !mine && message.quickReplies?.length ? splitScriptSteps(message.body ?? '') : null;
+  /** One chat bubble; `withSender` puts the avatar-row name in it (first bubble only). */
+  const bubble = (text: string, withSender: boolean) => (
+    <div
+      className={[
+        // Evenly rounded on all four corners: the Master Shots drop the
+        // speech-bubble tail entirely (frames 53/57/61).
+        'st-message break-words rounded-st-lg px-3.5 py-2.5 text-sm',
+        mine ? 'whitespace-pre-wrap' : '',
+        mine ? 'st-message-user bg-primary-500 text-on-primary' : 'st-message-bot bg-gray-100 text-gray-800',
+      ].join(' ')}
+    >
+      {withSender && avatarRow && senderLabel && (
+        <div className="st-sender mb-0.5 text-xs font-semibold text-primary-600">{senderLabel}</div>
+      )}
+      {/* The shopper's own words stay exactly as typed (PLN-261008 D1);
+          AI, agent and system messages show their markdown as formatting. */}
+      {mine ? text : <RichText text={text} />}
+    </div>
+  );
   return (
     <div className={`group flex ${mine ? 'justify-end' : 'justify-start'} ${avatarRow ? 'gap-2' : ''}`}>
       {avatarRow && (
@@ -83,24 +106,29 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         )}
         {/* A file sent with no words is a valid turn (PLN-260814) — render the
             attachments alone rather than an empty bubble above them. */}
-        {message.body?.trim() && (
-          <div
-            className={[
-              // Evenly rounded on all four corners: the Master Shots drop the
-              // speech-bubble tail entirely (frames 53/57/61).
-              'st-message break-words rounded-st-lg px-3.5 py-2.5 text-sm',
-              mine ? 'whitespace-pre-wrap' : '',
-              mine ? 'st-message-user bg-primary-500 text-on-primary' : 'st-message-bot bg-gray-100 text-gray-800',
-            ].join(' ')}
-          >
-            {avatarRow && senderLabel && (
-              <div className="st-sender mb-0.5 text-xs font-semibold text-primary-600">{senderLabel}</div>
-            )}
-            {/* The shopper's own words stay exactly as typed (PLN-261008 D1);
-                AI, agent and system messages show their markdown as formatting. */}
-            {mine ? message.body : <RichText text={message.body} />}
-          </div>
-        )}
+        {message.body?.trim() &&
+          (steps ? (
+            // A scripted reply with numbered steps (ivy-docs T12): its opening
+            // line, the design's step cards, its closing line.
+            <div className="space-y-2">
+              {steps.before && bubble(steps.before, true)}
+              <ol className="space-y-2 pl-3" data-testid="script-steps">
+                {steps.steps.map((s, i) => (
+                  <li key={i} className="st-step rounded-st-lg bg-primary-50 px-3.5 py-3">
+                    <p className="text-sm font-semibold text-gray-900">{s.title}</p>
+                    {s.text && (
+                      <div className="mt-0.5 text-xs text-gray-600">
+                        <RichText text={s.text} />
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ol>
+              {steps.after && bubble(steps.after, !steps.before)}
+            </div>
+          ) : (
+            bubble(message.body, true)
+          ))}
         {message.attachments && message.attachments.length > 0 && (
           <MessageAttachments attachments={message.attachments} mine={mine} />
         )}

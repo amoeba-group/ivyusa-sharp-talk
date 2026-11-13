@@ -93,10 +93,33 @@ const IVY_SCENARIO_OVERRIDES: Record<string, ScenarioOverride> = {
       ZH: '如需取消订单，请尽快发送邮件至 hello@ivyusa.com。订单一经提交便无法修改；如需更改，请先取消原订单（如仍可取消），再重新下单。',
     },
   },
+  // ivy-docs T12 §8-4a: the design's own copy (SCR-IVY-14, KO verbatim) — the
+  // IVY Beauty name and the 10% rate are IVY's terms, so they live here rather
+  // than in the shipped script. Every language is set: an override in one
+  // language would otherwise stand in for all of them.
+  affiliate: {
+    utterance: {
+      EN: 'How to become an Affiliate?',
+      ES: '¿Cómo ser afiliado?',
+      KO: '제휴 파트너는 어떻게 되나요?',
+      VI: 'Làm sao để trở thành affiliate?',
+      JA: 'アフィリエイトになるには？',
+      ZH: '如何成为推广合作伙伴？',
+    },
+    reply: {
+      EN: 'Become an IVY Beauty affiliate partner! 💼\n\n1. **Submit an application** — Fill out a short form.\n2. **Review (1–3 business days)** — Our team will review it and email you.\n3. **Start earning** — Share your own link → earn 10% on every sale!\n\nIf you have any questions, just ask!',
+      ES: '¡Hazte socio afiliado de IVY Beauty! 💼\n\n1. **Envía tu solicitud** — Completa un formulario breve.\n2. **Revisión (1–3 días hábiles)** — Nuestro equipo la revisará y te escribirá por correo.\n3. **Empieza a ganar** — Comparte tu enlace personal → ¡gana un 10% por cada venta!\n\nSi tienes alguna pregunta, ¡pregúntanos!',
+      KO: 'IVY Beauty 제휴 파트너가 되어주세요! 💼\n\n1. **신청서 제출** — 간단한 양식을 작성해주세요.\n2. **심사 (1–3 영업일)** — 팀에서 검토 후 이메일로 안내드려요.\n3. **활동 시작 & 수익** — 전용 링크 공유 → 판매 시 10% 적립!\n\n궁금한 점이 있으시면 언제든 물어봐주세요!',
+      VI: 'Hãy trở thành đối tác affiliate của IVY Beauty! 💼\n\n1. **Gửi đơn đăng ký** — Điền một biểu mẫu ngắn.\n2. **Xét duyệt (1–3 ngày làm việc)** — Đội ngũ IVY sẽ xem xét và gửi email cho bạn.\n3. **Bắt đầu kiếm tiền** — Chia sẻ đường link riêng → nhận 10% cho mỗi đơn hàng!\n\nNếu có câu hỏi, bạn cứ hỏi nhé!',
+      JA: 'IVY Beautyのアフィリエイトパートナーになりませんか？💼\n\n1. **申し込み** — 簡単なフォームにご記入ください。\n2. **審査（1〜3営業日）** — チームが確認し、メールでご案内します。\n3. **活動開始・報酬** — 専用リンクをシェア → 販売ごとに10%を還元！\n\nご不明な点があれば、いつでもお尋ねください！',
+      ZH: '欢迎成为 IVY Beauty 的推广合作伙伴！💼\n\n1. **提交申请** — 填写一份简短的表格。\n2. **审核（1–3 个工作日）** — 我们的团队审核后会通过邮件通知您。\n3. **开始赚取收益** — 分享专属链接 → 每笔销售可获得 10% 返利！\n\n如有任何问题，欢迎随时咨询！',
+    },
+  },
 };
 
 /**
- * IVY's seven quick replies, in design order (ivy-docs T08 §4, Figma 1008:2291).
+ * IVY's seven design quick replies, in design order (ivy-docs T08 §4, Figma
+ * 1008:2291), plus Affiliate at the end (T12 §8-3a).
  * KO from the design; EN per SPEC Q-07; the rest translated from EN. The KO
  * design keeps "Contact Support" in English.
  */
@@ -116,6 +139,10 @@ const IVY_SCENARIO_BUTTONS: ScenarioButton[] = [
     label: { EN: 'Feedback', ES: 'Comentarios', KO: '피드백', VI: 'Góp ý', JA: 'ご意見', ZH: '意见反馈' } },
   { id: 'contact_support', action: 'contact_support', enabled: true, emoji: '🤝',
     label: { EN: 'Contact Support', ES: 'Contactar con soporte', KO: 'Contact Support', VI: 'Liên hệ hỗ trợ', JA: 'サポートに問い合わせ', ZH: '联系客服' } },
+  // ivy-docs T12 §8-3a: the design draws the Affiliate scenario (SCR-IVY-14)
+  // but no way into it; the owner chose an eighth button at the end.
+  { id: 'affiliate', action: 'affiliate', enabled: true, emoji: '💼',
+    label: { EN: 'Affiliate', ES: 'Afiliados', KO: '제휴', VI: 'Cộng tác viên', JA: 'アフィリエイト', ZH: '推广合作' } },
 ];
 
 const IVY_WIDGET_PRESET = {
@@ -372,8 +399,9 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
           'Answer only from the knowledge base; never invent policies.',
           'Offer to connect a human agent when unsure or out of scope.',
         ],
-        // The seeded tenant is IVY: its seven design quick replies (T08) and
-        // its own return / cancel answers (T10).
+        // The seeded tenant is IVY: its seven design quick replies (T08) plus
+        // Affiliate (T12), its own return / cancel answers (T10) and its
+        // affiliate terms (T12).
         scenarioButtons: IVY_SCENARIO_BUTTONS,
         scenarioOverrides: IVY_SCENARIO_OVERRIDES,
       }),

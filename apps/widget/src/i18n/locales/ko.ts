@@ -114,9 +114,11 @@ export const ko: Translation = {
     endConfirm: '상담을 종료할까요?',
     endCancel: '취소',
     endedNotice: '상담이 종료되었습니다. 새 메시지를 보내면 새 상담이 시작됩니다.',
-    csatQuestion: '상담에 만족하셨나요?',
-    csatThanks: '평가해 주셔서 감사합니다 🙏',
-    csatDismiss: '닫기',
+    // T12 (Figma 1006:6110): the question above the card, then the card's title.
+    csatPrompt: '오늘 상담이 도움이 되셨으면 좋겠습니다. 상담은 어떠셨나요?',
+    csatTitle: '상담 만족도를 선택해주세요',
+    csatThanks: '소중한 의견 감사합니다',
+    csatDismiss: '건너뛰기',
     csatStar: '별 {{count}}개',
     connectingAgent: '상담원에게 연결하고 있습니다. 잠시만 기다려 주세요…',
     callback: {
@@ -225,9 +227,10 @@ export const ko: Translation = {
     threadLoadError: '이전 대화를 불러오지 못했습니다',
     threadNone: '이전 대화가 없습니다',
     endedThanks: '이용해 주셔서 감사합니다!',
+    // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
-      1: '매우 불만족',
-      2: '불만족',
+      1: '불만족',
+      2: '다소 불만족',
       3: '보통',
       4: '만족',
       5: '매우 만족',
@@ -290,6 +293,9 @@ export const ko: Translation = {
       emailPlaceholder: '이메일을 입력하세요',
       message: '문의 내용',
       messagePlaceholder: '어떤 도움이 필요하신지 적어주세요',
+      // Affiliate "Apply now" (T12 §8-2a): the same form, for an application.
+      affiliateLead: '정보를 남겨주시면 제휴 프로그램에 대해 이메일로 안내드릴게요.',
+      affiliateMessage: '제휴 프로그램에 신청하고 싶어요.\n홍보할 채널 (인스타그램, 틱톡, 블로그 등): ',
       send: '문의 보내기',
       sending: '보내는 중…',
       errors: {
@@ -314,18 +320,6 @@ export const ko: Translation = {
       successBody: '고객센터에서 문의 내용을 확인한 후 입력하신 이메일로 답변드리겠습니다.',
       successHint: '메일함에서 답변을 확인해 주세요.',
     },
-  },
-
-  affiliate: {
-    title: '제휴 프로그램',
-    steps: [
-      '프로그램 참여 신청',
-      '심사는 영업일 기준 1~3일 소요',
-      '추천 시 10% 수수료 지급',
-    ],
-    apply: '지금 신청',
-    pending: '신청서가 심사 중입니다.',
-    approved: '제휴가 승인되었습니다!',
   },
 
   orders: {

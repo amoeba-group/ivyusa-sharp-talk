@@ -17,8 +17,9 @@ import {
  *
  * - `POST /session/ensure` goes to the REAL API and is then patched, so the widget keeps the
  *   tenant's real copy/theme while the test controls identity, tabs and consent.
- * - Customer-bound endpoints (notifications, orders, affiliate, inquiries, CSAT…) are served
- *   from an in-memory fake seeded with Figma data. Everything else passes through to the API.
+ * - Customer-bound endpoints (notifications, orders, inquiries…) are served from an
+ *   in-memory fake seeded with Figma data. Everything else passes through to the API;
+ *   chat end and rating pass through too, but are recorded (T12).
  * - Every mocked call is recorded in `calls` so tests can assert what the widget sent.
  */
 export interface MockOptions {
@@ -28,7 +29,7 @@ export interface MockOptions {
   authenticated?: boolean;
   /** Pretend consent was already given (hides the consent banner). */
   consent?: 'granted' | 'pending';
-  /** Include the My Orders / Affiliate scenario buttons besides the 7 design quick replies. */
+  /** Include the My Orders scenario button besides IVY's quick replies (7 design + Affiliate, T12). */
   scenarioFlows?: boolean;
   /** Serve the IVY quick-reply config instead of the tenant's real one. */
   mockScenario?: boolean;
@@ -244,25 +245,17 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
       return route.fulfill({ status: 201, json: ok({ subscribed: true }) });
     }
 
-    // ── Affiliate / contact / CSAT ─────────────────────────────────────────────
-    if (method === 'GET' && path === '/affiliate/status') {
-      return route.fulfill({ json: ok({ status: 'none', linkCode: null, commissionRate: 10 }) });
-    }
-    if (method === 'POST' && path === '/affiliate/apply') {
-      record(req, path, url);
-      return route.fulfill({ status: 201, json: ok({ status: 'pending', linkCode: null, commissionRate: 10 }) });
-    }
+    // ── Contact / CSAT ─────────────────────────────────────────────────────────
     if (method === 'POST' && path === '/inquiries') {
       record(req, path, url);
       return route.fulfill({ status: 201, json: ok({ id: '9001', status: 'open' }) });
     }
-    if (method === 'POST' && path === '/chat/csat') {
+    // End and rating go to the real API, recorded (T12): a mocked end left the
+    // real conversation open, so the next 5 s poll reported it live again and
+    // took the rating card away mid-test.
+    if (method === 'POST' && (path === '/chat/csat' || path === '/chat/end')) {
       record(req, path, url);
-      return route.fulfill({ status: 201, json: ok({ ok: true }) });
-    }
-    if (method === 'POST' && path === '/chat/end') {
-      record(req, path, url);
-      return route.fulfill({ status: 201, json: ok({ ended: true, canRate: true }) });
+      return route.fallback();
     }
 
     // ── Privacy (identified shopper) ───────────────────────────────────────────

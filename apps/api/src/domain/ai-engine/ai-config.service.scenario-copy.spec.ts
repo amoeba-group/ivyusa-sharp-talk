@@ -1,5 +1,5 @@
 import { AiConfigService } from './ai-config.service';
-import { SCENARIOS } from '../chat/scenario-scripts';
+import { SCENARIOS, isValidFollowUpId } from '../chat/scenario-scripts';
 
 /**
  * The shipped scenario copy (PLN-260903).
@@ -48,6 +48,23 @@ describe('AiConfigService — scenario copy defaults & override keys', () => {
     expect(shipping).toMatchObject({ via: 'button', buttonAction: 'delivery_status' });
     // Follow-up-only scripts are listed too — invisible copy cannot be fixed.
     expect(defaults.scripts.find((s) => s.action === 'refund_policy')?.via).toBe('follow_up');
+  });
+
+  it('ships the affiliate scripts (ivy-docs T12): reached from the button, chips that all lead somewhere', () => {
+    const { svc } = build();
+    const scripts = svc.getDefaults().scripts;
+    expect(scripts.find((s) => s.action === 'affiliate')).toMatchObject({ via: 'button', buttonAction: 'affiliate' });
+    expect(scripts.find((s) => s.action === 'affiliate_details')?.via).toBe('follow_up');
+    expect(SCENARIOS.affiliate.followUps.map((f) => f.id)).toEqual(['affiliate_apply', 'affiliate_details', 'end_chat']);
+    expect(SCENARIOS.affiliate_details.followUps.map((f) => f.id)).toEqual(['affiliate_apply', 'end_chat']);
+    // Every shipped chip must do something on tap — a dead id answers with "sending failed".
+    for (const [action, script] of Object.entries(SCENARIOS)) {
+      for (const f of script.followUps) expect([action, isValidFollowUpId(f.id)]).toEqual([action, true]);
+    }
+    // The design's step cards: three numbered "**Title** — text" lines in every language.
+    for (const text of Object.values(SCENARIOS.affiliate.reply)) {
+      expect(text.split('\n').filter((l) => /^\d\. \*\*.+\*\* — .+/.test(l))).toHaveLength(3);
+    }
   });
 
   it('stores an edit made on the delivery button under the script the runtime reads', async () => {

@@ -101,6 +101,7 @@
     "utterance": "Customer's line",
     "utteranceHint": "Shown in the thread as if the customer had typed it when they press the button.",
     "defaultShownHint": "The shipped text is filled in. Edit it to override; leave it as is and nothing is saved.",
+    "stepsHint": "Numbered lines show as step cards in the widget, e.g. 1. **Title** — description",
     "edited": "edited",
     "revert": "Restore defaults",
     "followUpsDefault": "Built-in chips: {{chips}}",

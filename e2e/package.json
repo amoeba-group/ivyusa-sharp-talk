@@ -10,7 +10,7 @@
     "test:headed": "playwright test --headed",
     "test:prod": "cross-env E2E_TARGET=prod playwright test",
     "test:task": "playwright test --project=desktop --grep",
-    "test:ci": "playwright test --project=desktop --grep \"@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T09|@T10|@T11|@T13\"",
+    "test:ci": "playwright test --project=desktop --grep \"@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T09|@T10|@T11|@T12|@T13\"",
     "report": "playwright show-report",
     "install:browsers": "playwright install chromium"
   },

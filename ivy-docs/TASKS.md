@@ -36,7 +36,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ✅ | TC-10-01..07 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ✅ (prod: SQL, email hỗ trợ, SMTP, mail thử — 2026-11-13) | TC-11-01..08 |
-| 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
+| 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261113-IVY-Affiliate-Config.md)) | TC-12-01..06 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ⬜ (TC đã xanh 4/4, chỉ còn rà visual/copy) | TC-13-01..04 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ⬜ | TC-14-01..03 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ⬜ | TC-15-01..04 |
@@ -253,10 +253,17 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **TC:** TC-11-01..08 — **8/8** ✅ (05: thẻ live chat khi tenant bật; 06: gửi lỗi; 07: tenant không cấu hình; 08: gửi thật lên API).
 - **Production:** chạy SQL, rồi kiểm cấu hình theo [GUIDE-261113-IVY-Contact-Support-Config](../docs/guide/GUIDE-261113-IVY-Contact-Support-Config.md).
 
-### T12 · Affiliate + CSAT — ⬜
-- **Figma:** `1006:5990…6290`. **Gap:** G-19, G-20. **BR:** 12, 13.
-- **Việc cần làm:** 3 bước có mô tả (copy tenant); chip **Apply now · Learn more · Start over · End**; End → `POST /chat/end` → thẻ CSAT **4 mức** (Q-12: map 1·3·4·5) + **Skip**; đánh giá → `POST /chat/csat` → "Thank you for your feedback" → "The chat has ended" (thứ tự này). Test-id `csat-card`.
-- **TC:** TC-12-01..04.
+### T12 · Affiliate + CSAT — ✅ (2026-11-13) · [PLN](../docs/plan/PLN-261113-IVY-T12-Affiliate-CSAT.md) · [RPT](../docs/implementation/RPT-261113-IVY-T12-Affiliate-CSAT.md)
+- **Figma:** `1006:5990…6290`. **Gap:** G-19, G-20. **BR:** 12, 13. **Bug:** BUG-024 (phần Affiliate), BUG-025.
+- **Chủ dự án duyệt (2026-11-13):** `1. ok 2. a 3. a 4. a` — Apply now mở form liên hệ; thêm nút thứ 8 "💼 Affiliate"; câu chữ theo thiết kế (IVY Beauty, 10%).
+- **Đã làm:**
+  - Affiliate là kịch bản trên server (`affiliate`, `affiliate_details`): cuộc chat được ghi lại, có cái để đánh giá sau End, nhân viên thấy trong lịch sử. 3 dòng `1. **Tên** — mô tả` của câu trả lời vẽ thành 3 thẻ bước.
+  - Câu chữ sửa ở console → AI Settings → Built-in conversations. IVY: seed cho DB mới, production theo [GUIDE-261113-IVY-Affiliate-Config](../docs/guide/GUIDE-261113-IVY-Affiliate-Config.md).
+  - Chip Apply now · Learn more · Start over · End (Start over đứng trước End). Apply now = form liên hệ T11 điền sẵn → Inquiries + mail.
+  - End → câu hỏi → thẻ `csat-card` 4 mặt (lưu 1·3·4·5) + Skip → "Thank you for your feedback" → "The chat has ended". Chip `end_chat` hết báo lỗi (BUG-025).
+  - Bỏ thẻ Affiliate cũ (`AffiliateCard`) và lời gọi `/affiliate/*` của widget.
+  - Thêm `@T12` vào `test:ci`.
+- **TC:** TC-12-01..06.
 
 ### T13 · Settings / Privacy — ⬜
 - **Figma:** `1004:1367`, `1004:1447`. **Gap:** G-21.

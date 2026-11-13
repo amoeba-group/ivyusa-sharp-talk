@@ -101,6 +101,7 @@
     "utterance": "客户的话",
     "utteranceHint": "点击按钮后，会像客户自己输入的一样显示在对话中。",
     "defaultShownHint": "已填入默认文案。修改即覆盖；保持原样则不会保存。",
+    "stepsHint": "编号的行会在小组件中显示为步骤卡片，例如：1. **标题** — 说明",
     "edited": "已修改",
     "revert": "恢复默认",
     "followUpsDefault": "默认后续按钮：{{chips}}",

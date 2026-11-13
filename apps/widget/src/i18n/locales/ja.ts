@@ -100,9 +100,11 @@ export const ja: Translation = {
     endConfirm: 'この会話を終了しますか。',
     endCancel: 'キャンセル',
     endedNotice: 'この会話は終了しました。メッセージを送信すると新しい会話が始まります。',
-    csatQuestion: '今回のチャットにどの程度ご満足いただけましたか。',
-    csatThanks: 'ご意見ありがとうございます 🙏',
-    csatDismiss: '閉じる',
+    // T12 (Figma 1006:6110): the question above the card, then the card's title.
+    csatPrompt: '本日のご相談がお役に立てば幸いです。ご相談はいかがでしたか？',
+    csatTitle: '満足度をお選びください',
+    csatThanks: '貴重なご意見をありがとうございます',
+    csatDismiss: 'スキップ',
     csatStar: '星{{count}}つ',
     connectingAgent: 'サポート担当者におつなぎしています。少々お待ちください…',
     callback: {
@@ -219,7 +221,7 @@ export const ja: Translation = {
       exchange: '商品を交換または返品したいです。',
       restock: 'この商品が再入荷したら知らせてください。',
     },
-    endedTitle: 'チャットが終了しました',
+    endedTitle: '相談が終了しました',
     // Earlier conversations of the signed-in account (PLN-261022 stage 2).
     threadLoadPrevious: '以前の会話を表示',
     threadLoading: '読み込み中…',
@@ -227,11 +229,12 @@ export const ja: Translation = {
     threadColleagues: '同じ会社の同僚による以前のお問い合わせ {{count}} 件は担当者が確認できます。',
     threadLoadError: '以前の会話を読み込めませんでした',
     threadNone: '以前の会話はありません',
-    endedThanks: 'ご利用ありがとうございました！',
+    endedThanks: 'ご利用いただきありがとうございました！',
+    // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
-      1: 'とても不満',
-      2: '不満',
-      3: 'ふつう',
+      1: '不満',
+      2: 'やや不満',
+      3: '普通',
       4: '満足',
       5: 'とても満足',
     },
@@ -294,6 +297,9 @@ export const ja: Translation = {
       emailPlaceholder: 'メールアドレスを入力',
       message: 'お問い合わせ内容',
       messagePlaceholder: 'どのようなご用件かご記入ください',
+      // Affiliate "Apply now" (T12 §8-2a): the same form, for an application.
+      affiliateLead: 'ご連絡先をご記入いただければ、アフィリエイトプログラムについてメールでご案内します。',
+      affiliateMessage: 'アフィリエイトプログラムに申し込みたいです。\n紹介する場所（Instagram、TikTok、ブログなど）：',
       send: '送信する',
       sending: '送信中…',
       errors: {
@@ -318,18 +324,6 @@ export const ja: Translation = {
       successBody: 'サポートチームが内容を確認し、ご入力のメールアドレスにご返信いたします。',
       successHint: '返信はメールの受信箱をご確認ください。',
     },
-  },
-
-  affiliate: {
-    title: 'アフィリエイトプログラム',
-    steps: [
-      'プログラムへの参加を申し込む',
-      '審査は1〜3営業日',
-      'ご紹介につき10%の報酬を獲得',
-    ],
-    apply: '今すぐ申し込む',
-    pending: 'お申し込みを審査中です。',
-    approved: 'アフィリエイトとして承認されました。',
   },
 
   orders: {

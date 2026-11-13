@@ -21,37 +21,31 @@ import {
  *                one [Submit]. Nothing is sent until the button, because the
  *                three answers travel together.
  *
- * The design shows FOUR faces; this keeps FIVE (PLN §7 D-7). The rating is
- * persisted on a 1–5 scale and `csat_avg` is already being recorded against it,
- * so dropping to four would either leave a hole in the scale or silently change
- * what every historical average means. The emoji treatment is the part that was
- * asked for; the scale behind it is data.
+ * `rating` shows the design's FOUR faces (ivy-docs T12, Figma 1006:6110):
+ * 😞 Dissatisfied · 😐 Neutral · 😊 Satisfied · 😍 Very satisfied, stored as
+ * 1 · 3 · 4 · 5 (SPEC Q-12). The scale stays 1–5 because `csat_avg` is already
+ * recorded against it — four faces on the same scale keep every average, old
+ * and new, comparable. `survey` keeps all five in its segmented box.
  *
- * Dismissal is a first-class outcome, not a failure: skipping removes the card
- * and remembers that decision per conversation, so a shopper who does not want
- * to rate is not asked again every time they reopen the widget.
+ * Skipping is a first-class outcome, not a failure. The parent owns it
+ * (`onSkip`): it remembers the choice per conversation, so a shopper who does
+ * not want to rate is not asked again every time they reopen the widget, and it
+ * shows the "chat has ended" mark in the card's place (BR-13).
  */
 const FACES = ['😞', '😕', '😐', '😊', '😍'];
+/** The design's four faces and the 1–5 value each one stores (Q-12). */
+const RATING_FACES = [1, 3, 4, 5] as const;
 
 export function CsatCard({
-  conversationId,
   mode = 'rating',
   onRate,
+  onSkip,
 }: {
-  conversationId: string;
   mode?: 'rating' | 'survey';
   onRate: (rating: number, survey?: CsatSurveyAnswers) => Promise<void>;
+  onSkip: () => void;
 }) {
   const { t } = useTranslation();
-  const storageKey = `ivy.csat.dismissed.${conversationId}`;
-  const [dismissed, setDismissed] = useState(() => {
-    try {
-      return localStorage.getItem(storageKey) === '1';
-    } catch {
-      // Private mode / blocked storage: showing the card is the safe default.
-      return false;
-    }
-  });
   const [submitted, setSubmitted] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -60,17 +54,6 @@ export function CsatCard({
   const [rating, setRating] = useState<number | null>(null);
   const [reason, setReason] = useState<string | null>(null);
   const [comment, setComment] = useState('');
-
-  if (dismissed) return null;
-
-  const dismiss = () => {
-    try {
-      localStorage.setItem(storageKey, '1');
-    } catch {
-      /* not being able to remember is better than not being able to dismiss */
-    }
-    setDismissed(true);
-  };
 
   const send = async (value: number, survey?: CsatSurveyAnswers) => {
     if (busy || submitted != null) return;
@@ -96,19 +79,16 @@ export function CsatCard({
     rating != null &&
     (!askReason || (reason != null && (reason !== CSAT_REASON.OTHER || comment.trim().length > 0)));
 
+  // Survey only: all five faces as a radio group, sent with the other answers.
   const faces = (
     <div
-      className={
-        survey
-          ? 'flex overflow-hidden rounded-st-md border border-gray-200'
-          : 'flex justify-center gap-1'
-      }
+      className="flex overflow-hidden rounded-st-md border border-gray-200"
       role="radiogroup"
-      aria-label={survey ? t('chat.csatSurvey.q2') : t('chat.csatQuestion')}
+      aria-label={t('chat.csatSurvey.q2')}
     >
       {FACES.map((face, i) => {
         const value = i + 1;
-        const chosen = survey ? rating === value : submitted === value;
+        const chosen = rating === value;
         return (
           <button
             key={value}
@@ -117,25 +97,12 @@ export function CsatCard({
             aria-checked={chosen}
             aria-label={t(`chat.csatLevel.${value}`)}
             disabled={busy || submitted != null}
-            onClick={() => (survey ? setRating(value) : void send(value))}
-            className={
-              survey
-                ? `st-csat-option flex flex-1 items-center justify-center py-2.5 transition-colors ${
-                    i > 0 ? 'border-l border-gray-200' : ''
-                  } ${chosen ? 'bg-primary-100' : 'bg-white hover:bg-gray-50'} ${
-                    submitted != null ? 'cursor-default' : ''
-                  }`
-                : `st-csat-option flex flex-1 flex-col items-center gap-1 rounded-st-md px-1 py-1.5 transition-all ${
-                    submitted == null ? 'hover:bg-gray-50' : 'cursor-default'
-                  } ${submitted != null && !chosen ? 'opacity-30' : ''}`
-            }
+            onClick={() => setRating(value)}
+            className={`st-csat-option flex flex-1 items-center justify-center py-2.5 transition-colors ${
+              i > 0 ? 'border-l border-gray-200' : ''
+            } ${chosen ? 'bg-primary-100' : 'bg-white hover:bg-gray-50'} ${submitted != null ? 'cursor-default' : ''}`}
           >
             <span className="text-3xl leading-none">{face}</span>
-            {!survey && (
-              <span className="break-keep text-[10px] leading-tight text-gray-500">
-                {t(`chat.csatLevel.${value}`)}
-              </span>
-            )}
           </button>
         );
       })}
@@ -143,18 +110,46 @@ export function CsatCard({
   );
 
   if (!survey) {
+    // The design's card (T12, Figma 1006:6110): a title, four faces, Skip. A
+    // tap sends at once; the thanks and the "chat has ended" mark follow below
+    // it in the thread, so the card keeps the chosen face lit.
     return (
-      <div className="st-csat rounded-st-lg border-2 border-primary-300 bg-white px-3 py-4 text-center">
-        <p className="mb-3 text-sm text-gray-700">
-          {submitted != null ? t('chat.csatThanks') : t('chat.csatQuestion')}
-        </p>
-        {faces}
+      <div
+        className="st-csat rounded-st-lg border-2 border-primary-300 bg-white px-3 py-4 text-center"
+        data-testid="csat-card"
+      >
+        <p className="mb-3 text-sm font-medium text-gray-800">{t('chat.csatTitle')}</p>
+        <div className="flex justify-center gap-1" role="group" aria-label={t('chat.csatTitle')}>
+          {RATING_FACES.map((value) => {
+            const chosen = submitted === value;
+            const label = t(`chat.csatLevel.${value}`);
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-label={label}
+                aria-pressed={chosen}
+                disabled={busy || submitted != null}
+                onClick={() => void send(value)}
+                className={`st-csat-option flex flex-1 flex-col items-center gap-1 rounded-st-md px-1 py-1.5 transition-all ${
+                  submitted == null ? 'hover:bg-gray-50' : 'cursor-default'
+                } ${submitted != null && !chosen ? 'opacity-30' : ''}`}
+              >
+                <span className="text-3xl leading-none" aria-hidden="true">
+                  {FACES[value - 1]}
+                </span>
+                <span className="break-keep text-[10px] leading-tight text-gray-500">{label}</span>
+              </button>
+            );
+          })}
+        </div>
         {failed && <p className="mt-2 text-xs text-error">{t('chat.csatFailed')}</p>}
         {submitted == null && (
           <button
             type="button"
-            onClick={dismiss}
-            className="mt-3 text-xs text-gray-400 underline-offset-2 hover:underline"
+            onClick={onSkip}
+            disabled={busy}
+            className="mt-3 text-xs text-gray-400 underline-offset-2 hover:underline disabled:opacity-50"
           >
             {t('chat.csatDismiss')}
           </button>
@@ -185,13 +180,13 @@ export function CsatCard({
   );
 
   return (
-    <div className="st-csat rounded-st-lg border border-gray-200 bg-white text-left shadow-sm">
+    <div className="st-csat rounded-st-lg border border-gray-200 bg-white text-left shadow-sm" data-testid="csat-card">
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <span className="text-sm font-semibold text-gray-900">{t('chat.csatSurvey.title')}</span>
         {submitted == null && (
           <button
             type="button"
-            onClick={dismiss}
+            onClick={onSkip}
             aria-label={t('chat.csatDismiss')}
             className="rounded-st-sm p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           >

@@ -54,18 +54,26 @@ export const START_OVER_ID = 'start_over';
 export const TRACK_DELIVERY_ID = 'track_delivery';
 /** "Cancel order" after the order answer: the shipped `cancel_order` script. */
 export const CANCEL_ORDER_ID = 'cancel_order';
+/** "End" (ivy-docs T12, BR-12/13): ends the conversation, then asks for a rating. */
+export const END_CHAT_ID = 'end_chat';
+/** "Apply now" under the affiliate answer (T12 §8-2a): the contact form, filled in. */
+export const AFFILIATE_APPLY_ID = 'affiliate_apply';
 
 /**
  * A scripted reply's chips plus Start over (BR-12: every scenario ends with a
  * way back to the menu). Never added twice, and never to a reply without
- * chips — a plain answer is not a scenario step.
+ * chips — a plain answer is not a scenario step. End stays last: the design
+ * reads "… · Start over · End" (ivy-docs T12, Figma 1006:5990).
  */
 export function withStartOver<T extends { id: string; label: string }>(
   chips: readonly T[],
   startOverLabel: string,
 ): Array<T | { id: string; label: string }> {
   if (chips.length === 0 || chips.some((c) => c.id === START_OVER_ID)) return [...chips];
-  return [...chips, { id: START_OVER_ID, label: startOverLabel }];
+  const startOver = { id: START_OVER_ID, label: startOverLabel };
+  const end = chips.findIndex((c) => c.id === END_CHAT_ID);
+  if (end < 0) return [...chips, startOver];
+  return [...chips.slice(0, end), startOver, ...chips.slice(end)];
 }
 
 /**

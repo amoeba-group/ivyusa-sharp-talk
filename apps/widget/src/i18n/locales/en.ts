@@ -115,9 +115,11 @@ export const en = {
     endConfirm: 'End this conversation?',
     endCancel: 'Cancel',
     endedNotice: 'This conversation has ended. Send a message to start a new one.',
-    csatQuestion: 'How satisfied were you with this chat?',
-    csatThanks: 'Thanks for the feedback 🙏',
-    csatDismiss: 'Close',
+    // T12 (Figma 1006:6110): the question above the card, then the card's title.
+    csatPrompt: 'We hope today\'s chat was helpful. How was your chat today?',
+    csatTitle: 'Please rate your satisfaction',
+    csatThanks: 'Thank you for your feedback',
+    csatDismiss: 'Skip',
     csatStar: '{{count}} star',
     connectingAgent: 'You are being connected to a support agent. Please hold on…',
     callback: {
@@ -218,7 +220,7 @@ export const en = {
       exchange: 'I would like to exchange or return an item.',
       restock: 'Please notify me when this product is back in stock.',
     },
-    endedTitle: 'This conversation has ended',
+    endedTitle: 'The chat has ended',
     // Earlier conversations of the signed-in account (PLN-261022 stage 2).
     threadLoadPrevious: 'Show earlier conversations',
     threadLoading: 'Loading…',
@@ -226,13 +228,14 @@ export const en = {
     threadColleagues: '{{count}} earlier conversation(s) from colleagues at your company — our team can see them.',
     threadLoadError: 'Couldn\'t load earlier conversations',
     threadNone: 'No earlier conversations',
-    endedThanks: 'Thanks for reaching out!',
+    endedThanks: 'Thank you for chatting with us!',
+    // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
-      1: 'Very unhappy',
-      2: 'Unhappy',
-      3: 'Okay',
-      4: 'Happy',
-      5: 'Very happy',
+      1: 'Dissatisfied',
+      2: 'Somewhat dissatisfied',
+      3: 'Neutral',
+      4: 'Satisfied',
+      5: 'Very satisfied',
     },
     csatFailed: 'We couldn\'t save your rating. Please try again.',
     aiDisclosureShort: 'AI-generated replies · processed in {{region}}',
@@ -292,6 +295,9 @@ export const en = {
       emailPlaceholder: 'Enter your email',
       message: 'Message',
       messagePlaceholder: 'Please describe how we can help you',
+      // Affiliate "Apply now" (T12 §8-2a): the same form, for an application.
+      affiliateLead: 'Leave your details and our team will email you about the affiliate program.',
+      affiliateMessage: 'I\'d like to join your affiliate program.\nWhere I\'d share your products (Instagram, TikTok, blog…): ',
       send: 'Send Message',
       sending: 'Sending…',
       errors: {
@@ -316,18 +322,6 @@ export const en = {
       successBody: 'Our support team will review your inquiry and reply to the email address you provided.',
       successHint: 'Please check your inbox for our response.',
     },
-  },
-
-  affiliate: {
-    title: 'Affiliate Program',
-    steps: [
-      'Apply to join the program',
-      'Review takes 1–3 business days',
-      'Earn 10% commission on referrals',
-    ],
-    apply: 'Apply now',
-    pending: 'Your application is under review.',
-    approved: 'You are an approved affiliate!',
   },
 
   orders: {

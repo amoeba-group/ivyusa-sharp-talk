@@ -178,9 +178,11 @@ export const IVY_QUICK_REPLIES = [
   { id: 'product_inquiry', emoji: '✨', label: 'Product inquiry', ko: '제품문의', action: 'product_help' },
   { id: 'feedback', emoji: '💬', label: 'Feedback', ko: '피드백', action: 'message' },
   { id: 'contact_support', emoji: '🤝', label: 'Contact Support', ko: 'Contact Support', action: 'contact_support' },
+  // T12 §8-3a: the owner added Affiliate after the seven design buttons (the design has no way into SCR-IVY-14).
+  { id: 'affiliate', emoji: '💼', label: 'Affiliate', ko: '제휴', action: 'affiliate' },
 ];
 
-/** Scenario config incl. the flows reached from other entry points (My Orders, Affiliate). */
+/** Scenario config incl. the flow reached from another entry point (My Orders). */
 export function scenarioConfig(opts: { withFlows?: boolean; language?: string | null } = {}) {
   // The API resolves labels to the language on screen (PLN-261023); so does this mock.
   const ko = (opts.language ?? '').toUpperCase() === 'KO';
@@ -193,7 +195,6 @@ export function scenarioConfig(opts: { withFlows?: boolean; language?: string | 
   if (opts.withFlows) {
     buttons.push(
       { id: 'my_orders', label: 'My Orders', action: 'my_orders', enabled: true, emoji: '📦' },
-      { id: 'affiliate', label: 'How to become an Affiliate?', action: 'affiliate', enabled: true, emoji: '💼' },
     );
   }
   return { scenarioButtons: buttons };

@@ -13,7 +13,7 @@ test.describe('T08 · Chat home', () => {
     await expect(widget.panel.getByText(/IVY Beauty/).first()).toBeVisible();
   });
 
-  test('TC-08-02 seven quick replies with emoji, in design order @T08 @design', async ({ widget }) => {
+  test('TC-08-02 the design quick replies with emoji, in order, then Affiliate (T12) @T08 @design', async ({ widget }) => {
     const buttons = widget.quickReplies.getByRole('button');
     await expect(buttons).toHaveCount(IVY_QUICK_REPLIES.length);
     const texts = (await buttons.allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());

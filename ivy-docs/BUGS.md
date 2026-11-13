@@ -24,7 +24,8 @@
 | BUG-016 | Fixture e2e "hôm qua" = 26 giờ trước → TC-02-02 đỏ từ 00:00–02:00 giờ New York | E2E harness | 🟡 | Fixed (T02) | T02 |
 | BUG-017 | TC-03-05 đọc URL của tab mới trước khi tab điều hướng → luôn nhận chuỗi rỗng (TC-05-04 cùng lỗi) | E2E harness | 🟡 | Fixed (T03, T05, T06) | T03 · T05 · T06 |
 | BUG-018 | TC-01-06 đo độ rộng panel ngay khi mở → đỏ 11/15 khi chạy song song (panel mở ở 404px trước khi theme 380px về) | E2E harness · Widget | 🟡 | Fixed test (T03). Chớp 404→380px khi mở rất sớm: Open, mức thấp | T01 · T03 |
-| BUG-024 | Khung trả lời trong chat (My Orders, Contact, Affiliate…) nằm ở **một ô cố định cuối luồng**, nên tin nhắn gửi sau hiện **phía trên** nó | Widget | 🟡 | Fixed cho My Orders + Start over (T09), Product Help (T10), Contact (T11). Affiliate: T12 | T09 · T11 · T12 |
+| BUG-025 | Chip **End** (`end_chat`) báo "Sorry, that didn't go through": widget gửi nó lên server như một kịch bản không tồn tại | Widget | 🟡 | Fixed (T12, 2026-11-13) | T12 |
+| BUG-024 | Khung trả lời trong chat (My Orders, Contact, Affiliate…) nằm ở **một ô cố định cuối luồng**, nên tin nhắn gửi sau hiện **phía trên** nó | Widget | 🟡 | Fixed cho My Orders + Start over (T09), Product Help (T10), Contact (T11), Affiliate (T12). Còn Callback | T09 · T11 · T12 |
 | BUG-022 | Lưu nút trả lời nhanh trong console **làm mất câu hỏi** (`message`) của nút "Send a message": `sanitize()` dựng lại nút mà không có trường này, nên nút luôn gửi nhãn thay câu đã nhập | API | 🟠 | Fixed (T08) | T08 |
 | BUG-023 | Lần đầu mở Chat (khách đã đăng nhập, chưa có theme cache): menu nút vẽ **kiểu mặc định** (lưới 2 cột xanh) rồi mới đổi sang kiểu của tenant khi session/ensure về | Widget | 🟡 | Fixed (T08) | T08 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
@@ -133,12 +134,19 @@
 - **Fix:** TC-04-04 tìm trong `getByRole('tabpanel')`, tức chỉ tab đang hiện. TC-04-03 dùng `exact: true`. T04 ×3: 21/21.
 - **Phòng ngừa:** chữ có thể xuất hiện ở tab khác thì thu phạm vi vào tab đang hiện, hoặc so khớp chính xác.
 
+## BUG-025 · Chip End báo "gửi thất bại"
+- **Hiện tượng:** console cho đặt chip `end_chat` dưới một kịch bản (nó nằm trong danh sách id hợp lệ), nhưng bấm chip đó thì widget hiện "Sorry, that didn't go through. Please try again."
+- **Nguyên nhân:** `handleQuickReply` không có nhánh cho `end_chat`, nên rơi vào nhánh mặc định `scenario('end_chat')`. Server không có kịch bản `end_chat`, widget không gửi kèm câu hỏi, nên `POST /chat/scenario` trả 404.
+- **Fix (T12):** `end_chat` kết thúc cuộc chat ngay (không hỏi xác nhận, theo thiết kế 1006:6050) rồi hiện thẻ đánh giá. Hằng số `END_CHAT_ID` ở `reply-chips.ts`. TC-12-02..04.
+- **Phòng ngừa:** mỗi id trong danh sách "chip điều khiển" của API (`CONTROL_FOLLOW_UP_IDS`) phải có nhánh xử lý trong widget. Unit test API kiểm mọi chip của kịch bản có sẵn đều dẫn tới đâu đó; khi thêm id điều khiển mới, thêm luôn nhánh và test e2e bấm vào nó.
+
 ## BUG-024 · Khung trả lời trong chat chen lên trên tin nhắn mới
 - **Hiện tượng:** khung `inline` (My Orders, Contact, Affiliate, đăng nhập…) render **sau** danh sách tin nhắn, ở một ô duy nhất. Bấm My Orders rồi "Cancel order" thì câu trả lời huỷ đơn hiện **phía trên** thẻ đơn.
 - **Fix (T09):** My Orders và menu của Start over là "thread insert" gắn với số tin nhắn lúc xuất hiện (`at`). Chúng render ngay sau tin nhắn thứ `at`, nên tin nhắn sau nằm bên dưới. Chip của insert chỉ hiện khi nó là thứ cuối cùng trong luồng.
 - **T10:** Product Help (menu, danh mục, sản phẩm phổ biến) là insert.
 - **T11:** Contact Support và form liên hệ là insert; form gửi xong thành thẻ "YOUR INQUIRY" ngay tại chỗ (`sent` lưu trên insert).
-- **Còn:** Affiliate, Callback… vẫn dùng ô cũ. Chuyển Affiliate sang insert khi làm T12.
+- **T12:** Affiliate thành kịch bản trên server: câu trả lời là một tin nhắn trong luồng, 3 bước vẽ thành thẻ ngay trong tin đó. "Apply now" mở form liên hệ dạng insert. Bỏ thẻ Affiliate cũ.
+- **Còn:** Callback (form gọi lại khi hàng đợi lâu / ngoài giờ) vẫn dùng ô cũ.
 - **Phòng ngừa:** thứ gì "nói" trong luồng chat phải có vị trí trong luồng, không phải một ô cố định cuối luồng.
 
 ## BUG-022 · Lưu nút làm mất câu hỏi của nút

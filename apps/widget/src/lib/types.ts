@@ -12,7 +12,6 @@
  * UI switches on, and fields that exist solely in local optimistic state.
  */
 import type {
-  AffiliateStatusResponse,
   ChatCitation,
   ChatAttachmentResponse,
   ChatMessageResponse,
@@ -117,7 +116,6 @@ export type NotificationItem = NotificationResponse;
 export type NotifChannel = 'in_app' | 'email' | 'sms' | 'web_push' | 'push';
 export type NotifPref = NotificationPrefResponse;
 
-export type AffiliateStatus = AffiliateStatusResponse;
 
 /** Server-driven scenario action keys (admin-configured). */
 export type ScenarioActionKey =

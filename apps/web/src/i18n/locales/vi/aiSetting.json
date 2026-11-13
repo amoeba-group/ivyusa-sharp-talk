@@ -101,6 +101,7 @@
     "utterance": "Câu của khách",
     "utteranceHint": "Hiển thị trong hội thoại như thể khách đã tự nhập khi bấm nút.",
     "defaultShownHint": "Nội dung mặc định đã được điền sẵn. Sửa để ghi đè; giữ nguyên thì không lưu gì cả.",
+    "stepsHint": "Các dòng đánh số hiện thành thẻ bước trong widget, ví dụ: 1. **Tiêu đề** — mô tả",
     "edited": "đã sửa",
     "revert": "Khôi phục mặc định",
     "followUpsDefault": "Chip mặc định: {{chips}}",

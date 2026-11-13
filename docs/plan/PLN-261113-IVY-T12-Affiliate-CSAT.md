@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | ⏳ **Chờ duyệt** |
+| Trạng thái | ✅ **Đã duyệt 2026-11-13** (`1. ok 2. a 3. a 4. a`) và đã làm — [RPT-261113](../implementation/RPT-261113-IVY-T12-Affiliate-CSAT.md) |
 | Task | [ivy-docs/TASKS.md T12](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-14 · G-19 · G-20 · BR-12 · BR-13 · Q-12 · BUG-024 (phần Affiliate) |
 | Figma | `1006:5990`, `1006:6050`, `1006:6110` (CSAT), `1006:6200`, `1006:6290` (kết thúc). Figma MCP hết lượt gọi; kế hoạch dựa vào SPEC. Nếu tiện, gửi ảnh 5 frame này (link ở §8) |
 | TC | TC-12-01..04 ([e2e/tests/12-affiliate-csat.spec.ts](../../e2e/tests/12-affiliate-csat.spec.ts)), baseline **0/4** (chạy 2026-11-13) |

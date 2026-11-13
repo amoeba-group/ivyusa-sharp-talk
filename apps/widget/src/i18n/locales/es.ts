@@ -114,9 +114,11 @@ export const es: Translation = {
     endConfirm: '¿Finalizar esta conversación?',
     endCancel: 'Cancelar',
     endedNotice: 'La conversación ha finalizado. Envía un mensaje para iniciar una nueva.',
-    csatQuestion: '¿Qué tan satisfecho quedaste con este chat?',
-    csatThanks: 'Gracias por tu opinión 🙏',
-    csatDismiss: 'Cerrar',
+    // T12 (Figma 1006:6110): the question above the card, then the card's title.
+    csatPrompt: 'Esperamos que la conversación de hoy te haya sido útil. ¿Qué tal fue?',
+    csatTitle: 'Valora tu satisfacción',
+    csatThanks: 'Gracias por tu opinión',
+    csatDismiss: 'Omitir',
     csatStar: '{{count}} estrella',
     connectingAgent: 'Te estamos conectando con un agente de soporte. Espera un momento…',
     callback: {
@@ -225,10 +227,11 @@ export const es: Translation = {
     threadLoadError: 'No se pudieron cargar las conversaciones anteriores',
     threadNone: 'No hay conversaciones anteriores',
     endedThanks: '¡Gracias por escribirnos!',
+    // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
-      1: 'Muy insatisfecho',
-      2: 'Insatisfecho',
-      3: 'Normal',
+      1: 'Insatisfecho',
+      2: 'Algo insatisfecho',
+      3: 'Neutral',
       4: 'Satisfecho',
       5: 'Muy satisfecho',
     },
@@ -290,6 +293,9 @@ export const es: Translation = {
       emailPlaceholder: 'Escribe tu correo',
       message: 'Mensaje',
       messagePlaceholder: 'Cuéntanos cómo podemos ayudarte',
+      // Affiliate "Apply now" (T12 §8-2a): the same form, for an application.
+      affiliateLead: 'Déjanos tus datos y te escribiremos sobre el programa de afiliados.',
+      affiliateMessage: 'Me gustaría unirme a su programa de afiliados.\nDónde compartiría sus productos (Instagram, TikTok, blog…): ',
       send: 'Enviar mensaje',
       sending: 'Enviando…',
       errors: {
@@ -314,18 +320,6 @@ export const es: Translation = {
       successBody: 'Nuestro equipo de soporte revisará tu consulta y responderá al correo que indicaste.',
       successHint: 'Revisa tu bandeja de entrada para ver nuestra respuesta.',
     },
-  },
-
-  affiliate: {
-    title: 'Programa de afiliados',
-    steps: [
-      'Solicita unirte al programa',
-      'La revisión tarda de 1 a 3 días hábiles',
-      'Gana un 10 % de comisión por referidos',
-    ],
-    apply: 'Solicitar ahora',
-    pending: 'Tu solicitud está en revisión.',
-    approved: '¡Eres un afiliado aprobado!',
   },
 
   orders: {

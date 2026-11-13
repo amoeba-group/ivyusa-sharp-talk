@@ -77,6 +77,22 @@ test('withStartOver leaves a reply without chips alone (a plain answer is not a 
   assert.deepEqual(withStartOver([], 'Start over'), []);
 });
 
+// ivy-docs T12 (Figma 1006:5990): Apply now · Learn more · Start over · End — End stays last.
+test('withStartOver puts Start over before End', () => {
+  const chips = [
+    { id: 'affiliate_apply', label: 'Apply now' },
+    { id: 'affiliate_details', label: 'Learn more' },
+    { id: 'end_chat', label: 'End' },
+  ];
+  assert.deepEqual(ids(withStartOver(chips, 'Start over')), [
+    'affiliate_apply',
+    'affiliate_details',
+    START_OVER_ID,
+    'end_chat',
+  ]);
+  assert.deepEqual(ids(withStartOver([{ id: 'end_chat', label: 'End' }], 'Start over')), [START_OVER_ID, 'end_chat']);
+});
+
 // SCR-IVY-11: Track delivery · Cancel order · Start over.
 test('orderAnswerChips: three chips with orders, only Start over without', () => {
   const labels = { track: 'Track delivery', cancel: 'Cancel order', startOver: 'Start over' };

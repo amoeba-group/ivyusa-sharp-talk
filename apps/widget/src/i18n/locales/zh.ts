@@ -100,9 +100,11 @@ export const zh: Translation = {
     endConfirm: '要结束这次对话吗？',
     endedNotice: '本次对话已结束。发送消息即可开始新的对话。',
     endCancel: '取消',
-    csatQuestion: '您对本次聊天的满意度如何？',
-    csatThanks: '感谢您的反馈 🙏',
-    csatDismiss: '关闭',
+    // T12 (Figma 1006:6110): the question above the card, then the card's title.
+    csatPrompt: '希望今天的咨询对您有帮助。您觉得这次咨询怎么样？',
+    csatTitle: '请选择您的满意度',
+    csatThanks: '感谢您的宝贵意见',
+    csatDismiss: '跳过',
     csatStar: '{{count}} 星',
     connectingAgent: '正在为您转接客服人员，请稍候…',
     callback: {
@@ -217,7 +219,7 @@ export const zh: Translation = {
       exchange: '我想换货或退货。',
       restock: '这款商品到货后请通知我。',
     },
-    endedTitle: '会话已结束',
+    endedTitle: '本次咨询已结束',
     // Earlier conversations of the signed-in account (PLN-261022 stage 2).
     threadLoadPrevious: '查看之前的对话',
     threadLoading: '加载中…',
@@ -225,10 +227,11 @@ export const zh: Translation = {
     threadColleagues: '同公司同事之前的 {{count}} 条咨询，客服可以一并查看。',
     threadLoadError: '无法加载之前的对话',
     threadNone: '没有之前的对话',
-    endedThanks: '感谢您的使用！',
+    endedThanks: '感谢您的咨询！',
+    // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
-      1: '非常不满意',
-      2: '不满意',
+      1: '不满意',
+      2: '有点不满意',
       3: '一般',
       4: '满意',
       5: '非常满意',
@@ -291,6 +294,9 @@ export const zh: Translation = {
       emailPlaceholder: '请输入您的邮箱',
       message: '留言',
       messagePlaceholder: '请描述您需要的帮助',
+      // Affiliate "Apply now" (T12 §8-2a): the same form, for an application.
+      affiliateLead: '请留下您的联系方式，我们会通过邮件向您介绍推广合作计划。',
+      affiliateMessage: '我想加入推广合作计划。\n我会在这些渠道分享产品（Instagram、TikTok、博客等）：',
       send: '发送留言',
       sending: '发送中…',
       errors: {
@@ -315,14 +321,6 @@ export const zh: Translation = {
       successBody: '客服团队将查看您的咨询，并回复到您提供的邮箱。',
       successHint: '请留意您的收件箱。',
     },
-  },
-
-  affiliate: {
-    title: '推广合作计划',
-    steps: ['申请加入计划', '审核需 1–3 个工作日', '推荐成交可获 10% 佣金'],
-    apply: '立即申请',
-    pending: '您的申请正在审核中。',
-    approved: '您已成为通过审核的推广伙伴！',
   },
 
   orders: {

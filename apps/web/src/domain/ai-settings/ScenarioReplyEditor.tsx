@@ -35,7 +35,8 @@ const POST_ACTIONS: ScenarioPostAction['type'][] = [
  * so showing the defaults does not freeze them into the tenant's row.
  */
 /** Chip ids the widget acts on: a control, or another shipped script. */
-const CONTROL_FOLLOW_UP_IDS = ['agent_connect', 'my_orders', 'end_chat', 'track_delivery'];
+// Mirrors the API's CONTROL_FOLLOW_UP_IDS; `affiliate_apply` opens the contact form (ivy-docs T12).
+const CONTROL_FOLLOW_UP_IDS = ['agent_connect', 'my_orders', 'end_chat', 'track_delivery', 'affiliate_apply'];
 
 export function ScenarioReplyEditor({
   action,
@@ -145,6 +146,8 @@ export function ScenarioReplyEditor({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
             />
             <p className="mt-1 text-[11px] text-gray-400">{t('editor.defaultShownHint')}</p>
+            {/* The widget draws numbered lines as step cards (ivy-docs T12). */}
+            <p className="mt-0.5 text-[11px] text-gray-400">{t('editor.stepsHint')}</p>
           </div>
         </>
       ) : (

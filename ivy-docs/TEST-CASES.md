@@ -45,7 +45,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T09 | 1 / 4 → **7 / 7** ✅ (T09, 2026-11-12; thêm TC-09-05..07) | tất cả | — |
 | T10 | 1 / 5 → **7 / 7** ✅ (T10, 2026-11-12; thêm TC-10-06..07) | tất cả | — |
 | T11 | 0 / 4 → **8 / 8** ✅ (T11, 2026-11-13; thêm TC-11-05..08) | tất cả | — |
-| T12 | 0 / 4 | — | TC-12-01, TC-12-02, TC-12-03, TC-12-04 |
+| T12 | 0 / 4 → **6 / 6** ✅ (T12, 2026-11-13; thêm TC-12-05..06) | tất cả | — |
 | T13 | 4 / 4 | TC-13-01, TC-13-02, TC-13-04, TC-13-03 | — |
 | T14 | 7 / 8 → 8 / 8 (nhờ T02: chip KO 주문 · 배송 · 프로모 · 리뷰) | TC-14-01 [en], TC-14-01 [es], TC-14-01 [ko], TC-14-01 [vi], TC-14-01 [ja], TC-14-01 [zh], TC-14-03, TC-14-02 [ko] | — |
 | T15 | 3 / 4 → 4 / 4 (nhờ T02: chip `aria-pressed`) | tất cả | — |
@@ -230,7 +230,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
 | TC-08-01 | Lời chào | bubble có "IVY Beauty" | SCR-IVY-10 |
-| TC-08-02 | 7 quick-reply | `quick-replies` có đúng 7 nút theo thứ tự, mỗi nút có emoji + nhãn (💰 Payment check … 🤝 Contact Support) | G-12, BR-11 |
+| TC-08-02 | 7 quick-reply + Affiliate | `quick-replies` có đúng 8 nút theo thứ tự: 7 nút thiết kế (💰 Payment check … 🤝 Contact Support) rồi 💼 Affiliate (T12 §8-3a). Mỗi nút có emoji + nhãn | G-12, BR-11 |
 | TC-08-03 | Kiểu chip | nền `rgb(255,255,255)` (đọc bằng `expect.poll`), viền ≥ 1px. EN: trong một hàng có chip rộng khác nhau (rộng theo chữ, không lưới 2 cột). **KO** (frame `1008:2291`): ≥ 3 chip trên 1 hàng | G-12, §4 |
 | TC-08-04 | Composer | placeholder "Ask Anything"; Send disabled khi rỗng, enabled khi có chữ | G-13 |
 | TC-08-05 | Hỏi–đáp thật | gửi câu hỏi → `POST /chat/message` < 300 → bubble khách + câu trả lời bot hiện | BR-16 |
@@ -330,12 +330,25 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 
 ## T12 · Affiliate & CSAT (`12-affiliate-csat.spec.ts`)
 
+Chạy với consent thật: Affiliate là kịch bản trên API thật (câu chữ IVY của seed). End và đánh giá cũng đi API thật, mock chỉ ghi lại.
+
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
-| TC-12-01 | 3 bước + 4 chip | "Submit application", "1–3 business days", "10%"; Apply now · Learn more · Start over · End | G-19 |
-| TC-12-02 | CSAT 4 mức | End → `csat-card` có đúng 5 nút: Dissatisfied · Neutral · Satisfied · Very satisfied · Skip | G-20, Q-12 |
+| TC-12-01 | 3 bước + 4 chip | `script-steps` có 3 thẻ: "Submit an application", "1–3 business days", "10%"; "IVY Beauty affiliate partner"; chip đúng thứ tự **Apply now · Learn more · Start over · End** | G-19 |
+| TC-12-02 | CSAT 4 mức | End → "How was your chat today?" → `csat-card` "Please rate your satisfaction" có đúng 5 nút: Dissatisfied · Neutral · Satisfied · Very satisfied · Skip; chưa có "chat has ended" | G-20, Q-12, BR-13 |
 | TC-12-03 | Gửi đánh giá | Very satisfied → `POST /chat/csat` rating 5 → "Thank you for your feedback" **rồi** "chat has ended" (nằm dưới) | BR-13, G-20 |
-| TC-12-04 | Bỏ qua | Skip → "chat has ended", không gọi `/chat/csat` | BR-13 |
+| TC-12-04 | Bỏ qua | Skip → "chat has ended", thẻ biến mất, không gọi `/chat/csat` | BR-13 |
+| TC-12-05 | Apply now | Câu dẫn "…email you about the affiliate program"; form điền sẵn "join your affiliate program" → gửi → `POST /inquiries` có câu đó → thẻ "YOUR INQUIRY" | PLN-261113 §8-2a |
+| TC-12-06 | Learn more | Câu trả lời ("referral link") nằm **dưới** các thẻ bước (BUG-024); chip còn Apply now · Start over · End | G-19, BR-12 |
+
+**Kết quả (2026-11-13):** 6/6, lặp ×3: 18/18. Cổng CI mới (thêm `@T12`) ×2: 196/196. Toàn bộ desktop: **108 / 108** xanh.
+
+| Loại | File | Ca |
+|---|---|---|
+| Unit widget | `apps/widget/test/script-steps.test.mjs` | Câu Affiliate EN → mở đầu + 3 bước + câu kết; KO, khoảng "1–3" không bị tách; không in đậm → tách ở gạch có khoảng trắng; không có danh sách / chỉ 1 dòng → không tách; chỉ lấy dãy bước đầu tiên |
+| Unit widget | `apps/widget/test/reply-chips.test.mjs` | Start over chèn trước End |
+| Unit API | `ai-config.service.scenario-copy.spec.ts` | `affiliate` đi từ nút, `affiliate_details` từ chip; mọi chip của kịch bản có sẵn đều hợp lệ; câu trả lời có 3 dòng bước ở cả 6 ngôn ngữ |
+| Ảnh chụp | thủ công, 380px | KO khớp chữ thiết kế SCR-IVY-14: IVY Beauty 제휴 파트너가 되어주세요! 💼 · 신청서 제출 · 심사 (1–3 영업일) · 활동 시작 & 수익 (10% 적립) · 지금 신청하기 · 더 알아보기 · 처음으로 · 종료 → 상담 만족도를 선택해주세요 (불만족 · 보통 · 만족 · 매우 만족 · 건너뛰기) → 소중한 의견 감사합니다 → 상담이 종료되었습니다. EN tương ứng; Apply now: form điền sẵn |
 
 ## T13 · Settings / Privacy (`13-settings.spec.ts`)
 

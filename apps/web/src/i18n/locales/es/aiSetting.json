@@ -101,6 +101,7 @@
     "utterance": "Mensaje del cliente",
     "utteranceHint": "Aparece en la conversación como si el cliente lo hubiera escrito al pulsar el botón.",
     "defaultShownHint": "El texto original está cargado. Edítalo para sustituirlo; si lo dejas igual no se guarda nada.",
+    "stepsHint": "Las líneas numeradas se muestran como tarjetas de pasos en el widget, p. ej. 1. **Título** — descripción",
     "edited": "editado",
     "revert": "Restaurar valores predeterminados",
     "followUpsDefault": "Botones integrados: {{chips}}",

@@ -1,5 +1,4 @@
 import { apiClient } from '../lib/api-client';
-import type { AffiliateStatus } from '../lib/types';
 
 export function createReview(
   sessionToken: string,
@@ -12,18 +11,6 @@ export function createReview(
     order_item_id: orderItemId,
     rating,
     body,
-  });
-}
-
-export function affiliateApply(sessionToken: string): Promise<unknown> {
-  return apiClient.post('/affiliate/apply', { session_token: sessionToken });
-}
-
-export function affiliateStatus(
-  sessionToken: string,
-): Promise<AffiliateStatus> {
-  return apiClient.get<AffiliateStatus>('/affiliate/status', {
-    session_token: sessionToken,
   });
 }
 

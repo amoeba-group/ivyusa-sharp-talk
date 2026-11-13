@@ -48,6 +48,41 @@ const FOLLOW_UP_MY_ORDERS = {
     ZH: '查看我的订单',
   },
 };
+/** Affiliate (ivy-docs T12): the widget opens the contact form, filled in for an application. */
+const FOLLOW_UP_AFFILIATE_APPLY = {
+  id: 'affiliate_apply',
+  label: {
+    EN: 'Apply now',
+    ES: 'Solicitar ahora',
+    KO: '지금 신청하기',
+    VI: 'Đăng ký ngay',
+    JA: '今すぐ申し込む',
+    ZH: '立即申请',
+  },
+};
+const FOLLOW_UP_AFFILIATE_DETAILS = {
+  id: 'affiliate_details',
+  label: {
+    EN: 'Learn more',
+    ES: 'Más información',
+    KO: '더 알아보기',
+    VI: 'Tìm hiểu thêm',
+    JA: '詳しく見る',
+    ZH: '了解更多',
+  },
+};
+/** Ends the conversation; the widget then asks for a rating (ivy-docs T12, BR-12/13). */
+const FOLLOW_UP_END = {
+  id: 'end_chat',
+  label: {
+    EN: 'End',
+    ES: 'Finalizar',
+    KO: '종료',
+    VI: 'Kết thúc',
+    JA: '終了',
+    ZH: '结束',
+  },
+};
 
 /**
  * Deterministic scenario scripts (FR-003 / FR-S1, PLAN-Scenario-Handoff-Alert).
@@ -303,6 +338,51 @@ export const SCENARIOS: Record<string, ScenarioScript> = {
       FOLLOW_UP_AGENT,
     ],
   },
+  /**
+   * The affiliate programme (ivy-docs T12, SCR-IVY-14). The numbered lines are
+   * the design's step cards: the widget draws `1. **Title** — text` lines of a
+   * scripted reply as cards and the rest as bubbles; anywhere else (console
+   * history, a transcript) it reads as a plain list. No shop name and no rate
+   * here — those are the tenant's own terms, set in AI Settings.
+   */
+  affiliate: {
+    utterance: {
+      EN: 'How do I become an affiliate?',
+      ES: '¿Cómo puedo ser afiliado?',
+      KO: '제휴 파트너가 되려면 어떻게 하나요?',
+      VI: 'Làm sao để trở thành cộng tác viên affiliate?',
+      JA: 'アフィリエイトになるにはどうすればいいですか？',
+      ZH: '如何成为推广合作伙伴？',
+    },
+    reply: {
+      EN: 'Become our affiliate partner! 💼\n\n1. **Submit an application** — Fill out a short form.\n2. **Review (1–3 business days)** — Our team will review it and reply by email.\n3. **Start earning** — Share your own link and earn a commission on every sale.\n\nIf you have any questions, feel free to ask!',
+      ES: '¡Hazte socio afiliado! 💼\n\n1. **Envía tu solicitud** — Completa un formulario breve.\n2. **Revisión (1–3 días hábiles)** — Nuestro equipo la revisará y te responderá por correo.\n3. **Empieza a ganar** — Comparte tu enlace personal y gana una comisión por cada venta.\n\nSi tienes alguna pregunta, ¡no dudes en consultarnos!',
+      KO: '제휴 파트너가 되어주세요! 💼\n\n1. **신청서 제출** — 간단한 양식을 작성해주세요.\n2. **심사 (1–3 영업일)** — 팀에서 검토 후 이메일로 안내드려요.\n3. **활동 시작 & 수익** — 전용 링크를 공유하고 판매마다 수수료를 받으세요.\n\n궁금한 점이 있으시면 언제든 물어봐주세요!',
+      VI: 'Hãy trở thành đối tác affiliate của chúng tôi! 💼\n\n1. **Gửi đơn đăng ký** — Điền một biểu mẫu ngắn.\n2. **Xét duyệt (1–3 ngày làm việc)** — Đội ngũ của chúng tôi sẽ xem xét và trả lời qua email.\n3. **Bắt đầu kiếm tiền** — Chia sẻ đường link riêng và nhận hoa hồng cho mỗi đơn hàng.\n\nNếu có câu hỏi, bạn cứ hỏi nhé!',
+      JA: 'アフィリエイトパートナーになりませんか？💼\n\n1. **申し込み** — 簡単なフォームにご記入ください。\n2. **審査（1〜3営業日）** — チームが確認し、メールでご連絡します。\n3. **活動開始・報酬** — 専用リンクをシェアすると、販売ごとに報酬を受け取れます。\n\nご不明な点があれば、お気軽にお尋ねください！',
+      ZH: '欢迎成为我们的推广合作伙伴！💼\n\n1. **提交申请** — 填写一份简短的表格。\n2. **审核（1–3 个工作日）** — 我们的团队审核后会通过邮件回复您。\n3. **开始赚取收益** — 分享您的专属链接，每笔销售都可获得佣金。\n\n如有任何问题，欢迎随时咨询！',
+    },
+    followUps: [FOLLOW_UP_AFFILIATE_APPLY, FOLLOW_UP_AFFILIATE_DETAILS, FOLLOW_UP_END],
+  },
+  affiliate_details: {
+    utterance: {
+      EN: 'Tell me more about the affiliate program.',
+      ES: 'Cuéntame más sobre el programa de afiliados.',
+      KO: '제휴 프로그램에 대해 더 알려주세요.',
+      VI: 'Cho tôi biết thêm về chương trình affiliate.',
+      JA: 'アフィリエイトプログラムについて詳しく教えてください。',
+      ZH: '请介绍一下推广合作计划。',
+    },
+    reply: {
+      EN: 'Affiliates share a personal referral link on their social media, blog or website. When someone buys through your link, you earn a commission on that sale. Applications are reviewed within 1–3 business days, and approved partners receive their link and the full program terms by email.',
+      ES: 'Los afiliados comparten un enlace de referido personal en sus redes sociales, blog o sitio web. Cuando alguien compra a través de tu enlace, ganas una comisión por esa venta. Las solicitudes se revisan en 1–3 días hábiles, y los socios aprobados reciben su enlace y las condiciones completas del programa por correo.',
+      KO: '제휴 파트너는 SNS, 블로그, 웹사이트에 전용 추천 링크를 공유해요. 누군가 그 링크로 구매하면 해당 판매에 대한 수수료를 받게 됩니다. 신청서는 1–3영업일 내에 검토되며, 승인된 파트너에게는 전용 링크와 프로그램 상세 조건을 이메일로 보내드려요.',
+      VI: 'Cộng tác viên chia sẻ đường link giới thiệu riêng trên mạng xã hội, blog hoặc website của mình. Khi có người mua hàng qua link của bạn, bạn nhận hoa hồng cho đơn hàng đó. Đơn đăng ký được xét trong 1–3 ngày làm việc; đối tác được duyệt sẽ nhận link và điều khoản đầy đủ của chương trình qua email.',
+      JA: 'アフィリエイトパートナーは、SNS・ブログ・ウェブサイトで専用の紹介リンクをシェアします。そのリンク経由で購入があると、その売上に応じた報酬を受け取れます。お申し込みは1〜3営業日以内に審査し、承認されたパートナーには専用リンクとプログラムの詳しい条件をメールでお送りします。',
+      ZH: '推广合作伙伴可以在社交媒体、博客或网站上分享专属推荐链接。有人通过您的链接购买时，您即可获得该笔销售的佣金。申请将在 1–3 个工作日内完成审核，通过审核的合作伙伴会通过邮件收到专属链接和完整的计划条款。',
+    },
+    followUps: [FOLLOW_UP_AFFILIATE_APPLY, FOLLOW_UP_END],
+  },
 };
 
 
@@ -317,6 +397,9 @@ export const SCENARIOS: Record<string, ScenarioScript> = {
 export const SCRIPT_BY_BUTTON_ACTION: Record<string, string> = {
   delivery_status: 'shipping_policy',
   cancel_refund: 'cancel_refund',
+  // The Affiliate button runs the script of the same name (ivy-docs T12); listed
+  // so the console shows it as reached from a button, not a follow-up chip.
+  affiliate: 'affiliate',
 };
 
 /** The reverse lookup, for reading overrides a console saved under the old key. */
@@ -344,11 +427,20 @@ export function resolveScriptAction(action: string): string {
 
 /**
  * Chip ids the widget handles itself rather than as a script.
- * `end_chat` is styled separately in the thread; the other two open a flow.
+ * `end_chat` ends the conversation and asks for a rating (ivy-docs T12); the
+ * others open a flow.
  */
 // `track_delivery` (ivy-docs T09/T10): the widget opens the shopper's delivery
 // cards — the chip the design puts under the return policy answer.
-export const CONTROL_FOLLOW_UP_IDS = new Set(['agent_connect', 'my_orders', 'end_chat', 'track_delivery']);
+// `affiliate_apply` (ivy-docs T12): the contact form, filled in for an
+// affiliate application — it lands in Inquiries like any contact form.
+export const CONTROL_FOLLOW_UP_IDS = new Set([
+  'agent_connect',
+  'my_orders',
+  'end_chat',
+  'track_delivery',
+  'affiliate_apply',
+]);
 
 /**
  * A follow-up chip only does something if its id names a script or a control.

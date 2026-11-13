@@ -25,6 +25,10 @@ import { START_OVER_ID } from './reply-chips';
  * send says so in an error toast and keeps what was typed. Once sent, the form
  * gives way to the shopper's "Your inquiry" card and the bot's confirmation —
  * kept on the thread insert, so it survives re-renders.
+ *
+ * The affiliate "Apply now" chip opens the same form (ivy-docs T12 §8-2a) with
+ * its own lead line and the message filled in, so an application reaches the
+ * team the way any inquiry does: the Inquiries tab and the support mailbox.
  */
 
 const now = () => new Date().toISOString();
@@ -56,12 +60,16 @@ function ContactForm({
 }: {
   sessionToken: string | null;
   conversationId: string | null;
-  defaults: { name: string; email: string };
+  defaults: { name: string; email: string; message?: string };
   onSent: (form: InquiryInput) => void;
 }) {
   const { t } = useTranslation();
   const id = useId();
-  const [form, setForm] = useState<InquiryInput>({ name: defaults.name, email: defaults.email, message: '' });
+  const [form, setForm] = useState<InquiryInput>({
+    name: defaults.name,
+    email: defaults.email,
+    message: defaults.message ?? '',
+  });
   const [checked, setChecked] = useState(false);
   const [sending, setSending] = useState(false);
   const problems = checked ? inquiryProblems(form) : {};
@@ -205,6 +213,8 @@ function SentConfirmation() {
 
 export function ContactFormAnswer({
   insertKey,
+  asked,
+  lead,
   sessionToken,
   conversationId,
   defaults,
@@ -215,9 +225,14 @@ export function ContactFormAnswer({
   onStartOver,
 }: {
   insertKey: string;
+  /** The chip that opened the form, echoed as the shopper's bubble ("Apply now", T12). */
+  asked?: string | null;
+  /** The bot's line above the form; the contact form's own by default. */
+  lead?: string;
   sessionToken: string | null;
   conversationId: string | null;
-  defaults: { name: string; email: string };
+  /** `message` pre-fills the form (the affiliate application, T12 §8-2a). */
+  defaults: { name: string; email: string; message?: string };
   /** What was sent from this form; absent = the form is still open. */
   sent?: InquiryInput;
   picked?: string;
@@ -228,7 +243,12 @@ export function ContactFormAnswer({
   const { t } = useTranslation();
   return (
     <div className="space-y-2">
-      <MessageBubble message={{ id: `${insertKey}-lead`, senderType: 'ai', body: t('contact.form.lead'), createdAt: now() }} />
+      {asked && (
+        <MessageBubble message={{ id: `${insertKey}-asked`, senderType: 'user', body: asked, createdAt: now() }} />
+      )}
+      <MessageBubble
+        message={{ id: `${insertKey}-lead`, senderType: 'ai', body: lead ?? t('contact.form.lead'), createdAt: now() }}
+      />
       {sent ? (
         <>
           <SentCard form={sent} />

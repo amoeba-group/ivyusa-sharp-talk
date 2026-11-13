@@ -100,9 +100,11 @@ export const vi: Translation = {
     endConfirm: 'Kết thúc cuộc trò chuyện này?',
     endCancel: 'Hủy',
     endedNotice: 'Cuộc trò chuyện đã kết thúc. Gửi tin nhắn để bắt đầu cuộc trò chuyện mới.',
-    csatQuestion: 'Bạn hài lòng với cuộc trò chuyện này ở mức nào?',
-    csatThanks: 'Cảm ơn phản hồi của bạn 🙏',
-    csatDismiss: 'Đóng',
+    // T12 (Figma 1006:6110): the question above the card, then the card's title.
+    csatPrompt: 'Hy vọng cuộc trò chuyện hôm nay đã giúp ích cho bạn. Bạn thấy thế nào?',
+    csatTitle: 'Vui lòng chọn mức độ hài lòng',
+    csatThanks: 'Cảm ơn bạn đã góp ý',
+    csatDismiss: 'Bỏ qua',
     csatStar: '{{count}} sao',
     connectingAgent: 'Đang kết nối bạn với nhân viên hỗ trợ. Vui lòng chờ trong giây lát…',
     callback: {
@@ -227,10 +229,11 @@ export const vi: Translation = {
     threadColleagues: '{{count}} cuộc trò chuyện trước của đồng nghiệp cùng công ty — nhân viên hỗ trợ có thể xem.',
     threadLoadError: 'Không tải được các cuộc trò chuyện trước',
     threadNone: 'Chưa có cuộc trò chuyện trước',
-    endedThanks: 'Cảm ơn bạn đã liên hệ!',
+    endedThanks: 'Cảm ơn bạn đã trò chuyện cùng chúng tôi!',
+    // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
-      1: 'Rất không hài lòng',
-      2: 'Không hài lòng',
+      1: 'Không hài lòng',
+      2: 'Hơi không hài lòng',
       3: 'Bình thường',
       4: 'Hài lòng',
       5: 'Rất hài lòng',
@@ -294,6 +297,9 @@ export const vi: Translation = {
       emailPlaceholder: 'Nhập email của bạn',
       message: 'Nội dung',
       messagePlaceholder: 'Hãy mô tả điều bạn cần hỗ trợ',
+      // Affiliate "Apply now" (T12 §8-2a): the same form, for an application.
+      affiliateLead: 'Để lại thông tin, đội ngũ của chúng tôi sẽ gửi email cho bạn về chương trình affiliate.',
+      affiliateMessage: 'Tôi muốn tham gia chương trình affiliate.\nKênh tôi sẽ chia sẻ sản phẩm (Instagram, TikTok, blog…): ',
       send: 'Gửi tin nhắn',
       sending: 'Đang gửi…',
       errors: {
@@ -318,18 +324,6 @@ export const vi: Translation = {
       successBody: 'Đội hỗ trợ sẽ xem yêu cầu và trả lời qua địa chỉ email bạn đã cung cấp.',
       successHint: 'Vui lòng kiểm tra hộp thư để nhận phản hồi.',
     },
-  },
-
-  affiliate: {
-    title: 'Chương trình cộng tác viên',
-    steps: [
-      'Đăng ký tham gia chương trình',
-      'Xét duyệt trong 1–3 ngày làm việc',
-      'Nhận hoa hồng 10% cho mỗi lượt giới thiệu',
-    ],
-    apply: 'Đăng ký ngay',
-    pending: 'Đơn đăng ký của bạn đang được xét duyệt.',
-    approved: 'Bạn đã được duyệt làm cộng tác viên!',
   },
 
   orders: {

@@ -28,9 +28,10 @@ import { ScenarioMenu } from './ScenarioMenu';
 import { AuthGate } from './AuthGate';
 import { ContactAnswer } from './ContactCard';
 import { ContactFormAnswer } from './ContactForm';
-import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import {
+  AFFILIATE_APPLY_ID,
+  END_CHAT_ID,
   OTHER_CATEGORIES_ID,
   PRODUCT_HELP_IDS,
   replyChips,
@@ -48,7 +49,7 @@ import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
 import { CALLBACK_CHIP_ID } from '../../../../../packages/types/src/common/chat-close';
 import { contactChannels, type InquiryInput } from '../../../../../packages/types/src/common/inquiry';
 
-type Inline = 'auth' | 'affiliate' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
+type Inline = 'auth' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
 
 /**
  * Something the widget adds to the thread itself (ivy-docs T09): the My Orders
@@ -62,7 +63,8 @@ type Inline = 'auth' | 'affiliate' | 'contactEmail' | 'callback' | 'orders' | 'c
  * remembers which chip of the row was tapped, so it stays outlined.
  *
  * Contact Support (T11) adds two: the channel cards, and the contact form —
- * which becomes the shopper's "Your inquiry" card once `sent`.
+ * which becomes the shopper's "Your inquiry" card once `sent`. The affiliate
+ * "Apply now" (T12) opens that same form for an application (`purpose`).
  */
 type ThreadInsert = {
   key: string;
@@ -76,7 +78,20 @@ type ThreadInsert = {
   picked?: string;
   /** contactForm: what was sent from it. */
   sent?: InquiryInput;
+  /** contactForm: an affiliate application (T12 §8-2a) — its own lead line and message. */
+  purpose?: 'affiliate';
 };
+
+/** A skipped rating is remembered per conversation (same key the card used before T12). */
+const csatSkipKey = (id: string) => `ivy.csat.dismissed.${id}`;
+function csatSkipped(id: string): boolean {
+  try {
+    return localStorage.getItem(csatSkipKey(id)) === '1';
+  } catch {
+    // Private mode / blocked storage: asking again is the safe default.
+    return false;
+  }
+}
 
 
 export function ChatTab() {
@@ -187,7 +202,33 @@ export function ChatTab() {
    * its thanks state survives the status flip instead of vanishing mid-read.
    */
   const [ratedIn, setRatedIn] = useState<string | null>(null);
-  const showCsat = !!conversationId && (canRate || ratedIn === conversationId);
+  // Saved, not just sent: the thanks and the ended mark wait for the server, so
+  // a failed save does not flash them before the card reports the error.
+  const [ratedOkIn, setRatedOkIn] = useState<string | null>(null);
+  // Skip (ivy-docs T12 D3): no rating sent, the card gives way to the ended mark.
+  const [skippedIn, setSkippedIn] = useState<string | null>(null);
+  const rated = !!conversationId && ratedOkIn === conversationId;
+  const skipped = !!conversationId && (skippedIn === conversationId || csatSkipped(conversationId));
+  const showCsat = !!conversationId && (canRate || ratedIn === conversationId) && !skipped;
+  // Still waiting for the shopper's answer: the ended mark waits below it (BR-13).
+  const csatOpen = showCsat && !rated;
+  // The close policy can ask for a rating while the chat is still live; the
+  // server then says its own prompt and thank-you lines (PLN-261026). The
+  // widget's own lines (T12) only speak for a card that came after the end.
+  const [csatLive, setCsatLive] = useState<string | null>(null);
+  useEffect(() => {
+    if (showCsat && conversationId && status !== 'ended' && csatLive !== conversationId) setCsatLive(conversationId);
+  }, [showCsat, conversationId, status, csatLive]);
+  const csatOwnLines = showCsat && status === 'ended' && csatLive !== conversationId;
+  function skipRating() {
+    if (!conversationId) return;
+    try {
+      localStorage.setItem(csatSkipKey(conversationId), '1');
+    } catch {
+      /* not being able to remember is better than not being able to skip */
+    }
+    setSkippedIn(conversationId);
+  }
   // Tell the header × whether closing should ask for feedback (PLN-261027 D1):
   // an ongoing conversation (not the agent queue) the shopper wrote in and has
   // not rated. `end` is how the prompt's buttons finish it.
@@ -204,6 +245,7 @@ export function ChatTab() {
     setRatedIn(id);
     try {
       await rate(rating, survey);
+      setRatedOkIn(id);
     } catch (e) {
       setRatedIn(null);
       throw e;
@@ -283,7 +325,7 @@ export function ChatTab() {
   useEffect(() => {
     scrollToEnd();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, inline, inserts, showEscalate, waitMode, endConfirm, status]);
+  }, [messages, inline, inserts, showEscalate, waitMode, endConfirm, status, canRate, ratedOkIn, skippedIn]);
 
   /**
    * Chat tab badge (PLN-260817 W-1). The thread keeps polling while the shopper
@@ -378,7 +420,10 @@ export function ChatTab() {
         addInsert('contact', button.label);
         return;
       case 'affiliate':
-        setInline('affiliate');
+        // A script now (ivy-docs T12 D1): the server keeps the exchange, so the
+        // thread has a conversation to rate after End, and the answer sits
+        // where it was asked (BUG-024).
+        void scenario('affiliate', button.label).then(runPostAction);
         return;
       case 'cancel_refund':
         void scenario('cancel_refund', button.label).then(runPostAction);
@@ -439,7 +484,7 @@ export function ChatTab() {
         addInsert('contact');
         return;
       case 'open_affiliate':
-        setInline('affiliate');
+        void scenario('affiliate', t('chat.scenarios.affiliate')).then(runPostAction);
         return;
       case 'connect_agent':
         void requestAgent();
@@ -466,7 +511,7 @@ export function ChatTab() {
   function addInsert(
     kind: ThreadInsert['kind'],
     asked?: string | null,
-    extra: Pick<ThreadInsert, 'categories' | 'category'> = {},
+    extra: Pick<ThreadInsert, 'categories' | 'category' | 'purpose'> = {},
   ) {
     insertSeq.current += 1;
     setInserts((prev) => [...prev, { key: `${kind}-${insertSeq.current}`, kind, at: messages.length, asked, ...extra }]);
@@ -575,6 +620,17 @@ export function ChatTab() {
       case TRACK_DELIVERY_ID:
         trackDelivery(label);
         return;
+      case END_CHAT_ID:
+        // The chip is the shopper's explicit choice — no confirm row (T12 D2,
+        // design 1006:6050). Before T12 it went to the server as a script that
+        // does not exist and came back "that didn't go through" (BUG-025).
+        setShowEscalate(false);
+        setEndConfirm(false);
+        void endChat();
+        return;
+      case AFFILIATE_APPLY_ID:
+        addInsert('contactForm', label, { purpose: 'affiliate' });
+        return;
       default:
         void scenario(id, label).then(runPostAction);
         return;
@@ -599,7 +655,9 @@ export function ChatTab() {
     !sending &&
     !showEscalate &&
     inline === null &&
-    !insertAtEnd;
+    !insertAtEnd &&
+    // An ended chat closes with the rating and the ended mark (T12 D3).
+    status !== 'ended';
 
   const renderInserts = (at: number) =>
     inserts
@@ -668,9 +726,15 @@ export function ChatTab() {
           <ContactFormAnswer
             key={x.key}
             insertKey={x.key}
+            asked={x.asked}
+            lead={x.purpose === 'affiliate' ? t('contact.form.affiliateLead') : undefined}
             sessionToken={sessionToken}
             conversationId={conversationId}
-            defaults={{ name: customerName ?? '', email: customerEmail ?? '' }}
+            defaults={{
+              name: customerName ?? '',
+              email: customerEmail ?? '',
+              message: x.purpose === 'affiliate' ? t('contact.form.affiliateMessage') : '',
+            }}
             sent={x.sent}
             picked={x.picked}
             disabled={sending}
@@ -835,7 +899,7 @@ export function ChatTab() {
             <MessageBubble message={m} />
             {/* Scenario follow-up chips on the latest message only (FR-S1),
                 plus the shared Start over (BR-12, T09 D3). */}
-            {i === messages.length - 1 && !insertAtEnd && !!m.quickReplies?.length && (
+            {i === messages.length - 1 && !insertAtEnd && !!m.quickReplies?.length && status !== 'ended' && (
               <div className="flex flex-wrap gap-1.5 pl-1">
                 {withStartOver(m.quickReplies, t('chat.startOver')).map((q) => (
                   <ChatChip
@@ -888,26 +952,36 @@ export function ChatTab() {
           </div>
         )}
 
+        {/* End → rating → ended (ivy-docs T12 D3, BR-13, Figma 1006:6110 →
+            1006:6290): the question, the card, the thanks, then the ended mark
+            — which waits until the shopper rates or skips. The server decides
+            whether rating is open (PLN-260810 P3, PLN-261026 S3), so the card
+            cannot outlive what the API accepts. */}
+        {csatOwnLines && (
+          <MessageBubble
+            message={{ id: `csat-ask-${conversationId}`, senderType: 'ai', body: t('chat.csatPrompt'), createdAt: new Date().toISOString() }}
+          />
+        )}
+        {showCsat && conversationId && (
+          <CsatCard key={conversationId} mode={csatMode} onRate={rateHere} onSkip={skipRating} />
+        )}
+        {csatOwnLines && rated && csatMode !== 'survey' && (
+          <MessageBubble
+            message={{ id: `csat-thanks-${conversationId}`, senderType: 'ai', body: t('chat.csatThanks'), createdAt: new Date().toISOString() }}
+          />
+        )}
+
         {/* Ended — set by our end button OR an agent ending the thread. The
             design closes the conversation with a mark rather than a hairline
             divider (frame 69), which reads as a finished errand. */}
-        {status === 'ended' && (
-          <div className="flex flex-col items-center gap-2 py-4">
+        {status === 'ended' && !csatOpen && (
+          <div className="flex flex-col items-center gap-2 py-4" data-testid="chat-ended">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-success/15">
               <Check className="h-6 w-6 text-success" />
             </span>
             <span className="text-sm font-bold text-gray-900">{t('chat.endedTitle')}</span>
             <span className="text-xs text-gray-400">{t('chat.endedThanks')}</span>
           </div>
-        )}
-
-        {/* Satisfaction (PLN-260810 P3, PLN-261026 S3). The server decides
-            whether rating is open — after the end, or while live when the close
-            policy asked — so the card cannot outlive what the API accepts. One
-            slot for both cases: the ended mark above slides in without
-            remounting the card, so its thanks state is kept. */}
-        {showCsat && conversationId && (
-          <CsatCard key={conversationId} conversationId={conversationId} mode={csatMode} onRate={rateHere} />
         )}
 
         {waitMode && <TypingBubble mode={waitMode} />}
@@ -964,9 +1038,6 @@ export function ChatTab() {
             onPick={onConsultPick}
             onSkip={onConsultSkip}
           />
-        )}
-        {inline === 'affiliate' && (
-          <AffiliateCard sessionToken={sessionToken} />
         )}
 
         {showEscalate && (
