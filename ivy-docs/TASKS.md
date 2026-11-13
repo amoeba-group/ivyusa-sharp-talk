@@ -39,7 +39,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261113-IVY-Affiliate-Config.md)) | TC-12-01..06 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ✅ | TC-13-01..06 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ✅ | TC-14-01..07 |
-| 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ⬜ | TC-15-01..04 |
+| 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ✅ | TC-15-01..06 |
 | 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | ⬜ | TC-16-01..03 |
 
 > Baseline E2E trên commit `583ce121` + tài liệu này: xem [TEST-CASES.md §0](TEST-CASES.md).
@@ -119,7 +119,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 
 ### T07 · Chọn & xoá — ✅ (2026-11-12) · [PLN](../docs/plan/PLN-261111-IVY-T07-Select-Delete.md) · [RPT](../docs/implementation/RPT-261112-IVY-T07-Select-Delete.md)
 - **Figma:** `992:526`, `1006:2814`, `1006:2698`. **Gap:** G-11. **BR:** 09.
-- **Quyết định của chủ dự án (2026-11-12):** "Delete All" chỉ xoá **chip đang xem**; vuốt trái để xoá chưa làm, để T15 cân nhắc.
+- **Quyết định của chủ dự án (2026-11-12):** "Delete All" chỉ xoá **chip đang xem**; vuốt trái để xoá chưa làm, để T15 cân nhắc. **T15 (2026-11-13, 3a):** vẫn chưa làm.
 - **Đã làm:**
   - Copy "Delete Selected Notifications" / "Delete All Notifications" (KO 선택 알림 삭제 / 전체 알림 삭제), 6 ngôn ngữ, bỏ số đếm trong nút.
   - Xác nhận "Delete All" ngay trong panel (`role="alertdialog"`), thay `window.confirm`. Focus ở Cancel; Esc chỉ đóng hộp xác nhận.
@@ -289,9 +289,18 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - `npm run i18n:check` xanh; không còn chữ chưa dịch hay viết cứng trong widget.
 - **TC:** TC-14-01..07.
 
-### T15 · Responsive & a11y — ⬜
-- **Việc cần làm:** ≤ 480px → panel toàn màn hình; focus vào panel khi mở; `Esc` đóng; `aria-pressed` cho chip; không lỗi console.
-- **TC:** TC-15-01..04 (TC-15-01 chạy ở project `mobile`).
+### T15 · Responsive & a11y — ✅ (2026-11-13) · [PLN](../docs/plan/PLN-261113-IVY-T15-Responsive-A11y.md) · [RPT](../docs/implementation/RPT-261113-IVY-T15-Responsive-A11y.md)
+- **Chủ dự án duyệt (2026-11-13):** `1. ok 2. a 3. a`.
+  - 2a: điện thoại màn cao cũng phủ kín màn hình.
+  - 3a: chưa làm vuốt trái để xoá (BR-09 tuỳ chọn); trên điện thoại vẫn xoá bằng Chọn → "Delete Selected".
+- **Đã làm:**
+  - Điện thoại (màn < 640px, cùng quy tắc với `embed.js`): panel `100vw × 100dvh`, kể cả iPhone 15 / Pixel 7 (trước: bottom sheet cao 680px).
+  - Trang widget mở thẳng (`talk.ivyusa.com/widget/`) trên điện thoại: bố cục điện thoại như trên ivyusa.com (BUG-030).
+  - Tab / Shift+Tab đi vòng trong panel, không thoát ra trang phía sau (BUG-029, NFR-02). Nút đang có focus mà biến mất (ví dụ Accept của banner đồng ý) thì focus về lại panel, không rơi ra `<body>`.
+  - Đã có từ trước, nay kiểm lại: Esc đóng panel, `aria-pressed` cho chip, `aria-selected` cho tab, console sạch.
+  - 6 ngôn ngữ trên điện thoại 390×844: không gì tràn hay bị cắt.
+  - `test:ci` chạy thêm project `mobile`, để TC-15-01 vào cổng.
+- **TC:** TC-15-01..06.
 
 ### T16 · Deploy & smoke production — ⬜
 - **Điều kiện:** máy chạy test phải nằm trong allowlist của ELB (BUG-004); người có quyền server (`secrets/`).

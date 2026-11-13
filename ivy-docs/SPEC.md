@@ -113,6 +113,10 @@ Launcher (góc phải dưới) ─► Panel 380px
 ### SCR-IVY-01 · Launcher & Panel
 - **Figma:** mockup desktop `1006:2431`, `1006:2455`, `1006:4258`, `1006:5260`, `1006:5374`, `1006:5398`, `1008:2755` (1903×901 trên nền ivyusa.com); mobile `1282:17` (iPhone 15 Pro).
 - Launcher tròn góc phải dưới; bấm → panel 380px nổi phía trên launcher; trên mobile ≤ 480px → panel toàn màn hình.
+- **Đã làm (T15, 2026-11-13):**
+  - Điện thoại theo quy tắc của `embed.js`: màn < 640px → panel `100vw × 100dvh`, kể cả màn cao (chủ dự án chọn 2a; trước là bottom sheet 680px).
+  - Trang widget mở thẳng trên điện thoại hiện giống vậy.
+  - Focus đi vòng trong panel.
 - ✕ đóng panel; `Esc` cũng đóng; mở lại giữ tab/vị trí cuộn cuối cùng.
 
 ### SCR-IVY-02 · Header & ngôn ngữ
@@ -344,8 +348,8 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-20 | CSAT **4** mặt + **건너뛰기** | **5** mặt (thang 1–5, cố ý), nút "닫기" (`CsatCard.tsx`) | Quyết định Q-12; đổi "닫기" → "건너뛰기"; dòng "상담이 종료되었습니다" hiện **sau** khi đánh giá (hiện đang ở trên) | UI · I18N | T12 ✅ (2026-11-13; 4 mặt lưu 1·3·4·5; câu hỏi → thẻ → cảm ơn → khối kết thúc) |
 | G-21 | Settings/Privacy | Đã có đủ khối (`PreferencesPanel.tsx`); không có tiêu đề màn | Đối chiếu copy/khoảng cách; header biến thể (Q-09) | UI | T13 ✅ (2026-11-13; theo ảnh `1004:1367`: cỡ chữ, khoảng cách, nút viền đỏ, toggle 44×24, câu "stops immediately". Tiêu đề màn: thanh 2a "← Settings" màu brand, chủ dự án chốt) |
 | G-22 | Copy KO/EN theo thiết kế | i18n 6 ngôn ngữ đã có (`apps/widget/src/i18n/locales/*.ts`) | Thêm/sửa key mới; chạy `npm run i18n:check` | I18N | T14 ✅ (2026-11-13; so với bản trích chữ Figma: KO pill 결제완료, "리뷰 쓰기", "고객님께 배송중입니다!"; tóm tắt đơn theo BR-08; tiếng Hàn ngắt ở dấu cách; bước giao hàng theo ngôn ngữ widget; chip ES / VI xuống hàng) |
-| G-23 | A11y chip lọc | ~~Chip không có `aria-pressed`~~ → có từ T02; badge tab có `aria-label` "{n} unread" ✓ | Bổ sung theo NFR-02 | UI | T15 |
-| G-24 | Mobile toàn màn hình | Có chế độ `compact=1` / `mode=app` | Kiểm thử 390px, sửa tràn | UI | T15 |
+| G-23 | A11y chip lọc | ~~Chip không có `aria-pressed`~~ → có từ T02; badge tab có `aria-label` "{n} unread" ✓ | Bổ sung theo NFR-02 | UI | T15 ✅ (2026-11-13; thêm: focus không thoát khỏi panel, TC-15-05) |
+| G-24 | Mobile toàn màn hình | Có chế độ `compact=1` / `mode=app` | Kiểm thử 390px, sửa tràn | UI | T15 ✅ (2026-11-13; điện thoại kín màn `100dvh`; trang mở thẳng cũng vậy; 6 ngôn ngữ ở 390×844 không tràn) |
 | G-25 | Báo hàng về thật (재입고 알림) | `POST /restock/subscribe` có, nhưng `notifyRestock` không được gọi ở đâu (không có nguồn báo khi Shopify có hàng lại) và bản đăng ký không lưu tenant | Nguồn báo hàng về (webhook `inventory_levels/update` hoặc product sync) → thông báo trong app; chip Restock alert đăng ký cho sản phẩm cụ thể | API · UI | Task riêng (chủ dự án chốt 2026-11-12, T10 §8-4a) |
 
 **Đã khớp thiết kế (giữ nguyên):** menu 6 ngôn ngữ (`LanguageSwitcher.tsx`), nút Settings/Close, badge tab (99+), nhóm "Today's/Yesterday" (code: "Today's notifications"/"Yesterday"), thẻ giao hàng + stepper ngang (`TrackingStepperH.tsx`), chế độ chọn/xoá, review list + form, typing bubble "답변을 작성 중입니다…", Settings (consent + ngày + version, marketing opt-out, CCPA, export JSON, delete).

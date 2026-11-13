@@ -48,7 +48,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T12 | 0 / 4 → **6 / 6** ✅ (T12, 2026-11-13; thêm TC-12-05..06) | tất cả | — |
 | T13 | 4 / 4 → 6 / 6 (T13) → **7 / 7** ✅ (2a, 2026-11-13; thêm TC-13-07) | tất cả | — |
 | T14 | 7 / 8 → 8 / 8 (nhờ T02) → **20 / 20** ✅ (T14, 2026-11-13; thêm TC-14-04..07) | tất cả | — |
-| T15 | 3 / 4 → 4 / 4 (nhờ T02: chip `aria-pressed`) | TC-15-02, 03, 04 | TC-15-01 (project `mobile`): chạy lại 2026-11-13, đỏ cả trước và sau T14 (panel 380px trên màn 412px). Việc của T15, chưa vào cổng CI |
+| T15 | 3 / 4 → **12 / 12** ✅ (T15, 2026-11-13; TC-15-01 sửa xong, thêm TC-15-05 ×2, TC-15-06 ×6) | tất cả | — |
 
 > T16 (`@prod`) không chạy ở baseline vì talk.ivyusa.com trả 403 cho máy này (BUG-004).
 > Khi một task xong, cập nhật lại dòng của task đó (chạy `npm run test:task -- @Tnn`).
@@ -75,7 +75,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-01-05 | Đóng/mở | Close → ẩn; mở lại vẫn ở tab cũ; `Esc` → ẩn | SCR-IVY-01 |
 | TC-01-06 | Rộng 380px (theme thật) | bề rộng panel 378–382px, **chờ** theme của tenant về (panel có thể mở ở 404px mặc định trước đó, BUG-018) | G-03, §4 |
 | TC-01-07 | Settings | ⚙ → "Chat & AI consent"; Back → về tab | SCR-IVY-02 |
-| TC-01-08 ×11 | Mọi kích thước màn hình, mở qua **`embed.js` thật** trên một trang storefront (tag `@devices`) | Panel nằm trọn trong màn hình. ≥ 640px: 380 × min(600, frame − 20). < 640px: rộng bằng màn hình, cao min(680, màn hình), bám đáy. Header "Hi, Kiho", 2 tab và nút Close đều hiện trong panel | SCR-IVY-01, yêu cầu 2026-11-10 "PC, tablet, mọi mobile" |
+| TC-01-08 ×11 | Mọi kích thước màn hình, mở qua **`embed.js` thật** trên một trang storefront (tag `@devices`) | Panel nằm trọn trong màn hình. ≥ 640px: 380 × min(600, frame − 20). < 640px: **kín màn hình** (từ T15; trước đó: cao min(680, màn hình), bám đáy). Header "Hi, Kiho", 2 tab và nút Close đều hiện trong panel | SCR-IVY-01, yêu cầu 2026-11-10 "PC, tablet, mọi mobile" |
 
 **Kết quả T01 (2026-11-10, local):** 7/7 + TC-01-08 11/11 ✅. Kích thước đo được:
 
@@ -84,7 +84,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | PC 1920×1080 · laptop 1366×768 · cửa sổ thấp 1280×650 | 380×600 |
 | iPad dọc 768×1024 · ngang 1024×768 · iPad Pro 1024×1366 | 380×600 |
 | điện thoại 320×568 · iPhone SE 375×667 | toàn màn hình |
-| iPhone 15 390×844 · Pixel 7 412×915 | bottom sheet rộng hết màn, cao 680 |
+| iPhone 15 390×844 · Pixel 7 412×915 | bottom sheet rộng hết màn, cao 680 → **kín màn hình** từ T15 (2026-11-13) |
 | điện thoại xoay ngang 844×390 | 380×370 (tự co, không bị cắt) |
 
 ## T02 · Notifications — Order (`02-notifications-order.spec.ts`)
@@ -382,10 +382,14 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
-| TC-15-01 | Mobile (Pixel 7) | panel rộng ≥ 95% viewport, sát mép trái | NFR-03 |
+| TC-15-01 | Mobile (Pixel 7), trang widget **mở thẳng** (không qua `embed.js`) | panel rộng ≥ 95% viewport, sát mép trái | NFR-03, BUG-030 |
 | TC-15-02 | Console sạch | đi qua mọi tab/chip/settings → 0 lỗi console | NFR-04 |
 | TC-15-03 | Bàn phím | Tab → focus nằm trong panel; Esc → đóng | NFR-02 |
 | TC-15-04 | ARIA | tab `aria-selected`; chip `aria-pressed` đổi theo lựa chọn | NFR-02, G-23 |
+| TC-15-05 ×2 | Focus không thoát | (1) Chờ panel tải xong, Tab ×40: focus luôn trong panel; Shift+Tab từ nút đầu (Language) vẫn trong panel; Tab tiếp → về Language. (2) Banner đồng ý: focus Accept, Enter → banner mất, focus vẫn trong panel; Tab tiếp vẫn trong panel | NFR-02, BUG-029 |
+| TC-15-06 ×6 | Điện thoại 390×844 qua `embed.js`, 6 ngôn ngữ (tag `@devices`) | Panel 390×844 tại (0,0). Mọi chip, Chat, Settings: không phần tử nào vượt mép panel, không chữ bị khung cắt | NFR-03, G-24 |
+
+**Kết quả (2026-11-13):** T15 + T01 (desktop + mobile) 29/29. Thử ngược: bỏ phần sửa trong widget và loader thì đúng 8 ca đỏ (TC-15-01 380px, TC-15-05 focus ra ngoài, TC-15-06 ×6 cao 680); ca banner (TC-15-05 thứ 2) bỏ phần sửa thì 3/3 đỏ. TC-15-05 ×2 lặp 20 lần: 40/40. `npm run test:ci`: 132 / 132, chạy 2 lần (131 desktop + 1 mobile). Toàn bộ: 132 / 132 — cổng CI giờ gồm mọi test desktop và mobile. Unit widget 121/121.
 
 ## T16 · Production smoke (`16-prod-smoke.spec.ts`, chỉ `E2E_TARGET=prod`, chỉ đọc)
 

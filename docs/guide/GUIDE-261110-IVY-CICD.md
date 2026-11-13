@@ -151,8 +151,8 @@ Khi deploy fail, commit status chuyển sang *failure* và log nằm ở `~/shar
 
 ## 7. Cổng e2e (`test:ci`)
 
-`e2e/package.json` → `test:ci` = `playwright test --project=desktop --grep "@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T09|@T10|@T11|@T12|@T13"` (T01 thêm ngày 2026-11-10, gồm cả ma trận thiết bị TC-01-08; T02 và T03 thêm ngày 2026-11-11; T04–T10 thêm ngày 2026-11-12; T11 và T12 thêm ngày 2026-11-13).
-Cổng này chỉ gồm các test **đang xanh**. Sau T14 (và thanh đầu 2a của T13), cả 123 test desktop đều xanh (ivy-docs/TEST-CASES.md §0); T15 chưa vào cổng vì task chưa làm xong.
+`e2e/package.json` → `test:ci` = `playwright test --project=desktop --project=mobile --grep "@smoke|@T00|…|@T14|@T15"`. T01 thêm ngày 2026-11-10, gồm cả ma trận thiết bị TC-01-08. T02 và T03 thêm ngày 2026-11-11. T04–T10 thêm ngày 2026-11-12. T11–T15 thêm ngày 2026-11-13. Project `mobile` cũng thêm từ T15. Project này chỉ chạy test có tag `@responsive` / `@mobile-only`, hiện là TC-15-01.
+Cổng này chỉ gồm các test **đang xanh**. Sau T15, cả 131 test desktop và 1 test mobile đều xanh (ivy-docs/TEST-CASES.md §0). Mọi task T00–T15 đều đã vào cổng.
 **Khi task Tnn xong** (toàn bộ TC xanh), thêm `|@Tnn` vào `test:ci` trong cùng commit (ivy-docs/TASKS.md §0).
 
 ## 8. Vì sao server tự kéo thay vì GitHub đẩy vào

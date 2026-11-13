@@ -120,6 +120,17 @@
   var launcherSizePx = '96px';
   var isOpen = false;
   var openedAt = 0;
+  // A phone-sized page (ivy-docs T15 D1, SPEC NFR-03): decided once, when the
+  // frame URL is built, so the frame and the widget's own layout (`?compact=1`)
+  // can never disagree — a rotated phone stays a phone. The open panel then
+  // takes the whole screen. `100dvh` is the height the shopper can actually see:
+  // `100vh` counts the area under a mobile browser's toolbars, which would push
+  // the header and its X out of view; old browsers without dvh fall back to it.
+  var COMPACT = window.innerWidth < 640;
+  var FULL_H =
+    window.CSS && typeof window.CSS.supports === 'function' && window.CSS.supports('height', '100dvh')
+      ? '100dvh'
+      : '100vh';
   var pageHost = (window.location.hostname || '').toLowerCase();
   var isCafe24Host = /(^|\.)cafe24\.com$/.test(pageHost);
 
@@ -434,6 +445,16 @@
   var frameSize = { w: 444, h: 680 };
   var OPEN = { w: 'min(444px, 100vw)', h: 'min(680px, 100vh)' };
   function recomputeOpen() {
+    // A phone: the whole screen — under the storefront header when docked —
+    // not a 680px sheet with the shop still showing above it (T15 D1). The
+    // panel fills its frame edge to edge here, so nothing is held back for a gap.
+    if (COMPACT) {
+      OPEN = {
+        w: '100vw',
+        h: triggerMode && triggerOffset > 0 ? 'calc(' + FULL_H + ' - ' + triggerOffset + 'px)' : FULL_H,
+      };
+      return;
+    }
     // Floating keeps its old box exactly: bottom corner, nothing reserved.
     var reserved = triggerMode
       ? triggerOffset + Math.max(0, DOCK_BOTTOM_GAP - PANEL_GUTTER)
@@ -460,6 +481,9 @@
     recomputeOpen();
   }
   if (launcher && launcher.frame) applyFrame(launcher.frame);
+  // A first visit has no cached frame yet: settle the open box now, so a phone
+  // opens full screen even before the widget has reported its launcher.
+  else recomputeOpen();
 
   // One-shot reopen flag: set when redirect-mode sign-in navigates the tab away,
   // consumed on the return visit so the widget reopens where the shopper left
@@ -537,7 +561,7 @@
       '&parent=' + encodeURIComponent(window.location.origin) +
       // Phone-sized viewport: the widget keeps its close button even in trigger
       // mode, because a full-screen panel has no "outside" to click.
-      (window.innerWidth < 640 ? '&compact=1' : '') +
+      (COMPACT ? '&compact=1' : '') +
       // Invite key for the exposure restriction (PLN-260929): the loader has
       // already spent the link, the widget needs it to pass the server-side
       // check on every session call.

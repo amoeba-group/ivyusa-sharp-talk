@@ -6,6 +6,7 @@ import { isAppMode, postToHost } from '../../lib/host-bridge';
 import { logoUrl } from '../../lib/branding';
 import { resolveLauncher } from '../../lib/launcher';
 import { greetingFor, pickCopy } from '../../lib/copy';
+import { useStandalonePhone } from '../../hooks/useStandalonePhone';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { TopTabs } from './TopTabs';
 import { BottomTabs } from './BottomTabs';
@@ -25,6 +26,37 @@ const PANELS: Partial<Record<TabKey, () => ReactElement>> = {
   orders: () => <OrdersTab />,
   chat: () => <ChatTab />,
 };
+
+/** What Tab can land on: enabled controls in the tab order, and actually drawn. */
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]';
+
+/**
+ * Tab never leaves the open panel (ivy-docs T15 D3, SPEC NFR-02). The panel says
+ * it is a modal dialog (`aria-modal`), so focus must stay in it: past the last
+ * control Tab wraps to the first, before the first Shift+Tab wraps to the last.
+ * Hidden tabs stay mounted but are not drawn, and roving tabs sit at -1, so
+ * both are left out. The way back to the page is ✕ or Esc.
+ */
+function keepFocusInside(e: KeyboardEvent, panel: HTMLElement | null): void {
+  if (!panel) return;
+  const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (el) => el.tabIndex >= 0 && el.getClientRects().length > 0,
+  );
+  if (items.length === 0) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  const active = document.activeElement;
+  // The panel itself takes focus on open; it sits before every control.
+  const outside = !active || active === panel || !panel.contains(active);
+  if (e.shiftKey && (active === first || outside)) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && (active === last || (outside && active !== panel))) {
+    e.preventDefault();
+    first.focus();
+  }
+}
 
 /** "Don't show again" for the close-feedback prompt, per shop in this browser (PLN-261027 D4). */
 function closeFeedbackKey(): string {
@@ -164,7 +196,10 @@ export function WidgetPanel() {
   // a phone (loader adds ?compact=1) the X stays because there is no "outside".
   const triggerUnavailable = useWidgetStore((s) => s.triggerUnavailable);
   const triggerMode = resolveLauncher(theme).mode === 'trigger' && !isAppMode() && !triggerUnavailable;
-  const compact = new URLSearchParams(window.location.search).get('compact') === '1';
+  // A phone: the loader says so (`?compact=1`), or — with no loader — this page
+  // is itself phone-sized (T15 D2, `useStandalonePhone`).
+  const standalonePhone = useStandalonePhone();
+  const compact = new URLSearchParams(window.location.search).get('compact') === '1' || standalonePhone;
   const showClose = !triggerMode || compact;
   // A phone-sized page gets the bottom sheet; a host app gets the whole screen.
   const fullBleed = compact || isAppMode();
@@ -191,6 +226,47 @@ export function WidgetPanel() {
     wasSettings.current = showSettings;
   }, [showSettings]);
 
+  // A control that disappears while it has the focus — the consent banner's
+  // Accept once consent is in, a menu replaced by its answer — drops the focus
+  // onto <body>, outside the dialog (T15 D3, NFR-02), and Chrome fires no event
+  // for it. So watch the panel's own DOM: when something in it is removed while
+  // the focus was inside and is now on <body>, take it back to the panel. Focus
+  // the shopper moved elsewhere (a click on the page, another window) leaves
+  // through a focusout with the control still in place, and stays theirs.
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    let focusInside = panel.contains(document.activeElement);
+    const dropped = () => !document.activeElement || document.activeElement === document.body;
+    // A control that can no longer hold the focus: removed, switched off while
+    // it works (the banner's buttons are disabled while consent saves), or hidden.
+    const gone = (el: Element) =>
+      !el.isConnected || (el as HTMLButtonElement).disabled === true || el.getClientRects().length === 0;
+    const onFocusIn = () => {
+      focusInside = true;
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      const next = e.relatedTarget as Node | null;
+      if (next && panel.contains(next)) return;
+      const left = e.target as Element;
+      queueMicrotask(() => {
+        if (dropped() && gone(left)) panel.focus();
+        else if (!panel.contains(document.activeElement)) focusInside = false;
+      });
+    };
+    const observer = new MutationObserver(() => {
+      if (focusInside && dropped()) panel.focus();
+    });
+    observer.observe(panel, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+    panel.addEventListener('focusin', onFocusIn);
+    panel.addEventListener('focusout', onFocusOut);
+    return () => {
+      observer.disconnect();
+      panel.removeEventListener('focusin', onFocusIn);
+      panel.removeEventListener('focusout', onFocusOut);
+    };
+  }, []);
+
   // Tabs the shopper has opened at least once — mounted from then on.
   const [visited, setVisited] = useState<TabKey[]>([activeTab]);
   useEffect(() => {
@@ -202,6 +278,10 @@ export function WidgetPanel() {
   // confirmation does (T07). Read live: this listener is bound once.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        keepFocusInside(e, panelRef.current);
+        return;
+      }
       if (e.key !== 'Escape') return;
       const store = useWidgetStore.getState();
       if (store.settingsOpen) store.setSettingsOpen(false);

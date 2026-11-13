@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | ⏳ **Chờ duyệt** |
+| Trạng thái | ✅ **Đã duyệt 2026-11-13** (`1. ok 2. a 3. a`) và đã làm — [RPT-261113](../implementation/RPT-261113-IVY-T15-Responsive-A11y.md) |
 | Task | [ivy-docs/TASKS.md T15](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-01 · NFR-02 · NFR-03 · NFR-04 · G-23 · G-24 |
 | TC | TC-15-01..04 ([e2e/tests/15-responsive-a11y.spec.ts](../../e2e/tests/15-responsive-a11y.spec.ts)): TC-15-02..04 **xanh**, TC-15-01 **đỏ**. Thêm TC-15-05..06 (§5) |
 | Migration | **Không có SQL**, không đổi API |

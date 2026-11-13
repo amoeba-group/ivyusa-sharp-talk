@@ -74,10 +74,11 @@ test.describe('T01 · Panel shell, header & tabs', () => {
 /**
  * TC-01-08 — the shell through the REAL loader (embed.js on a storefront page),
  * because the loader decides the frame size and, below 640px, the phone
- * bottom-sheet (`?compact=1`). Opening the widget URL directly would test a
- * layout no shopper sees. Expected geometry (embed.js recomputeOpen + the
+ * layout (`?compact=1`). Expected geometry (embed.js recomputeOpen + the
  * .ivy-panel-desktop clamps): frame = min(panel+40, 100vw) × min(680, 100vh);
- * desktop/tablet panel = 380 × min(600, frame − 20); phone panel = the frame.
+ * desktop/tablet panel = 380 × min(600, frame − 20). A phone (< 640px) is the
+ * whole screen (ivy-docs T15 D1, owner's 2a; before T15 a tall phone got a 680px
+ * bottom sheet). The page opened directly is TC-15-01's job.
  */
 const DEVICES = [
   { name: 'desktop 1920x1080', width: 1920, height: 1080, mobile: false },
@@ -149,8 +150,8 @@ test.describe('T01 · Panel shell on every screen size (through embed.js)', () =
         const frameH = Math.min(680, d.height);
         if (d.width < 640) {
           expect(Math.abs(box.width - d.width), 'phone: full width').toBeLessThanOrEqual(1);
-          expect(Math.abs(box.height - frameH), 'phone: bottom sheet height').toBeLessThanOrEqual(2);
-          expect(Math.abs(box.y + box.height - d.height), 'phone: anchored to the bottom').toBeLessThanOrEqual(1);
+          expect(Math.abs(box.height - d.height), 'phone: full screen height (T15)').toBeLessThanOrEqual(2);
+          expect(Math.abs(box.y), 'phone: from the top of the screen').toBeLessThanOrEqual(1);
         } else {
           expect(Math.abs(box.width - 380), 'panel width 380').toBeLessThanOrEqual(2);
           expect(Math.abs(box.height - Math.min(600, frameH - 20)), 'panel height').toBeLessThanOrEqual(2);

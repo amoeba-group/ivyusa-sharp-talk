@@ -31,6 +31,8 @@
 | BUG-026 | Đổi ngôn ngữ lúc đang xem thẻ giao hàng: chữ 4 bước **giữ ngôn ngữ cũ** (tới 1 phút), cả ở Order Detail | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T14 |
 | BUG-027 | Hàng chip thông báo che chip cuối ở 380px: ES "Reseña" bị cắt nửa, VI "Đánh giá" bị che hẳn | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T14 |
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
+| BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
 | BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
@@ -130,6 +132,36 @@
 - **Fix (test):** `expect.poll` chờ độ rộng ≤ 382 rồi mới kiểm tra ≥ 378, giống TC-01-08. Sau fix: 15/15 với 4 worker.
 - **Còn mở (mức thấp):** nếu khách mở widget trước khi cấu hình tenant về, panel có thể chớp từ 404px xuống 380px. Thực tế hiếm vì cấu hình tải ngay khi trang nạp. Có thể xử lý ở T15 bằng cách chờ theme rồi mới cho mở, hoặc đổi mặc định sang 380px.
 - **Phòng ngừa:** mọi phép đo hình học phụ thuộc cấu hình tenant phải dùng `expect.poll` hoặc assertion tự chờ.
+
+## BUG-029 · Focus thoát khỏi panel
+- **Hiện tượng:** mở panel rồi bấm Tab. Sau 14 nút trong panel, focus chạy ra trang phía sau (link Shop, Add to cart…). Khi widget nằm trong khung của `embed.js`, focus rời khung sang trang shop.
+- **Nguyên nhân:**
+  - Panel là `role="dialog"` + `aria-modal="true"`, tức báo với trình đọc màn hình rằng phần còn lại của trang không dùng được.
+  - Nhưng không có gì giữ focus lại trong panel (NFR-02).
+- **Hiện tượng thứ 2 (gặp khi viết test):** focus đang ở nút Accept của banner đồng ý; banner biến mất (khách bấm Accept, hoặc trạng thái đồng ý vừa tải xong) → focus rơi ra `<body>`. Test Tab ×40 vì vậy đỏ ngẫu nhiên 2/20 lần.
+- **Fix (T15):**
+  - `keepFocusInside()` (`WidgetPanel.tsx`): Tab qua nút cuối → về nút đầu; Shift+Tab trước nút đầu → về nút cuối.
+  - Bỏ qua tab đang ẩn và tab "roving" (`tabindex=-1`).
+  - Muốn quay ra trang shop thì dùng ✕ hoặc Esc.
+  - Nút đang có focus mà bị gỡ, bị tắt (nút của banner tắt trong lúc lưu) hoặc bị ẩn → focus về panel.
+    - Chrome **không phát sự kiện nào** khi gỡ phần tử đang có focus, nên widget theo dõi DOM của panel (`MutationObserver`).
+    - Khách tự bấm ra ngoài (nút cũ vẫn còn, vẫn bấm được) thì không giành lại focus.
+  - TC-15-05 ×2.
+- **Phòng ngừa:**
+  - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
+  - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-030 · Trang widget mở thẳng trên điện thoại hiện kiểu máy tính
+- **Hiện tượng:** mở `talk.ivyusa.com/widget/?shop=…` trên điện thoại (trang chủ dự án dùng để thử, vì widget chưa gắn lên ivyusa.com). Panel hiện thẻ 370×600 lệch trái, trong khi khách vào qua `embed.js` thì nhận bố cục điện thoại. TC-15-01 đỏ từ đầu.
+- **Nguyên nhân:**
+  - Bố cục điện thoại chỉ bật khi loader gắn `?compact=1`.
+  - Mở thẳng thì không có loader, nên không ai báo "đây là điện thoại".
+  - Widget cố ý không tự đo chiều rộng, vì trong khung của loader chiều rộng đó là của khung, không phải của trang (FIX-260920).
+- **Fix (T15):**
+  - `useStandalonePhone()`: chỉ khi **không** có `?embed=1` và không phải app, trang hẹp hơn 640px (cùng quy tắc với `embed.js`) thì dùng bố cục điện thoại.
+  - Hook theo `matchMedia`, nên xoay máy thì bố cục đổi theo.
+  - TC-15-01.
+- **Phòng ngừa:** trang dùng để thử phải hiện giống trang khách thấy. Test thiết bị đi qua `embed.js` (TC-01-08, TC-15-06); TC-15-01 giữ cho trang mở thẳng.
 
 ## BUG-026 · Bước giao hàng giữ ngôn ngữ cũ
 - **Hiện tượng:** khách xem chip Delivery rồi đổi ngôn ngữ (🌐). Cả panel sang ngôn ngữ mới, chỉ chữ dưới 4 bước vẫn giữ ngôn ngữ cũ. Order Detail cũng vậy.
