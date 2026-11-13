@@ -87,7 +87,7 @@ Chủ dự án trả lời câu hỏi mở bằng **"làm 2a"**. Wireframe đã 
 
 | Deploy | Trạng thái |
 |---|---|
-| Commit | ⏳ (điền sau khi push) |
-| CI | ⏳ |
-| Server | ⏳ |
+| Commit | `4eaf37e5` trên `deploy/talk-ivyusa`, push 2026-11-13 09:02Z (`a20ca0d9..4eaf37e5`) |
+| CI | ✅ run 43397967051, xong 09:06:29Z: verify ✅, e2e gate ✅ (có `@T13`), deploy-gate ✅ |
+| Server | ⏳ **Chưa xác nhận.** Cron deploy vài phút sau khi CI xanh. Chủ dự án kiểm tra bằng `tail -n 3 ~/ivy-autodeploy.log`: tìm `4eaf37e5 deployed` |
 
