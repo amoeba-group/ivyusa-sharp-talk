@@ -64,5 +64,5 @@ Figma MCP hết lượt gọi; mình đối chiếu theo chữ trong SPEC SCR-IV
 | SQL | Không có |
 | Commit | `d85127fd` trên `deploy/talk-ivyusa`, push 2026-11-13 (`cf5f53ad..d85127fd`) |
 | CI | ✅ run 43367464469, xong 04:48:33Z: verify ✅, e2e gate ✅ (có `@T12`), deploy-gate ✅ |
-| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 3 ~/ivy-autodeploy.log`: tìm `d85127fd deployed` |
+| Server `talkaibotprd01` | ✅ **Đã deploy**, cùng bản `8b553779` (T14) mà chủ dự án xác nhận ngày 2026-11-13. Code T12 nằm trong bản đó |
 | Cấu hình production | ⏳ Chủ dự án làm [GUIDE-261113-IVY-Affiliate-Config](../guide/GUIDE-261113-IVY-Affiliate-Config.md): §1 nút 💼 Affiliate, §2 câu chữ IVY ở 6 ngôn ngữ |

@@ -53,6 +53,6 @@ Kế hoạch: [PLN-261113-IVY-T13](../plan/PLN-261113-IVY-T13-Settings-Privacy.m
 | SQL | Không có |
 | Commit | `08c5c9ac` trên `deploy/talk-ivyusa`, push 2026-11-13 (`00c526cf..08c5c9ac`) |
 | CI | ✅ run 43377337772, xong 06:18:47Z: verify ✅, e2e gate ✅ (có `@T13`), deploy-gate ✅ |
-| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 3 ~/ivy-autodeploy.log`: tìm `08c5c9ac deployed` |
+| Server `talkaibotprd01` | ✅ **Đã deploy**, cùng bản `8b553779` (T14) mà chủ dự án xác nhận ngày 2026-11-13. Code T13 nằm trong bản đó |
 | Cấu hình production | Không cần |
 | Câu hỏi mở | Thanh đầu Settings: giữ trắng như ảnh `1004:1367` hay làm 2a (màu brand "← Settings") — chờ chủ dự án trả lời |
