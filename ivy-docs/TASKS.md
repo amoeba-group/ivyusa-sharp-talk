@@ -38,7 +38,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ✅ (prod: SQL, email hỗ trợ, SMTP, mail thử — 2026-11-13) | TC-11-01..08 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261113-IVY-Affiliate-Config.md)) | TC-12-01..06 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ✅ | TC-13-01..06 |
-| 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ⬜ | TC-14-01..03 |
+| 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ✅ | TC-14-01..07 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ⬜ | TC-15-01..04 |
 | 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | ⬜ | TC-16-01..03 |
 
@@ -276,9 +276,18 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Toggle marketing giữ chữ thiết kế (3a): bật = không nhận marketing qua email / SMS / push; thông báo trong app vẫn hiện.
 - **TC:** TC-13-01..06.
 
-### T14 · i18n — ⬜
-- **Việc cần làm:** mọi key mới đủ 6 locale; copy KO bám thiết kế (sửa lỗi chính tả ở SPEC §11, ví dụ 혜택); `npm run i18n:check` xanh.
-- **TC:** TC-14-01..03.
+### T14 · i18n — ✅ (2026-11-13) · [PLN](../docs/plan/PLN-261113-IVY-T14-I18n.md) · [RPT](../docs/implementation/RPT-261113-IVY-T14-I18n.md)
+- **Chủ dự án duyệt (2026-11-13):** `1. ok 2. a`.
+- **Nguồn chữ:** bản trích toàn bộ chữ trang Figma `23:2`. Frame Settings KO `1004:1447` vẫn để chữ tiếng Anh, nên giữ bản dịch KO hiện có. Lỗi chính tả ở SPEC §11 (해택, 4월 전, KR) không có trong code.
+- **Đã làm:**
+  - Tiếng Hàn chỉ xuống dòng ở dấu cách (`html:lang(ko)`); JA / ZH giữ nguyên (BUG-028).
+  - Chữ 4 bước giao hàng lấy từ bảng của widget, nên đổi ngôn ngữ là đổi ngay (BUG-026).
+  - Hàng chip xuống hàng 2 khi không vừa (2a): ES / VI thấy đủ 4 chip, các ngôn ngữ khác vẫn 1 hàng (BUG-027).
+  - Chữ KO theo Figma: pill 결제완료, "리뷰 쓰기", "고객님께 배송중입니다!".
+  - Tóm tắt đơn theo BR-08 ở thẻ giao hàng, thẻ đơn trong chat, danh sách đơn: "+ 2 items" / "외 2개".
+  - Nhóm hôm qua ES / VI cùng kiểu nhóm hôm nay.
+  - `npm run i18n:check` xanh; không còn chữ chưa dịch hay viết cứng trong widget.
+- **TC:** TC-14-01..07.
 
 ### T15 · Responsive & a11y — ⬜
 - **Việc cần làm:** ≤ 480px → panel toàn màn hình; focus vào panel khi mở; `Esc` đóng; `aria-pressed` cho chip; không lỗi console.

@@ -30,6 +30,33 @@ export function deliveryStepState(i: number, stepIndex: number, count: number): 
 }
 
 /**
+ * `orders.trackingSteps` is the one translation key that is an ARRAY, and
+ * i18next's `returnObjects` hands back whatever the bundle holds. A locale that
+ * lost the key, or defined it as a string, would make this a non-array, and a
+ * `.map` downstream would throw and take the card down. Validate, never cast.
+ */
+export function asStepLabels(raw: unknown): string[] {
+  return Array.isArray(raw) ? raw.filter((s): s is string => typeof s === 'string') : [];
+}
+
+/**
+ * The words under the steps (T14 D2). The server sends them in the session's
+ * language at fetch time, and the widget keeps a fetch for a minute, so after
+ * the shopper switched language the steps stayed in the old one. The widget's
+ * own table (`orders.trackingSteps`, six languages, the same words as the
+ * server's `DELIVERY_STEPS_BY_LANG`) follows the switch at once, so it wins
+ * whenever it has as many steps as the shipment. A shipment with a different
+ * number of steps keeps the server's words: the table does not describe it.
+ */
+export function deliveryStepLabels(
+  serverSteps: readonly string[] | null | undefined,
+  local: readonly string[],
+): readonly string[] {
+  if (!serverSteps?.length) return local;
+  return serverSteps.length === local.length ? local : serverSteps;
+}
+
+/**
  * The card's pill (T03 D4). The tracking step wins once it has loaded, so the
  * pill, the stepper and the message always say the same thing even when the
  * order row lags behind the fulfillment. Before that, the order's own status.

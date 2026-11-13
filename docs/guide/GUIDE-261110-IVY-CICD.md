@@ -152,7 +152,7 @@ Khi deploy fail, commit status chuyển sang *failure* và log nằm ở `~/shar
 ## 7. Cổng e2e (`test:ci`)
 
 `e2e/package.json` → `test:ci` = `playwright test --project=desktop --grep "@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T09|@T10|@T11|@T12|@T13"` (T01 thêm ngày 2026-11-10, gồm cả ma trận thiết bị TC-01-08; T02 và T03 thêm ngày 2026-11-11; T04–T10 thêm ngày 2026-11-12; T11 và T12 thêm ngày 2026-11-13).
-Cổng này chỉ gồm các test **đang xanh**. Sau T13, cả 110 test desktop đều xanh (ivy-docs/TEST-CASES.md §0); T14 / T15 chưa vào cổng vì task chưa làm xong.
+Cổng này chỉ gồm các test **đang xanh**. Sau T14, cả 122 test desktop đều xanh (ivy-docs/TEST-CASES.md §0); T15 chưa vào cổng vì task chưa làm xong.
 **Khi task Tnn xong** (toàn bộ TC xanh), thêm `|@Tnn` vào `test:ci` trong cùng commit (ivy-docs/TASKS.md §0).
 
 ## 8. Vì sao server tự kéo thay vì GitHub đẩy vào

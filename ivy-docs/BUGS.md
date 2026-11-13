@@ -28,6 +28,9 @@
 | BUG-024 | Khung trả lời trong chat (My Orders, Contact, Affiliate…) nằm ở **một ô cố định cuối luồng**, nên tin nhắn gửi sau hiện **phía trên** nó | Widget | 🟡 | Fixed cho My Orders + Start over (T09), Product Help (T10), Contact (T11), Affiliate (T12). Còn Callback | T09 · T11 · T12 |
 | BUG-022 | Lưu nút trả lời nhanh trong console **làm mất câu hỏi** (`message`) của nút "Send a message": `sanitize()` dựng lại nút mà không có trường này, nên nút luôn gửi nhãn thay câu đã nhập | API | 🟠 | Fixed (T08) | T08 |
 | BUG-023 | Lần đầu mở Chat (khách đã đăng nhập, chưa có theme cache): menu nút vẽ **kiểu mặc định** (lưới 2 cột xanh) rồi mới đổi sang kiểu của tenant khi session/ensure về | Widget | 🟡 | Fixed (T08) | T08 |
+| BUG-026 | Đổi ngôn ngữ lúc đang xem thẻ giao hàng: chữ 4 bước **giữ ngôn ngữ cũ** (tới 1 phút), cả ở Order Detail | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T14 |
+| BUG-027 | Hàng chip thông báo che chip cuối ở 380px: ES "Reseña" bị cắt nửa, VI "Đánh giá" bị che hẳn | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T14 |
+| BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
 | BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
@@ -127,6 +130,43 @@
 - **Fix (test):** `expect.poll` chờ độ rộng ≤ 382 rồi mới kiểm tra ≥ 378, giống TC-01-08. Sau fix: 15/15 với 4 worker.
 - **Còn mở (mức thấp):** nếu khách mở widget trước khi cấu hình tenant về, panel có thể chớp từ 404px xuống 380px. Thực tế hiếm vì cấu hình tải ngay khi trang nạp. Có thể xử lý ở T15 bằng cách chờ theme rồi mới cho mở, hoặc đổi mặc định sang 380px.
 - **Phòng ngừa:** mọi phép đo hình học phụ thuộc cấu hình tenant phải dùng `expect.poll` hoặc assertion tự chờ.
+
+## BUG-026 · Bước giao hàng giữ ngôn ngữ cũ
+- **Hiện tượng:** khách xem chip Delivery rồi đổi ngôn ngữ (🌐). Cả panel sang ngôn ngữ mới, chỉ chữ dưới 4 bước vẫn giữ ngôn ngữ cũ. Order Detail cũng vậy.
+- **Nguyên nhân:**
+  - Chữ các bước lấy từ `TrackingResponse.steps`. Server dịch theo ngôn ngữ của phiên **lúc tải**.
+  - Widget giữ kết quả 60 giây (`staleTime`), và khoá cache không có ngôn ngữ, nên đổi ngôn ngữ không làm tải lại.
+  - Server chỉ biết ngôn ngữ mới qua `POST /session/language` gửi song song, nên kể cả tải lại ngay cũng có thể về chữ cũ.
+- **Fix (T14):**
+  - `deliveryStepLabels()` (`lib/delivery.ts`) dùng bảng `orders.trackingSteps` của widget (6 ngôn ngữ, giống `DELIVERY_STEPS_BY_LANG` của server) khi số bước khớp. Số bước khác thì giữ chữ server.
+  - Áp cho thanh bước ngang (thẻ giao hàng, danh sách đơn) và thanh dọc (Order Detail).
+  - Test: unit 4 ca, TC-14-05.
+- **Phòng ngừa:** chữ giao diện mà widget tự dịch được thì lấy từ i18n của widget, không dùng chữ server đã dịch sẵn theo phiên. Nếu bắt buộc phải dùng chữ server, đưa ngôn ngữ vào khoá cache.
+
+## BUG-027 · Hàng chip che chip cuối
+- **Hiện tượng:** ở 380px, chip "Reseña" (ES) bị cắt nửa, chip "Đánh giá" (VI) bị che hẳn. Khách phải cuộn ngang mới thấy, mà không có dấu hiệu nào cho biết còn chip.
+- **Nguyên nhân:**
+  - Hàng chip là một thanh cuộn ngang (`overflow-x-auto`).
+  - Chữ ES / VI dài hơn: VI cần 385px, chỉ có 307px.
+  - Rút gọn chữ không đủ: "Đơn · Giao hàng · Ưu đãi · Đánh giá" vẫn thừa 0,6px.
+- **Fix (T14, chủ dự án chọn 2a):**
+  - Chip xuống hàng 2 khi không vừa (`flex-wrap`). Nút Chọn đứng cạnh, ở hàng đầu.
+  - EN / KO / JA / ZH vẫn 1 hàng.
+  - TC-14-07 ×6 kiểm mọi chip nằm trọn trong panel.
+- **Phòng ngừa:** chữ có thể dài hơn ở ngôn ngữ khác thì không đặt trong thanh cuộn ngang ẩn. Test "nằm trọn trong khung" phải tự kiểm khung cắt, vì `toBeVisible` của Playwright không xét `overflow`.
+
+## BUG-028 · Tiếng Hàn xuống dòng giữa từ
+- **Hiện tượng:** 3 chỗ bị cắt giữa từ (ghi nhận ở T13, để T14 sửa):
+  - "무엇을 도와드릴 / 까요?" ở lời chào Chat;
+  - "리뷰 요청에 / 만" ở Settings;
+  - "유지됩니 / 다." ở Settings.
+- **Nguyên nhân:** theo mặc định (`word-break: normal`), trình duyệt được ngắt dòng tiếng Hàn sau bất kỳ âm tiết nào.
+- **Fix (T14):**
+  - `html:lang(ko) { word-break: keep-all; overflow-wrap: break-word; }` trong `index.css`.
+  - Chỉ áp cho tiếng Hàn. Tiếng Nhật, tiếng Trung không có dấu cách, nên `keep-all` sẽ làm chúng không xuống dòng được.
+  - Đường link hoặc email dài vẫn ngắt được nhờ `overflow-wrap`.
+  - TC-14-04 đo từng từ, chạy ×3 ngôn ngữ.
+- **Phòng ngừa:** quy tắc ngắt dòng theo ngôn ngữ đặt ở `:lang()`, không áp chung cho mọi ngôn ngữ. Widget luôn giữ `<html lang>` theo ngôn ngữ đang chọn.
 
 ## BUG-020 · Test khớp chữ ở tab bị ẩn
 - **Hiện tượng:** TC-04-04 đỏ "strict mode violation… resolved to 2 elements": `#IVY-39891` ở Order Detail và tin nhắn chat. Màn vẫn chạy đúng (đã chuyển sang Chat và gửi câu hỏi). TC-04-03 cũng vậy với "United States": dòng địa chỉ và câu "…AI service provider in the United States…" trong tab Chat.

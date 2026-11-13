@@ -1,15 +1,16 @@
 import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Tracking } from '../../lib/types';
+import { asStepLabels, deliveryStepLabels } from '../../lib/delivery';
 
 export function TrackingStepper({ tracking }: { tracking: Tracking }) {
   const { t } = useTranslation();
-  // Labels come from the backend already localized to the session language. The
-  // fallback is only for a payload without them — and must not be hardcoded
-  // English either, so it goes through i18n like everything else.
-  const steps = tracking.steps?.length
-    ? tracking.steps
-    : (t('orders.trackingSteps', { returnObjects: true }) as string[]);
+  // The words follow the widget's language, not the session language of the
+  // fetch, so a language switch shows at once (T14 D2, `deliveryStepLabels`).
+  const steps = deliveryStepLabels(
+    tracking.steps,
+    asStepLabels(t('orders.trackingSteps', { returnObjects: true })),
+  );
 
   return (
     <div className="rounded-st-md border border-gray-200 bg-white p-3">

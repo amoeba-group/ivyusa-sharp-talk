@@ -1,6 +1,6 @@
 import { CircleCheck, Package, Truck } from 'lucide-react';
 import type { Tracking } from '../../lib/types';
-import { deliveryStepState } from '../../lib/delivery';
+import { deliveryStepLabels, deliveryStepState } from '../../lib/delivery';
 
 /**
  * Horizontal shipment progress on a delivery card (ivy-docs T03, Figma
@@ -10,19 +10,20 @@ import { deliveryStepState } from '../../lib/delivery';
  *
  * The vertical `TrackingStepper` still serves the order-detail view.
  *
- * Step labels come from the server already localized (`TrackingResponse.steps`),
- * so the count is data — do not assume the design's four. The icons follow the
- * design for four and repeat the truck for any extra middle step.
+ * The count of steps is data (`TrackingResponse.steps`) — do not assume the
+ * design's four. The words follow the widget's language (`deliveryStepLabels`,
+ * T14). The icons follow the design for four and repeat the truck for any
+ * extra middle step.
  */
 export function TrackingStepperH({
   tracking,
   labels,
 }: {
   tracking: Tracking;
-  /** Fallback labels when the payload carries none; already localized. */
+  /** The widget's localized step table (`orders.trackingSteps`). */
   labels: string[];
 }) {
-  const steps = tracking.steps?.length ? tracking.steps : labels;
+  const steps = deliveryStepLabels(tracking.steps, labels);
   if (!steps.length) return null;
   const last = steps.length - 1;
   const reached = (i: number) => deliveryStepState(i, tracking.stepIndex, steps.length) !== 'todo';

@@ -26,7 +26,7 @@ export const vi: Translation = {
     },
     groups: {
       today: 'Thông báo hôm nay',
-      yesterday: 'Hôm qua',
+      yesterday: 'Thông báo hôm qua',
     },
     time: {
       justNow: 'Vừa xong',
@@ -398,8 +398,8 @@ export const vi: Translation = {
     shippingAddress: 'Địa chỉ giao hàng',
     itemCount_one: '{{count}} sản phẩm',
     itemCount_other: '{{count}} sản phẩm',
-    itemsMore_one: '{{title}} + {{count}} sản phẩm khác',
-    itemsMore_other: '{{title}} + {{count}} sản phẩm khác',
+    itemsMore_one: '{{title}} + {{count}} sản phẩm',
+    itemsMore_other: '{{title}} + {{count}} sản phẩm',
     trackingCta: 'Theo dõi đơn hàng',
     shipmentDelivered: 'Đơn hàng của bạn đã được giao!',
     shipmentInTransit: 'Đơn hàng của bạn đang trên đường giao!',

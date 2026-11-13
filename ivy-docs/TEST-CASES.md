@@ -47,8 +47,8 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T11 | 0 / 4 → **8 / 8** ✅ (T11, 2026-11-13; thêm TC-11-05..08) | tất cả | — |
 | T12 | 0 / 4 → **6 / 6** ✅ (T12, 2026-11-13; thêm TC-12-05..06) | tất cả | — |
 | T13 | 4 / 4 → **6 / 6** ✅ (T13, 2026-11-13; thêm TC-13-05, 06) | tất cả | — |
-| T14 | 7 / 8 → 8 / 8 (nhờ T02: chip KO 주문 · 배송 · 프로모 · 리뷰) | TC-14-01 [en], TC-14-01 [es], TC-14-01 [ko], TC-14-01 [vi], TC-14-01 [ja], TC-14-01 [zh], TC-14-03, TC-14-02 [ko] | — |
-| T15 | 3 / 4 → 4 / 4 (nhờ T02: chip `aria-pressed`) | tất cả | — |
+| T14 | 7 / 8 → 8 / 8 (nhờ T02) → **20 / 20** ✅ (T14, 2026-11-13; thêm TC-14-04..07) | tất cả | — |
+| T15 | 3 / 4 → 4 / 4 (nhờ T02: chip `aria-pressed`) | TC-15-02, 03, 04 | TC-15-01 (project `mobile`): chạy lại 2026-11-13, đỏ cả trước và sau T14 (panel 380px trên màn 412px). Việc của T15, chưa vào cổng CI |
 
 > T16 (`@prod`) không chạy ở baseline vì talk.ivyusa.com trả 403 cho máy này (BUG-004).
 > Khi một task xong, cập nhật lại dòng của task đó (chạy `npm run test:task -- @Tnn`).
@@ -370,6 +370,12 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 | TC-14-01 ×6 | en/es/ko/vi/ja/zh | nhãn tab đúng locale; panel không lộ key thô (`notifications.filters.x`…) | BR-19 |
 | TC-14-02 | Copy KO | chip 주문 · 배송 · 프로모 · 리뷰; "오늘 받은 알림"; 선택 → "선택 알림 삭제", "전체 알림 삭제" | G-22 |
 | TC-14-03 | Giữ ngôn ngữ (API thật) | chọn 한국어 → reload → tab "채팅" | SCR-IVY-02 |
+| TC-14-04 ×3 | Xuống dòng tiếng Hàn | KO: `<html>` có `word-break: keep-all`; lời chào Chat và 2 câu ở Settings không có từ nào bị cắt sang 2 dòng (đo vị trí từng từ). JA / ZH: `normal` | BUG-028, G-22 |
+| TC-14-05 | Bước giao hàng theo ngôn ngữ widget | EN: Preparing · Processing · In Transit · Delivered → đổi sang 한국어 ngay trên chip → 발송준비 · 배송시작 · 배송중 · 배송완료 (mock vẫn trả chữ EN) | BUG-026, BR-06 |
+| TC-14-06 ×2 | Chữ theo thiết kế / BR-08 | KO: pill 결제완료, "고객님께 배송중입니다!", "외 2개", "리뷰 쓰기". EN: thẻ giao hàng "+ 2 items", không còn "more items". VI: "Thông báo hôm qua" | G-22, BR-08 |
+| TC-14-07 ×6 | Hàng chip | 4 chip + nút Chọn nằm trọn trong panel, không bị khung nào cắt (test tự kiểm `overflow` của các khung cha) | BUG-027 |
+
+**Kết quả (2026-11-13):** 20/20. Thử ngược: bỏ phần sửa trong widget thì đúng 6 ca đỏ (TC-14-04 [ko], TC-14-05, TC-14-06 ×2, TC-14-07 [es] "Reseña", [vi] "Đánh giá"). Toàn bộ desktop: **122 / 122** xanh. Unit widget 116/116 (thêm 4 ca `deliveryStepLabels` / `asStepLabels`).
 
 ## T15 · Responsive & a11y (`15-responsive-a11y.spec.ts`)
 

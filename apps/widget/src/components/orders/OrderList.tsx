@@ -15,6 +15,7 @@ import { StatusPill } from '../ui/StatusPill';
 import { Spinner } from '../ui/Spinner';
 import { TrackingStepperH } from './TrackingStepperH';
 import { isInTransit, statusLabel } from './order-status';
+import { asStepLabels } from '../../lib/delivery';
 import type { OrderSummary, Tracking } from '../../lib/types';
 
 /**
@@ -24,10 +25,9 @@ import type { OrderSummary, Tracking } from '../../lib/types';
  */
 const TRACKED_MAX = 5;
 
-/** See ShipmentList: this key is an array, and a bad bundle must not throw. */
+/** The widget's step table, validated: the key is an array (see `asStepLabels`). */
 function trackingStepLabels(t: TFunction): string[] {
-  const raw = t('orders.trackingSteps', { returnObjects: true });
-  return Array.isArray(raw) ? raw.filter((s): s is string => typeof s === 'string') : [];
+  return asStepLabels(t('orders.trackingSteps', { returnObjects: true }));
 }
 
 function OrderRow({

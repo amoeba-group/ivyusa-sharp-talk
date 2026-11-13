@@ -26,7 +26,7 @@ export const es: Translation = {
     },
     groups: {
       today: 'Notificaciones de hoy',
-      yesterday: 'Ayer',
+      yesterday: 'Notificaciones de ayer',
     },
     time: {
       justNow: 'Ahora mismo',
@@ -394,8 +394,8 @@ export const es: Translation = {
     shippingAddress: 'Dirección de envío',
     itemCount_one: '{{count}} artículo',
     itemCount_other: '{{count}} artículos',
-    itemsMore_one: '{{title}} + {{count}} artículo más',
-    itemsMore_other: '{{title}} + {{count}} artículos más',
+    itemsMore_one: '{{title}} + {{count}} artículo',
+    itemsMore_other: '{{title}} + {{count}} artículos',
     trackingCta: 'Rastrear pedido',
     shipmentDelivered: '¡Tu pedido ha sido entregado!',
     shipmentInTransit: '¡Tu pedido está en camino!',

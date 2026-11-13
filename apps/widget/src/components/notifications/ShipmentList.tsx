@@ -10,7 +10,7 @@ import { Spinner } from '../ui/Spinner';
 import { TrackingStepperH } from '../orders/TrackingStepperH';
 import { isShipmentish } from '../orders/order-status';
 import { groupByDate } from '../../lib/format';
-import { deliveryCardStatus, isDeliveredStep } from '../../lib/delivery';
+import { asStepLabels, deliveryCardStatus, isDeliveredStep } from '../../lib/delivery';
 import { DateGroupHeader } from './DateGroupHeader';
 import type { OrderSummary, Tracking } from '../../lib/types';
 
@@ -22,16 +22,9 @@ import type { OrderSummary, Tracking } from '../../lib/types';
  */
 const TRACKED_MAX = 5;
 
-/**
- * `orders.trackingSteps` is the one translation key that is an ARRAY, and
- * `returnObjects` hands back whatever the bundle holds. A locale that lost the
- * key, or defined it as a string, would make this a non-array — and the `.map`
- * downstream would throw, replacing the whole Shipping filter with an error
- * boundary. Validate rather than cast.
- */
+/** The widget's step table, validated: the key is an array (see `asStepLabels`). */
 function trackingStepLabels(t: TFunction): string[] {
-  const raw = t('orders.trackingSteps', { returnObjects: true });
-  return Array.isArray(raw) ? raw.filter((s): s is string => typeof s === 'string') : [];
+  return asStepLabels(t('orders.trackingSteps', { returnObjects: true }));
 }
 
 /** When the order was placed — what the card's date band goes by (T03 §7-3). */
