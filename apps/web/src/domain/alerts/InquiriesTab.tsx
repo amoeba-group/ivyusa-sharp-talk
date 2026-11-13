@@ -15,7 +15,8 @@ import { inquiriesService } from './inquiries.service';
 import type { Inquiry, InquiryDetail, InquiryListParams } from './inquiries.service';
 
 const PAGE_SIZE = 20;
-const STATUSES = ['open', 'answered', 'all'] as const;
+// "All" first and by default: answered forms stay in view, the Status column tells them apart.
+const STATUSES = ['all', 'open', 'answered'] as const;
 
 const when = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -127,7 +128,7 @@ function InquiryDialog({ item, onClose }: { item: Inquiry; onClose: () => void }
  */
 export function InquiriesTab() {
   const { t } = useTranslation('livechat');
-  const [status, setStatus] = useState<NonNullable<InquiryListParams['status']>>('open');
+  const [status, setStatus] = useState<NonNullable<InquiryListParams['status']>>('all');
   const [page, setPage] = useState(1);
   const [opened, setOpened] = useState<Inquiry | null>(null);
   const { data, isLoading, error } = useInquiries({ status, page, size: PAGE_SIZE });

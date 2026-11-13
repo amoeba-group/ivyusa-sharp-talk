@@ -105,4 +105,11 @@ Kế hoạch: [PLN-261112-IVY-T11](../plan/PLN-261112-IVY-T11-Contact-Form.md), 
 | Commit | `00ee3c0a` (code) + `79dce873` (GUIDE §1 từng bước) trên `deploy/talk-ivyusa`, push 2026-11-13 (`56059d35..79dce873`) |
 | CI | ✅ run 43356138455, xong 03:04:47Z: verify ✅, e2e gate ✅ (có `@T11`), deploy-gate ✅ |
 | Server `talkaibotprd01` | ✅ **Đã deploy** 2026-11-13 03:06Z, chủ dự án xác nhận bằng `~/ivy-autodeploy.log`: `deploying 79dce873 over 56059d35` → `79dce873 deployed` (log `sharptalk-deploy-20261113-030602-79dce873.log`). Không có dòng `waiting: deploy check failed`: lần kiểm tra trước deploy thấy đủ 4 cột SQL. Cùng log xác nhận các lần deploy T06–T10 (`a136b4ae` … `ab944c43`) đều `deployed` |
-| Cấu hình production | ⏳ Chủ dự án làm [GUIDE §2](../guide/GUIDE-261113-IVY-Contact-Support-Config.md) (lưu `hello@ivyusa.com` trong console) và §3 (kiểm `SMTP_HOST`) |
+| Cấu hình production | • SMTP ✅ 2026-11-13: `SMTP_HOST` trống lúc deploy. Chủ dự án điền tài khoản gửi Office 365 của IVY (cùng tài khoản Odoo dùng), khởi động lại API theo [GUIDE §3.1](../guide/GUIDE-261113-IVY-Contact-Support-Config.md). Lần thử đầu `read ECONNRESET` (mạng chập chờn), lần sau `235 Authentication successful` → `SMTP OK`.<br>• Gửi form thử: chủ dự án gửi và bấm Mark answered trên console. ⏳ Chưa xác nhận mail tới `hello@ivyusa.com`.<br>• Email hỗ trợ trong console (§2): ⏳ chưa xác nhận |
+
+## 5. Sửa sau deploy
+
+| Ngày | Thay đổi | Lý do |
+|---|---|---|
+| 2026-11-13 | Tài liệu: đường vào Inquiries là chuông 🔔 → View all → Alarm center, hoặc `/live-chat/alerts?tab=inquiries` | Bản trước ghi "Live chat → Alerts", không có trong menu; chủ dự án tìm không thấy |
+| 2026-11-13 | Tab Inquiries mặc định lọc **All** (trước: Open); "All" đứng đầu ô lọc. `apps/web/src/domain/alerts/InquiriesTab.tsx` | Chủ dự án yêu cầu: bấm Mark answered thì tin biến mất khỏi danh sách mặc định, khó tìm lại. Số đỏ trên tab vẫn đếm tin Open. Kiểm tra: `tsc` + `vite build` web, Playwright trên console local (mặc định All: 10 dòng gồm 1 Answered; chọn Open: 9 dòng) |

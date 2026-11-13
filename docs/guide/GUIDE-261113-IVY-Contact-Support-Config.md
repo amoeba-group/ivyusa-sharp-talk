@@ -163,10 +163,10 @@ Trang này **không có trong menu bên trái**. Có 2 cách vào:
 
 Chuông chỉ hiện với tài khoản có quyền Live chat. Số trên chuông là cảnh báo chat, **không** tính inquiry: có inquiry mới thì chuông không đổi.
 
-- Danh sách: thời gian, tên, email (che bớt), đầu nội dung.
+- Danh sách: thời gian, tên, email (che bớt), đầu nội dung, trạng thái. Mặc định hiện **tất cả** (Open và Answered). Ô lọc **Status** góc phải để chỉ xem Open hoặc Answered.
 - Bấm **Open**: hiện đủ email và nội dung. Mỗi lần mở được ghi vào audit log.
 - **Reply by email**: mở ứng dụng mail với địa chỉ khách, tiêu đề "Re: Your inquiry" và trích nội dung khách gửi.
-- **Mark answered**: chuyển sang "Answered". Bấm **Open again** nếu cần mở lại.
+- **Mark answered**: chuyển sang "Answered"; tin vẫn ở trong danh sách, cột Status đổi màu. Bấm **Open again** nếu cần mở lại.
 
 ## 5. Thử trên production
 
