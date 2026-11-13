@@ -458,7 +458,7 @@ export const ko: Translation = {
       pendingHint: '채팅 탭에서 개인정보 처리 안내를 확인하고 선택해 주세요.',
       withdraw: '동의 철회',
       withdrawConfirm: '한 번 더 클릭하면 철회가 확정됩니다',
-      withdrawHint: '철회하면 다시 동의할 때까지 채팅과 AI 처리가 중단됩니다.',
+      withdrawHint: '철회하면 채팅과 AI 처리가 즉시 중단됩니다.',
       reconsent: '다시 동의하기',
       saved: '동의 선택이 저장되었습니다.',
       error: '선택을 저장하지 못했습니다. 다시 시도해 주세요.',

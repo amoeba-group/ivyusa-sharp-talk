@@ -458,7 +458,7 @@ export const es: Translation = {
       pendingHint: 'Abre la pestaña de chat para revisar el aviso de privacidad y hacer tu elección.',
       withdraw: 'Retirar consentimiento',
       withdrawConfirm: 'Haz clic de nuevo para confirmar la retirada',
-      withdrawHint: 'Si lo retiras, el chat y el procesamiento con IA se detienen hasta que vuelvas a consentir.',
+      withdrawHint: 'Si lo retiras, el chat y el procesamiento con IA se detienen de inmediato.',
       reconsent: 'Dar consentimiento de nuevo',
       saved: 'Tu elección de consentimiento se ha guardado.',
       error: 'No pudimos guardar tu elección. Inténtalo de nuevo.',

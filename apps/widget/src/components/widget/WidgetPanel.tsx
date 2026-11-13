@@ -240,7 +240,13 @@ export function WidgetPanel() {
           fixed brand string. The language switcher and close button are absent
           from the design but kept deliberately (PLN §7 D-2): without the X, a
           shopper on a touch device has no way to dismiss the panel but Esc. */}
-      <header className="st-header flex items-center justify-between bg-header-bg px-4 pb-2 pt-4">
+      {/* In Settings the design rules the header off from the content (T13,
+          Figma 1004:1367); on the tabs the tab bar does that job. */}
+      <header
+        className={`st-header flex items-center justify-between bg-header-bg px-4 pb-2 pt-4 ${
+          showSettings ? 'border-b border-gray-200' : ''
+        }`}
+      >
         {/* Greet the shopper by name once they are known (frame 34, "Hi, Lisa");
             before that the tenant's own name identifies whose widget this is
             (frames 48/49). The two design variants are the two sign-in states,
@@ -269,12 +275,16 @@ export function WidgetPanel() {
           {/* Each button is the tenant's to hide (PLN-261023-Widget-Header-Buttons);
               the close button is not — a touch device would lose its only way out. */}
           {!triggerMode && headerControls.language && <LanguageSwitcher />}
+          {/* Open/closed is said with aria-pressed and a darker icon; the
+              design draws no box behind the gear (T13). Focus rings for the
+              keyboard only, so a click does not leave one behind. */}
           {headerControls.settings && (
           <button
             onClick={() => setShowSettings(!showSettings)}
             aria-label={t('settings')}
-            className={`st-header-control rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-              showSettings ? 'bg-header-fg/10 text-header-fg' : ''
+            aria-pressed={showSettings}
+            className={`st-header-control rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+              showSettings ? 'text-header-fg' : ''
             }`}
           >
             <Settings className="h-5 w-5" />

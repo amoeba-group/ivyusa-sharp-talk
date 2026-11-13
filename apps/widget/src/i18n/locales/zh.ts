@@ -459,7 +459,7 @@ export const zh: Translation = {
       pendingHint: '请打开聊天标签页查看隐私声明并做出选择。',
       withdraw: '撤回同意',
       withdrawConfirm: '再次点击以确认撤回',
-      withdrawHint: '撤回后，聊天与 AI 处理将停止，直到您再次同意。',
+      withdrawHint: '撤回后，聊天与 AI 处理将立即停止。',
       reconsent: '重新同意',
       saved: '您的选择已保存。',
       error: '无法保存您的选择。请重试。',

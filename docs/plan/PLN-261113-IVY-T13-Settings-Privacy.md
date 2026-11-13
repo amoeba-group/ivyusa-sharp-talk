@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | ⏳ **Chờ duyệt** |
+| Trạng thái | ✅ **Đã duyệt 2026-11-13** (`1. ok 2. a 3. a` + ảnh EN `1004:1367`) và đã làm — [RPT-261113](../implementation/RPT-261113-IVY-T13-Settings-Privacy.md). Ảnh giữ thanh đầu trắng nên **không** làm 2a (§7-4: làm theo ảnh) |
 | Task | [ivy-docs/TASKS.md T13](../../ivy-docs/TASKS.md) · SPEC SCR-IVY-15 · G-21 · BR-18 · Q-09 |
 | Figma | `1004:1367` (EN), `1004:1447` (KO). Figma MCP hết lượt gọi; kế hoạch dựa vào chữ trong SPEC. **Cần ảnh 2 frame này** để khớp khoảng cách và chữ KO (link ở §7) |
 | TC | TC-13-01..04 ([e2e/tests/13-settings.spec.ts](../../e2e/tests/13-settings.spec.ts)) **đã xanh 4/4** từ trước. T13 chỉ còn rà giao diện và câu chữ |

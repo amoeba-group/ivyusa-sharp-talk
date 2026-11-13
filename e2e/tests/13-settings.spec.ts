@@ -49,4 +49,44 @@ test.describe('T13 · Settings / Privacy — identified shopper', () => {
     await expect(p.getByText('Download my data (JSON)')).toBeVisible();
     await expect(p.getByText('Delete my data', { exact: true })).toBeVisible();
   });
+
+  test('TC-13-05 Withdraw consent is a red-outlined button with the design wording @T13 @design', async ({ widget }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.settingsButton.click();
+    const p = widget.panel;
+    const withdraw = p.getByRole('button', { name: 'Withdraw consent' });
+    await expect(withdraw).toBeVisible();
+    // Outline and text share the error red (Figma 1004:1367), not the old grey outline.
+    const look = await withdraw.evaluate((e) => {
+      const s = getComputedStyle(e);
+      return { border: s.borderTopColor, color: s.color, width: parseFloat(s.borderTopWidth) };
+    });
+    expect(look.width).toBeGreaterThanOrEqual(1);
+    expect(look.border).toBe(look.color);
+    expect(look.border).not.toBe('rgb(229, 231, 235)');
+    await expect(p.getByText('If you withdraw, chat and AI processing stops immediately.')).toBeVisible();
+    // The header keeps the greeting and its buttons on this screen, as designed.
+    await expect(widget.headerTitle).toHaveText(/Hi, Kiho/);
+    await expect(widget.settingsButton).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('TC-13-06 marketing and CCPA switches are named, 44×24, and saving says so @T13 @a11y', async ({ widget, mocks }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.settingsButton.click();
+    const p = widget.panel;
+    const marketing = p.getByRole('switch', { name: 'Do not send me marketing messages' });
+    const ccpa = p.getByRole('switch', { name: 'CCPA: Do not sell or share my personal information' });
+    await expect(marketing).toHaveAttribute('aria-checked', 'false');
+    await expect(ccpa).toHaveAttribute('aria-checked', 'false');
+    const box = await marketing.boundingBox();
+    expect(Math.round(box!.width)).toBe(44);
+    expect(Math.round(box!.height)).toBe(24);
+    await marketing.click();
+    await expect(p.getByText('Preference saved.')).toBeVisible();
+    const put = mocks!.callsTo('PUT', '/notifications/marketing-opt-out');
+    expect(put).toHaveLength(1);
+    expect(put[0].body.opt_out).toBe(true);
+  });
 });

@@ -460,7 +460,7 @@ export const en = {
       pendingHint: 'Open the chat tab to review the privacy notice and make your choice.',
       withdraw: 'Withdraw consent',
       withdrawConfirm: 'Click again to confirm withdrawal',
-      withdrawHint: 'If you withdraw, chat and AI processing stop until you consent again.',
+      withdrawHint: 'If you withdraw, chat and AI processing stops immediately.',
       reconsent: 'Give consent again',
       saved: 'Your consent choice has been saved.',
       error: 'We could not save your choice. Please try again.',

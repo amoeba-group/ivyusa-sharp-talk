@@ -463,8 +463,7 @@ export const vi: Translation = {
         'Mở tab trò chuyện để xem thông báo về quyền riêng tư và đưa ra lựa chọn của bạn.',
       withdraw: 'Rút lại đồng ý',
       withdrawConfirm: 'Nhấn lần nữa để xác nhận rút lại',
-      withdrawHint:
-        'Nếu bạn rút lại, việc trò chuyện và xử lý bằng AI sẽ dừng cho tới khi bạn đồng ý lại.',
+      withdrawHint: 'Nếu bạn rút lại, việc trò chuyện và xử lý bằng AI sẽ dừng ngay lập tức.',
       reconsent: 'Đồng ý lại',
       saved: 'Lựa chọn của bạn đã được lưu.',
       error: 'Chúng tôi không lưu được lựa chọn của bạn. Vui lòng thử lại.',

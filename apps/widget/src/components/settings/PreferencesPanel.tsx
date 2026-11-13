@@ -8,7 +8,6 @@ import {
   Loader2,
   Lock,
   ShieldCheck,
-  ShieldOff,
   Trash2,
   X,
 } from 'lucide-react';
@@ -28,28 +27,38 @@ import { setStoredConsent } from '../../lib/consent';
 import { formatDate } from '../../lib/format';
 
 
+/**
+ * On/off switch, 44×24 as in the design (ivy-docs T13, Figma 1004:1367). A
+ * `switch` with the row's own words as its name: it used to be a nameless
+ * button, so a screen reader announced "toggle button, pressed" and nothing
+ * about what it toggled.
+ */
 function Toggle({
   on,
+  label,
   disabled,
   onChange,
 }: {
   on: boolean;
+  label: string;
   disabled?: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!on)}
-      className={`relative h-5 w-9 rounded-full transition-colors ${
+      className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
         on ? 'bg-primary-500' : 'bg-gray-200'
       } ${disabled ? 'opacity-50' : ''}`}
-      aria-pressed={on}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
-          on ? 'left-[18px]' : 'left-0.5'
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
+          on ? 'left-[22px]' : 'left-0.5'
         }`}
       />
     </button>
@@ -102,20 +111,22 @@ function ConsentSection() {
   }
 
   return (
-    <div className="mb-4 border-b border-gray-200 pb-4">
-      <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
-        <ShieldCheck className="h-4 w-4 shrink-0 text-primary-500" />
+    // Type scale and spacing from the design (ivy-docs T13, Figma 1004:1367):
+    // section titles 16px, rows 14px, notes 12px, 28px between sections.
+    <div className="border-b border-gray-200 pb-7">
+      <div className="mb-3 flex items-center gap-2 text-base font-semibold text-gray-900">
+        <ShieldCheck className="h-5 w-5 shrink-0 text-primary-500" />
         {t('privacy.consent.title')}
       </div>
 
       {!consent ? (
-        <p className="text-[11px] text-gray-400">{t('privacy.consent.unavailable')}</p>
+        <p className="text-xs text-gray-400">{t('privacy.consent.unavailable')}</p>
       ) : (
         <>
-          <p className="text-xs font-medium text-gray-700">
+          <p className="text-sm font-semibold text-gray-900">
             {t(`privacy.consent.state.${consent.state}`)}
           </p>
-          <p className="mt-0.5 text-[11px] text-gray-400">
+          <p className="mt-1 text-xs text-gray-400">
             {consent.consentAt &&
               t('privacy.consent.grantedAt', { date: formatDate(consent.consentAt, i18n.language) })}
             {consent.consentAt && consent.noticeVersion && ' · '}
@@ -124,22 +135,23 @@ function ConsentSection() {
           </p>
 
           {consent.state === 'pending' ? (
-            <p className="mt-2 text-[11px] text-gray-500">
+            <p className="mt-3 text-xs leading-5 text-gray-500">
               {t('privacy.consent.pendingHint')}
             </p>
           ) : consent.state === 'granted' ? (
             <>
+              {/* Red outline, as designed: it stops chat and AI for this visitor. */}
               <button
                 onClick={() => void changeConsent(false)}
                 disabled={!sessionToken || busy}
-                className="mt-2 flex items-center gap-1.5 rounded-st-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-error hover:bg-gray-50 disabled:opacity-50"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-st-md border border-error bg-white px-4 py-2 text-sm font-medium text-error hover:bg-gray-50 disabled:opacity-50"
               >
-                {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {busy && <Loader2 className="h-4 w-4 animate-spin" />}
                 {confirmWithdraw
                   ? t('privacy.consent.withdrawConfirm')
                   : t('privacy.consent.withdraw')}
               </button>
-              <p className="mt-1 text-[11px] text-gray-400">
+              <p className="mt-3 text-xs leading-5 text-gray-400">
                 {t('privacy.consent.withdrawHint')}
               </p>
             </>
@@ -147,9 +159,9 @@ function ConsentSection() {
             <button
               onClick={() => void changeConsent(true)}
               disabled={!sessionToken || busy}
-              className="mt-2 flex items-center gap-1.5 rounded-st-md bg-primary-500 px-3 py-1.5 text-xs font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-st-md bg-primary-500 px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
             >
-              {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />}
               {t('privacy.consent.reconsent')}
             </button>
           )}
@@ -159,7 +171,7 @@ function ConsentSection() {
       {notice && (
         <div
           role={notice.tone === 'error' ? 'alert' : 'status'}
-          className={`mt-2 flex items-center gap-1.5 text-[11px] ${
+          className={`mt-3 flex items-center gap-1.5 text-xs ${
             notice.tone === 'error' ? 'text-error' : 'text-success'
           }`}
         >
@@ -272,18 +284,24 @@ export function PreferencesPanel({ onBack }: { onBack: () => void }) {
   // an anonymous visitor must still be able to withdraw or re-give it — that is the
   // entire point of a consent control. Returning early above it would have quietly
   // taken that away from exactly the visitors most likely to want it.
+  // The way back sits above the content, as in the design (T13): the header
+  // keeps the greeting and its buttons on this screen too.
+  const back = (
+    <button
+      onClick={onBack}
+      className="mb-6 flex items-center gap-1.5 self-start text-sm text-gray-500 hover:text-gray-700"
+    >
+      <ArrowLeft className="h-4 w-4" />
+      {t('orders.back')}
+    </button>
+  );
+
   if (!authenticated || authLost) {
     return (
-      <div className="scroll-thin flex h-full flex-col overflow-y-auto p-3">
-        <button
-          onClick={onBack}
-          className="mb-3 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('orders.back')}
-        </button>
+      <div className="scroll-thin flex h-full flex-col overflow-y-auto px-6 pb-6 pt-5">
+        {back}
         <ConsentSection />
-        <div className="mt-4 flex flex-1 flex-col items-center justify-center gap-3 border-t border-gray-200 pt-4">
+        <div className="mt-7 flex flex-1 flex-col items-center justify-center gap-3">
           <Lock className="h-6 w-6 text-gray-300" />
           <AuthGate
             sessionToken={sessionToken}
@@ -296,14 +314,8 @@ export function PreferencesPanel({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="scroll-thin flex h-full flex-col overflow-y-auto p-3">
-      <button
-        onClick={onBack}
-        className="mb-3 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        {t('orders.back')}
-      </button>
+    <div className="scroll-thin flex h-full flex-col overflow-y-auto px-6 pb-6 pt-5">
+      {back}
 
       {/* Consent withdrawal / re-consent — above notification prefs (5.2). */}
       <ConsentSection />
@@ -317,64 +329,64 @@ export function PreferencesPanel({ onBack }: { onBack: () => void }) {
           already suppressed server-side, so an untouched account shows this as
           opted OUT. Showing it as opted in would promise messages that never
           arrive. */}
-      <div className="mb-2 text-sm font-semibold text-gray-900">{t('prefs.marketingTitle')}</div>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-gray-600">{t('prefs.marketingOptOut')}</span>
-        <Toggle
-          on={marketingOptOut.data?.optOut ?? true}
-          disabled={marketingOptOut.isLoading || setMarketing.isPending}
-          onChange={(v) =>
-            setMarketing.mutate(v, {
-              onSuccess: () => setMarketingNotice(t('prefs.marketingSaved')),
-              // Silent failure is banned (dev-kit §4.3) — a toggle that springs
-              // back with no message reads as a UI glitch, not a failed save.
-              onError: () => setMarketingNotice(t('prefs.marketingFailed')),
-            })
-          }
-        />
+      <div className="pt-7">
+        <div className="mb-3 text-base font-semibold text-gray-900">{t('prefs.marketingTitle')}</div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-gray-800">{t('prefs.marketingOptOut')}</span>
+          <Toggle
+            label={t('prefs.marketingOptOut')}
+            on={marketingOptOut.data?.optOut ?? true}
+            disabled={marketingOptOut.isLoading || setMarketing.isPending}
+            onChange={(v) =>
+              setMarketing.mutate(v, {
+                onSuccess: () => setMarketingNotice(t('prefs.marketingSaved')),
+                // Silent failure is banned (dev-kit §4.3) — a toggle that springs
+                // back with no message reads as a UI glitch, not a failed save.
+                onError: () => setMarketingNotice(t('prefs.marketingFailed')),
+              })
+            }
+          />
+        </div>
+        <p className="mt-3 text-xs leading-5 text-gray-400">{t('prefs.marketingHint')}</p>
+        {marketingNotice && <p className="mt-2 text-xs text-primary-600">{marketingNotice}</p>}
       </div>
-      <p className="mt-1 text-[11px] text-gray-400">{t('prefs.marketingHint')}</p>
-      {marketingNotice && (
-        <p className="mt-1 text-[11px] text-primary-600">{marketingNotice}</p>
-      )}
 
       {/* CCPA/CPRA + DSAR consumer rights (PRV-M3) */}
-      <div className="mt-4 border-t border-gray-200 pt-3">
-        <div className="mb-2 text-sm font-semibold text-gray-900">{t('privacy.title')}</div>
+      <div className="mt-7 border-t border-gray-200 pt-7">
+        <div className="mb-3 text-base font-semibold text-gray-900">{t('privacy.title')}</div>
 
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-            <ShieldOff className="h-3.5 w-3.5 shrink-0" />
-            {t('prefs.ccpa')}
-          </div>
+        {/* No icon in front of the label: the design has none (T13). */}
+        <div className="flex items-center justify-between gap-3">
+          <span className="min-w-0 text-sm text-gray-800">{t('prefs.ccpa')}</span>
           <Toggle
+            label={t('prefs.ccpa')}
             on={optOutStatus.data?.optOut ?? false}
             disabled={!sessionToken || setOptOut.isPending}
             onChange={(v) => setOptOut.mutate(v)}
           />
         </div>
-        <p className="mt-1 text-[11px] text-gray-400">{t('privacy.optOutHint')}</p>
+        <p className="mt-3 text-xs leading-5 text-gray-400">{t('privacy.optOutHint')}</p>
 
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="mt-7 flex flex-col items-start gap-3">
           <button
             onClick={handleExport}
             disabled={!sessionToken || dsarBusy !== null}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-500 underline hover:text-gray-700 disabled:opacity-50"
+            className="flex items-center gap-2 text-sm text-gray-700 underline underline-offset-2 hover:text-gray-900 disabled:opacity-50"
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="h-4 w-4" />
             {dsarBusy === 'export' ? t('privacy.exporting') : t('privacy.export')}
           </button>
           <button
             onClick={handleDelete}
             disabled={!sessionToken || dsarBusy !== null}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-500 underline hover:text-error disabled:opacity-50"
+            className="flex items-center gap-2 text-sm text-gray-700 underline underline-offset-2 hover:text-error disabled:opacity-50"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
             {confirmDelete ? t('privacy.deleteConfirm') : t('privacy.delete')}
           </button>
         </div>
 
-        {dsarNotice && <p className="mt-2 text-[11px] text-gray-500">{dsarNotice}</p>}
+        {dsarNotice && <p className="mt-3 text-xs text-gray-500">{dsarNotice}</p>}
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T10 | 1 / 5 → **7 / 7** ✅ (T10, 2026-11-12; thêm TC-10-06..07) | tất cả | — |
 | T11 | 0 / 4 → **8 / 8** ✅ (T11, 2026-11-13; thêm TC-11-05..08) | tất cả | — |
 | T12 | 0 / 4 → **6 / 6** ✅ (T12, 2026-11-13; thêm TC-12-05..06) | tất cả | — |
-| T13 | 4 / 4 | TC-13-01, TC-13-02, TC-13-04, TC-13-03 | — |
+| T13 | 4 / 4 → **6 / 6** ✅ (T13, 2026-11-13; thêm TC-13-05, 06) | tất cả | — |
 | T14 | 7 / 8 → 8 / 8 (nhờ T02: chip KO 주문 · 배송 · 프로모 · 리뷰) | TC-14-01 [en], TC-14-01 [es], TC-14-01 [ko], TC-14-01 [vi], TC-14-01 [ja], TC-14-01 [zh], TC-14-03, TC-14-02 [ko] | — |
 | T15 | 3 / 4 → 4 / 4 (nhờ T02: chip `aria-pressed`) | tất cả | — |
 
@@ -358,6 +358,10 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 | TC-13-02 | Rút consent (API thật) | Withdraw → xác nhận → có "Give consent again"/Accept | BR-18 |
 | TC-13-03 | Khách đã nhận diện | Marketing messages + toggle, CCPA, Download my data (JSON), Delete my data | SCR-IVY-15 |
 | TC-13-04 | Khách vãng lai (API thật) | có khối consent, **không** có Download my data | SCR-IVY-15 |
+| TC-13-05 | Nút rút consent | "Withdraw consent" viền cùng màu đỏ với chữ (không còn viền xám); "…stops immediately."; thanh đầu vẫn "Hi, Kiho", ⚙ có `aria-pressed=true` | SCR-IVY-15 (`1004:1367`) |
+| TC-13-06 | Toggle | `switch` có tên "Do not send me marketing messages" và "CCPA: …", `aria-checked`, 44×24; bấm → `PUT /notifications/marketing-opt-out {opt_out: true}` → "Preference saved." | SCR-IVY-15, a11y |
+
+**Kết quả (2026-11-13):** 6/6, lặp ×3: 18/18. `@T01|@T13|@T15`: 27/27. Toàn bộ desktop: **110 / 110** xanh. Ảnh chụp EN khớp `1004:1367` (ảnh chủ dự án gửi): thanh đầu trắng + đường kẻ, Back 14px, tiêu đề 16px, nút viền đỏ, toggle 44×24, không icon trước CCPA.
 
 ## T14 · i18n (`14-i18n.spec.ts`)
 

@@ -37,7 +37,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ✅ | TC-10-01..07 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ✅ (prod: SQL, email hỗ trợ, SMTP, mail thử — 2026-11-13) | TC-11-01..08 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261113-IVY-Affiliate-Config.md)) | TC-12-01..06 |
-| 13 | T13 | Settings / Privacy | UI | P2 | T01 | ⬜ (TC đã xanh 4/4, chỉ còn rà visual/copy) | TC-13-01..04 |
+| 13 | T13 | Settings / Privacy | UI | P2 | T01 | ✅ | TC-13-01..06 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ⬜ | TC-14-01..03 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ⬜ | TC-15-01..04 |
 | 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | ⬜ | TC-16-01..03 |
@@ -265,10 +265,16 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Thêm `@T12` vào `test:ci`.
 - **TC:** TC-12-01..06.
 
-### T13 · Settings / Privacy — ⬜
-- **Figma:** `1004:1367`, `1004:1447`. **Gap:** G-21.
-- **Việc cần làm:** đối chiếu copy/khoảng cách; xác nhận ý nghĩa toggle marketing; header biến thể (Q-09).
-- **TC:** TC-13-01..04.
+### T13 · Settings / Privacy — ✅ (2026-11-13) · [PLN](../docs/plan/PLN-261113-IVY-T13-Settings-Privacy.md) · [RPT](../docs/implementation/RPT-261113-IVY-T13-Settings-Privacy.md)
+- **Figma:** `1004:1367` (EN, ảnh chủ dự án gửi 2026-11-13), `1004:1447` (KO, chưa có ảnh). **Gap:** G-21.
+- **Chủ dự án duyệt (2026-11-13):** `1. ok 2. a 3. a` + ảnh EN. Ảnh giữ thanh đầu trắng "Hi, Kiho", nên mình làm theo ảnh (quy tắc PLN §7-4), **không** đổi thanh đầu thành "← Settings" màu brand (2a). Chờ chủ dự án xác nhận nếu vẫn muốn 2a.
+- **Đã làm:**
+  - Cỡ chữ và khoảng cách theo ảnh: tiêu đề khối 16px, dòng 14px, ghi chú 12px, lề 24px, 28px giữa các khối; "← Back" 14px.
+  - Nút "Withdraw consent" viền đỏ, bo 11px; câu dưới nút "…stops immediately." (6 ngôn ngữ).
+  - Toggle 44×24, là `switch` có tên (trước đây là nút không tên). Bỏ icon trước dòng CCPA. Link Download / Delete 14px, xám đậm.
+  - Thanh đầu khi mở Settings: đường kẻ mảnh bên dưới; nút ⚙ không còn ô nền xám (trạng thái mở nói bằng `aria-pressed`); vòng focus chỉ hiện khi dùng bàn phím.
+  - Toggle marketing giữ chữ thiết kế (3a): bật = không nhận marketing qua email / SMS / push; thông báo trong app vẫn hiện.
+- **TC:** TC-13-01..06.
 
 ### T14 · i18n — ⬜
 - **Việc cần làm:** mọi key mới đủ 6 locale; copy KO bám thiết kế (sửa lỗi chính tả ở SPEC §11, ví dụ 혜택); `npm run i18n:check` xanh.
