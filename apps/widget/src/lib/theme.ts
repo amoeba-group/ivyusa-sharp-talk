@@ -103,6 +103,8 @@ const THEMED_PROPERTIES = [
   '--ivy-on-primary',
   '--ivy-header-bg',
   '--ivy-header-fg',
+  '--ivy-bar-bg',
+  '--ivy-bar-fg',
   '--ivy-header-dim',
   // Design profile (P2)
   '--ivy-font-family',

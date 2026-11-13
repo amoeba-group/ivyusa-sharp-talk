@@ -36,6 +36,13 @@ html:lang(ko) {
   overflow-wrap: break-word;
 }
 
+/* The Settings header (T13 §7-2a, SPEC Q-09): the brand bar with "← Settings".
+   Its controls inherit this colour. A stable hook for tenant custom CSS too. */
+.st-header-settings {
+  background-color: rgb(var(--ivy-bar-bg));
+  color: rgb(var(--ivy-bar-fg));
+}
+
 /* The card geometry, deliberately NOT behind a width media query (FIX-260920).
    Inside the loader's iframe the viewport IS the frame — 420px for a 380px
    panel, and never more than 520px for the largest panel a tenant can set — so
@@ -92,5 +99,11 @@ html:lang(ko) {
   /* The Master Shots header: white ground, near-black title. */
   --ivy-header-bg: 255 255 255;
   --ivy-header-fg: 17 24 39;
+
+  /* The Settings bar (T13 §7-2a): a white title on the brand ramp's first
+     shade where white reads at AA — the 700 of the default #2B7FFF. A themed
+     tenant gets its own from buildThemeVariables (brandBarColors). */
+  --ivy-bar-bg: 0 99 250;
+  --ivy-bar-fg: 255 255 255;
   --ivy-header-dim: 0.6;
 }

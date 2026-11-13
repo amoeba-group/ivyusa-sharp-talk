@@ -457,6 +457,29 @@ export function buildThemeRamp(brandHex: string): Record<number, string> | null 
   return ramp;
 }
 
+/** How far down its own ramp the Settings bar may go and still read as the brand. */
+const BAR_STOPS = [500, 600, 700] as const;
+
+/**
+ * The Settings bar (ivy-docs T13 §7-2a, SPEC Q-09): the design draws a white
+ * title on the brand blue. White on the brand itself is often under AA — 3.8:1
+ * on the default #2B7FFF — so the bar steps down the brand's own ramp to the
+ * first shade where white clears 4.5:1. A brand too light for that by 700 keeps
+ * the brand with its readable foreground, like every other brand surface.
+ */
+export function brandBarColors(
+  rgb: [number, number, number],
+  ramp: Record<number, string>,
+): { bg: string; fg: string } {
+  for (const stop of BAR_STOPS) {
+    const shade = ramp[stop].split(' ').map(Number) as [number, number, number];
+    if (contrastRatio(shade, WHITE) >= MIN_ON_PRIMARY_CONTRAST) {
+      return { bg: ramp[stop], fg: toChannels(WHITE) };
+    }
+  }
+  return { bg: toChannels(rgb), fg: toChannels(readableForeground(rgb)) };
+}
+
 /** Every CSS custom property a themed widget sets, ready to write to :root. */
 export function buildThemeVariables(theme: WidgetTheme | null | undefined): Record<string, string> {
   const rgb = theme ? parseHex(theme.brand) : null;
@@ -465,6 +488,9 @@ export function buildThemeVariables(theme: WidgetTheme | null | undefined): Reco
   const vars: Record<string, string> = {};
   for (const stop of RAMP_STOPS) vars[`--ivy-primary-${stop}`] = ramp[stop];
   vars['--ivy-on-primary'] = toChannels(readableForeground(rgb));
+  const bar = brandBarColors(rgb, ramp);
+  vars['--ivy-bar-bg'] = bar.bg;
+  vars['--ivy-bar-fg'] = bar.fg;
   if (theme?.headerStyle === WIDGET_HEADER_STYLE.BRAND) {
     vars['--ivy-header-bg'] = toChannels(rgb);
     vars['--ivy-header-fg'] = toChannels(readableForeground(rgb));

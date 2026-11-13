@@ -267,12 +267,12 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 
 ### T13 · Settings / Privacy — ✅ (2026-11-13) · [PLN](../docs/plan/PLN-261113-IVY-T13-Settings-Privacy.md) · [RPT](../docs/implementation/RPT-261113-IVY-T13-Settings-Privacy.md)
 - **Figma:** `1004:1367` (EN, ảnh chủ dự án gửi 2026-11-13), `1004:1447` (KO, chưa có ảnh). **Gap:** G-21.
-- **Chủ dự án duyệt (2026-11-13):** `1. ok 2. a 3. a` + ảnh EN. Ảnh giữ thanh đầu trắng "Hi, Kiho", nên mình làm theo ảnh (quy tắc PLN §7-4), **không** đổi thanh đầu thành "← Settings" màu brand (2a). Chờ chủ dự án xác nhận nếu vẫn muốn 2a.
+- **Chủ dự án duyệt (2026-11-13):** `1. ok 2. a 3. a` + ảnh EN. Ảnh giữ thanh đầu trắng "Hi, Kiho", nên lúc đầu mình làm theo ảnh (quy tắc PLN §7-4). **Sau đó chủ dự án chọn "làm 2a" (2026-11-13), nên đã làm 2a** ([RPT §5](../docs/implementation/RPT-261113-IVY-T13-Settings-Privacy.md)).
 - **Đã làm:**
   - Cỡ chữ và khoảng cách theo ảnh: tiêu đề khối 16px, dòng 14px, ghi chú 12px, lề 24px, 28px giữa các khối; "← Back" 14px.
   - Nút "Withdraw consent" viền đỏ, bo 11px; câu dưới nút "…stops immediately." (6 ngôn ngữ).
   - Toggle 44×24, là `switch` có tên (trước đây là nút không tên). Bỏ icon trước dòng CCPA. Link Download / Delete 14px, xám đậm.
-  - Thanh đầu khi mở Settings: đường kẻ mảnh bên dưới; nút ⚙ không còn ô nền xám (trạng thái mở nói bằng `aria-pressed`); vòng focus chỉ hiện khi dùng bàn phím.
+  - Thanh đầu khi mở Settings (2a): thanh màu brand "← Settings" chữ trắng + ✕ (sắc 700 của brand, chữ trắng 5,0:1, đạt AA); ẩn lời chào, 🌐 và ⚙; ← và Esc quay về tab. Focus chuyển vào ← khi mở, về lại ⚙ khi đóng. Nút ⚙ không có ô nền; vòng focus chỉ hiện khi dùng bàn phím.
   - Toggle marketing giữ chữ thiết kế (3a): bật = không nhận marketing qua email / SMS / push; thông báo trong app vẫn hiện.
 - **TC:** TC-13-01..06.
 

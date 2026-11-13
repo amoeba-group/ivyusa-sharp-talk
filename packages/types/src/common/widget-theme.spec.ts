@@ -144,6 +144,27 @@ describe('buildThemeVariables', () => {
     expect(vars['--ivy-on-primary']).toBe('17 24 39');
   });
 
+  it('gives the Settings bar the design white title, at AA, from the brand ramp (T13 §7-2a)', () => {
+    // White is 3.8:1 on #2B7FFF and 4.4:1 on its 600: the bar takes the 700.
+    const ivy = buildThemeVariables({ brand: '#2B7FFF', headerStyle: 'white' });
+    expect(ivy['--ivy-bar-fg']).toBe('255 255 255');
+    expect(ivy['--ivy-bar-bg']).toBe(buildThemeRamp('#2B7FFF')![700]);
+    // A brand that already carries white keeps itself.
+    expect(buildThemeVariables({ brand: '#2563EB', headerStyle: 'white' })['--ivy-bar-bg']).toBe('37 99 235');
+    // Too light for white by 700: the brand itself, with its readable foreground.
+    const sky = buildThemeVariables({ brand: '#7CDAFF', headerStyle: 'white' });
+    expect(sky['--ivy-bar-bg']).toBe('124 218 255');
+    expect(sky['--ivy-bar-fg']).toBe(sky['--ivy-on-primary']);
+  });
+
+  it('the Settings bar reads at 4.5:1 or better for any brand', () => {
+    const channels = (v: string) => v.split(' ').map(Number) as [number, number, number];
+    for (const brand of ['#2B7FFF', '#E11D6B', '#FFD700', '#FFF5CC', '#22C55E', '#7CDAFF', '#111111', '#AD8CEC', '#808080']) {
+      const vars = buildThemeVariables({ brand, headerStyle: 'white' });
+      expect(contrastRatio(channels(vars['--ivy-bar-bg']), channels(vars['--ivy-bar-fg']))).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('leaves the header alone unless the tenant asked for a brand header', () => {
     const white = buildThemeVariables({ brand: '#E11D6B', headerStyle: 'white' });
     expect(white['--ivy-header-bg']).toBeUndefined();

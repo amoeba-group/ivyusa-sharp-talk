@@ -55,4 +55,39 @@ Kế hoạch: [PLN-261113-IVY-T13](../plan/PLN-261113-IVY-T13-Settings-Privacy.m
 | CI | ✅ run 43377337772, xong 06:18:47Z: verify ✅, e2e gate ✅ (có `@T13`), deploy-gate ✅ |
 | Server `talkaibotprd01` | ✅ **Đã deploy**, cùng bản `8b553779` (T14) mà chủ dự án xác nhận ngày 2026-11-13. Code T13 nằm trong bản đó |
 | Cấu hình production | Không cần |
-| Câu hỏi mở | Thanh đầu Settings: giữ trắng như ảnh `1004:1367` hay làm 2a (màu brand "← Settings") — chờ chủ dự án trả lời |
+| Câu hỏi mở | ~~Thanh đầu Settings: giữ trắng hay làm 2a~~ → chủ dự án chọn **làm 2a** (2026-11-13), xem §5 |
+
+## 5. Bổ sung: thanh đầu 2a (2026-11-13)
+
+Chủ dự án trả lời câu hỏi mở bằng **"làm 2a"**. Wireframe đã có sẵn ở PLN §4 ("← Settings"), và phương án §7-2a được duyệt từ đầu, nên không cần kế hoạch mới.
+
+| Phần | File | Nội dung |
+|---|---|---|
+| Widget | `widget/WidgetPanel.tsx` | Khi mở Settings: thanh đầu là "← Settings" + ✕ trên nền brand; ẩn lời chào, 🌐 và ⚙. ← và **Esc** quay về tab; Esc lần nữa mới đóng panel. Focus vào ← khi mở, về lại ⚙ khi đóng. Nút ⚙ bỏ `aria-pressed`, vì nó không còn là nút bật / tắt |
+| Widget | `settings/PreferencesPanel.tsx` | Bỏ "← Back" trong nội dung (đã lên thanh đầu); lề trên 24px |
+| Theme | `packages/types/src/common/widget-theme.ts` | `brandBarColors()`: nền thanh là sắc đầu tiên trong 500 → 700 của brand mà chữ trắng đạt 4,5:1. IVY (#2B7FFF): 500 chỉ 3,8:1, 600 là 4,4:1, nên dùng **700** (`#0063FA`, 5,0:1). Brand quá nhạt thì giữ màu brand và dùng chữ đậm. Kết quả nằm ở 2 biến `--ivy-bar-bg` / `--ivy-bar-fg` |
+| Widget | `index.css`, `lib/theme.ts` | Giá trị mặc định của 2 biến (widget chưa có theme) và class `.st-header-settings`; `theme.ts` xoá 2 biến khi đổi tenant |
+| Test | `widget-theme.spec.ts` (+2), `13-settings.spec.ts` | Unit: IVY → 700 + chữ trắng; brand đủ đậm giữ nguyên; brand nhạt → chữ đậm; mọi brand thử đều ≥ 4,5:1. E2E **TC-13-07**. TC-13-05 bỏ phần kiểm thanh đầu cũ |
+
+**Vì sao không dùng đúng màu brand:**
+- PLN ghi "nền màu brand, chữ trắng". Nhưng chữ trắng trên chính #2B7FFF chỉ đạt 3,8:1, dưới chuẩn đọc AA (4,5:1).
+- Hệ thống theme vì vậy tự đổi sang chữ đậm. Ảnh chụp lần đầu ra chữ tối trên nền xanh, khác thiết kế.
+- Dùng sắc đậm hơn của chính màu brand thì giữ được chữ trắng như thiết kế (SPEC §4: xanh #2563EB, chữ trắng) mà vẫn đạt chuẩn.
+
+**Kiểm thử:**
+- Unit widget 116/116; theme 37/37; typecheck sạch.
+- E2E `@T01|@T13|@T14|@T15` 48/48. Toàn bộ desktop **123/123**.
+- Mobile: chỉ TC-15-01 đỏ, có từ trước, việc của T15.
+- Ảnh chụp EN / KO / VI: nền xanh đậm, "← Settings" và ✕ màu trắng.
+
+**Ảnh hưởng:**
+- Mọi khách mở Settings thấy thanh màu brand "← Settings" thay cho lời chào. 🌐 và ⚙ chỉ hiện ở các tab.
+- Esc trong Settings quay về tab, không đóng panel nữa.
+- Tenant khác cũng nhận thay đổi này (code dùng chung).
+
+| Deploy | Trạng thái |
+|---|---|
+| Commit | ⏳ (điền sau khi push) |
+| CI | ⏳ |
+| Server | ⏳ |
+

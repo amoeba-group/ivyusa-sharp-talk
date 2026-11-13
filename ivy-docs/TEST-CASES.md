@@ -46,7 +46,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T10 | 1 / 5 → **7 / 7** ✅ (T10, 2026-11-12; thêm TC-10-06..07) | tất cả | — |
 | T11 | 0 / 4 → **8 / 8** ✅ (T11, 2026-11-13; thêm TC-11-05..08) | tất cả | — |
 | T12 | 0 / 4 → **6 / 6** ✅ (T12, 2026-11-13; thêm TC-12-05..06) | tất cả | — |
-| T13 | 4 / 4 → **6 / 6** ✅ (T13, 2026-11-13; thêm TC-13-05, 06) | tất cả | — |
+| T13 | 4 / 4 → 6 / 6 (T13) → **7 / 7** ✅ (2a, 2026-11-13; thêm TC-13-07) | tất cả | — |
 | T14 | 7 / 8 → 8 / 8 (nhờ T02) → **20 / 20** ✅ (T14, 2026-11-13; thêm TC-14-04..07) | tất cả | — |
 | T15 | 3 / 4 → 4 / 4 (nhờ T02: chip `aria-pressed`) | TC-15-02, 03, 04 | TC-15-01 (project `mobile`): chạy lại 2026-11-13, đỏ cả trước và sau T14 (panel 380px trên màn 412px). Việc của T15, chưa vào cổng CI |
 
@@ -358,7 +358,8 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 | TC-13-02 | Rút consent (API thật) | Withdraw → xác nhận → có "Give consent again"/Accept | BR-18 |
 | TC-13-03 | Khách đã nhận diện | Marketing messages + toggle, CCPA, Download my data (JSON), Delete my data | SCR-IVY-15 |
 | TC-13-04 | Khách vãng lai (API thật) | có khối consent, **không** có Download my data | SCR-IVY-15 |
-| TC-13-05 | Nút rút consent | "Withdraw consent" viền cùng màu đỏ với chữ (không còn viền xám); "…stops immediately."; thanh đầu vẫn "Hi, Kiho", ⚙ có `aria-pressed=true` | SCR-IVY-15 (`1004:1367`) |
+| TC-13-05 | Nút rút consent | "Withdraw consent" viền cùng màu đỏ với chữ (không còn viền xám); "…stops immediately." | SCR-IVY-15 (`1004:1367`) |
+| TC-13-07 | Thanh đầu 2a | Mở Settings từ tab Chat: thanh đầu là tiêu đề "Settings", nền = `--ivy-bar-bg`, chữ trắng; không có nút Language / Settings, còn Close. Focus ở ←; bấm ← → về tab Chat, "Hi, Kiho", focus ở ⚙. Mở lại, Esc → về tab (panel còn mở); Esc lần nữa → đóng panel | SCR-IVY-15, Q-09, NFR-02 |
 | TC-13-06 | Toggle | `switch` có tên "Do not send me marketing messages" và "CCPA: …", `aria-checked`, 44×24; bấm → `PUT /notifications/marketing-opt-out {opt_out: true}` → "Preference saved." | SCR-IVY-15, a11y |
 
 **Kết quả (2026-11-13):** 6/6, lặp ×3: 18/18. `@T01|@T13|@T15`: 27/27. Toàn bộ desktop: **110 / 110** xanh. Ảnh chụp EN khớp `1004:1367` (ảnh chủ dự án gửi): thanh đầu trắng + đường kẻ, Back 14px, tiêu đề 16px, nút viền đỏ, toggle 44×24, không icon trước CCPA.

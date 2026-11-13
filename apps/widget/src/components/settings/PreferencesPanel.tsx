@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
-  ArrowLeft,
   CheckCircle2,
   Download,
   Loader2,
@@ -286,20 +285,11 @@ export function PreferencesPanel({ onBack }: { onBack: () => void }) {
   // taken that away from exactly the visitors most likely to want it.
   // The way back sits above the content, as in the design (T13): the header
   // keeps the greeting and its buttons on this screen too.
-  const back = (
-    <button
-      onClick={onBack}
-      className="mb-6 flex items-center gap-1.5 self-start text-sm text-gray-500 hover:text-gray-700"
-    >
-      <ArrowLeft className="h-4 w-4" />
-      {t('orders.back')}
-    </button>
-  );
-
+  // Back lives in the Settings header now (T13 §7-2a): "← Settings" in the
+  // brand bar, with Esc doing the same. `onBack` still serves the sign-in card.
   if (!authenticated || authLost) {
     return (
-      <div className="scroll-thin flex h-full flex-col overflow-y-auto px-6 pb-6 pt-5">
-        {back}
+      <div className="scroll-thin flex h-full flex-col overflow-y-auto p-6">
         <ConsentSection />
         <div className="mt-7 flex flex-1 flex-col items-center justify-center gap-3">
           <Lock className="h-6 w-6 text-gray-300" />
@@ -314,9 +304,7 @@ export function PreferencesPanel({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="scroll-thin flex h-full flex-col overflow-y-auto px-6 pb-6 pt-5">
-      {back}
-
+    <div className="scroll-thin flex h-full flex-col overflow-y-auto p-6">
       {/* Consent withdrawal / re-consent — above notification prefs (5.2). */}
       <ConsentSection />
 

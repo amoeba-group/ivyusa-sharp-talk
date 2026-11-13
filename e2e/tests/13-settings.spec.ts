@@ -66,9 +66,45 @@ test.describe('T13 · Settings / Privacy — identified shopper', () => {
     expect(look.border).toBe(look.color);
     expect(look.border).not.toBe('rgb(229, 231, 235)');
     await expect(p.getByText('If you withdraw, chat and AI processing stops immediately.')).toBeVisible();
-    // The header keeps the greeting and its buttons on this screen, as designed.
+  });
+
+  test('TC-13-07 Settings has the brand header "← Settings"; ← and Esc go back to the tab @T13 @design @a11y', async ({ page, widget }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.openChat();
+    await widget.settingsButton.click();
+    // The brand bar (owner's 2a, 2026-11-13; SPEC Q-09): the screen's name in
+    // the design's white, no greeting, language or gear; the X still closes.
+    const header = widget.panel.locator('.st-header');
+    await expect(widget.headerTitle).toHaveText('Settings');
+    const look = await header.evaluate((e) => {
+      const triplet = getComputedStyle(document.documentElement).getPropertyValue('--ivy-bar-bg').trim();
+      return {
+        bg: getComputedStyle(e).backgroundColor,
+        bar: `rgb(${triplet.split(/\s+/).join(', ')})`,
+        title: getComputedStyle(e.querySelector('.st-header-title')!).color,
+      };
+    });
+    expect(look.bg).toBe(look.bar);
+    // White on the IVY blue's 700, 5.0:1 (AA). On the brand itself white is 3.8:1.
+    expect(look.title).toBe('rgb(255, 255, 255)');
+    await expect(widget.languageButton).toHaveCount(0);
+    await expect(widget.settingsButton).toHaveCount(0);
+    await expect(widget.closeButton).toBeVisible();
+    // Focus follows the screen: onto ← on the way in, back onto the gear on the way out.
+    const back = widget.panel.getByRole('button', { name: 'Back' });
+    await expect(back).toBeFocused();
+    await back.click();
+    await expect(widget.tab('Chat')).toHaveAttribute('aria-selected', 'true');
     await expect(widget.headerTitle).toHaveText(/Hi, Kiho/);
-    await expect(widget.settingsButton).toHaveAttribute('aria-pressed', 'true');
+    await expect(widget.settingsButton).toBeFocused();
+    // Esc leaves Settings one layer at a time: back to the tab, the panel stays open.
+    await widget.settingsButton.click();
+    await page.keyboard.press('Escape');
+    await expect(widget.panel).toBeVisible();
+    await expect(widget.tab('Chat')).toHaveAttribute('aria-selected', 'true');
+    await page.keyboard.press('Escape');
+    await expect(widget.panel).toBeHidden();
   });
 
   test('TC-13-06 marketing and CCPA switches are named, 44×24, and saving says so @T13 @a11y', async ({ widget, mocks }) => {

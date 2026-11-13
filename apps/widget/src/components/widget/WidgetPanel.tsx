@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { Settings, X, MessageSquareHeart } from 'lucide-react';
+import { ArrowLeft, Settings, X, MessageSquareHeart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { isAppMode, postToHost } from '../../lib/host-bridge';
@@ -179,6 +179,17 @@ export function WidgetPanel() {
   const visibleTabs = useWidgetStore((s) => s.visibleTabs);
   const tabPosition = useWidgetStore((s) => s.tabPosition);
   const panelRef = useRef<HTMLDivElement>(null);
+  // Settings swaps the header (T13 §7-2a): its ← takes the focus on the way in,
+  // and the gear that opened it gets it back on the way out, so a keyboard user
+  // is never left on a button that just disappeared.
+  const backRef = useRef<HTMLButtonElement>(null);
+  const gearRef = useRef<HTMLButtonElement>(null);
+  const wasSettings = useRef(showSettings);
+  useEffect(() => {
+    if (showSettings) backRef.current?.focus();
+    else if (wasSettings.current) gearRef.current?.focus();
+    wasSettings.current = showSettings;
+  }, [showSettings]);
 
   // Tabs the shopper has opened at least once — mounted from then on.
   const [visited, setVisited] = useState<TabKey[]>([activeTab]);
@@ -186,10 +197,15 @@ export function WidgetPanel() {
     setVisited((v) => (v.includes(activeTab) ? v : [...v, activeTab]));
   }, [activeTab]);
 
-  // Esc closes the panel; focus the panel on open.
+  // Esc closes the panel; focus the panel on open. In Settings, Esc goes back to
+  // the tab like the header's ← (T13 §4): one layer at a time, as the delete
+  // confirmation does (T07). Read live: this listener is bound once.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') dismiss();
+      if (e.key !== 'Escape') return;
+      const store = useWidgetStore.getState();
+      if (store.settingsOpen) store.setSettingsOpen(false);
+      else dismiss();
     };
     document.addEventListener('keydown', onKeyDown);
     panelRef.current?.focus();
@@ -240,19 +256,35 @@ export function WidgetPanel() {
           fixed brand string. The language switcher and close button are absent
           from the design but kept deliberately (PLN §7 D-2): without the X, a
           shopper on a touch device has no way to dismiss the panel but Esc. */}
-      {/* In Settings the design rules the header off from the content (T13,
-          Figma 1004:1367); on the tabs the tab bar does that job. */}
+      {/* Settings has its own header (T13 §7-2a, owner's call 2026-11-13; SPEC
+          Q-09): the brand bar, "← Settings" and the X. Its colours are the
+          `--ivy-bar-*` pair (white at AA on the brand ramp, index.css), which
+          the title and both buttons inherit. The greeting, the language and
+          the gear come back with the tabs. Same height as the tab header,
+          centred, since a coloured bar shows its padding. */}
       <header
-        className={`st-header flex items-center justify-between bg-header-bg px-4 pb-2 pt-4 ${
-          showSettings ? 'border-b border-gray-200' : ''
+        className={`st-header flex items-center justify-between px-4 ${
+          showSettings ? 'st-header-settings py-3' : 'bg-header-bg pb-2 pt-4'
         }`}
       >
-        {/* Greet the shopper by name once they are known (frame 34, "Hi, Lisa");
+        {showSettings ? (
+          <div className="flex min-w-0 items-center gap-1">
+            <button
+              ref={backRef}
+              onClick={() => setShowSettings(false)}
+              aria-label={t('orders.back')}
+              className="st-header-control -ml-1.5 rounded-st-md p-1.5 hover:bg-black/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h2 className="st-header-title truncate text-xl font-bold">{t('settings')}</h2>
+          </div>
+        ) : /* Greet the shopper by name once they are known (frame 34, "Hi, Lisa");
             before that the tenant's own name identifies whose widget this is
             (frames 48/49). The two design variants are the two sign-in states,
             not a contradiction. `truncate` keeps a long name from pushing the
-            three controls on the right off the header. */}
-        {logo && !logoWithTitle ? (
+            three controls on the right off the header. */
+        logo && !logoWithTitle ? (
           // The name still exists for screen readers; a logo replaces the text
           // only visually. Height-capped so a tall upload cannot push the header
           // out of shape.
@@ -274,18 +306,16 @@ export function WidgetPanel() {
         <div className="flex flex-shrink-0 items-center gap-0.5">
           {/* Each button is the tenant's to hide (PLN-261023-Widget-Header-Buttons);
               the close button is not — a touch device would lose its only way out. */}
-          {!triggerMode && headerControls.language && <LanguageSwitcher />}
-          {/* Open/closed is said with aria-pressed and a darker icon; the
-              design draws no box behind the gear (T13). Focus rings for the
-              keyboard only, so a click does not leave one behind. */}
-          {headerControls.settings && (
+          {!showSettings && !triggerMode && headerControls.language && <LanguageSwitcher />}
+          {/* The design draws no box behind the gear (T13). Focus rings for
+              the keyboard only, so a click does not leave one behind. In
+              Settings the gear gives way to the header's ←. */}
+          {!showSettings && headerControls.settings && (
           <button
-            onClick={() => setShowSettings(!showSettings)}
+            ref={gearRef}
+            onClick={() => setShowSettings(true)}
             aria-label={t('settings')}
-            aria-pressed={showSettings}
-            className={`st-header-control rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
-              showSettings ? 'text-header-fg' : ''
-            }`}
+            className="st-header-control rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             <Settings className="h-5 w-5" />
           </button>
@@ -294,7 +324,11 @@ export function WidgetPanel() {
             <button
               onClick={dismiss}
               aria-label={t('a11y.close')}
-              className="st-header-control rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className={`st-header-control rounded-st-md p-1.5 focus:outline-none ${
+                showSettings
+                  ? 'hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-current'
+                  : 'text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:ring-2 focus:ring-primary-500'
+              }`}
             >
               <X className="h-5 w-5" />
             </button>
