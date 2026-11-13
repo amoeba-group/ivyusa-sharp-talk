@@ -101,8 +101,8 @@ Kế hoạch: [PLN-261112-IVY-T11](../plan/PLN-261112-IVY-T11-Contact-Form.md), 
 
 | Mục | Trạng thái |
 |---|---|
-| SQL production | ⏳ Chờ chủ dự án chạy GUIDE §1 |
-| Commit | ⏳ Chưa push (chờ SQL) |
-| CI | — |
-| Server `talkaibotprd01` | — |
-| Cấu hình production | ⏳ GUIDE §2 sau khi deploy |
+| SQL production | ✅ 2026-11-13, chủ dự án chạy [GUIDE §1](../guide/GUIDE-261113-IVY-Contact-Support-Config.md) **trước** khi push (`sql/261112-inquiry-contact-form.sql`, 4 cột trên `inquiries`) |
+| Commit | `00ee3c0a` (code) + `79dce873` (GUIDE §1 từng bước) trên `deploy/talk-ivyusa`, push 2026-11-13 (`56059d35..79dce873`) |
+| CI | ✅ run 43356138455, xong 03:04:47Z: verify ✅, e2e gate ✅ (có `@T11`), deploy-gate ✅ |
+| Server `talkaibotprd01` | ⏳ **Chưa xác nhận.** Cron deploy vài phút sau khi CI xanh. Máy dev bị ELB trả 403, nên không tự kiểm tra được. Chủ dự án kiểm tra bằng `tail -n 30 ~/ivy-autodeploy.log`: tìm `Deployed.` cho `79dce873`. Nếu thấy `waiting: deploy check failed` thì SQL chưa vào đúng DB (chạy lại bước 4 của GUIDE §1) |
+| Cấu hình production | ⏳ Chủ dự án làm [GUIDE §2](../guide/GUIDE-261113-IVY-Contact-Support-Config.md) (lưu `hello@ivyusa.com` trong console) và §3 (kiểm `SMTP_HOST`) |
