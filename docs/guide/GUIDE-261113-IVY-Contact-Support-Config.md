@@ -4,21 +4,48 @@ Kèm theo [PLN-261112-IVY-T11](../plan/PLN-261112-IVY-T11-Contact-Form.md) và [
 
 ## 1. Chạy SQL — TRƯỚC khi code mới lên
 
-Trên `talkaibotprd01` (user `appops`, qua SSM):
+Mất khoảng 2 phút. Lệnh chỉ **thêm 4 cột trống** vào bảng `inquiries`, không sửa hay xoá dữ liệu nào. Không cần tắt website.
+
+### Bước 1 — Mở terminal trên server
+
+1. Đăng nhập AWS Console → **EC2 → Instances** → chọn `talkaibotprd01`.
+2. Bấm **Connect** → tab **Session Manager** → **Connect**. Một terminal đen mở trong trình duyệt.
+3. Gõ từng dòng, Enter sau mỗi dòng:
+
+   ```bash
+   cd ~ && exec /bin/bash
+   whoami
+   cd /docker/apps/talktalk
+   ```
+
+   `whoami` phải in ra `appops`. Nếu in ra tên khác, gõ `sudo su - appops` rồi gõ lại dòng `cd /docker/apps/talktalk`.
+
+### Bước 2 — Xem bảng trước khi sửa
+
+Copy cả dòng, dán vào terminal (chuột phải → Paste, hoặc `Ctrl+Shift+V`), Enter:
 
 ```bash
-cd /docker/apps/talktalk
-docker exec -i sharptalk_mysql sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' <<'SQL'
-ALTER TABLE `inquiries`
-  ADD COLUMN `contact_name` VARBINARY(512) NULL,
-  ADD COLUMN `contact_email` VARBINARY(512) NULL,
-  ADD COLUMN `message` VARBINARY(8192) NULL,
-  ADD COLUMN `language` VARCHAR(8) NULL;
-SQL
 docker exec sharptalk_mysql sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" -e "SHOW COLUMNS FROM inquiries"'
 ```
 
-**Đúng** khi bảng có 11 dòng, 4 dòng cuối là:
+Phải thấy **7 dòng**: `id`, `tenant_id`, `conversation_id`, `order_id`, `customer_id`, `status`, `created_at`.
+
+- Dòng `mysql: [Warning] Using a password on the command line interface can be insecure.` là bình thường. Mật khẩu được đọc trong container, không hiện ra màn hình.
+- Nếu đã thấy 11 dòng (có `contact_name`…) thì SQL đã chạy rồi. Bỏ qua bước 3.
+
+### Bước 3 — Thêm 4 cột
+
+Copy **cả dòng** (lệnh dài, kéo hết sang phải), dán, Enter:
+
+```bash
+docker exec sharptalk_mysql sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" -e "ALTER TABLE inquiries ADD COLUMN contact_name VARBINARY(512) NULL, ADD COLUMN contact_email VARBINARY(512) NULL, ADD COLUMN message VARBINARY(8192) NULL, ADD COLUMN language VARCHAR(8) NULL"'
+```
+
+**Đúng** khi chỉ in ra dòng Warning ở trên, không có chữ `ERROR`.
+
+### Bước 4 — Kiểm tra lại
+
+Chạy lại đúng lệnh ở bước 2. Bây giờ phải thấy **11 dòng**, 4 dòng cuối là:
 
 ```
 contact_name   varbinary(512)   YES
@@ -27,7 +54,17 @@ message        varbinary(8192)  YES
 language       varchar(8)       YES
 ```
 
-- `ERROR 1060 … Duplicate column name 'contact_name'` = đã chạy rồi. Không sao.
+Copy kết quả này gửi lại cho người push code.
+
+### Nếu có lỗi
+
+| Thấy | Nghĩa là | Làm gì |
+|---|---|---|
+| `ERROR 1060 … Duplicate column name 'contact_name'` | Đã chạy rồi | Không sao. Làm bước 4 để chắc chắn |
+| `No such container: sharptalk_mysql` | Sai tên container | Chạy `docker ps --format '{{.Names}}'`, gửi kết quả lại |
+| `permission denied … docker.sock` | User không thuộc nhóm docker | Kiểm tra `whoami` = `appops` (bước 1) |
+| `ERROR 1045 Access denied` | Biến mật khẩu trong container không khớp | Dừng lại, gửi kết quả lại. Đừng thử mật khẩu khác |
+
 - Chạy SQL trước là an toàn: code đang chạy bỏ qua 4 cột mới.
 - Nếu quên: cron chạy `deploy-self-hosted.sh --check` trước khi deploy. Thấy SQL còn thiếu thì nó quay checkout về commit cũ, production vẫn chạy code cũ.
   - `~/ivy-autodeploy.log` ghi `… waiting: deploy check failed …`.
