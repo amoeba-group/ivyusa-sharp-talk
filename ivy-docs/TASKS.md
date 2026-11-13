@@ -35,7 +35,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 8 | T08 | Chat home — lời chào, 7 quick-reply có emoji, composer | UI · API · CFG | P0 | T01 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261112-IVY-Chat-Home-Config.md)) | TC-08-01..06 |
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ✅ | TC-10-01..07 |
-| 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ✅ code · ⏳ cấu hình prod ([GUIDE](../docs/guide/GUIDE-261113-IVY-Contact-Support-Config.md)) | TC-11-01..08 |
+| 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ✅ (prod: SQL, email hỗ trợ, SMTP, mail thử — 2026-11-13) | TC-11-01..08 |
 | 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ⬜ | TC-12-01..04 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ⬜ (TC đã xanh 4/4, chỉ còn rà visual/copy) | TC-13-01..04 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ⬜ | TC-14-01..03 |
