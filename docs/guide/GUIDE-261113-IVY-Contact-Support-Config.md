@@ -170,7 +170,9 @@ Chuông chỉ hiện với tài khoản có quyền Live chat. Số trên chuôn
 
 ## 5. Thử trên production
 
-1. Mở widget trên ivyusa.com → tab Chat → **🤝 Contact Support**.
+1. Mở widget → bấm **Accept** ở thông báo quyền riêng tư nếu có → tab Chat → **🤝 Contact Support**.
+   - Widget chưa gắn vào ivyusa.com thì mở thẳng `https://talk.ivyusa.com/widget/?shop=ivyusa.myshopify.com` (cùng máy / mạng đang vào được console), bấm nút **Open support** góc dưới bên phải.
+   - Gửi thử sẽ tạo trên production 1 inquiry và 1 khách (lead) mang email bạn nhập.
    - Thấy "Please choose how you'd like to reach us." và **một** thẻ 📧 Email inquiry · Open 24 hours · Reply within 1 business day · hello@ivyusa.com.
 2. Bấm thẻ → form Name · Email · Message.
    - Khách đã đăng nhập: tên và email được điền sẵn.
