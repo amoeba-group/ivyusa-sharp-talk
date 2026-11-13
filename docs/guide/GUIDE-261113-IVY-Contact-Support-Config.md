@@ -105,6 +105,55 @@ grep -E '^(SMTP_HOST|SMTP_PORT|SMTP_USER|ALERT_EMAIL_FROM)=' docker/self-hosted/
 - `SMTP_HOST` có giá trị: mail đi.
 - `SMTP_HOST` trống: không có mail. Inquiry vẫn được lưu và hiện ở console (§4). Log API có **một** dòng `inquiry mail skipped: SMTP_HOST is not set`.
 
+### 3.1 Bật SMTP (Office 365 của IVY)
+
+2026-11-13: chủ dự án chọn dùng chung tài khoản gửi mail Office 365 mà Odoo của IVY đang dùng (Odoo → Outgoing Mail Servers → "Ivy Beauty"). Tài khoản và mật khẩu lấy ở đó. **Không ghi chúng vào repo** (repo public).
+
+Bật SMTP là bật mail cho **cả hệ thống**, không riêng inquiry. Ngoài mail báo inquiry, các mail sau cũng bắt đầu được gửi: quên mật khẩu console, mời nhân viên, cảnh báo hết credit AI (tới `AI_ALERT_EMAIL`, trống = `dev@amoeba.group`), cảnh báo không có nhân viên online.
+
+Trên server, trong `/docker/apps/talktalk`:
+
+```bash
+cp docker/self-hosted/.env.self-hosted ~/env.self-hosted.bak-$(date +%F)
+nano docker/self-hosted/.env.self-hosted
+```
+
+Sửa 5 dòng `SMTP_*` / `ALERT_EMAIL_FROM` (đã có sẵn, đang trống):
+
+```
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_USER=<Username trong Odoo>
+SMTP_PASS=<Password trong Odoo>
+ALERT_EMAIL_FROM=<FROM Filtering trong Odoo>
+```
+
+- Lưu: `Ctrl+O` → Enter → `Ctrl+X`.
+- Không cần dấu nháy.
+- Port 587 = TLS (STARTTLS), giống cấu hình Odoo.
+
+Khởi động lại riêng API để nhận cấu hình mới. Lệnh này không build lại; khung chat tạm gián đoạn khoảng 30–40 giây:
+
+```bash
+docker compose -f docker/self-hosted/docker-compose.self-hosted.yml --env-file docker/self-hosted/.env.self-hosted up -d --no-deps --force-recreate api
+```
+
+Kiểm tra đăng nhập SMTP (không gửi mail, không in mật khẩu):
+
+```bash
+docker exec sharptalk_api node -e "const n=require('nodemailer');n.createTransport({host:process.env.SMTP_HOST,port:+process.env.SMTP_PORT,secure:false,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}}).verify().then(()=>console.log('SMTP OK'),e=>console.log('SMTP FAIL:',e.message))"
+```
+
+| Kết quả | Nghĩa là |
+|---|---|
+| `SMTP OK` | Đăng nhập được. Gửi một form thử (§5): `hello@ivyusa.com` nhận mail |
+| `SMTP FAIL: … 535 5.7.139 … SmtpClientAuthentication is disabled` | Office 365 tắt SMTP AUTH cho hộp thư này. Admin Microsoft 365 bật lại |
+| `SMTP FAIL: … 535 … Authentication unsuccessful` | Sai Username/Password, hoặc mật khẩu đã đổi bên Odoo |
+| `SMTP FAIL: … ETIMEDOUT` | Server không ra được cổng 587 (firewall / security group outbound) |
+| `SMTP OK` nhưng log có `Email send failed: … SendAsDenied` | Tài khoản không được gửi dưới tên `ALERT_EMAIL_FROM`. Đặt `ALERT_EMAIL_FROM` = đúng Username rồi chạy lại lệnh khởi động API |
+
+Mail báo inquiry gửi tới **email hỗ trợ đã lưu ở §2**. Chưa lưu email ở §2 thì không có mail, dù SMTP đã bật.
+
 ## 4. Xem và trả lời inquiry
 
 Trang này **không có trong menu bên trái**. Có 2 cách vào:
