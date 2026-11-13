@@ -37,7 +37,7 @@ Kế hoạch: [PLN-261112-IVY-T11](../plan/PLN-261112-IVY-T11-Contact-Form.md), 
 **Khác kế hoạch:**
 - **Tên, email và nội dung đều được mã hoá.** PLN §5 ghi `contact_name VARCHAR(100)` và `message TEXT`; mình đổi sang `VARBINARY` mã hoá, giống tên và ghi chú của khách trong bảng `customers`. Cả 3 đều là dữ liệu cá nhân. Câu SQL gửi bạn chạy là bản đã đổi.
 - **File SQL tên `261112-inquiry-contact-form.sql`**, theo cách đặt tên các file gần đây trong `sql/`; PLN ghi `migration_inquiry_contact_form.sql`.
-- **Inquiries là một tab trong Live chat → Alerts**, cạnh "Callback requests", không phải mục menu mới trong nhóm Consult.
+- **Inquiries là một tab trong trang Alarm center** (`/live-chat/alerts?tab=inquiries`), cạnh "Callback requests", không phải mục menu mới trong nhóm Consult. Trang này không có trong menu bên trái: vào bằng chuông 🔔 → View all, hoặc mở thẳng URL. *(Sửa 2026-11-13: bản trước ghi nhầm "Live chat → Alerts", chủ dự án tìm theo đó không thấy.)*
   - Thêm một mục menu phải sửa danh mục menu, gói (plan) và ma trận quyền theo cấp bậc. Tab trong Alerts dùng lại đúng quyền của Live chat (nhãn Consult), như PLN muốn.
   - Danh sách hiện email đã che (`hy***@ivyent.com`). Email đầy đủ chỉ hiện khi mở một inquiry, và lần mở đó được ghi audit; đây là cách PLN D4 mô tả "đọc có ghi audit".
 - **Tên được điền sẵn** cùng email khi khách đã đăng nhập, như PLN D2. Ảnh `1006:6529` để trống ô Name.

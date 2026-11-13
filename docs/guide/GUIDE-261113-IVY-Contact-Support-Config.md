@@ -107,7 +107,12 @@ grep -E '^(SMTP_HOST|SMTP_PORT|SMTP_USER|ALERT_EMAIL_FROM)=' docker/self-hosted/
 
 ## 4. Xem và trả lời inquiry
 
-Console → **Live chat → Alerts → tab Inquiries** (số đỏ là số inquiry chưa trả lời).
+Trang này **không có trong menu bên trái**. Có 2 cách vào:
+
+- Mở thẳng `https://talk.ivyusa.com/live-chat/alerts?tab=inquiries`. Nên lưu bookmark.
+- Hoặc bấm **chuông 🔔** góc trên bên phải console → **View all** → trang **Alarm center** → tab **Inquiries**. Số đỏ trên tab là số inquiry chưa trả lời.
+
+Chuông chỉ hiện với tài khoản có quyền Live chat. Số trên chuông là cảnh báo chat, **không** tính inquiry: có inquiry mới thì chuông không đổi.
 
 - Danh sách: thời gian, tên, email (che bớt), đầu nội dung.
 - Bấm **Open**: hiện đủ email và nội dung. Mỗi lần mở được ghi vào audit log.
@@ -121,7 +126,7 @@ Console → **Live chat → Alerts → tab Inquiries** (số đỏ là số inqu
 2. Bấm thẻ → form Name · Email · Message.
    - Khách đã đăng nhập: tên và email được điền sẵn.
 3. Gửi một tin thử → thẻ tối "YOUR INQUIRY" + "Your message has been sent successfully."
-4. Console → Alerts → Inquiries: thấy tin vừa gửi. Mailbox `hello@ivyusa.com` có mail nếu có SMTP. Bấm **Mark answered** cho tin thử.
+4. Console → `https://talk.ivyusa.com/live-chat/alerts?tab=inquiries` (xem §4): thấy tin vừa gửi. Mailbox `hello@ivyusa.com` có mail nếu có SMTP. Bấm **Mark answered** cho tin thử.
 
 ## 6. Khi có sự cố
 

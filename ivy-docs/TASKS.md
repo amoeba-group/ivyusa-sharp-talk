@@ -247,7 +247,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Contact Support trả lời **trong luồng chat** (BUG-024): bong bóng khách, "Please choose how you'd like to reach us.", thẻ 📧 Email inquiry · Open 24 hours · Reply within 1 business day · email, chip Start over.
   - Thẻ email mở form Name · Email · Message (điền sẵn tên và email khi đã đăng nhập). Lỗi hiện dưới từng ô, không gọi API. Gửi lỗi → toast lỗi, form giữ nội dung. Gửi xong → thẻ tối "YOUR INQUIRY" + bong bóng "Your message has been sent successfully."
   - API `POST /inquiries { name, email, message }`: cần consent; cùng luật kiểm tra với widget (`inquiryProblems`); khách chưa đăng nhập được tạo lead từ email; tối đa 5 lần / phiên / giờ; email đã xin xoá thì từ chối. Mail tới email hỗ trợ (Reply-To = khách) nếu server có SMTP.
-  - Console → Live chat → Alerts → tab **Inquiries**: danh sách (email che bớt), mở một inquiry (đọc đầy đủ, ghi audit), **Reply by email**, **Mark answered** / Open again.
+  - Console → chuông 🔔 → View all → Alarm center → tab **Inquiries** (`/live-chat/alerts?tab=inquiries`, không có trong menu trái): danh sách (email che bớt), mở một inquiry (đọc đầy đủ, ghi audit), **Reply by email**, **Mark answered** / Open again.
   - Xoá dữ liệu cá nhân xoá luôn tên / email / nội dung của inquiry; DSAR xuất 3 trường này.
   - Thêm `@T11` vào `test:ci`.
 - **TC:** TC-11-01..08 — **8/8** ✅ (05: thẻ live chat khi tenant bật; 06: gửi lỗi; 07: tenant không cấu hình; 08: gửi thật lên API).
