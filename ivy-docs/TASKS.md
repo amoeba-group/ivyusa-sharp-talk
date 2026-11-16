@@ -40,7 +40,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ✅ | TC-13-01..06 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ✅ | TC-14-01..07 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ✅ | TC-15-01..06 |
-| 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | ⬜ | TC-16-01..03 |
+| 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | 🟨 | TC-16-01..03 |
 
 > Baseline E2E trên commit `583ce121` + tài liệu này: xem [TEST-CASES.md §0](TEST-CASES.md).
 
@@ -302,7 +302,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - `test:ci` chạy thêm project `mobile`, để TC-15-01 vào cổng.
 - **TC:** TC-15-01..06.
 
-### T16 · Deploy & smoke production — ⬜
+### T16 · Deploy & smoke production — 🟨 chờ duyệt PLN (2026-11-16) · [PLN](../docs/plan/PLN-261116-IVY-T16-Deploy-Smoke.md)
+- **Hiện trạng (2026-11-16):** tip `0ded01c5` có `deploy-gate` xanh (run `43810433622`), không có SQL. Chưa xác minh được server và chưa chạy được `test:prod` từ máy dev (không có quyền SSM, BUG-004).
 - **Điều kiện:** máy chạy test phải nằm trong allowlist của ELB (BUG-004); người có quyền server (`secrets/`).
 - **Việc cần làm:**
   1. Áp SQL (nếu có).
