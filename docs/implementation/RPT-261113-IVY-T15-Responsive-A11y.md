@@ -60,5 +60,6 @@ Kế hoạch: [PLN-261113-IVY-T15](../plan/PLN-261113-IVY-T15-Responsive-A11y.md
 | Commit | `8f264e88` (2026-11-13) |
 | CI | ❌ run `43407310275`: `verify` xanh, `e2e gate` đỏ — TC-15-06 ×6 ở bước Chat (nút Send ngoài mép panel, [BUG-031](../../ivy-docs/BUGS.md)); `deploy-gate` bị bỏ qua |
 | Server `talkaibotprd01` | Chưa nhận bản T15 (không có `deploy-gate` xanh cho `8f264e88`) |
-| Sửa BUG-031 (2026-11-16) | `min-w-0` cho ô nhập chat. Local (Windows): typecheck sạch, unit widget 121/121, `test:ci` 132/132. Commit `1a9bc75f`, run `43808679108`: bước Chat hết đỏ, nhưng `e2e gate` vẫn đỏ vì TC-15-06 đếm chip trước khi hàng chip hiện (lỗi của test). Sửa test ở commit kế tiếp; CI / server: ⏳ |
+| Sửa BUG-031 (2026-11-16) | `min-w-0` cho ô nhập chat. Local (Windows): typecheck sạch, unit widget 121/121, `test:ci` 132/132. Commit `1a9bc75f`, run `43808679108`: bước Chat hết đỏ, nhưng `e2e gate` vẫn đỏ vì TC-15-06 đếm chip trước khi hàng chip hiện (lỗi của test). Sửa test ở commit `3b0263e8`: run `43809373458` **xanh** (verify, e2e gate 132/132, deploy-gate) |
+| Server `talkaibotprd01` sau `3b0263e8` | Chưa xác minh được từ máy dev: server không ghi commit status lên GitHub (T00-e (2) chưa đặt token) và `talk.ivyusa.com` trả 403 cho máy ngoài allowlist (BUG-004). Cần xem `~/ivy-autodeploy.log` trên server |
 | Cấu hình production | Không cần |
