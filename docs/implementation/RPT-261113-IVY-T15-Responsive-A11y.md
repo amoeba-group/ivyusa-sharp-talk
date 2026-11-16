@@ -57,7 +57,8 @@ Kế hoạch: [PLN-261113-IVY-T15](../plan/PLN-261113-IVY-T15-Responsive-A11y.md
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit | ⏳ (điền sau khi push) |
-| CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ |
+| Commit | `8f264e88` (2026-11-13) |
+| CI | ❌ run `43407310275`: `verify` xanh, `e2e gate` đỏ — TC-15-06 ×6 ở bước Chat (nút Send ngoài mép panel, [BUG-031](../../ivy-docs/BUGS.md)); `deploy-gate` bị bỏ qua |
+| Server `talkaibotprd01` | Chưa nhận bản T15 (không có `deploy-gate` xanh cho `8f264e88`) |
+| Sửa BUG-031 (2026-11-16) | `min-w-0` cho ô nhập chat. Local (Windows): typecheck sạch, unit widget 121/121, `test:ci` 132/132. Commit / CI / server: ⏳ điền sau khi push |
 | Cấu hình production | Không cần |

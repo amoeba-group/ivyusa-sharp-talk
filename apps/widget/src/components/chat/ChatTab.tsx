@@ -1149,7 +1149,11 @@ export function ChatTab() {
           onChange={(e) => setInput(e.target.value)}
           // The tenant's own words when set ("Ask Anything", ivy-docs T08 D3).
           placeholder={pickCopy(widgetCopy?.composerPlaceholder, language) ?? t('chat.inputPlaceholder')}
-          className="st-input flex-1 rounded-full border border-gray-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50"
+          // min-w-0: an <input> will not shrink below its intrinsic width
+          // (20 average glyphs of the font in use), and on a 390px phone that
+          // leaves ~55px to spare with a Latin font — a wider default font
+          // pushed Send past the panel's edge (TC-15-06, BUG-031).
+          className="st-input min-w-0 flex-1 rounded-full border border-gray-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50"
         />
         <button
           type="submit"

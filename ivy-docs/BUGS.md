@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-031 | Ô nhập chat không co lại được: khi font mặc định rộng (runner Linux của CI), nút **Send** bị đẩy ra ngoài mép panel 390px → TC-15-06 ×6 đỏ trên CI, xanh ở local | Widget | 🟠 | Fixed (2026-11-16) | T15 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
 | BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
@@ -162,6 +163,20 @@
   - Hook theo `matchMedia`, nên xoay máy thì bố cục đổi theo.
   - TC-15-01.
 - **Phòng ngừa:** trang dùng để thử phải hiện giống trang khách thấy. Test thiết bị đi qua `embed.js` (TC-01-08, TC-15-06); TC-15-01 giữ cho trang mở thẳng.
+
+## BUG-031 · Nút Send bị đẩy ra ngoài panel trên điện thoại
+- **Hiện tượng:** CI run `43407310275` (commit `8f264e88`, T15) đỏ ở `e2e gate`: TC-15-06 cả 6 ngôn ngữ, bước `chat`, báo `past the edge: <button> ""` + `<svg>` + `<path>`. Ở local cổng CI xanh 132/132 (RPT T15; chạy lại trên Windows ngày 2026-11-16 cũng xanh), nên commit được push và production **không** nhận bản T15 (`deploy-gate` bị bỏ qua).
+- **Nguyên nhân:**
+  - Hàng nhập của Chat là `flex`: nút đính kèm 36px · ô nhập `flex-1` · nút Send 40px. Ô nhập **không có `min-w-0`**.
+  - `<input>` không co xuống dưới bề rộng tự nhiên của nó (20 ký tự trung bình của font đang dùng). Trên panel 390px còn 274px cho ô nhập; với font Latin bề rộng tự nhiên là 219px (đo trên Windows), tức chỉ dư 55px.
+  - Font mặc định của runner Ubuntu có ký tự trung bình rộng hơn → bề rộng tự nhiên vượt 274px → hàng nhập rộng hơn panel → Send nằm ngoài mép phải.
+  - Tab Chat chỉ có 2 nút chỉ-icon (đính kèm ở mép trái, Send ở mép phải), và các bước chip trước đó của cùng test đều xanh, nên phần tử bị báo là Send.
+  - Khách thật cũng gặp: máy có font mặc định rộng (CJK), hoặc tenant đặt font rộng qua `--ivy-font-family`.
+- **Kiểm chứng ở local:** ép bề rộng tự nhiên của ô nhập lớn hơn chỗ trống (`size=60`) → Send ở x=610 trên panel 390 (đúng lỗi của CI). Thêm `min-w-0` → Send ở 378 với mọi `size`. Phần "font của runner rộng hơn" là **suy luận** từ cơ chế này; không tải được trace của CI (cần đăng nhập GitHub).
+- **Fix:** `min-w-0` cho ô nhập (`ChatTab.tsx`, `.st-input`), giống ô email của `ContactEmailCard`. Không đổi gì với font Latin: ô nhập vẫn 274px.
+- **Phòng ngừa:**
+  - Mọi `<input>` / `<textarea>` là phần tử `flex-1` phải kèm `min-w-0`.
+  - Test đo hình học xanh ở local chưa đủ: font của runner Linux khác macOS / Windows. Kết quả CI của chính commit đó mới là kết quả cuối; RPT chỉ ghi "xanh" sau khi run trên GitHub xanh.
 
 ## BUG-026 · Bước giao hàng giữ ngôn ngữ cũ
 - **Hiện tượng:** khách xem chip Delivery rồi đổi ngôn ngữ (🌐). Cả panel sang ngôn ngữ mới, chỉ chữ dưới 4 bước vẫn giữ ngôn ngữ cũ. Order Detail cũng vậy.
