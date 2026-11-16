@@ -164,6 +164,9 @@ test.describe('T15 · Phone 390×844 through embed.js', () => {
       const nav = NAV[lang];
       await panel.getByRole('tab', { name: new RegExp(`^${nav.notifications}`) }).click();
       const chips = panel.getByRole('tabpanel').locator('div.flex-wrap').first().getByRole('button');
+      // Wait for the chip bar: count() does not, and read 0 on CI while the
+      // tab was still loading (BUG-031, same kind as BUG-019).
+      await expect(chips.nth(3)).toBeVisible();
       const count = await chips.count();
       expect(count).toBeGreaterThanOrEqual(4);
       for (let i = 0; i < count; i++) {

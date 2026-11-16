@@ -174,6 +174,7 @@
   - Khách thật cũng gặp: máy có font mặc định rộng (CJK), hoặc tenant đặt font rộng qua `--ivy-font-family`.
 - **Kiểm chứng ở local:** ép bề rộng tự nhiên của ô nhập lớn hơn chỗ trống (`size=60`) → Send ở x=610 trên panel 390 (đúng lỗi của CI). Thêm `min-w-0` → Send ở 378 với mọi `size`. Phần "font của runner rộng hơn" là **suy luận** từ cơ chế này; không tải được trace của CI (cần đăng nhập GitHub).
 - **Fix:** `min-w-0` cho ô nhập (`ChatTab.tsx`, `.st-input`), giống ô email của `ContactEmailCard`. Không đổi gì với font Latin: ô nhập vẫn 274px.
+- **Kết quả trên CI (commit `1a9bc75f`, run `43808679108`):** bước Chat hết đỏ ở mọi lượt đi tới đó, tức suy luận về font đúng. Nhưng run vẫn đỏ vì lỗi thứ hai, của chính test: TC-15-06 gọi `chips.count()` ngay sau khi bấm tab Notifications, không chờ hàng chip hiện → `Expected >= 4, Received 0` (ES, VI đỏ cả 2 lượt; EN, JA, ZH đỏ lượt đầu, xanh lượt lại). Run trước không lộ vì khi đó test dừng ở bước Chat với thời điểm khác. Sửa: chờ chip thứ 4 hiện rồi mới đếm (cùng kiểu BUG-019). Local: TC-15-06 ×6 lặp 4 lần, 24/24.
 - **Phòng ngừa:**
   - Mọi `<input>` / `<textarea>` là phần tử `flex-1` phải kèm `min-w-0`.
   - Test đo hình học xanh ở local chưa đủ: font của runner Linux khác macOS / Windows. Kết quả CI của chính commit đó mới là kết quả cuối; RPT chỉ ghi "xanh" sau khi run trên GitHub xanh.
