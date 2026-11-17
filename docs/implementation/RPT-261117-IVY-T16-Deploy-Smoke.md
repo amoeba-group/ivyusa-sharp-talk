@@ -39,6 +39,10 @@ Chạy trên máy dev ngày 2026-11-17 (khoảng 04:40 UTC), theo yêu cầu c�
 | TC-16-02 `/widget/` 200, `/widget/embed.js` 200 + content-type javascript | ✅ (1.3s) |
 | TC-16-03 bấm launcher → dialog "Support widget" | ✅ (6.6s) |
 
+**Chủ dự án kiểm tay bằng Chrome (ảnh màn hình, 2026-11-17):** `/widget/embed.js` hiện mã nguồn loader; `/widget/?shop=ivyusa.myshopify.com` mở được panel và tab Chat.
+
+**Thấy trong ảnh panel production — cấu hình tenant chưa nhập:** 3 tab (Thông báo · Đơn hàng · Trò chuyện), tiêu đề "ivyusa", lưới 2 cột 6 nút xanh không emoji, lời chào mặc định, ô nhập "Nhập tin nhắn…". Code T01–T15 đã ở trên server; giao diện theo thiết kế (2 tab, 7 chip trắng có emoji, lời chào IVY, "Ask Anything") chỉ hiện sau khi nhập cấu hình console theo các GUIDE của T01, T08, T10, T12.
+
 **Cách chạy khác với `npm run test:prod`:**
 - `npm run test:prod` nguyên bản dừng ở `global-setup.ts`: bước này gọi health và `/widget/` bằng `fetch` của Node và nhận 403 (chủ dự án chạy và gửi ảnh).
 - Máy dev không có proxy hay VPN, và Chrome trên cùng máy nhận 200. Tức production từ chối client không phải trình duyệt, không phải chặn theo IP như BUG-004 từng ghi.
