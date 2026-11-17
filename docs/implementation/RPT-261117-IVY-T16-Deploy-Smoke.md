@@ -65,11 +65,26 @@ Nhập qua console `talk.ivyusa.com`, trong phiên đăng nhập Master của ch
 
 **Nhìn trên widget production (chỉ xem, không bấm Accept, không gửi tin):** EN và KO đều 2 tab, panel 380×600, 8 chip có emoji đúng thứ tự, placeholder "Ask Anything" / "무엇이든 물어보세요", dòng AI dưới ô nhập, lời chào IVY Beauty.
 
-**Chưa làm / chưa kiểm:**
-- Chưa bấm thử các luồng trên production (Product inquiry → Popular products → Nails; Exchange / Return; Affiliate → Apply now; End → CSAT): các bước này cần Accept consent và gửi tin nhắn thật.
-- `affiliate_details` (Learn more) giữ câu mặc định (GUIDE §3: tuỳ chọn).
-- **KB production còn các tài liệu chính sách trùng tên bộ demo của seed, đang bật:** #2 "Returns & Exchanges", #6 "CS Policy — Returns (US Cosmetics Standard)", #7 "CS Policy — Exchanges", #9, #10, #4 và #8 (Order Cancellation). Trong seed, các tài liệu này ghi 7 ngày / 30 ngày "gently used" / huỷ trước khi chuẩn bị hàng — trái chính sách thật của IVY (10 ngày, chưa mở; huỷ qua email). Nội dung trên production chưa đọc được (danh sách không trả nội dung). Chưa tắt: đây là quyết định nội dung của chủ dự án (GUIDE Product-Help §4).
-- **AI engine của tenant là Built-in Stub** (`AI off (stub)`): câu hỏi gõ tự do chỉ nhận câu dự phòng. Engine Anthropic ở trạng thái "No key · Operator approval required".
+**Bấm thử các luồng trên production (2026-11-17, khách vãng lai, EN, có Accept consent; không bấm Apply now):** không có lỗi console hay lỗi API nào.
+
+| Luồng | Kết quả |
+|---|---|
+| ✨ Product inquiry | ✅ "What do you need help with?" + chip Popular products · How to use · Ingredients · Exchange / Return · Restock alert · Start over |
+| Popular products | ✅ 11 danh mục đúng thứ tự + Start over |
+| Nails | ❌ "I couldn't load the popular Nails products right now." + link "See all Nails on ivyusa.myshopify.com". Nguyên nhân ở dưới |
+| Exchange / Return | ✅ câu 10 ngày + chip Track delivery · Cancel order · Start over |
+| Start over | ✅ menu 8 chip hiện lại ở cuối luồng |
+| 💼 Affiliate | ✅ bong bóng "How to become an Affiliate?", câu IVY Beauty, 3 thẻ bước, chip Apply now · Learn more · Start over · End |
+| Learn more | ✅ câu mặc định |
+| End → Skip | ✅ câu hỏi + 4 mặt + Skip → "The chat has ended" |
+
+**Knowledge (GUIDE Product-Help §4):** 11 tài liệu policy / faq / warranty trên production có nội dung đúng bằng bộ demo của seed. Đã **tắt (Deactivate, không xoá)** 6 bài trái chính sách thật: #2 Returns & Exchanges (7 ngày), #6 CS Policy — Returns (30 ngày, gently used, nhãn trả miễn phí), #7 CS Policy — Exchanges (30 ngày), #10 Final Sale (mỹ phẩm đã mở trả được trong 30 ngày), #4 và #8 Order Cancellation (huỷ trước khi chuẩn bị hàng). Bật lại: Knowledge → mở bài → Activate. Còn bật, **chưa đối chiếu với chính sách thật của IVY**: #1 Shipping & Delivery, #3 Warranty, #9 Refunds, #11 Damaged / Defective, #12 US Compliance Notes. Bản sao nội dung 11 bài: `D:\amoeba\_localdev\ivy-prod-backup-20261117\kb-docs`.
+
+**Phát hiện — việc còn mở, cần chủ dự án:**
+- **Tenant production chưa kết nối Shopify:** `GET /tenants/me/shopify` trả `credential.configured: false`, chưa từng sync. Vì vậy Popular products không tải được, Dashboard ghi 0 đơn, và các màn dựa vào đơn hàng thật (Order / Delivery, Order Detail, My Orders) chưa có dữ liệu. Cần cài / uỷ quyền app Shopify cho cửa hàng (console → Tenant Settings → Platforms).
+- **Storefront URL trống** (`storefrontUrl: null`): link "See all …" trỏ về `ivyusa.myshopify.com` thay vì `ivyusa.com`.
+- **AI engine là Built-in Stub** (`AI off (stub)`): câu hỏi gõ tự do chỉ nhận câu dự phòng. Engine Anthropic của nền tảng: `hasApiKey: false`, `selectable: false`. Cần System Admin cấp key và mở cho tenant, hoặc tenant tự thêm engine bằng key riêng (Tenant Settings → Basic → Add engine).
+- `affiliate_details` (Learn more) giữ câu mặc định (GUIDE §3: tuỳ chọn). Apply now chưa bấm thử (sẽ gửi mail tới hello@ivyusa.com).
 
 ## 4. Trạng thái deploy
 
@@ -81,5 +96,5 @@ Nhập qua console `talk.ivyusa.com`, trong phiên đăng nhập Master của ch
 | TC-16-01..03 | ✅ 3/3 (2026-11-17, xem §3) |
 | `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` | Tick 3 mục đã có bằng chứng: host, domain, deploy + health. Các mục khác chưa kiểm nên để trống |
 | BUG-004 | Open: `npm run test:prod` nguyên bản vẫn dừng ở bước kiểm tra đầu |
-| Cấu hình production (T01, T02, T08, T10, T12) | ✅ nhập 2026-11-17 (§3b); chưa bấm thử luồng |
+| Cấu hình production (T01, T02, T08, T10, T12) | ✅ nhập 2026-11-17, đã bấm thử (§3b). Còn mở: kết nối Shopify, Storefront URL, AI engine |
 | Quyền PCD Address / Phone (T04) | ⏳ chủ dự án |

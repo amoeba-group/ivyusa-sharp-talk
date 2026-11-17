@@ -36,7 +36,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 9 | T09 | Kịch bản My Orders + chip "Start over" | UI · I18N | P1 | T08, T04 | ✅ | TC-09-01..07 |
 | 10 | T10 | Kịch bản Product Help — danh mục, sản phẩm phổ biến | UI | P2 | T08 | ✅ | TC-10-01..07 |
 | 11 | T11 | Contact Support + form liên hệ → inquiry | API · DB · UI | P1 | T08 | ✅ (prod: SQL, email hỗ trợ, SMTP, mail thử — 2026-11-13) | TC-11-01..08 |
-| 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ✅ (cấu hình prod nhập 2026-11-17, [GUIDE](../docs/guide/GUIDE-261113-IVY-Affiliate-Config.md); chưa bấm thử luồng trên prod) | TC-12-01..06 |
+| 12 | T12 | Affiliate + End → CSAT → kết thúc | UI · I18N · CFG | P1 | T08, T09 | ✅ (cấu hình prod nhập 2026-11-17, [GUIDE](../docs/guide/GUIDE-261113-IVY-Affiliate-Config.md); luồng đã bấm thử trên prod) | TC-12-01..06 |
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ✅ | TC-13-01..06 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ✅ | TC-14-01..07 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ✅ | TC-15-01..06 |
