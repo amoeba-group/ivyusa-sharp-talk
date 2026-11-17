@@ -18,7 +18,7 @@ npm run test:task -- @T03              # toàn bộ TC của 1 task
 npx playwright test --project=mobile   # các ca @responsive
 npm test                               # tất cả (desktop + mobile)
 npm run report                         # mở báo cáo HTML
-E2E_TARGET=prod npm run test:prod      # smoke production (chỉ @prod, cần IP được allowlist)
+E2E_TARGET=prod npm run test:prod      # smoke production (chỉ @prod; bước kiểm tra đầu bị 403 — BUG-004)
 ```
 
 **CI:** workflow *IVY CI/CD* chạy `test:ci` trên stack được seed mới (widget bản build qua `vite preview`) cho mỗi push/PR vào `deploy/talk-ivyusa`. Task xong thì thêm `|@Tnn` vào `test:ci` ([GUIDE-261110 §7](../docs/guide/GUIDE-261110-IVY-CICD.md)). Khi fail, tải artifact `e2e-report-*` của run để xem chi tiết.
@@ -398,3 +398,5 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 | TC-16-01 | Health | `https://talk.ivyusa.com/api/v1/health` 200, ok |
 | TC-16-02 | Tài nguyên widget | `/widget/` 200; `/widget/embed.js` 200, content-type javascript |
 | TC-16-03 | Mở widget | launcher → dialog "Support widget" |
+
+**Kết quả (2026-11-17, production chạy `3b0263e8`):** **3 / 3** ✅ bằng Chromium trên máy dev, với bước kiểm tra đầu (`global-setup.ts`) bỏ qua vì production trả 403 cho `fetch` của Node (BUG-004). Chi tiết: [RPT-261117](../docs/implementation/RPT-261117-IVY-T16-Deploy-Smoke.md) §3.

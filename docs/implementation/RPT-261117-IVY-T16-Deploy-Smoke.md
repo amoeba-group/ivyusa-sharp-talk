@@ -2,7 +2,7 @@
 
 Kế hoạch: [PLN-261116-IVY-T16](../plan/PLN-261116-IVY-T16-Deploy-Smoke.md), duyệt ngày 2026-11-17 (`1. ok 2. a 3. b 4. a`). Task: ivy-docs/TASKS.md T16.
 
-**Trạng thái: 🟦 deploy đã xác minh trên server; smoke production (TC-16-01..03) chưa chạy.**
+**Trạng thái: ✅ deploy đã xác minh trên server; smoke production TC-16-01..03 xanh 3/3 (2026-11-17).**
 
 ## 1. Thay đổi
 
@@ -29,9 +29,21 @@ Chủ dự án chạy trên `talkaibotprd01` (SSM, user `appops`, `/docker/apps/
 
 **Chưa kiểm:** dòng `successfully started` trong boot log của API (API không khởi động lại trong lần deploy này; container báo healthy) và HTTP status từ ngoài (xem §3).
 
-## 3. Smoke production (3b) — ⏳
+## 3. Smoke production (3b) — ✅ 3/3
 
-`npm run test:prod` (TC-16-01..03) chưa chạy: máy dev vẫn nhận 403 từ `talk.ivyusa.com` (BUG-004, thử lại 2026-11-17). Chờ chủ dự án chạy từ mạng được phép.
+Chạy trên máy dev ngày 2026-11-17 (khoảng 04:40 UTC), theo yêu cầu của chủ dự án.
+
+| TC | Kết quả |
+|---|---|
+| TC-16-01 health 200, `status: ok` | ✅ (905ms). Chủ dự án cũng mở bằng Chrome: `status: ok`, 04:30:15 UTC |
+| TC-16-02 `/widget/` 200, `/widget/embed.js` 200 + content-type javascript | ✅ (1.3s) |
+| TC-16-03 bấm launcher → dialog "Support widget" | ✅ (6.6s) |
+
+**Cách chạy khác với `npm run test:prod`:**
+- `npm run test:prod` nguyên bản dừng ở `global-setup.ts`: bước này gọi health và `/widget/` bằng `fetch` của Node và nhận 403 (chủ dự án chạy và gửi ảnh).
+- Máy dev không có proxy hay VPN, và Chrome trên cùng máy nhận 200. Tức production từ chối client không phải trình duyệt, không phải chặn theo IP như BUG-004 từng ghi.
+- 3 test được chạy bằng `playwright test` với project `prod` có sẵn (Chromium), qua một file cấu hình tạm chỉ bỏ `globalSetup`. File tạm đã xoá, không commit. Nội dung test không đổi; test chỉ đọc.
+- Việc sửa `global-setup.ts` cho `test:prod` chạy được nguyên bản: chưa làm, ghi ở BUG-004.
 
 ## 4. Trạng thái deploy
 
@@ -40,6 +52,7 @@ Chủ dự án chạy trên `talkaibotprd01` (SSM, user `appops`, `/docker/apps/
 | SQL | Không có |
 | Code đang chạy trên production | `3b0263e8` (deploy 2026-11-16 05:24 UTC, tự động) |
 | Tip của nhánh | `6cd25fe8` (chỉ tài liệu), CI run `44012687424` xanh, server đã fast-forward |
-| TC-16-01..03 | ⏳ chưa chạy |
-| `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` | ⏳ tick sau khi có smoke |
+| TC-16-01..03 | ✅ 3/3 (2026-11-17, xem §3) |
+| `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` | Tick 3 mục đã có bằng chứng: host, domain, deploy + health. Các mục khác chưa kiểm nên để trống |
+| BUG-004 | Open: `npm run test:prod` nguyên bản vẫn dừng ở bước kiểm tra đầu |
 | Cấu hình production (T01, T02, T08, T12), quyền PCD (T04) | Việc của chủ dự án, ngoài T16 |

@@ -40,7 +40,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ✅ | TC-13-01..06 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ✅ | TC-14-01..07 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ✅ | TC-15-01..06 |
-| 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | 🟦 chờ kết quả server + smoke | TC-16-01..03 |
+| 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | ✅ (2026-11-17, bản `3b0263e8`) | TC-16-01..03 |
 
 > Baseline E2E trên commit `583ce121` + tài liệu này: xem [TEST-CASES.md §0](TEST-CASES.md).
 
@@ -302,12 +302,14 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - `test:ci` chạy thêm project `mobile`, để TC-15-01 vào cổng.
 - **TC:** TC-15-01..06.
 
-### T16 · Deploy & smoke production — 🟦 (PLN duyệt 2026-11-17: `1. ok 2. a 3. b 4. a`) · [PLN](../docs/plan/PLN-261116-IVY-T16-Deploy-Smoke.md)
+### T16 · Deploy & smoke production — ✅ (2026-11-17) · [PLN](../docs/plan/PLN-261116-IVY-T16-Deploy-Smoke.md) · [RPT](../docs/implementation/RPT-261117-IVY-T16-Deploy-Smoke.md)
+- **Chủ dự án duyệt (2026-11-17):** `1. ok 2. a 3. b 4. a`.
 - **Hiện trạng (2026-11-16):** tip `0ded01c5` có `deploy-gate` xanh (run `43810433622`), không có SQL. Chưa xác minh được server và chưa chạy được `test:prod` từ máy dev (không có quyền SSM, BUG-004).
 - **Đã làm (2026-11-17):** BUG-005 — `README.md` §8, `SPEC.md` §12 / §14, `CLAUDE.md` §6, `CONFIG.md` §7 ghi đúng production đang chạy.
 - **Server (2a) — ✅ 2026-11-17:** production chạy `3b0263e8` (T15 + BUG-031), deploy tự động 2026-11-16 05:24 UTC; tip `6cd25fe8` đã fast-forward. Chi tiết: [RPT](../docs/implementation/RPT-261117-IVY-T16-Deploy-Smoke.md) §2.
-- **Chờ chủ dự án:** (3b) kết quả `npm run test:prod` từ mạng được phép. Có hai kết quả này thì viết RPT, tick `CHECKLIST.md`, đóng T16.
-- **Điều kiện:** máy chạy test phải nằm trong allowlist của ELB (BUG-004); người có quyền server (`secrets/`).
+- **Smoke production — ✅ 2026-11-17:** TC-16-01..03 **3/3** trên máy dev, chạy bằng Chromium. `npm run test:prod` nguyên bản dừng ở bước kiểm tra đầu (403 cho client không phải trình duyệt — BUG-004), nên lần này chạy 3 test với bước đó bỏ qua.
+- **Mỗi đợt deploy sau:** lặp lại bước 3–5 bên dưới. Cấu hình console production của T01 / T02 / T08 / T12 và quyền PCD của T04 vẫn là việc của chủ dự án.
+- **Điều kiện:** smoke phải chạy bằng trình duyệt — `talk.ivyusa.com` trả 403 cho curl / Node (BUG-004); xác minh server cần người có quyền SSM.
 - **Việc cần làm:**
   1. Áp SQL (nếu có).
   2. Deploy:

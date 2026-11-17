@@ -119,7 +119,7 @@ Kit rules adopted (dev-kit 03/04 — MUST):
 ## 8. IVY USA TalkTalk widget (`deploy/talk-ivyusa` → talk.ivyusa.com)
 - **Source of truth:** `ivy-docs/` — `SPEC.md` (Figma `fviVlvtkuHYU0Agre1daTr` page `23:2`, screens SCR-IVY-xx, rules BR-xx, gaps G-xx, selector contract §9), `TASKS.md` (ordered T00–T16), `ARCHITECTURE.md`, `TEST-CASES.md`, `BUGS.md`.
   When asked to start/continue IVY work: read SPEC + TASKS, take the next task in TASKS §1 order, follow TASKS §0 (PLN → approval → implement → `e2e` green → update TASKS/TEST-CASES/BUGS → RPT → push this branch). Never work on `main` for IVY.
-- **E2E:** `e2e/` is a standalone Playwright package (not an npm workspace — never add it to the root lockfile). `cd e2e && npm run test:smoke` · `npm run test:task -- @T03` · `npm run test:prod` (talk.ivyusa.com; ELB allowlists IPs). Test titles carry the TC id; keep the selector contract in SPEC §9 when changing widget markup.
+- **E2E:** `e2e/` is a standalone Playwright package (not an npm workspace — never add it to the root lockfile). `cd e2e && npm run test:smoke` · `npm run test:task -- @T03` · `npm run test:prod` (talk.ivyusa.com; the load balancer answers 403 to non-browser clients, so the Node pre-flight in `global-setup.ts` fails — ivy-docs BUG-004). Test titles carry the TC id; keep the selector contract in SPEC §9 when changing widget markup.
 - **Local:** `apps/widget/.env` must exist (copy `.env.example`), or the widget calls its own origin and 404s. Open `http://localhost:5174/?shop=ivyusa.myshopify.com`.
 - **Production branch = `deploy/talk-ivyusa`, NEVER `main`.** Never commit to `main`, push to it, merge into it or deploy from it for IVY.
 - **CI/CD** ([GUIDE-261110-IVY-CICD](docs/guide/GUIDE-261110-IVY-CICD.md)):

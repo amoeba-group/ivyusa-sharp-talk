@@ -10,7 +10,7 @@
 | BUG-001 | Widget local gọi `localhost:5174/api/v1` → 404, không tạo được session | Env / Docs | 🟠 | Workaround (local) · docs Open | T00 |
 | BUG-002 | `nest start --watch` trên Windows tự restart liên tục khi không có file nào đổi | Env | 🟠 | Workaround | T00 |
 | BUG-003 | `POST /session/ensure` bị gọi 2 lần khi mở widget lần đầu → 2 session | Widget | 🟡 | Dev only: bản build gọi 1 lần (kiểm 2026-11-12, T10). Test consent thật dùng `acceptConsent()` | T01 · T10 |
-| BUG-004 | talk.ivyusa.com trả 403 (AWS ELB) cho mọi đường dẫn từ máy dev | Infra / Access | 🔴 | Open | T16 |
+| BUG-004 | talk.ivyusa.com trả 403 (AWS ELB) cho curl / Node; trình duyệt cùng máy vào được. `npm run test:prod` dừng ở bước kiểm tra đầu | Infra / Access · E2E harness | 🟠 | Open: nguyên nhân đã rõ hơn (2026-11-17), bước kiểm tra đầu của `test:prod` chưa sửa | T16 |
 | BUG-005 | Tài liệu nói production "chưa deploy", nhưng talk.ivyusa.com đã chạy production | Docs | 🟡 | Fixed (T16, 2026-11-17): README, SPEC, CLAUDE, CONFIG. `CHECKLIST.md` của IVY chờ kết quả xác minh server | T16 |
 | BUG-006 | `npm install` ở root viết lại `package-lock.json` (npm 10.9.2) | Tooling | 🟡 | Workaround | — |
 | BUG-007 | `npm audit`: 64 lỗ hổng (4 critical, 26 high) | Security | 🟠 | Open (cần phân loại) | — |
@@ -70,7 +70,14 @@
 - **Hiện tượng:** `curl -I https://talk.ivyusa.com/` (cả `/widget/`, `/api/v1/health`, `/ivyusa`, `/admin/login`; HTTP lẫn HTTPS) → `403 Forbidden`, `Server: awselb/2.0`. DNS: 32.201.31.106, 52.4.26.102. Thời điểm: 2026-11-09 16:10 ICT.
 - **Nhận định:** chặn ở ALB listener rule/WAF theo IP nguồn, không phải ở ứng dụng.
 - **Ảnh hưởng:** không chạy được T16 (smoke production) từ máy này; không kiểm được BUG-003 trên production.
-- **Cần:** thêm IP văn phòng/VPN vào allowlist, hoặc chạy `npm run test:prod` từ mạng đã được phép.
+- **Cần (nhận định cũ, 2026-11-09):** thêm IP văn phòng/VPN vào allowlist, hoặc chạy `npm run test:prod` từ mạng đã được phép.
+- **Cập nhật 2026-11-17 (T16):** nhận định "chặn theo IP" **không khớp** với những gì đo được trên máy dev (Windows, không proxy, không VPN, một đường mạng):
+  - Chrome của chủ dự án: `/api/v1/health` → 200 `status: ok`.
+  - Cùng lúc, cùng máy: `curl` và `fetch` của Node → 403 ở `/api/v1/health`, `/widget/`, `/widget/embed.js`.
+  - Playwright Chromium (project `prod`, cấu hình sẵn của repo): TC-16-01..03 đều 200 / xanh.
+  - Vậy load balancer (hoặc WAF trước nó) từ chối **client không phải trình duyệt**. Thuộc tính nào bị xét (User-Agent hay thứ khác) thì chưa biết; có thêm luật theo IP hay không cũng chưa biết.
+- **Hệ quả:** `e2e/global-setup.ts` kiểm tra bằng `fetch` của Node nên luôn nhận 403, và `npm run test:prod` dừng trước khi chạy test nào — trên mọi máy, không riêng máy dev. Thông báo lỗi của nó ("run from an allowlisted network") chỉ sai hướng.
+- **Đề xuất (chưa làm, cần chủ dự án quyết):** với `E2E_TARGET=prod`, bỏ bước kiểm tra bằng Node (TC-16-01 đã kiểm health bằng trình duyệt), và sửa câu gợi ý. Nên hỏi người quản trị AWS của IVY luật chặn này là chủ ý hay không trước khi đổi.
 
 ## BUG-005 · Tài liệu lệch thực tế deploy
 - `/SPEC.md §12` và README §8 ghi production "not yet deployed / host TBD". Trong khi đó [RPT-261030](../docs/implementation/RPT-261030-Console-UX-Refresh.md) ghi production **talk.ivyusa.com** (EC2 `talkaibotprd01`) đã deploy `ff9bb663` ngày 2026-10-30. `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` cũng chưa tick host/domain.

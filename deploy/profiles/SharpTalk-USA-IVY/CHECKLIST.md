@@ -3,8 +3,8 @@
 가이드: `docs/guide/GUIDE-260913-SharpTalk-USA-IVY-Staging.md` (절 번호는 그 문서 기준)
 
 ## 결정
-- [ ] 호스트·클라우드·리전(미국): 
-- [ ] 도메인(한 오리진): talk-us.<DOMAIN> → 
+- [x] 호스트·클라우드·리전(미국): AWS EC2 `talkaibotprd01` (리전 미기록) — 2026-11-17 확인, RPT-261117-IVY-T16
+- [x] 도메인(한 오리진): talk-us.<DOMAIN> → `talk.ivyusa.com`
 - [ ] TLS 종단 방식: 
 - [ ] Shopify 앱: 기존 앱 콜백 추가(스테이징) / 신규 등록(프로덕션): 
 - [ ] 백업 저장소(미국 내): 
@@ -16,7 +16,7 @@
 - [ ] `cp deploy/profiles/SharpTalk-USA-IVY/.env.SharpTalk-USA-IVY.example docker/self-hosted/.env.self-hosted` → `<DOMAIN>`·Shopify 값 치환
 - [ ] `bash scripts/gen-secrets.sh` → 붙여넣기
 - [ ] `bash scripts/deploy-self-hosted.sh --check` 통과
-- [ ] `bash scripts/deploy-self-hosted.sh` → 헬스 ok
+- [x] `bash scripts/deploy-self-hosted.sh` → 헬스 ok (2026-11-16 `3b0263e8` 자동 배포, 2026-11-17 `/api/v1/health` ok · TC-16 3/3)
 - [ ] `SEED_ON_BOOT=false`로 변경 → API 재생성
 - [ ] Basic §9 스모크 + Shopify OAuth 콜백·웹훅 4/4
 

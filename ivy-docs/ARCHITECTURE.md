@@ -21,7 +21,7 @@
    └──► <iframe sandbox src="https://talk.ivyusa.com/widget/?embed=1&shop=…&locale=…">
              │  React app (apps/widget) — polling, không websocket
              ▼
-      talk.ivyusa.com  ──  AWS ELB (allowlist IP → 403 với nguồn lạ)
+      talk.ivyusa.com  ──  AWS ELB (403 với client không phải trình duyệt — BUG-004)
              ▼
       EC2 talkaibotprd01 · host nginx :80
              ▼
@@ -147,7 +147,7 @@ Server **tự kéo** bản mới, GitHub không kết nối vào server. Lý do:
 | 3. Kéo code | server `talkaibotprd01` (timer hoặc tay) | `git pull --ff-only` |
 | 4. Deploy | server (timer hoặc tay) | `bash scripts/deploy-self-hosted.sh` |
 | 5. Xác minh | server + trình duyệt | log boot `successfully started`, tuổi container (`docker ps`), `/api/v1/health` ok, `/widget/` và `/` = 200; route mới: 401 = đã deploy, 404 = chưa, 502 = API đang restart |
-| 6. Smoke E2E | mạng được allowlist | `cd e2e && npm run test:prod` |
+| 6. Smoke E2E | bằng trình duyệt (BUG-004) | `cd e2e && npm run test:prod` |
 
 `deploy-self-hosted.sh` làm: kiểm `docker/self-hosted/.env.self-hosted` (có `UPLOAD_DIR=/data/uploads` + secret bắt buộc) → ghi `docker/self-hosted/widget-config.js` (API base) → nếu MySQL đang chạy thì `scripts/check-migrations.sh` và **dừng nếu còn SQL chưa áp** (script không tự chạy SQL) → `docker compose -f docker/self-hosted/docker-compose.self-hosted.yml --env-file … up -d --build` → kiểm health/widget/console/boot log.
 
