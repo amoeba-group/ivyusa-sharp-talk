@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt** (§7) |
+| Trạng thái | ✅ **Đã duyệt 2026-11-17** (`1. ok 2. a 3. a`) và đã làm, deploy ở trạng thái **tắt** — [RPT-261117](../implementation/RPT-261117-Order-Cache-Purge.md). Trước khi bật: RPT §3 (tổng của khách cộng từ cache) |
 | Nguồn | Mục 4 của phương án B3 trong [PLN-261117-Orders-Search-And-Sync-Backfill](PLN-261117-Orders-Search-And-Sync-Backfill.md), đã duyệt về nguyên tắc ("dọn sau 180 ngày") nhưng chưa làm (RPT §2-3). Chủ dự án đồng ý làm tiếp ngày 2026-11-17 |
 | Phạm vi | `apps/api` (lịch purge sẵn có). **Không có thay đổi giao diện** |
 | Migration | Không có SQL |

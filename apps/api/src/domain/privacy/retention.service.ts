@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
@@ -13,6 +13,7 @@ import { AiUsageDaily } from '../ai-engine/entity/ai-usage-daily.entity';
 import { ModerationLog } from '../moderation/entity/moderation-log.entity';
 import { AgentAlert } from '../agent/entity/agent-alert.entity';
 import { isCliContext } from '../../global/util/cli-context.util';
+import { OrderCache } from '../order/entity/order-cache.entity';
 
 export interface RetentionPurgeResult {
   retentionDays: number;
@@ -31,7 +32,43 @@ export interface RetentionPurgeResult {
   moderationLogs: number;
   /** Escalation alerts disposed of — they carry a message preview. */
   agentAlerts: number;
+  /** Cached orders older than this are disposable (PLN-261117-Order-Cache-Purge). */
+  orderCacheRetentionDays: number;
+  /** False = report only: `ordersEligible` is counted, nothing is deleted. */
+  orderCachePurgeEnabled: boolean;
+  /** Cached orders past the window that nothing else points at, before this run. */
+  ordersEligible: number;
+  /** Cached orders deleted by this run, with their items and fulfillments. */
+  orders: number;
 }
+
+/** Cached orders deleted per transaction, and the most batches one run takes. */
+const ORDER_PURGE_BATCH = 500;
+const ORDER_PURGE_MAX_BATCHES = 400;
+
+/**
+ * A cached order is disposable when it is old, has not been touched lately, and
+ * nothing else points at it. It is a copy: the store still has the order, and
+ * a login, a guest lookup or the console's "Look up on Shopify" fetch it again.
+ *
+ * Kept: an order an inquiry names (a support record), one a notification still
+ * opens (the order or one of its items), and one with a review on an item —
+ * deleting the item would orphan the review.
+ */
+const DISPOSABLE_ORDERS_SQL = `
+  FROM orders_cache o
+  WHERE COALESCE(o.ordered_at, o.created_at) < ?
+    AND o.updated_at < ?
+    AND NOT EXISTS (SELECT 1 FROM inquiries i WHERE i.order_id = o.id)
+    AND NOT EXISTS (SELECT 1 FROM notifications n WHERE n.ref_type = 'order' AND n.ref_id = o.id)
+    AND NOT EXISTS (
+      SELECT 1 FROM order_items oi
+      JOIN notifications n ON n.ref_type = 'order_item' AND n.ref_id = oi.id
+      WHERE oi.order_id = o.id)
+    AND NOT EXISTS (
+      SELECT 1 FROM order_items oi
+      JOIN reviews r ON r.order_item_id = oi.id
+      WHERE oi.order_id = o.id)`;
 
 /** First scheduled run fires shortly after boot so frequent restarts can't starve disposal. */
 const INITIAL_DELAY_MS = 5 * 60_000;
@@ -61,6 +98,9 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     private readonly config: ConfigService,
     private readonly audit: AuditService,
     private readonly attachments: AttachmentService,
+    // Appended and optional: the specs build this service positionally, and a
+    // build without it simply has no order cache to dispose of.
+    @Optional() @InjectRepository(OrderCache) private readonly orderRepo?: Repository<OrderCache>,
   ) {}
 
   onModuleInit(): void {
@@ -87,7 +127,9 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       const result = await this.purgeExpired();
       this.logger.log(
         `Retention purge: msgs=${result.messages} convs=${result.conversations} cjm=${result.cjmEvents} ` +
-          `notifs=${result.notifications} sessions=${result.sessions} aiUsage=${result.aiUsage}`,
+          `notifs=${result.notifications} sessions=${result.sessions} aiUsage=${result.aiUsage} ` +
+          `orders=${result.orders} (eligible=${result.ordersEligible}, ` +
+          `${result.orderCachePurgeEnabled ? 'enabled' : 'report only'}, ${result.orderCacheRetentionDays}d)`,
       );
     } catch (err) {
       this.logger.error(`Scheduled retention purge failed: ${String(err)}`);
@@ -117,7 +159,49 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     return Number.isFinite(days) && days > 0 ? days : 400;
   }
 
-  /** Delete rows older than the retention window: messages → conversations → cjm → notifications → stale sessions → usage. */
+  /**
+   * The order cache window (PLN-261117-Order-Cache-Purge). Deleting is opt-in:
+   * until ORDER_CACHE_PURGE_ENABLED=true a run only counts what it would take,
+   * so an operator sees the number before anything goes.
+   */
+  private orderCachePolicy(): { days: number; enabled: boolean } {
+    const days = Number(this.config.get<string | number>('ORDER_CACHE_RETENTION_DAYS', 180));
+    const enabled = String(this.config.get<string | boolean>('ORDER_CACHE_PURGE_ENABLED', 'false')).toLowerCase() === 'true';
+    return { days: Number.isFinite(days) && days > 0 ? days : 180, enabled };
+  }
+
+  /** Count — and, when enabled, delete — the cached orders nothing needs any more. */
+  private async purgeOrderCache(): Promise<{ days: number; enabled: boolean; eligible: number; purged: number }> {
+    const { days, enabled } = this.orderCachePolicy();
+    if (!this.orderRepo) return { days, enabled, eligible: 0, purged: 0 };
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const manager = this.orderRepo.manager;
+    const counted = (await manager.query(`SELECT COUNT(*) AS n ${DISPOSABLE_ORDERS_SQL}`, [cutoff, cutoff])) as Array<{ n: string | number }>;
+    const eligible = Number(counted[0]?.n ?? 0);
+    if (!enabled || eligible === 0) return { days, enabled, eligible, purged: 0 };
+
+    let purged = 0;
+    for (let batch = 0; batch < ORDER_PURGE_MAX_BATCHES; batch++) {
+      const rows = (await manager.query(
+        `SELECT o.id AS id ${DISPOSABLE_ORDERS_SQL} ORDER BY o.id LIMIT ${ORDER_PURGE_BATCH}`,
+        [cutoff, cutoff],
+      )) as Array<{ id: string | number }>;
+      if (!rows.length) break;
+      const ids = rows.map((r) => String(r.id));
+      // Children first, in one transaction: an order must never be left
+      // without its lines, nor lines without their order.
+      await manager.transaction(async (trx) => {
+        await trx.query('DELETE FROM fulfillments WHERE order_id IN (?)', [ids]);
+        await trx.query('DELETE FROM order_items WHERE order_id IN (?)', [ids]);
+        await trx.query('DELETE FROM orders_cache WHERE id IN (?)', [ids]);
+      });
+      purged += ids.length;
+      if (rows.length < ORDER_PURGE_BATCH) break;
+    }
+    return { days, enabled, eligible, purged };
+  }
+
+  /** Delete rows older than the retention window: messages → conversations → cjm → notifications → stale sessions → usage → cached orders. */
   async purgeExpired(): Promise<RetentionPurgeResult> {
     const retentionDays = this.retentionDays();
     const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
@@ -160,6 +244,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       .andWhere('id NOT IN (SELECT session_id FROM conversations)')
       .execute();
 
+    // After the notifications above: an order is kept while a notification
+    // still opens it, so the expired ones must be gone first.
+    const orderCache = await this.purgeOrderCache();
+
     const result: RetentionPurgeResult = {
       retentionDays,
       cutoff: cutoff.toISOString(),
@@ -173,6 +261,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       aiUsageRetentionDays,
       moderationLogs: moderation.affected ?? 0,
       agentAlerts: alerts.affected ?? 0,
+      orderCacheRetentionDays: orderCache.days,
+      orderCachePurgeEnabled: orderCache.enabled,
+      ordersEligible: orderCache.eligible,
+      orders: orderCache.purged,
     };
 
     // Scheduler-driven purge — 'system' actor, not a phantom admin (Stage 4).
@@ -194,6 +286,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         aiUsageRetentionDays: result.aiUsageRetentionDays,
         moderationLogs: result.moderationLogs,
         agentAlerts: result.agentAlerts,
+        orderCacheRetentionDays: result.orderCacheRetentionDays,
+        orderCachePurgeEnabled: result.orderCachePurgeEnabled,
+        ordersEligible: result.ordersEligible,
+        orders: result.orders,
       },
     });
 
