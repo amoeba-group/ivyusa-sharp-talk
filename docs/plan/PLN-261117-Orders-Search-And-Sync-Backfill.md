@@ -68,6 +68,31 @@ Không có kết quả:   No orders match "39x".      [Clear search]
 
 **B2 — chỉ nâng trần:** đổi `MAX_PAGES` 10 → 100. Ít code nhất, nhưng vẫn giữ lỗi "còn trang mà con trỏ vẫn nhảy" cho cửa hàng trên 5.000 đơn.
 
+**B3 (khuyến nghị mới, 2026-11-17) — không sao chép cả cửa hàng: cửa sổ gần đây + lấy theo nhu cầu.**
+
+Chủ dự án xác nhận cửa hàng có **181.188 đơn** và **219.739 khách**. Widget chỉ cần đơn của người đang chat và các đơn còn đang xử lý, nên sao chép toàn bộ là thừa:
+
+| | Sao chép toàn bộ (B1) | Cửa sổ + theo nhu cầu (B3) |
+|---|---|---|
+| Lần đồng bộ đầu | ~3.600 trang; với hạn mức của Shopify là nhiều giờ | Vài nghìn đơn, vài phút |
+| Dữ liệu cá nhân lưu ở talk.ivyusa.com | Email, tên của ~220.000 khách, phần lớn chưa từng dùng widget | Chỉ khách có đơn gần đây hoặc đã dùng widget |
+| Nghĩa vụ CCPA / GDPR (xoá, xuất, rò rỉ) | Trên toàn bộ tệp khách | Trên phần nhỏ đang dùng |
+| Customer Journey | Thêm ~181.000 dòng "order_created" giả lập lịch sử | Không |
+| Đơn cũ hơn 60 ngày | Cần quyền `read_all_orders` | Cũng cần quyền đó, nhưng chỉ khi có người hỏi tới |
+
+Nội dung B3:
+1. **Lần đầu:** chỉ đọc đơn trong **N ngày gần nhất** (đề xuất 60: đúng phần Shopify cho đọc khi chưa có `read_all_orders`, và phủ hết đơn còn trong hạn giao / đổi trả 10 ngày), **mới nhất trước**, đọc tới hết cửa sổ. Sửa luôn lỗi "còn trang mà con trỏ vẫn nhảy".
+2. **Từ đó trở đi:** webhook của Shopify đưa đơn mới và thay đổi về ngay (đã có); Sync now chỉ để bù khi webhook lỡ.
+3. **Theo nhu cầu:**
+   - khách đăng nhập widget → lấy đơn của chính họ (đã có, tối đa 100 đơn);
+   - khách vãng lai tra đơn bằng mã + email mà cache không có → hỏi thẳng Shopify đúng đơn đó rồi lưu (mới);
+   - console tìm mã đơn không thấy → nút **"Look up on Shopify"** lấy đúng đơn đó về (mới, ghi audit).
+4. **Dọn:** đơn trong cache quá M ngày (đề xuất 180) mà không gắn cuộc chat / inquiry nào thì xoá theo lịch purge sẵn có. Cần lại thì mục 3 lấy về.
+
+Không cần SQL. Nút "Full re-sync" của B1 đổi thành "Re-sync recent orders" (chạy lại mục 1).
+
+**Dung lượng nếu vẫn chọn sao chép toàn bộ (ước lượng, chưa đo):** MySQL chứa 181.000 đơn không khó — cỡ dưới 1 GB cả dòng hàng và index. Cái đắt là thời gian đồng bộ, lượng dữ liệu cá nhân phải giữ, và bản backup lớn hơn. Dung lượng đĩa còn trống của `talkaibotprd01` chưa biết (`df -h`).
+
 **Với tenant ivyusa đang ở trạng thái "đã chạy lần đầu, thiếu đơn":** cần một lần **đồng bộ lại từ đầu**. Đề xuất thêm nút / tham số "Full re-sync" (bỏ con trỏ rồi chạy như lần đầu), ghi audit. Upsert theo mã đơn Shopify nên chạy lại không tạo bản trùng.
 
 **Đơn cũ hơn 60 ngày:** chỉ đọc được khi app Shopify có quyền `read_all_orders`. Quyền này do Shopify xét duyệt và chủ cửa hàng cấp; code không tự mở được.
@@ -94,7 +119,7 @@ TCR, RPT (kèm SHA, run CI, trạng thái server), `ivy-docs/BUGS.md` (B là l�
 
 1. **Duyệt phần A (ô tìm theo mã đơn) như §2?**
 2. **Phạm vi tìm:** **a (khuyến nghị)** chỉ mã đơn · **b** thêm cả email / tên khách (cần thêm join và che bớt dữ liệu cá nhân, làm lâu hơn).
-3. **Phần B (đồng bộ thiếu đơn):** **a (khuyến nghị)** làm B1 + nút Full re-sync cùng đợt này · **b** chỉ B2 (nâng trần) · **c** chưa làm, chỉ làm A.
+3. **Phần B (đồng bộ đơn):** **a (khuyến nghị)** làm **B3** (60 ngày gần nhất + lấy theo nhu cầu + dọn sau 180 ngày) · **b** B1 (sao chép toàn bộ 181.188 đơn + nút Full re-sync) · **c** chỉ B2 (nâng trần) · **d** chưa làm, chỉ làm A. Nếu chọn a mà muốn số ngày khác 60 / 180 thì ghi kèm.
 4. **Đơn cũ hơn 60 ngày:** **a** không cần · **b** cần — khi đó bạn phải xin quyền `read_all_orders` cho app trên Shopify; tôi chỉ ghi hướng dẫn.
 
 Trả lời ví dụ: `1. ok  2. a  3. a  4. a`
