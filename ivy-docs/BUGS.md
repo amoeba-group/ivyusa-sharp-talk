@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-032 | Popup trong console (ví dụ Tenant Settings → Platforms → Shopify connection): lớp nền mờ **hở 32px ở mép trên**, thấy một dải trang không bị làm mờ | Console | 🟡 | Fixed (2026-11-17) | — |
 | BUG-031 | Ô nhập chat không co lại được: khi font mặc định rộng (runner Linux của CI), nút **Send** bị đẩy ra ngoài mép panel 390px → TC-15-06 ×6 đỏ trên CI, xanh ở local | Widget | 🟠 | Fixed (2026-11-16) | T15 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
@@ -171,6 +172,17 @@
   - Hook theo `matchMedia`, nên xoay máy thì bố cục đổi theo.
   - TC-15-01.
 - **Phòng ngừa:** trang dùng để thử phải hiện giống trang khách thấy. Test thiết bị đi qua `embed.js` (TC-01-08, TC-15-06); TC-15-01 giữ cho trang mở thẳng.
+
+## BUG-032 · Lớp nền của popup hở 32px ở mép trên
+- **Hiện tượng:** chủ dự án mở Tenant Settings → Platforms → Shopify trên production: popup hiện đúng, nhưng lớp nền mờ phía sau không phủ hết chiều cao, còn một dải trắng ở trên cùng.
+- **Nguyên nhân:**
+  - `Modal` vẽ gốc của nó là `fixed inset-0`, ngay tại chỗ được gọi (không qua portal).
+  - Trang Platforms đặt popup làm con của `<div class="space-y-8">`. Lớp `space-y-*` của Tailwind cho mọi phần tử con từ thứ hai trở đi `margin-top: 2rem`, kể cả gốc của popup.
+  - Với hộp `fixed` có `top: 0; bottom: 0`, `margin-top` đẩy mép trên xuống: nền bắt đầu ở 32px, cao 868 / 900px.
+  - Popup nào nằm trong cha `space-y-*` / `space-x-*` cũng bị; popup ở trang không dùng các lớp đó (ví dụ AI Engines của admin) thì không.
+- **Fix:** `!m-0` trên gốc của `Modal` và `Drawer` (`apps/web/src/components`). Không đổi gì khác.
+- **Kiểm (local, 2026-11-17):** đo gốc popup Shopify connection ở viewport 1440×900 — có fix: top 0, cao 900, margin 0; gỡ lớp `!m-0` trong DOM: top 32, cao 868, margin 32px. Typecheck và build `@sharptalk/web` sạch.
+- **Phòng ngừa:** phần tử phủ màn hình (`fixed inset-0`) vẽ tại chỗ phải tự xoá margin, vì nó không biết cha mình dùng lớp giãn cách nào. E2E của IVY chỉ chạy widget, không có test cho console.
 
 ## BUG-031 · Nút Send bị đẩy ra ngoài panel trên điện thoại
 - **Hiện tượng:** CI run `43407310275` (commit `8f264e88`, T15) đỏ ở `e2e gate`: TC-15-06 cả 6 ngôn ngữ, bước `chat`, báo `past the edge: <button> ""` + `<svg>` + `<path>`. Ở local cổng CI xanh 132/132 (RPT T15; chạy lại trên Windows ngày 2026-11-16 cũng xanh), nên commit được push và production **không** nhận bản T15 (`deploy-gate` bị bỏ qua).

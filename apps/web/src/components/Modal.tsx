@@ -40,7 +40,10 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    // !m-0: a page that spaces its children with space-y-* / space-x-* gives
+    // this root a margin too, and on a fixed inset-0 box a top margin moves the
+    // backdrop down — a 32px strip of undimmed page above it (BUG-032).
+    <div className="fixed inset-0 z-50 !m-0 flex items-center justify-center p-4">
       <div className="absolute inset-0 animate-st-fade-in bg-gray-950/50 backdrop-blur-[2px]" onClick={onClose} />
       <div
         ref={dialogRef}

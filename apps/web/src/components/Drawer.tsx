@@ -46,7 +46,8 @@ export function Drawer({ open, onClose, title, subtitle, children, footer, width
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    // !m-0: see Modal — a space-y-* parent must not push the backdrop down (BUG-032).
+    <div className="fixed inset-0 z-50 !m-0 flex justify-end">
       <div className="absolute inset-0 animate-st-fade-in bg-gray-950/40 backdrop-blur-[1px]" onClick={onClose} />
       <div
         ref={panelRef}
