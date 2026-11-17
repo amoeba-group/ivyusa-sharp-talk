@@ -50,8 +50,8 @@ Kế hoạch: [PLN-261117](../plan/PLN-261117-Orders-Search-And-Sync-Backfill.md
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit | ⏳ |
-| CI | ⏳ |
+| Commit | `ecc9b416` (2026-11-17) |
+| CI | ✅ run `44049635169`: verify (gồm toàn bộ test trên Linux) · e2e gate · deploy-gate |
 | Server `talkaibotprd01` | ⏳ (build lại `api` và `web`) |
 | Re-sync trên production | ⏳ chủ dự án |
 | Quyền `read_all_orders` | ⏳ chủ dự án xin Shopify |
