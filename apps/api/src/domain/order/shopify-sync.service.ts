@@ -25,8 +25,28 @@ const SHOPIFY = 'shopify';
 /** Overlap subtracted from the last_sync_at cursor — upserts are idempotent, so
  *  re-pulling a few minutes protects against clock skew and error-stamped cursors. */
 const CURSOR_LOOKBACK_MS = 10 * 60_000;
-/** Page cap per run (50 orders each) — bounds a single sync's work. */
-const MAX_PAGES = 10;
+/** Page cap per batch (50 orders each) — bounds one request's work. A sync that
+ *  hits it carries on in the background, batch after batch (BUG-033). */
+const MAX_PAGES = 20;
+/** Background batches per store before it stops and waits for the next trigger
+ *  (200 × 1,000 orders). */
+const MAX_CONTINUATIONS = 200;
+/** Breathing room between background batches — the store's API budget is shared. */
+const CONTINUATION_PAUSE_MS = 500;
+/**
+ * How far back a store's FIRST sync reads. Not the whole store: the widget needs
+ * the orders still in play, older ones are fetched when someone asks for them
+ * (`lookupOrderByNumber`, login backfill). 60 is also what Shopify serves without
+ * `read_all_orders` (PLN-261117 B3).
+ */
+function initialWindowDays(): number {
+  const n = Number(process.env.SHOPIFY_INITIAL_SYNC_DAYS);
+  return Number.isInteger(n) && n > 0 ? n : 60;
+}
+/** "1001", "#1001", " ivy-1001 " → one comparable form. */
+function normalizeOrderNumber(v: string | number | null | undefined): string {
+  return String(v ?? '').trim().replace(/^#/, '').toLowerCase();
+}
 /** Per-customer login backfill: page cap and re-run suppression window. */
 const CUSTOMER_BACKFILL_MAX_PAGES = 2;
 const CUSTOMER_BACKFILL_TTL_MS = 10 * 60_000;
@@ -43,6 +63,8 @@ export interface ShopifySyncResult {
   ok: boolean;
   synced: number;
   detail: string;
+  /** Present (true) only when this batch stopped at its cap with orders left. */
+  more?: boolean;
 }
 
 export interface ShopifyWebhookRegisterResult {
@@ -71,7 +93,71 @@ export class ShopifySyncService {
     private readonly bus: EventBusService,
   ) {}
 
+  /**
+   * Sync this store's orders into the cache. One batch runs inside the call;
+   * when it stops at its cap with orders left, the rest is read in the
+   * background, batch after batch, so "Sync now" never leaves a store half read
+   * (BUG-033: it used to stop at 500 and move the cursor past the rest).
+   */
   async syncOrders(tenantId: number): Promise<ShopifySyncResult> {
+    if (this.backfilling.has(tenantId)) {
+      return {
+        ok: true,
+        synced: 0,
+        detail: 'A sync is already running for this store — check again in a minute',
+        more: true,
+      };
+    }
+    const { resumeFrom, ...result } = await this.syncBatch(tenantId);
+    if (resumeFrom) this.continueInBackground(tenantId, resumeFrom);
+    return result;
+  }
+
+  /**
+   * Forget how far this store was read and read the recent window again — for a
+   * store whose first sync was cut short. Upserts by Shopify order id, so
+   * nothing is duplicated.
+   */
+  async resyncRecent(tenantId: number): Promise<ShopifySyncResult> {
+    if (this.backfilling.has(tenantId)) return this.syncOrders(tenantId);
+    await this.tenantService.clearShopifySyncCursor(tenantId);
+    return this.syncOrders(tenantId);
+  }
+
+  /** Stores with a background continuation in flight. */
+  private readonly backfilling = new Set<number>();
+
+  private continueInBackground(tenantId: number, from: Date): void {
+    if (this.backfilling.has(tenantId)) return;
+    this.backfilling.add(tenantId);
+    void (async () => {
+      try {
+        let next: Date | undefined = from;
+        for (let i = 0; next && i < MAX_CONTINUATIONS; i++) {
+          await new Promise((resolve) => setTimeout(resolve, CONTINUATION_PAUSE_MS));
+          const batch = await this.syncBatch(tenantId, next);
+          if (!batch.ok) break;
+          next = batch.resumeFrom;
+        }
+      } catch (e) {
+        this.logger.warn(`Background order sync for tenant ${tenantId} stopped: ${(e as Error).message}`);
+      } finally {
+        this.backfilling.delete(tenantId);
+      }
+    })();
+  }
+
+  /**
+   * Read one batch, oldest change first, so a batch that stops early knows
+   * exactly where it stopped: `resumeFrom` is the last change it read.
+   *
+   * @param from exact resume point of a continuation; absent = start from the
+   *   stored cursor, or from the initial window on a store never synced.
+   */
+  private async syncBatch(
+    tenantId: number,
+    from?: Date,
+  ): Promise<ShopifySyncResult & { resumeFrom?: Date }> {
     const conn = await this.tenantService.getShopifyConnection(tenantId);
     if (!conn) {
       return this.record(
@@ -87,14 +173,20 @@ export class ShopifySyncService {
     // so with two Shopify stores one store's run advanced the other's cursor
     // past orders it had never read (FIX-261019).
     const startedAt = new Date();
-    const cursor = await this.tenantService.getShopifySyncCursor(tenantId);
-    const since = cursor
-      ? new Date(cursor.getTime() - CURSOR_LOOKBACK_MS).toISOString()
-      : undefined;
+    const cursor = from ? null : await this.tenantService.getShopifySyncCursor(tenantId);
+    const firstSync = !from && !cursor;
+    const windowDays = initialWindowDays();
+    const sinceDate = from
+      ? from
+      : cursor
+        ? new Date(cursor.getTime() - CURSOR_LOOKBACK_MS)
+        : new Date(startedAt.getTime() - windowDays * 86_400_000);
+    const since = sinceDate.toISOString();
 
     let synced = 0;
     let pages = 0;
     let pageInfo: string | null = null;
+    let lastUpdated: Date | null = null;
     try {
       do {
         const page = await this.client.fetchOrders(conn.shopDomain, conn.token, {
@@ -102,6 +194,10 @@ export class ShopifySyncService {
           pageInfo: pageInfo ?? undefined,
         });
         synced += await this.upsertPage(tenantId, page.orders);
+        for (const o of page.orders) {
+          const at = o.updated_at ? new Date(o.updated_at) : null;
+          if (at && !Number.isNaN(at.getTime()) && (!lastUpdated || at > lastUpdated)) lastUpdated = at;
+        }
         pageInfo = page.nextPageInfo;
         pages++;
       } while (pageInfo && pages < MAX_PAGES);
@@ -111,12 +207,62 @@ export class ShopifySyncService {
       // cursor stays put so the unread pages are retried next run.
       return this.record(tenantId, true, synced, `Synced ${synced} order(s), interrupted: ${(e as Error).message}`);
     }
-    const detail = since
-      ? `Synced ${synced} order(s) updated since ${since}`
-      : `Synced ${synced} order(s) (initial full sync${pageInfo ? ', more pages remain' : ''})`;
+
+    if (pageInfo) {
+      // Stopped at the cap with orders left. The cursor moves only as far as
+      // this batch actually read — never to "now" — and only forward: a batch
+      // that got nowhere (more orders changed in one instant than a batch
+      // holds) must not loop on the same page.
+      const resumeFrom = lastUpdated && lastUpdated > sinceDate ? lastUpdated : undefined;
+      const detail = resumeFrom
+        ? `Synced ${synced} order(s) up to ${resumeFrom.toISOString()} — more remain, continuing in the background`
+        : `Synced ${synced} order(s) — more remain; run the sync again`;
+      const result = await this.record(tenantId, true, synced, detail, resumeFrom);
+      return { ...result, more: true, resumeFrom };
+    }
+
+    const detail = firstSync
+      ? `Synced ${synced} order(s) (first sync, last ${windowDays} days)`
+      : `Synced ${synced} order(s) updated since ${since}`;
     // Cursor = when this run STARTED, so orders updated while it ran fall
     // inside the next window (plus the lookback overlap).
     return this.record(tenantId, true, synced, detail, startedAt);
+  }
+
+  /**
+   * Fetch ONE order from the store by its number and cache it — for an order
+   * outside what the sync holds (PLN-261117 B3). With `email`, the order is
+   * cached only when it belongs to that address: a guest who knows a number
+   * must not pull someone else's order into reach.
+   *
+   * @returns the cached rows (empty when the store has no such order). Throws
+   *   when the store cannot be asked — callers decide what a failure means.
+   */
+  async lookupOrderByNumber(
+    tenantId: number,
+    orderNumber: string,
+    opts: { email?: string } = {},
+  ): Promise<OrderCache[]> {
+    const wanted = normalizeOrderNumber(orderNumber);
+    if (!wanted) return [];
+    const conn = await this.tenantService.getShopifyConnection(tenantId);
+    if (!conn) return [];
+    const page = await this.client.fetchOrders(conn.shopDomain, conn.token, {
+      name: orderNumber,
+      limit: 10,
+      newestFirst: true,
+    });
+    const email = opts.email?.trim().toLowerCase();
+    const matches = page.orders.filter((o) => {
+      // The store's search is not an exact match; keep only the order asked for.
+      if (normalizeOrderNumber(o.order_number ?? o.name) !== wanted) return false;
+      if (!email) return true;
+      const owner = (o.customer?.email ?? o.email ?? '').trim().toLowerCase();
+      return owner !== '' && owner === email;
+    });
+    const rows: OrderCache[] = [];
+    for (const o of matches) rows.push(await this.upsertOrder(tenantId, o));
+    return rows;
   }
 
   /**
@@ -142,6 +288,9 @@ export class ShopifySyncService {
     do {
       const page = await this.client.fetchOrders(conn.shopDomain, conn.token, {
         customerId: pageInfo ? undefined : shopifyCustomerId,
+        // The most recent ones: a shopper with more orders than the cap wants
+        // the latest, not the oldest (BUG-033).
+        newestFirst: pageInfo ? undefined : true,
         pageInfo: pageInfo ?? undefined,
       });
       synced += await this.upsertPage(tenantId, page.orders);

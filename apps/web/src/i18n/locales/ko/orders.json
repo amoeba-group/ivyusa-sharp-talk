@@ -1,10 +1,18 @@
 {
   "title": "주문",
-  "subtitle": "Shopify에서 동기화된 전체 매장 주문",
+  "subtitle": "매장의 최근 주문입니다. 주문번호로 검색하세요. 여기에 없는 주문은 매장에서 가져올 수 있습니다.",
   "orderNumber": "주문번호",
   "status": "상태",
   "amount": "금액",
   "items": "상품 수",
   "date": "일자",
-  "empty": "주문을 찾을 수 없습니다."
+  "empty": "주문을 찾을 수 없습니다.",
+  "searchPlaceholder": "주문번호로 검색…",
+  "emptySearch": "\"{{q}}\"와 일치하는 주문이 없습니다.",
+  "lookupHint": "여기에는 최근 주문만 보관됩니다. 매장에 이 주문이 있으면 지금 가져올 수 있습니다.",
+  "lookupOnStore": "Shopify에서 조회",
+  "lookingUp": "조회 중…",
+  "lookupFound": "매장에서 주문을 가져왔습니다.",
+  "lookupNotFound": "매장에 \"{{q}}\" 주문이 없습니다.",
+  "lookupFailed": "매장에서 이 주문을 조회하지 못했습니다. Shopify 연결을 확인한 뒤 다시 시도하세요."
 }

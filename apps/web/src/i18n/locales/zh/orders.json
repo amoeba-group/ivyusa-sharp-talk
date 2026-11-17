@@ -1,10 +1,18 @@
 {
   "title": "订单",
-  "subtitle": "从 Shopify 同步的全部店铺订单",
+  "subtitle": "店铺的近期订单。可按订单号搜索；这里没有的订单可以从店铺获取。",
   "orderNumber": "订单",
   "status": "状态",
   "amount": "金额",
   "items": "商品",
   "date": "日期",
-  "empty": "未找到订单。"
+  "empty": "未找到订单。",
+  "searchPlaceholder": "按订单号搜索…",
+  "emptySearch": "没有与“{{q}}”匹配的订单。",
+  "lookupHint": "这里只保存近期订单。如果店铺中有此订单，现在可以获取。",
+  "lookupOnStore": "在 Shopify 中查询",
+  "lookingUp": "查询中…",
+  "lookupFound": "已从店铺获取订单。",
+  "lookupNotFound": "店铺中没有订单“{{q}}”。",
+  "lookupFailed": "无法向店铺查询此订单。请检查 Shopify 连接后重试。"
 }

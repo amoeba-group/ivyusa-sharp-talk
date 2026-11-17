@@ -23,6 +23,16 @@ export class ShopifySyncController {
     return this.syncService.syncOrders(user.tenantId);
   }
 
+  @Post('resync')
+  @RequireCapability(CAPABILITY.INTEGRATION_CREDENTIALS_MANAGE)
+  @ApiOperation({ summary: 'Read the recent order window again from the start (first sync cut short)' })
+  async resync(@CurrentUser() user: Principal) {
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    return this.syncService.resyncRecent(user.tenantId);
+  }
+
   @Post('register-webhooks')
   @RequireCapability(CAPABILITY.INTEGRATION_CREDENTIALS_MANAGE)
   @ApiOperation({ summary: 'Subscribe the store to order/fulfillment webhooks' })

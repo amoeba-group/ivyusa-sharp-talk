@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-033 | Đồng bộ Shopify **dừng ở 500 đơn** rồi dời con trỏ qua phần chưa đọc: production có 500 / 181.188 đơn, bấm Sync now lại không thêm. Khách có hơn 100 đơn nhận 100 đơn cũ nhất khi đăng nhập | API | 🔴 | Fixed code (2026-11-17, [FIX](../docs/bug-fix/FIX-261117-Shopify-Sync-Stops-At-500.md)); production cần bấm Re-sync recent orders sau deploy | — |
 | BUG-032 | Popup trong console (ví dụ Tenant Settings → Platforms → Shopify connection): lớp nền mờ **hở 32px ở mép trên**, thấy một dải trang không bị làm mờ | Console | 🟡 | Fixed (2026-11-17) | — |
 | BUG-031 | Ô nhập chat không co lại được: khi font mặc định rộng (runner Linux của CI), nút **Send** bị đẩy ra ngoài mép panel 390px → TC-15-06 ×6 đỏ trên CI, xanh ở local | Widget | 🟠 | Fixed (2026-11-16) | T15 |
 | BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |

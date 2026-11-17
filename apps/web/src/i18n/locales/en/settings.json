@@ -174,7 +174,10 @@
         "step3": "Paste the snippet just before the </body> tag and Save."
       }
     },
-    "nonShopifyDomain": "This is not a *.myshopify.com domain. The field doubles as the tenant store domain, so a Cafe24 or custom domain here is fine — it just means this store is not connected to Shopify."
+    "nonShopifyDomain": "This is not a *.myshopify.com domain. The field doubles as the tenant store domain, so a Cafe24 or custom domain here is fine — it just means this store is not connected to Shopify.",
+    "resyncRecent": "Re-sync recent orders",
+    "resyncing": "Re-syncing…",
+    "syncHint": "The first sync reads the last 60 days of orders; after that, new and changed orders arrive by webhook and \"Sync now\" catches up on anything missed. Older orders are fetched when someone looks them up. \"Re-sync recent orders\" reads the 60-day window again from the start."
   },
   "integrations": {
     "configured": "Saved — enter a new value to replace",

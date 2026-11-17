@@ -21,6 +21,7 @@ import { TenantModule } from '../tenant/tenant.module';
 import { CustomerModule } from '../customer/customer.module';
 import { IntegrationModule } from '../integration/integration.module';
 import { OrderAddressService } from './order-address.service';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { OrderAddressService } from './order-address.service';
     TenantModule,
     CustomerModule,
     IntegrationModule,
+    AuditModule,
   ],
   controllers: [
     OrderController,

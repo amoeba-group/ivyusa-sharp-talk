@@ -500,6 +500,8 @@ export const settingsService = {
   saveShopify: (body: SaveShopifyBody) => apiPut<ShopifySettings>('/tenants/me/shopify', body),
   testShopify: () => apiPost<ShopifyTestResult>('/tenants/me/shopify/test'),
   syncShopify: () => apiPost<ShopifySyncResult>('/tenants/me/shopify/sync'),
+  /** Read the recent order window again from the start (PLN-261117 B3). */
+  resyncShopify: () => apiPost<ShopifySyncResult>('/tenants/me/shopify/resync'),
   registerShopifyWebhooks: () =>
     apiPost<ShopifyWebhookRegisterResult>('/tenants/me/shopify/register-webhooks'),
   integration: (provider: string) =>

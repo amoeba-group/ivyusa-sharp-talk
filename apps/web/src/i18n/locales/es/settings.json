@@ -174,7 +174,10 @@
         "step3": "Pega el fragmento justo antes de la etiqueta </body> y guarda."
       }
     },
-    "nonShopifyDomain": "No es un dominio *.myshopify.com. Este campo también es el dominio de la tienda del inquilino, así que un dominio de Cafe24 o propio es válido: solo significa que esta tienda no está conectada a Shopify."
+    "nonShopifyDomain": "No es un dominio *.myshopify.com. Este campo también es el dominio de la tienda del inquilino, así que un dominio de Cafe24 o propio es válido: solo significa que esta tienda no está conectada a Shopify.",
+    "resyncRecent": "Volver a sincronizar pedidos recientes",
+    "resyncing": "Sincronizando de nuevo…",
+    "syncHint": "La primera sincronización lee los pedidos de los últimos 60 días; después, los pedidos nuevos y modificados llegan por webhook y \"Sincronizar ahora\" recupera lo que falte. Los pedidos más antiguos se traen cuando alguien los busca. \"Volver a sincronizar pedidos recientes\" lee de nuevo la ventana de 60 días desde el principio."
   },
   "integrations": {
     "configured": "Guardado — introduce un nuevo valor para reemplazar",

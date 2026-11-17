@@ -1,10 +1,18 @@
 {
   "title": "Đơn hàng",
-  "subtitle": "Toàn bộ đơn hàng của cửa hàng được đồng bộ từ Shopify",
+  "subtitle": "Đơn hàng gần đây của cửa hàng. Tìm theo mã đơn; đơn chưa có ở đây có thể lấy về từ cửa hàng.",
   "orderNumber": "Đơn hàng",
   "status": "Trạng thái",
   "amount": "Số tiền",
   "items": "Sản phẩm",
   "date": "Ngày",
-  "empty": "Không tìm thấy đơn hàng nào."
+  "empty": "Không tìm thấy đơn hàng nào.",
+  "searchPlaceholder": "Tìm theo mã đơn hàng…",
+  "emptySearch": "Không có đơn hàng nào khớp với \"{{q}}\".",
+  "lookupHint": "Ở đây chỉ lưu các đơn gần đây. Nếu đơn này có trên cửa hàng, bạn có thể lấy về ngay.",
+  "lookupOnStore": "Tra trên Shopify",
+  "lookingUp": "Đang tra…",
+  "lookupFound": "Đã lấy đơn hàng từ cửa hàng.",
+  "lookupNotFound": "Cửa hàng không có đơn \"{{q}}\".",
+  "lookupFailed": "Không hỏi được cửa hàng về đơn này. Hãy kiểm tra kết nối Shopify rồi thử lại."
 }

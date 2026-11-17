@@ -1,10 +1,18 @@
 {
   "title": "Pedidos",
-  "subtitle": "Todos los pedidos de la tienda sincronizados desde Shopify",
+  "subtitle": "Pedidos recientes de la tienda. Busca por número de pedido; si un pedido no aparece aquí, se puede traer de la tienda.",
   "orderNumber": "Pedido",
   "status": "Estado",
   "amount": "Importe",
   "items": "Artículos",
   "date": "Fecha",
-  "empty": "No se encontraron pedidos."
+  "empty": "No se encontraron pedidos.",
+  "searchPlaceholder": "Buscar por número de pedido…",
+  "emptySearch": "Ningún pedido coincide con \"{{q}}\".",
+  "lookupHint": "Aquí solo se guardan los pedidos recientes. Si este pedido existe en la tienda, se puede traer ahora.",
+  "lookupOnStore": "Buscar en Shopify",
+  "lookingUp": "Buscando…",
+  "lookupFound": "Pedido traído de la tienda.",
+  "lookupNotFound": "La tienda no tiene ningún pedido \"{{q}}\".",
+  "lookupFailed": "No se pudo consultar este pedido en la tienda. Revisa la conexión con Shopify e inténtalo de nuevo."
 }

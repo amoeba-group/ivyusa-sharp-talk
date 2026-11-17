@@ -1258,6 +1258,14 @@ export class TenantService {
     return cred?.lastSyncedAt ?? null;
   }
 
+  /** Forget the order-sync cursor, so the next sync reads the initial window again. */
+  async clearShopifySyncCursor(tenantId: number): Promise<void> {
+    const cred = await this.credRepo.findOne({ where: { tenantId, provider: SHOPIFY } });
+    if (!cred || cred.lastSyncedAt == null) return;
+    cred.lastSyncedAt = null;
+    await this.credRepo.save(cred);
+  }
+
 }
 
 /**

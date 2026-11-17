@@ -1,10 +1,18 @@
 {
   "title": "Orders",
-  "subtitle": "All store orders synced from Shopify",
+  "subtitle": "Recent store orders. Search by order number; an order that is not here can be fetched from the store.",
   "orderNumber": "Order",
   "status": "Status",
   "amount": "Amount",
   "items": "Items",
   "date": "Date",
-  "empty": "No orders found."
+  "empty": "No orders found.",
+  "searchPlaceholder": "Search by order number…",
+  "emptySearch": "No orders match \"{{q}}\".",
+  "lookupHint": "Only recent orders are kept here. If this order exists in the store, it can be fetched now.",
+  "lookupOnStore": "Look up on Shopify",
+  "lookingUp": "Looking up…",
+  "lookupFound": "Order fetched from the store.",
+  "lookupNotFound": "The store has no order \"{{q}}\".",
+  "lookupFailed": "The store could not be asked for this order. Check the Shopify connection and try again."
 }

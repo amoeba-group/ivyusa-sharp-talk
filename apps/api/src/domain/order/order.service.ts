@@ -1,6 +1,6 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import {
   CJM_STAGE,
   FULFILLMENT_STATUS,
@@ -21,6 +21,7 @@ import { Session } from '../session/entity/session.entity';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { Customer } from '../customer/entity/customer.entity';
 import { OrderMapper, type ReviewItemView } from './order.mapper';
+import { ShopifySyncService } from './shopify-sync.service';
 import { Paginated } from '../../global/interceptor/transform.interceptor';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -63,6 +64,11 @@ function parseDaysWindow(days?: string): number | null {
   return n;
 }
 
+/** Make `%`, `_` and `\` in typed text match themselves in a MySQL LIKE pattern. */
+function escapeLike(text: string): string {
+  return text.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
 /**
  * Order read access (FR-019/020/021). Widget endpoints resolve the customer from
  * a session token; order data requires an authenticated (bound) customer (POL-001).
@@ -86,7 +92,13 @@ export class OrderService {
     @InjectRepository(ProductCache) private readonly productRepo: Repository<ProductCache>,
     // Appended for the same reason (PLN-260923 P3): read-only "already reviewed".
     @InjectRepository(Review) private readonly reviewRepo: Repository<Review>,
+    // Appended too (PLN-261117 B3): fetches one order from the store when the
+    // cache does not hold it. Optional so the specs that build this service
+    // without a store keep working, and behave as "the store has no such order".
+    @Optional() private readonly shopifySync?: ShopifySyncService,
   ) {}
+
+  private readonly logger = new Logger(OrderService.name);
 
   /** Guest order lookup (FR-019). Rate-limited per email; binds session on success. */
   async guestLookup(sessionToken: string, orderNumber: string, email: string) {
@@ -98,15 +110,19 @@ export class OrderService {
     }
     await this.enforceLookupLimit(email);
 
-    const order = await this.orderRepo
-      .createQueryBuilder('o')
-      .innerJoin(Customer, 'c', 'c.id = o.customer_id')
-      .where('o.order_number = :orderNumber', { orderNumber })
-      // Email is encrypted — match on the deterministic blind index (PRV-M6).
-      .andWhere('c.email_hash = :emailHash', { emailHash: blindIndex(email) ?? '__none__' })
-      .andWhere('o.tenant_id = :tenantId', { tenantId: session.tenantId })
-      .andWhere('c.tenant_id = :tenantId', { tenantId: session.tenantId })
-      .getOne();
+    let order = await this.findGuestOrder(session.tenantId, orderNumber, email);
+    // Not in the cache: the sync only holds the recent window (PLN-261117 B3),
+    // so ask the store for exactly this order. It is cached only when it
+    // belongs to this email, then read back through the same query as above —
+    // a failure here is "not found", never a reason to answer differently.
+    if (!order && this.shopifySync) {
+      try {
+        const fetched = await this.shopifySync.lookupOrderByNumber(session.tenantId, orderNumber, { email });
+        if (fetched.length) order = await this.findGuestOrder(session.tenantId, orderNumber, email);
+      } catch (e) {
+        this.logger.warn(`Guest lookup could not ask the store (tenant ${session.tenantId}): ${(e as Error).message}`);
+      }
+    }
 
     if (!order) throw new BusinessException(ERROR_CODE.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND);
 
@@ -116,6 +132,20 @@ export class OrderService {
     await this.redis.del(sessionCacheKey(session.sessionToken));
 
     return OrderMapper.toSummary(order);
+  }
+
+  /** The cached order with this number that belongs to this email, in this tenant. */
+  private findGuestOrder(tenantId: number, orderNumber: string, email: string): Promise<OrderCache | null> {
+    return this.orderRepo
+      .createQueryBuilder('o')
+      .innerJoin(Customer, 'c', 'c.id = o.customer_id')
+      // Stored without the "#" the shopper may type (see ShopifySyncService.upsertOrder).
+      .where('o.order_number = :orderNumber', { orderNumber: orderNumber.trim().replace(/^#/, '') })
+      // Email is encrypted — match on the deterministic blind index (PRV-M6).
+      .andWhere('c.email_hash = :emailHash', { emailHash: blindIndex(email) ?? '__none__' })
+      .andWhere('o.tenant_id = :tenantId', { tenantId })
+      .andWhere('c.tenant_id = :tenantId', { tenantId })
+      .getOne();
   }
 
   /**
@@ -159,6 +189,27 @@ export class OrderService {
       OrderMapper.toListItem(o, summaryByOrder.get(String(o.id)) ?? OrderService.EMPTY_ITEM_SUMMARY),
     );
     return new Paginated(items, buildPagination(p, s, total));
+  }
+
+  /**
+   * Console "Look up on Shopify" (PLN-261117 B3): fetch one order by number
+   * from the tenant's store, cache it, and return it as list rows. Empty when
+   * the store has no such order or the tenant has no store connected.
+   */
+  async lookupFromStore(tenantId: number, orderNumber: string) {
+    if (!this.shopifySync) return { found: 0, items: [] };
+    let rows: OrderCache[];
+    try {
+      rows = await this.shopifySync.lookupOrderByNumber(tenantId, orderNumber);
+    } catch (e) {
+      this.logger.warn(`Order lookup could not ask the store (tenant ${tenantId}): ${(e as Error).message}`);
+      throw new BusinessException(ERROR_CODE.ORDER_STORE_LOOKUP_FAILED, HttpStatus.BAD_GATEWAY);
+    }
+    const summaryByOrder = await this.itemSummaries(rows.map((o) => o.id));
+    const items = rows.map((o) =>
+      OrderMapper.toListItem(o, summaryByOrder.get(String(o.id)) ?? OrderService.EMPTY_ITEM_SUMMARY),
+    );
+    return { found: items.length, items };
   }
 
   /**
@@ -384,10 +435,16 @@ export class OrderService {
   }
 
   /** Admin view: all orders for the tenant (paginated). */
-  async listAll(tenantId: number, page?: string, size?: string) {
+  async listAll(tenantId: number, page?: string, size?: string, q?: string) {
     const { page: p, size: s } = normalizePage(page, size);
+    // Order-number search (PLN-261117 A): "contains", a leading "#" ignored.
+    // LIKE wildcards in what was typed are matched literally — "%" must not
+    // mean "every order". Always inside this tenant.
+    const term = (q ?? '').trim().replace(/^#/, '');
     const [orders, total] = await this.orderRepo.findAndCount({
-      where: { tenantId },
+      where: term
+        ? { tenantId, orderNumber: Like(`%${escapeLike(term)}%`) }
+        : { tenantId },
       order: { createdAt: 'DESC' },
       skip: (p - 1) * s,
       take: s,

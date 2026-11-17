@@ -7,6 +7,7 @@ import { FormRow, Input } from '@/components/Field';
 import { isShopifyDomain } from './SettingsPage';
 import {
   useRegisterShopifyWebhooks,
+  useResyncShopify,
   useSaveShopify,
   useShopifySettings,
   useSyncShopify,
@@ -27,6 +28,7 @@ export function ShopifyConfigModal({ open, onClose }: { open: boolean; onClose: 
   const save = useSaveShopify();
   const test = useTestShopify();
   const sync = useSyncShopify();
+  const resync = useResyncShopify();
   const registerWebhooks = useRegisterShopifyWebhooks();
 
   const [shopDomain, setShopDomain] = useState('');
@@ -142,12 +144,20 @@ export function ShopifyConfigModal({ open, onClose }: { open: boolean; onClose: 
         </Button>
         <Button
           variant="secondary"
+          onClick={() => resync.mutate()}
+          disabled={resync.isPending || sync.isPending || !data?.credential.configured}
+        >
+          {resync.isPending ? t('shopify.resyncing') : t('shopify.resyncRecent')}
+        </Button>
+        <Button
+          variant="secondary"
           onClick={() => registerWebhooks.mutate()}
           disabled={registerWebhooks.isPending || !data?.credential.configured}
         >
           {registerWebhooks.isPending ? t('shopify.registering') : t('shopify.registerWebhooks')}
         </Button>
       </div>
+      <p className="mt-2 text-xs text-gray-400">{t('shopify.syncHint')}</p>
 
       <div className="mt-4 space-y-1 border-t border-gray-100 pt-4 text-sm">
         <div className="flex items-center gap-2">

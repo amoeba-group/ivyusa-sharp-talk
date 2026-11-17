@@ -2,7 +2,13 @@ import { Body, Controller, Get, HttpStatus, Param, ParseIntPipe, Post, Query } f
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CAPABILITY, Principal } from '@sharptalk/types';
 import { OrderService } from './order.service';
-import { GuestLookupRequest, OrderListQuery } from './dto/request/order.request';
+import {
+  AdminOrderListQuery,
+  AdminOrderLookupRequest,
+  GuestLookupRequest,
+  OrderListQuery,
+} from './dto/request/order.request';
+import { AuditService } from '../audit/audit.service';
 import { Public } from '../../global/decorator/public.decorator';
 import { RequireCapability } from '../../global/decorator/auth.decorator';
 import { CurrentUser } from '../../global/decorator/current-user.decorator';
@@ -70,17 +76,41 @@ export class OrderController {
 @ApiTags('Orders')
 @Controller('admin/orders')
 export class AdminOrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Get()
   @RequireCapability(CAPABILITY.MODULE_OPERATIONS)
-  @ApiOperation({ summary: 'List all orders (admin)' })
-  async list(
-    @CurrentUser() user: Principal,
-    @Query('page') page?: string,
-    @Query('size') size?: string,
-  ) {
-    return this.orderService.listAll(this.tenantId(user), page, size);
+  @ApiOperation({ summary: 'List all orders (admin), optionally by order number' })
+  async list(@CurrentUser() user: Principal, @Query() query: AdminOrderListQuery) {
+    return this.orderService.listAll(this.tenantId(user), query.page, query.size, query.q);
+  }
+
+  /**
+   * Fetch one order from the store when the console's search did not find it
+   * (PLN-261117 B3). It pulls a customer's order — personal data — into this
+   * system on an operator's say-so, so it is audited.
+   */
+  @Post('lookup')
+  @RequireCapability(CAPABILITY.MODULE_OPERATIONS)
+  @ApiOperation({ summary: 'Fetch one order from the store by its number and cache it' })
+  async lookup(@CurrentUser() user: Principal, @Body() body: AdminOrderLookupRequest) {
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    const tenantId = user.tenantId;
+    const result = await this.orderService.lookupFromStore(tenantId, body.order_number);
+    await this.auditService.write({
+      tenantId,
+      actorType: 'user',
+      actorId: user.userId,
+      action: 'order.store_lookup',
+      target: `order_number:${body.order_number.replace(/^#/, '')}`,
+      metadata: { found: result.found },
+    });
+    return result;
   }
 
   private tenantId(user: Principal): number {

@@ -152,6 +152,24 @@ export function useSyncShopify() {
   });
 }
 
+/** "Re-sync recent orders": forget the cursor and read the initial window again. */
+export function useResyncShopify() {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: () => settingsService.resyncShopify(),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['shopify-settings', tenantKey] });
+      qc.invalidateQueries({ queryKey: ['orders', tenantKey] });
+      if (res.ok) toast.success(res.detail);
+      else toast.error(res.detail);
+    },
+    onError: (e: Error) => {
+      toast.error(e.message || 'Shopify sync failed.');
+    },
+  });
+}
+
 export function useRegisterShopifyWebhooks() {
   const qc = useQueryClient();
   const tenantKey = useTenantKey();

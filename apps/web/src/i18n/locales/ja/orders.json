@@ -1,10 +1,18 @@
 {
   "title": "注文",
-  "subtitle": "Shopifyから同期されたストアの全注文",
+  "subtitle": "ストアの最近の注文です。注文番号で検索できます。ここにない注文はストアから取得できます。",
   "orderNumber": "注文",
   "status": "ステータス",
   "amount": "金額",
   "items": "商品",
   "date": "日付",
-  "empty": "注文が見つかりません。"
+  "empty": "注文が見つかりません。",
+  "searchPlaceholder": "注文番号で検索…",
+  "emptySearch": "「{{q}}」に一致する注文はありません。",
+  "lookupHint": "ここには最近の注文のみ保存されています。ストアにこの注文があれば、今すぐ取得できます。",
+  "lookupOnStore": "Shopifyで照会",
+  "lookingUp": "照会中…",
+  "lookupFound": "ストアから注文を取得しました。",
+  "lookupNotFound": "ストアに注文「{{q}}」はありません。",
+  "lookupFailed": "ストアにこの注文を照会できませんでした。Shopifyの接続を確認して、もう一度お試しください。"
 }

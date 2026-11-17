@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt** (§7) |
+| Trạng thái | ✅ **Đã duyệt 2026-11-17** (`1. ok 2. a 3. a 4. b`) và đã làm — [RPT-261117](../implementation/RPT-261117-Orders-Search-And-Sync-Backfill.md). Khác kế hoạch: thứ tự đọc lần đầu, và phần dọn 180 ngày **chưa làm** (RPT §2) |
 | Yêu cầu | Chủ dự án, 2026-11-17: "ở màn hình Order hãy thêm search theo mã đơn hàng"; "hiện tại chỉ có 500 đơn hàng và 228 customers" |
 | Phạm vi | `apps/web` (console → Orders), `apps/api` (`admin/orders`, đồng bộ Shopify). Không đụng widget |
 | Migration | **A: không có SQL** (đã có index `idx_orders_number`). **B: tuỳ phương án** (§3) |

@@ -19,6 +19,8 @@ export interface ShopifyOrderDto {
   fulfillment_status?: string | null;
   /** When the order was placed (webhooks carry it natively). */
   created_at?: string | null;
+  /** Last change in Shopify — the sync resumes from the last one it read. */
+  updated_at?: string | null;
   total_price?: string | null;
   /**
    * Money breakdown (PLN-260920 P2). Webhooks carry `subtotal_price` and
@@ -80,6 +82,10 @@ export interface FetchOrdersOptions {
   updatedAtMin?: string;
   /** Only this customer's orders (Shopify legacy numeric id) — login backfill. */
   customerId?: string;
+  /** Only the order with this name ("1001", "#1001", "IVY-1001") — on-demand lookup. */
+  name?: string;
+  /** Most recently updated first (default: oldest first, which a resumable sync needs). */
+  newestFirst?: boolean;
   /** Opaque cursor from a previous page; excludes other filters (they ride inside). */
   pageInfo?: string;
 }
@@ -94,6 +100,8 @@ interface OrderNode {
   legacyResourceId?: string;
   name?: string;
   email?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
   displayFinancialStatus?: string | null;
   displayFulfillmentStatus?: string | null;
   totalPriceSet?: { shopMoney?: { amount?: string; currencyCode?: string } };
@@ -193,13 +201,15 @@ type LineItemTier = 'rich' | 'basic' | 'none';
 /** Orders page query; the tier decides how much of each line item is selected. */
 function ordersQuery(tier: LineItemTier): string {
   return `
-query Orders($first: Int!, $after: String, $query: String) {
-  orders(first: $first, after: $after, query: $query, sortKey: UPDATED_AT) {
+query Orders($first: Int!, $after: String, $query: String, $reverse: Boolean) {
+  orders(first: $first, after: $after, query: $query, sortKey: UPDATED_AT, reverse: $reverse) {
     pageInfo { hasNextPage endCursor }
     nodes {
       legacyResourceId
       name
       email
+      createdAt
+      updatedAt
       displayFinancialStatus
       displayFulfillmentStatus
       totalPriceSet { shopMoney { amount currencyCode } }
@@ -386,14 +396,20 @@ export class ShopifyAdminClient {
     const clauses: string[] = [];
     if (opts.updatedAtMin) clauses.push(`updated_at:>='${opts.updatedAtMin}'`);
     if (opts.customerId) clauses.push(`customer_id:${opts.customerId.replace(/\D/g, '')}`);
+    // Search syntax is the caller's input here: keep only what an order name is
+    // made of, so a typed value cannot add clauses of its own.
+    const name = opts.name?.replace(/^#/, '').replace(/[^A-Za-z0-9._-]/g, '');
+    if (name) clauses.push(`name:${name}`);
     let query: string | null = clauses.length ? clauses.join(' ') : null;
+    let reverse = opts.newestFirst === true;
     if (opts.pageInfo) {
       const cursor = this.decodeCursor(opts.pageInfo);
       after = cursor.after;
       query = cursor.query;
+      reverse = cursor.reverse;
     }
 
-    const vars = { first: limit, after, query };
+    const vars = { first: limit, after, query, reverse };
     // Ask for the most we can use, fall back a tier at a time. A store that has
     // not re-authorised since `read_products` was added still syncs — it just
     // loses the option text and the picture, not its orders (which is what
@@ -403,7 +419,7 @@ export class ShopifyAdminClient {
     const orders = (conn?.nodes ?? []).map((n) => this.toOrderDto(n, shopDomain));
     const nextPageInfo =
       conn?.pageInfo?.hasNextPage && conn.pageInfo.endCursor
-        ? this.encodeCursor(conn.pageInfo.endCursor, query)
+        ? this.encodeCursor(conn.pageInfo.endCursor, query, reverse)
         : null;
     return { orders, nextPageInfo };
   }
@@ -607,6 +623,8 @@ export class ShopifyAdminClient {
       id: Number(n.legacyResourceId ?? 0),
       name: n.name,
       email: n.email ?? null,
+      created_at: n.createdAt ?? null,
+      updated_at: n.updatedAt ?? null,
       financial_status: n.displayFinancialStatus?.toLowerCase() ?? null,
       fulfillment_status: this.mapFulfillmentStatus(n.displayFulfillmentStatus),
       total_price: n.totalPriceSet?.shopMoney?.amount ?? null,
@@ -653,19 +671,21 @@ export class ShopifyAdminClient {
     return display.toLowerCase();
   }
 
-  private encodeCursor(after: string, query: string | null): string {
-    return Buffer.from(JSON.stringify({ after, query }), 'utf8').toString('base64url');
+  /** The page order is part of what a cursor is valid for, so it rides along. */
+  private encodeCursor(after: string, query: string | null, reverse = false): string {
+    return Buffer.from(JSON.stringify({ after, query, reverse }), 'utf8').toString('base64url');
   }
 
-  private decodeCursor(pageInfo: string): { after: string | null; query: string | null } {
+  private decodeCursor(pageInfo: string): { after: string | null; query: string | null; reverse: boolean } {
     try {
       const parsed = JSON.parse(Buffer.from(pageInfo, 'base64url').toString('utf8')) as {
         after?: string;
         query?: string | null;
+        reverse?: boolean;
       };
-      return { after: parsed.after ?? null, query: parsed.query ?? null };
+      return { after: parsed.after ?? null, query: parsed.query ?? null, reverse: parsed.reverse === true };
     } catch {
-      return { after: pageInfo, query: null };
+      return { after: pageInfo, query: null, reverse: false };
     }
   }
 }

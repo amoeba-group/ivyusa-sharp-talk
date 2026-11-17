@@ -86,14 +86,14 @@ describe('ShopifySyncService.syncOrders', () => {
     expect(tenantService.recordShopifyOutcome).toHaveBeenCalledWith(
       7,
       true,
-      'Synced 2 order(s) (initial full sync)',
+      'Synced 2 order(s) (first sync, last 60 days)',
       { syncedAt: expect.any(Date) },
     );
 
     expect(res).toEqual({
       ok: true,
       synced: 2,
-      detail: 'Synced 2 order(s) (initial full sync)',
+      detail: 'Synced 2 order(s) (first sync, last 60 days)',
     });
     expect(saved).toHaveLength(2);
 

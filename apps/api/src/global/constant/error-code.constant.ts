@@ -364,6 +364,10 @@ export const ERROR_CODE = {
   /** Support email / phone in the tenant's Contact Support settings could not be read. */
   SUPPORT_CONTACT_INVALID: { code: 'E5163', message: 'Invalid support email or phone number' },
 
+  // E5164 — console order lookup on the store (PLN-261117 B3).
+  /** The tenant's store could not be asked for the order (token, network, API limit). */
+  ORDER_STORE_LOOKUP_FAILED: { code: 'E5164', message: 'The store could not be asked for this order' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

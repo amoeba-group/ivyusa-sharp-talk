@@ -174,7 +174,10 @@
         "step3": "Dán đoạn mã ngay trước thẻ </body> rồi Save."
       }
     },
-    "nonShopifyDomain": "Đây không phải tên miền *.myshopify.com. Trường này đồng thời là tên miền cửa hàng của gian hàng, nên tên miền Cafe24 hay tên miền riêng đều dùng được — chỉ có nghĩa là cửa hàng này không kết nối với Shopify."
+    "nonShopifyDomain": "Đây không phải tên miền *.myshopify.com. Trường này đồng thời là tên miền cửa hàng của gian hàng, nên tên miền Cafe24 hay tên miền riêng đều dùng được — chỉ có nghĩa là cửa hàng này không kết nối với Shopify.",
+    "resyncRecent": "Đồng bộ lại đơn gần đây",
+    "resyncing": "Đang đồng bộ lại…",
+    "syncHint": "Lần đồng bộ đầu đọc đơn hàng của 60 ngày gần nhất; sau đó đơn mới và đơn thay đổi về qua webhook, còn \"Đồng bộ ngay\" bù những gì bị lỡ. Đơn cũ hơn được lấy về khi có người tra. \"Đồng bộ lại đơn gần đây\" đọc lại cửa sổ 60 ngày từ đầu."
   },
   "integrations": {
     "configured": "Đã lưu — nhập giá trị mới để thay thế",
