@@ -82,7 +82,7 @@ Nhập qua console `talk.ivyusa.com`, trong phiên đăng nhập Master của ch
 
 **Phát hiện — việc còn mở, cần chủ dự án:**
 - **Tenant production chưa kết nối Shopify:** `GET /tenants/me/shopify` trả `credential.configured: false`, chưa từng sync. Vì vậy Popular products không tải được, Dashboard ghi 0 đơn, và các màn dựa vào đơn hàng thật (Order / Delivery, Order Detail, My Orders) chưa có dữ liệu. Cần cài / uỷ quyền app Shopify cho cửa hàng (console → Tenant Settings → Platforms).
-- **Storefront URL trống** (`storefrontUrl: null`): link "See all …" trỏ về `ivyusa.myshopify.com` thay vì `ivyusa.com`.
+- ~~Storefront URL trống~~ → **đã điền `https://ivyusa.com`** (Tenant Settings → Basic → Storefront → Shop URL, 2026-11-17; server trả `storefrontUrl: https://ivyusa.com`). Ô Store domain giữ `ivyusa.myshopify.com`. Trước đó link "See all …" trỏ về `ivyusa.myshopify.com`; chưa bấm thử lại link sau khi điền.
 - **AI engine là Built-in Stub** (`AI off (stub)`): câu hỏi gõ tự do chỉ nhận câu dự phòng. Engine Anthropic của nền tảng: `hasApiKey: false`, `selectable: false`. Cần System Admin cấp key và mở cho tenant, hoặc tenant tự thêm engine bằng key riêng (Tenant Settings → Basic → Add engine).
 - `affiliate_details` (Learn more) giữ câu mặc định (GUIDE §3: tuỳ chọn). Apply now chưa bấm thử (sẽ gửi mail tới hello@ivyusa.com).
 
