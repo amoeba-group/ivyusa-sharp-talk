@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt** (§6) |
+| Trạng thái | ✅ **Đã duyệt 2026-11-17** (`1. ok 2. a 3. b 4. a`). C (BUG-005, 4 file dùng chung) làm ngay ngày 2026-11-17 từ thông tin đã có trong GUIDE CI/CD và CONFIG §7; A và B chờ kết quả từ chủ dự án |
 | Task | [ivy-docs/TASKS.md T16](../../ivy-docs/TASKS.md) · BUG-004 · BUG-005 |
 | TC | TC-16-01..03 ([e2e/tests/16-prod-smoke.spec.ts](../../e2e/tests/16-prod-smoke.spec.ts)), chỉ đọc, `E2E_TARGET=prod` |
 | Migration | **Không có SQL** từ T12 tới nay (SQL của T11 đã áp ngày 2026-11-13) |

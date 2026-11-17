@@ -11,7 +11,7 @@
 | BUG-002 | `nest start --watch` trên Windows tự restart liên tục khi không có file nào đổi | Env | 🟠 | Workaround | T00 |
 | BUG-003 | `POST /session/ensure` bị gọi 2 lần khi mở widget lần đầu → 2 session | Widget | 🟡 | Dev only: bản build gọi 1 lần (kiểm 2026-11-12, T10). Test consent thật dùng `acceptConsent()` | T01 · T10 |
 | BUG-004 | talk.ivyusa.com trả 403 (AWS ELB) cho mọi đường dẫn từ máy dev | Infra / Access | 🔴 | Open | T16 |
-| BUG-005 | Tài liệu nói production "chưa deploy", nhưng talk.ivyusa.com đã chạy production | Docs | 🟡 | Open | T16 |
+| BUG-005 | Tài liệu nói production "chưa deploy", nhưng talk.ivyusa.com đã chạy production | Docs | 🟡 | Fixed (T16, 2026-11-17): README, SPEC, CLAUDE, CONFIG. `CHECKLIST.md` của IVY chờ kết quả xác minh server | T16 |
 | BUG-006 | `npm install` ở root viết lại `package-lock.json` (npm 10.9.2) | Tooling | 🟡 | Workaround | — |
 | BUG-007 | `npm audit`: 64 lỗ hổng (4 critical, 26 high) | Security | 🟠 | Open (cần phân loại) | — |
 | BUG-008 | `scripts/manual-screenshots.mjs` trỏ widget sang :5175 (cổng PWA) | Tooling | 🟡 | Open | — |
@@ -74,7 +74,8 @@
 
 ## BUG-005 · Tài liệu lệch thực tế deploy
 - `/SPEC.md §12` và README §8 ghi production "not yet deployed / host TBD". Trong khi đó [RPT-261030](../docs/implementation/RPT-261030-Console-UX-Refresh.md) ghi production **talk.ivyusa.com** (EC2 `talkaibotprd01`) đã deploy `ff9bb663` ngày 2026-10-30. `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` cũng chưa tick host/domain.
-- **Đề xuất:** cập nhật 3 chỗ trên ở T16 (CLAUDE.md §7: "khi giá trị vận hành đổi thì cập nhật CLAUDE/SPEC/CONFIG ngay").
+- **Fix (T16, 2026-11-17):** `README.md` §8, `SPEC.md` §12.1 / §12.2 / §14, `CLAUDE.md` §6 và `CONFIG.md` §7 ghi production đang chạy. Lưu ý khi sửa: repo có **hai** production — `sharptalk.amoeba.site` (nhánh `production`, từ 2026-09-14) và `talk.ivyusa.com` của IVY (nhánh `deploy/talk-ivyusa`); thứ chưa dùng chỉ là bộ template `docker/production/` cho host riêng. `CHECKLIST.md` tick sau khi có kết quả xác minh server.
+- **Đề xuất (gốc):** cập nhật 3 chỗ trên ở T16 (CLAUDE.md §7: "khi giá trị vận hành đổi thì cập nhật CLAUDE/SPEC/CONFIG ngay").
 
 ## BUG-006 · Root lockfile bị viết lại
 - `npm install` ở root với npm 10.9.2 xoá khoảng 675 dòng (các entry `peer`) trong `package-lock.json`. Nếu lỡ commit thì `npm ci` khi deploy dùng một cây phụ thuộc khác.

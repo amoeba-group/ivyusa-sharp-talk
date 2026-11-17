@@ -219,6 +219,8 @@ curl -s https://shoptalk.amoeba.site/api/v1/health   # {"status":"ok","db":"up"}
 
 `https://sharptalk.amoeba.site` → host nginx (Let's Encrypt) → `127.0.0.1:8081` → `docker/self-hosted` stack in `/home/shoptalk/sharptalk-production` (containers `sharptalk_*`, MySQL loopback `3318`, `RESTART_POLICY=always`). Env: server-only `docker/self-hosted/.env.self-hosted` from profile `deploy/profiles/SharpTalk-KR-Production/`; secrets in `secrets/SharpTalk-KR-Production-server.md`. Deploy from branch `production`. The dedicated-host plan below stays valid for when a host is provisioned.
 
+**IVY USA production (a separate deployment):** `https://talk.ivyusa.com` → AWS load balancer (allowlists source IPs: other networks get 403) → EC2 `talkaibotprd01`, `docker/self-hosted` stack in `/docker/apps/talktalk` (user `appops`, no sudo; access by AWS SSM Session Manager). Deploy from branch `deploy/talk-ivyusa`, never `main`: a push with green CI is pulled and deployed by `scripts/ivy-autodeploy.sh` (cron, every 2 minutes; log `~/ivy-autodeploy.log`). SQL is applied by hand before the push. Runbook: `docs/guide/GUIDE-261110-IVY-CICD.md`; profile `deploy/profiles/SharpTalk-USA-IVY/`.
+
 ### 7.1 Original bring-up notes (dedicated host)
 
 Docker templates exist (`docker/production/`: Dockerfiles api/web, compose, nginx,

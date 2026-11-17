@@ -50,7 +50,8 @@ Seed logins (must change on first login): `admin@amoeba.group` / `amb2026!@` (Sy
 **Open gaps** — the 2026-06 audit roadmap (tenant_id coverage, GDPR/DSAR, PII masking,
 bcrypt 12, DTO normalization, staging/prod Docker, unit tests) is **closed** — see SPEC §14
 for the resolution log. Remaining: e2e HTTP tests (supertest), Shopify OAuth partner
-approval, production host + `.env.production` (deploy pending). Staging runs
+approval, a dedicated host for `docker/production` (unprovisioned — production is live on
+self-hosted stacks: `sharptalk.amoeba.site`, CONFIG §7; IVY USA `talk.ivyusa.com`, §8). Staging runs
 `DB_SYNCHRONIZE=false` since 2026-07-31 (migration runbook exercised) — schema changes
 now REQUIRE manual SQL pre-apply from `sql/` on staging before deploying code.
 

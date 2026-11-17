@@ -40,7 +40,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 13 | T13 | Settings / Privacy | UI | P2 | T01 | ✅ | TC-13-01..06 |
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ✅ | TC-14-01..07 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ✅ | TC-15-01..06 |
-| 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | 🟨 | TC-16-01..03 |
+| 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | 🟦 chờ kết quả server + smoke | TC-16-01..03 |
 
 > Baseline E2E trên commit `583ce121` + tài liệu này: xem [TEST-CASES.md §0](TEST-CASES.md).
 
@@ -302,8 +302,10 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - `test:ci` chạy thêm project `mobile`, để TC-15-01 vào cổng.
 - **TC:** TC-15-01..06.
 
-### T16 · Deploy & smoke production — 🟨 chờ duyệt PLN (2026-11-16) · [PLN](../docs/plan/PLN-261116-IVY-T16-Deploy-Smoke.md)
+### T16 · Deploy & smoke production — 🟦 (PLN duyệt 2026-11-17: `1. ok 2. a 3. b 4. a`) · [PLN](../docs/plan/PLN-261116-IVY-T16-Deploy-Smoke.md)
 - **Hiện trạng (2026-11-16):** tip `0ded01c5` có `deploy-gate` xanh (run `43810433622`), không có SQL. Chưa xác minh được server và chưa chạy được `test:prod` từ máy dev (không có quyền SSM, BUG-004).
+- **Đã làm (2026-11-17):** BUG-005 — `README.md` §8, `SPEC.md` §12 / §14, `CLAUDE.md` §6, `CONFIG.md` §7 ghi đúng production đang chạy.
+- **Chờ chủ dự án:** (2a) kết quả các lệnh ở PLN §2-A trên `talkaibotprd01`; (3b) kết quả `npm run test:prod` từ mạng được phép. Có hai kết quả này thì viết RPT, tick `CHECKLIST.md`, đóng T16.
 - **Điều kiện:** máy chạy test phải nằm trong allowlist của ELB (BUG-004); người có quyền server (`secrets/`).
 - **Việc cần làm:**
   1. Áp SQL (nếu có).

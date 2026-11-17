@@ -380,7 +380,10 @@ past REQ/PLN/RPT are point-in-time records and stay as written.
 
 ### 12.1 Per-Environment Domains
 dev (local) · **staging LIVE** `https://shoptalk.amoeba.site` (host `211.110.140.172`;
-admin at `/`, widget at `/widget/`) · production (host + domain TBD). Full reference: `CONFIG.md`.
+admin at `/`, widget at `/widget/`) · **production LIVE** `https://sharptalk.amoeba.site`
+(since 2026-09-14, `CONFIG.md` §7) · **IVY USA production LIVE** `https://talk.ivyusa.com`
+(EC2 `talkaibotprd01`, branch `deploy/talk-ivyusa`, auto-deploy on green CI —
+`docs/guide/GUIDE-261110-IVY-CICD.md`). Full reference: `CONFIG.md`.
 
 ### 12.2 Docker-Based Deployment
 Dev: `docker/docker-compose.dev.yml` + `npm run db:up`. **Staging**: `docker/staging/*`
@@ -388,7 +391,9 @@ Dev: `docker/docker-compose.dev.yml` + `npm run db:up`. **Staging**: `docker/sta
 verified live; host nginx + Let's Encrypt terminate TLS → docker nginx `:8080`;
 `SEED_ON_BOOT=false` on server so in-app password changes persist. **Production**:
 `docker/production/*` templated (restart:always, no host DB/queue ports, `synchronize=false`
-+ init-sql migrations) — **not yet deployed** (needs host + `.env.production`). Runbook:
++ init-sql migrations) — these dedicated-host templates are **not in use** (no host
+provisioned). Both live productions (§12.1) run the `docker/self-hosted` stack via
+`scripts/deploy-self-hosted.sh`; IVY USA is deployed by `scripts/ivy-autodeploy.sh`. Runbook:
 `docs/guide/STAGING-DEPLOY.md`. Deploy verification (boot log / container age / new-route
 401-vs-404, don't trust exit codes) and the manual-migration runbook:
 `reference/btbz-dev-kit/04-deployment-operations.md` + skill `pre-deploy-check`.
@@ -443,7 +448,7 @@ Full evidence: `docs/report/RPT-Standards-Compliance-Audit-20260619.md`.
 - ✅ **Admin-issued temp password** (`POST /users/:id/temp-password`, USER_INVITE-gated).
 - ✅ **Staging LIVE** — deployed to `https://shoptalk.amoeba.site` (TLS via host nginx + Let's Encrypt); health check, self-bootstrap (`SEED_ON_BOOT`), verified end-to-end (admin login, widget RAG, Shopify sync on real order/customer).
 
-**Remaining — Low (optional)** — e2e HTTP tests (supertest + test DB) and broader service-level coverage; complete OAuth approval on the Shopify Partner side; production host + `.env.production` (deploy pending). **Soft-delete columns: intentionally not added** — the disposal model is hard-delete + anonymization (GDPR `redact`/DSAR `delete` + retention purge), which satisfies POL-003/privacy without an unused `deleted_at` column. Audit roadmap (High/Medium) is otherwise fully closed.
+**Remaining — Low (optional)** — e2e HTTP tests (supertest + test DB) and broader service-level coverage; complete OAuth approval on the Shopify Partner side; a dedicated production host for `docker/production` (unprovisioned — production itself is live on self-hosted stacks, §12). **Soft-delete columns: intentionally not added** — the disposal model is hard-delete + anonymization (GDPR `redact`/DSAR `delete` + retention purge), which satisfies POL-003/privacy without an unused `deleted_at` column. Audit roadmap (High/Medium) is otherwise fully closed.
 
 **Resolved (2026-07-31, from btbz-dev-kit adoption)**
 - ~~Staging `DB_SYNCHRONIZE=true` (dev-kit MUST violation)~~ → **flipped to `false` 2026-07-31** while deploying PR #39–#44: migration runbook (kit 04 §3) exercised on staging — `migration_tenant_privacy_notice.sql` + `migration_audit_context.sql` applied to `ivy_mysql_staging` before code deploy, then verified (boot OK, new route 401, zero `Unknown column` errors). Schema changes now require manual SQL pre-apply on staging, same as production.
