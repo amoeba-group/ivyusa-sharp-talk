@@ -305,7 +305,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 ### T16 · Deploy & smoke production — 🟦 (PLN duyệt 2026-11-17: `1. ok 2. a 3. b 4. a`) · [PLN](../docs/plan/PLN-261116-IVY-T16-Deploy-Smoke.md)
 - **Hiện trạng (2026-11-16):** tip `0ded01c5` có `deploy-gate` xanh (run `43810433622`), không có SQL. Chưa xác minh được server và chưa chạy được `test:prod` từ máy dev (không có quyền SSM, BUG-004).
 - **Đã làm (2026-11-17):** BUG-005 — `README.md` §8, `SPEC.md` §12 / §14, `CLAUDE.md` §6, `CONFIG.md` §7 ghi đúng production đang chạy.
-- **Chờ chủ dự án:** (2a) kết quả các lệnh ở PLN §2-A trên `talkaibotprd01`; (3b) kết quả `npm run test:prod` từ mạng được phép. Có hai kết quả này thì viết RPT, tick `CHECKLIST.md`, đóng T16.
+- **Server (2a) — ✅ 2026-11-17:** production chạy `3b0263e8` (T15 + BUG-031), deploy tự động 2026-11-16 05:24 UTC; tip `6cd25fe8` đã fast-forward. Chi tiết: [RPT](../docs/implementation/RPT-261117-IVY-T16-Deploy-Smoke.md) §2.
+- **Chờ chủ dự án:** (3b) kết quả `npm run test:prod` từ mạng được phép. Có hai kết quả này thì viết RPT, tick `CHECKLIST.md`, đóng T16.
 - **Điều kiện:** máy chạy test phải nằm trong allowlist của ELB (BUG-004); người có quyền server (`secrets/`).
 - **Việc cần làm:**
   1. Áp SQL (nếu có).
