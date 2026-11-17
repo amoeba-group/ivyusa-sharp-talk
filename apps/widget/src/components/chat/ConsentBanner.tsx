@@ -94,7 +94,7 @@ export function ConsentBanner({
       </div>
 
       {noticeOutdated && (
-        <p className="mb-1 text-xs font-medium text-warning">
+        <p className="mb-1 text-xs font-medium text-warning-ink">
           {t('chat.consent.updated')}
         </p>
       )}

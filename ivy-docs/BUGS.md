@@ -10,7 +10,7 @@
 | BUG-001 | Widget local gọi `localhost:5174/api/v1` → 404, không tạo được session | Env / Docs | 🟠 | Workaround (local) · docs Open | T00 |
 | BUG-002 | `nest start --watch` trên Windows tự restart liên tục khi không có file nào đổi | Env | 🟠 | Workaround | T00 |
 | BUG-003 | `POST /session/ensure` bị gọi 2 lần khi mở widget lần đầu → 2 session | Widget | 🟡 | Dev only: bản build gọi 1 lần (kiểm 2026-11-12, T10). Test consent thật dùng `acceptConsent()` | T01 · T10 |
-| BUG-004 | talk.ivyusa.com trả 403 (AWS ELB) cho curl / Node; trình duyệt cùng máy vào được. `npm run test:prod` dừng ở bước kiểm tra đầu | Infra / Access · E2E harness | 🟠 | Open: nguyên nhân đã rõ hơn (2026-11-17), bước kiểm tra đầu của `test:prod` chưa sửa | T16 |
+| BUG-004 | talk.ivyusa.com trả 403 (AWS ELB) cho curl / Node; trình duyệt cùng máy vào được. `npm run test:prod` dừng ở bước kiểm tra đầu | Infra / Access · E2E harness | 🟠 | Fixed harness (2026-11-17): `test:prod` không còn bước kiểm tra bằng Node, chạy nguyên bản 3/3. Việc production trả 403 cho client không phải trình duyệt: giữ nguyên, chưa hỏi quản trị AWS | T16 |
 | BUG-005 | Tài liệu nói production "chưa deploy", nhưng talk.ivyusa.com đã chạy production | Docs | 🟡 | Fixed (T16, 2026-11-17): README, SPEC, CLAUDE, CONFIG. `CHECKLIST.md` của IVY chờ kết quả xác minh server | T16 |
 | BUG-006 | `npm install` ở root viết lại `package-lock.json` (npm 10.9.2) | Tooling | 🟡 | Workaround | — |
 | BUG-007 | `npm audit`: 64 lỗ hổng (4 critical, 26 high) | Security | 🟠 | Open (cần phân loại) | — |
@@ -36,7 +36,7 @@
 | BUG-033 | Đồng bộ Shopify **dừng ở 500 đơn** rồi dời con trỏ qua phần chưa đọc: production có 500 / 181.188 đơn, bấm Sync now lại không thêm. Khách có hơn 100 đơn nhận 100 đơn cũ nhất khi đăng nhập | API | 🔴 | Fixed code (2026-11-17, [FIX](../docs/bug-fix/FIX-261117-Shopify-Sync-Stops-At-500.md)); production cần bấm Re-sync recent orders sau deploy | — |
 | BUG-032 | Popup trong console (ví dụ Tenant Settings → Platforms → Shopify connection): lớp nền mờ **hở 32px ở mép trên**, thấy một dải trang không bị làm mờ | Console | 🟡 | Fixed (2026-11-17) | — |
 | BUG-031 | Ô nhập chat không co lại được: khi font mặc định rộng (runner Linux của CI), nút **Send** bị đẩy ra ngoài mép panel 390px → TC-15-06 ×6 đỏ trên CI, xanh ở local | Widget | 🟠 | Fixed (2026-11-16) | T15 |
-| BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Open | T15 |
+| BUG-021 | Chữ cam `#FF6900` trên nền trắng chỉ đạt 2.89:1 (cần 4.5:1): câu "Your order is on the way!" ở thẻ giao hàng (T03). T06 đã dùng `warning-ink #C94F00` (4.56:1) cho "Write Review" | Widget / a11y | 🟡 | Fixed (2026-11-17): câu này và dòng "notice updated" của banner đồng ý dùng `warning-ink`; TC-03-03 kiểm màu | T15 |
 | BUG-020 | Test T04 khớp chữ ở **tab bị ẩn**: Order Detail vẫn gắn trong tab Notifications khi đã sang Chat (TC-04-04), câu AI disclosure trong tab Chat có "the United States" (TC-04-03) → strict mode violation | E2E harness | 🟡 | Fixed (T04) | T04 |
 | BUG-019 | TC-02-04 đọc danh sách thời gian bằng `allInnerTexts()` trước khi dòng hiện → "Expected > 0, Received 0" khi chạy toàn bộ desktop; TC-03-03/04 có cùng kiểu đọc `data-state` | E2E harness | 🟡 | Fixed (T07) | T02 · T03 · T07 |
 | BUG-013 | Repo **public**: cài đặt PR từ fork chỉ duyệt người đóng góp lần đầu; `env/backend/.env.development` (secret dev) và IP/SSH user staging nằm trong repo công khai | Security | 🟠 | Need info | T00-e |
@@ -79,7 +79,8 @@
   - Playwright Chromium (project `prod`, cấu hình sẵn của repo): TC-16-01..03 đều 200 / xanh.
   - Vậy load balancer (hoặc WAF trước nó) từ chối **client không phải trình duyệt**. Thuộc tính nào bị xét (User-Agent hay thứ khác) thì chưa biết; có thêm luật theo IP hay không cũng chưa biết.
 - **Hệ quả:** `e2e/global-setup.ts` kiểm tra bằng `fetch` của Node nên luôn nhận 403, và `npm run test:prod` dừng trước khi chạy test nào — trên mọi máy, không riêng máy dev. Thông báo lỗi của nó ("run from an allowlisted network") chỉ sai hướng.
-- **Đề xuất (chưa làm, cần chủ dự án quyết):** với `E2E_TARGET=prod`, bỏ bước kiểm tra bằng Node (TC-16-01 đã kiểm health bằng trình duyệt), và sửa câu gợi ý. Nên hỏi người quản trị AWS của IVY luật chặn này là chủ ý hay không trước khi đổi.
+- **Đã làm (2026-11-17, chủ dự án đồng ý):** `e2e/global-setup.ts` bỏ qua bước kiểm tra bằng Node khi `E2E_TARGET=prod`; câu gợi ý sai đã bỏ. `npm run test:prod` chạy nguyên bản trên máy dev: **3 passed**.
+- **Đề xuất gốc:** với `E2E_TARGET=prod`, bỏ bước kiểm tra bằng Node (TC-16-01 đã kiểm health bằng trình duyệt), và sửa câu gợi ý. Nên hỏi người quản trị AWS của IVY luật chặn này là chủ ý hay không trước khi đổi.
 
 ## BUG-005 · Tài liệu lệch thực tế deploy
 - `/SPEC.md §12` và README §8 ghi production "not yet deployed / host TBD". Trong khi đó [RPT-261030](../docs/implementation/RPT-261030-Console-UX-Refresh.md) ghi production **talk.ivyusa.com** (EC2 `talkaibotprd01`) đã deploy `ff9bb663` ngày 2026-10-30. `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` cũng chưa tick host/domain.

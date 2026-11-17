@@ -2,8 +2,8 @@ import { test, expect } from '../fixtures/widget';
 
 /**
  * T16 — production smoke on talk.ivyusa.com. Read-only: never sends chat messages or
- * changes consent on production. Runs only with E2E_TARGET=prod (`npm run test:prod`),
- * from a network the AWS ELB allowlists (BUG-004).
+ * changes consent on production. Runs only with E2E_TARGET=prod (`npm run test:prod`).
+ * Production answers 403 to non-browser clients (BUG-004); these tests run in Chromium.
  */
 test.use({ mockOptions: false });
 

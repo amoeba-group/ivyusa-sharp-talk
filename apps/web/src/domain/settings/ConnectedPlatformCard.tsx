@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Download, ExternalLink, KeyRound, RefreshCw, Settings2, Store, Building2, Zap } from 'lucide-react';
+import { Download, ExternalLink, History, KeyRound, RefreshCw, Settings2, Store, Building2, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
@@ -10,6 +10,7 @@ import {
   useStorefront,
   useSyncCafe24Orders,
   useSyncCafe24Products,
+  useResyncShopify,
   useSyncShopify,
   useTestCafe24,
   useTestShopify,
@@ -128,6 +129,7 @@ export function ShopifyConnectedCard({
   const { t } = useTranslation('settings');
   const test = useTestShopify();
   const sync = useSyncShopify();
+  const resync = useResyncShopify();
   return (
     <Shell
       icon={<Store className="h-5 w-5" />}
@@ -151,6 +153,18 @@ export function ShopifyConnectedCard({
           <Button variant="secondary" size="sm" disabled={sync.isPending} onClick={() => sync.mutate()}>
             <RefreshCw className="mr-1.5 h-4 w-4" />
             {sync.isPending ? t('shopify.syncing') : t('shopify.syncNow')}
+          </Button>
+          {/* Also here, not only in the settings popup: the owner looked for it
+              on the card and pressed "Sync now" instead (2026-11-17). */}
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={resync.isPending || sync.isPending}
+            title={t('shopify.syncHint')}
+            onClick={() => resync.mutate()}
+          >
+            <History className="mr-1.5 h-4 w-4" />
+            {resync.isPending ? t('shopify.resyncing') : t('shopify.resyncRecent')}
           </Button>
         </>
       }

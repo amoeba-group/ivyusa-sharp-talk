@@ -34,6 +34,8 @@ test.describe('T03 · Notifications — Delivery', () => {
     // Polled: the pill can show from the order before tracking arrives (BUG-019).
     await expect.poll(() => stepStates(c)).toEqual(['done', 'done', 'current', 'todo']);
     await expect(c).toContainText('Your order is on the way!');
+    // Orange that reads on white: #C94F00 is 4.56:1, the design's #FF6900 only 2.89:1 (BUG-021).
+    await expect(c.getByText('Your order is on the way!')).toHaveCSS('color', 'rgb(201, 79, 0)');
   });
 
   test('TC-03-04 delivered card: all steps done, "Your order is Delivered !" @T03 @design', async ({ widget }) => {

@@ -85,7 +85,9 @@ function ShipmentCard({
       {tracking && (
         <p
           className={`mt-3 text-center text-sm font-bold ${
-            delivered ? 'text-gray-900' : 'text-warning'
+            // warning-ink, not warning: the design's orange #FF6900 is 2.89:1 on
+            // white; the ink shade reads at 4.56:1 (BUG-021, as T06 did for Write Review).
+            delivered ? 'text-gray-900' : 'text-warning-ink'
           }`}
         >
           {delivered ? t('orders.shipmentDelivered') : t('orders.shipmentInTransit')}

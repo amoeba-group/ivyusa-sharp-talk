@@ -7,7 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Targets (E2E_TARGET):
  *   local (default) — widget dev server :5174 + API :3000 (`npm run dev` at repo root)
- *   prod            — https://talk.ivyusa.com (smoke only; the ELB allowlists source IPs)
+ *   prod            — https://talk.ivyusa.com (smoke only; it serves browsers and answers 403
+ *                     to other clients, so there is no Node pre-flight — ivy-docs BUG-004)
  */
 const target = process.env.E2E_TARGET ?? 'local';
 
