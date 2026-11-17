@@ -52,6 +52,8 @@ Kế hoạch: [PLN-261117](../plan/PLN-261117-Orders-Search-And-Sync-Backfill.md
 | SQL | Không có |
 | Commit | `ecc9b416` (2026-11-17) |
 | CI | ✅ run `44049635169`: verify (gồm toàn bộ test trên Linux) · e2e gate · deploy-gate |
-| Server `talkaibotprd01` | ⏳ (build lại `api` và `web`) |
-| Re-sync trên production | ⏳ chủ dự án |
+| Server `talkaibotprd01` | ✅ bản mới chạy trên production (2026-11-17: ô tìm ở màn Orders và nút Re-sync có trên console; `GET /admin/orders?q=` trả đúng 1 kết quả cho một mã đơn thật) |
+| Re-sync trên production | ✅ 2026-11-17, chủ dự án bấm; theo dõi chỉ-đọc từ máy dev. **530 → 44.289 đơn.** Xong lúc 10:37 UTC: "Synced 888 order(s) updated since 2026-11-16T23:21:38Z". Chạy nền từng lô 1.000 đơn, khoảng 1.000 đơn / 40–60 giây, không bị ngắt vì hạn mức. Đơn về có ngày đặt thật |
+| Ghi chú vận hành | Lượt Re-sync đầu tiên (bắt đầu trước 09:51 UTC) dừng ở khoảng 31.334 đơn. Thời điểm trùng với lần deploy `41f20178` dựng lại container API — lượt chạy nền nằm trong bộ nhớ của tiến trình nên mất khi API khởi động lại (suy luận từ thời điểm, chưa xem log server). Con trỏ đã lưu nên **Sync now** đọc tiếp được; lần này chủ dự án bấm Re-sync lại từ đầu. **Không deploy thay đổi API khi một lượt đồng bộ lớn đang chạy.** |
+| Chưa kiểm | So số 44.289 với số đơn 60 ngày trong Shopify admin · webhook đơn mới trên production · Look up on Shopify với đơn thật |
 | Quyền `read_all_orders` | ⏳ chủ dự án xin Shopify |
