@@ -17,14 +17,28 @@ Chưa có quyền này thì:
 
 ## 2. Cách xin
 
-Quyền này phải **xin Shopify** rồi mới thêm được vào app; không tự bật trong console SharpTalk.
+Theo tài liệu Shopify (đọc ngày 2026-11-17: [Access scopes › Orders permissions](https://shopify.dev/docs/api/usage/access-scopes#orders-permissions), [Manage access scopes](https://shopify.dev/docs/apps/build/authentication-authorization/manage-access-scopes)). `read_all_orders` không tự cho quyền gì: nó phải đi **cùng** `read_orders` và chỉ mở rộng phạm vi thời gian.
 
-1. Mở trang hướng dẫn chính thức: <https://shopify.dev/docs/api/usage/access-scopes#orders-permissions> và làm theo mục *Orders permissions* cho đúng loại app đang dùng.
-2. Khi Shopify hỏi lý do, nêu đúng việc dùng: *hiển thị cho khách hàng lịch sử đơn của chính họ trong widget hỗ trợ, và để nhân viên hỗ trợ tra một đơn cũ khi khách hỏi*. Shopify ghi rõ họ hạn chế quyền với app không có lý do chính đáng.
-3. Sau khi được chấp thuận: thêm `read_all_orders` vào danh sách quyền của app (bên cạnh `read_orders`, `read_customers`, `read_fulfillments`, `read_products`), rồi **cài lại / cấp quyền lại** app cho cửa hàng để token nhận quyền mới.
-4. Nếu token thay đổi sau khi cấp lại: dán token mới vào console → Tenant Settings → Platforms → Shopify → **Save** → **Test connection**.
+Cách làm tuỳ app được tạo ở đâu:
 
-Mình chưa xác minh được từng nút bấm ở bước 1 và 3 cho loại app IVY đang dùng (app tạo trong trang admin của cửa hàng). Nếu màn hình khác với hướng dẫn của Shopify, chụp lại để cùng xem.
+**A — App tạo trong Dev Dashboard (`dev.shopify.com/dashboard`) dưới tổ chức của chính cửa hàng (merchant organization): không cần Shopify duyệt.**
+1. Dev Dashboard → **Apps** → mở app.
+2. Thêm `read_all_orders` vào danh sách quyền (access scopes) của app, bên cạnh `read_orders`.
+3. Phát hành phiên bản mới của app (Release / deploy).
+4. Mở app trong trang admin của cửa hàng và chấp thuận quyền mới khi được hỏi.
+
+**B — App tạo dưới tổ chức Partner: phải xin Shopify trước.**
+1. Dev Dashboard → **Apps** → mở app → **Settings** → **Access requests**.
+2. Cạnh **Read all orders**, bấm **Request access**.
+3. Mô tả app và lý do cần quyền (xem câu gợi ý bên dưới) → **Request access**.
+4. Sau khi được duyệt: thêm `read_all_orders` vào quyền của app và phát hành phiên bản mới. Thêm trước khi được duyệt thì bước phát hành sẽ báo lỗi.
+5. Chủ cửa hàng chấp thuận quyền mới khi mở app.
+
+**C — App tạo ngay trong trang admin của cửa hàng** (Settings → Apps and sales channels → Develop apps): tài liệu trên không nêu cách xin `read_all_orders` cho loại này, chỉ dẫn sang trang riêng về đổi quyền của app loại cũ (mình chưa đọc trang đó). Thử: mở app → **Configuration** → *Admin API integration* → **Edit** → tìm `read_all_orders` trong danh sách. Có thì tick, **Save**, rồi cài lại app nếu được yêu cầu. Không có thì cần tạo app theo cách A.
+
+Câu gợi ý cho lý do: *"The app shows shoppers their own order history inside our support chat widget and lets support agents look up an older order when a customer asks about it."*
+
+Sau khi quyền có hiệu lực, nếu token thay đổi: dán token mới vào console → Tenant Settings → Platforms → Shopify → **Save** → **Test connection**.
 
 ## 3. Kiểm tra sau khi có quyền
 
