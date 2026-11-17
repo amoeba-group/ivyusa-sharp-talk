@@ -49,6 +49,28 @@ Chạy trên máy dev ngày 2026-11-17 (khoảng 04:40 UTC), theo yêu cầu c�
 - 3 test được chạy bằng `playwright test` với project `prod` có sẵn (Chromium), qua một file cấu hình tạm chỉ bỏ `globalSetup`. File tạm đã xoá, không commit. Nội dung test không đổi; test chỉ đọc.
 - Việc sửa `global-setup.ts` cho `test:prod` chạy được nguyên bản: chưa làm, ghi ở BUG-004.
 
+## 3b. Cấu hình tenant `ivyusa` trên production (2026-11-17)
+
+Nhập qua console `talk.ivyusa.com`, trong phiên đăng nhập Master của chủ dự án. Trước khi sửa đã lưu bản cấu hình cũ (các response GET của console) ở máy dev: `D:amoeba_localdevivy-prod-backup-20261117` (ngoài repo).
+
+| Mục | Giá trị | Ai nhập | Kiểm lại |
+|---|---|---|---|
+| Custom widget "Ivyusa Talk": rộng 380 × 600, bo `lg`, chip trắng (`card`), dòng AI dưới ô nhập | T01, T08 | Chủ dự án | `GET /tenants/widget-theme` |
+| Lời chào + placeholder, 6 ngôn ngữ | GUIDE Chat-Home §1 | Chủ dự án | `GET /tenants/widget-settings` |
+| Tab: Notifications · Chat (bỏ Orders) | T01 | Claude (console) | server trả `tabs: [notifications, chat]` |
+| Tiêu đề chào theo tên `Hi, {firstName}`…, 6 ngôn ngữ | PLN T01 §5 | Claude (console) | server trả đủ 6 |
+| 8 nút trả lời nhanh theo thứ tự thiết kế, nhãn 6 ngôn ngữ; My Orders tắt | GUIDE Chat-Home §3, Affiliate §1 | Claude (console) | `GET /ai-config`: 9 nút, nút 9 `enabled: false` |
+| 11 danh mục Product Help | GUIDE Product-Help §1 | Claude (console) | `GET /ai-config`: 11 mục |
+| `cancel_order`, `return_exchange` (+ 2 chip), `affiliate` (+ câu của khách): 6 ngôn ngữ, chép nguyên văn từ GUIDE | GUIDE Product-Help §2–3, Affiliate §2 | Claude (console) | `GET /ai-config` → `scenarioOverrides` có 3 khoá, đủ 6 ngôn ngữ |
+
+**Nhìn trên widget production (chỉ xem, không bấm Accept, không gửi tin):** EN và KO đều 2 tab, panel 380×600, 8 chip có emoji đúng thứ tự, placeholder "Ask Anything" / "무엇이든 물어보세요", dòng AI dưới ô nhập, lời chào IVY Beauty.
+
+**Chưa làm / chưa kiểm:**
+- Chưa bấm thử các luồng trên production (Product inquiry → Popular products → Nails; Exchange / Return; Affiliate → Apply now; End → CSAT): các bước này cần Accept consent và gửi tin nhắn thật.
+- `affiliate_details` (Learn more) giữ câu mặc định (GUIDE §3: tuỳ chọn).
+- **KB production còn các tài liệu chính sách trùng tên bộ demo của seed, đang bật:** #2 "Returns & Exchanges", #6 "CS Policy — Returns (US Cosmetics Standard)", #7 "CS Policy — Exchanges", #9, #10, #4 và #8 (Order Cancellation). Trong seed, các tài liệu này ghi 7 ngày / 30 ngày "gently used" / huỷ trước khi chuẩn bị hàng — trái chính sách thật của IVY (10 ngày, chưa mở; huỷ qua email). Nội dung trên production chưa đọc được (danh sách không trả nội dung). Chưa tắt: đây là quyết định nội dung của chủ dự án (GUIDE Product-Help §4).
+- **AI engine của tenant là Built-in Stub** (`AI off (stub)`): câu hỏi gõ tự do chỉ nhận câu dự phòng. Engine Anthropic ở trạng thái "No key · Operator approval required".
+
 ## 4. Trạng thái deploy
 
 | Mục | Trạng thái |
@@ -59,4 +81,5 @@ Chạy trên máy dev ngày 2026-11-17 (khoảng 04:40 UTC), theo yêu cầu c�
 | TC-16-01..03 | ✅ 3/3 (2026-11-17, xem §3) |
 | `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` | Tick 3 mục đã có bằng chứng: host, domain, deploy + health. Các mục khác chưa kiểm nên để trống |
 | BUG-004 | Open: `npm run test:prod` nguyên bản vẫn dừng ở bước kiểm tra đầu |
-| Cấu hình production (T01, T02, T08, T12), quyền PCD (T04) | Việc của chủ dự án, ngoài T16 |
+| Cấu hình production (T01, T02, T08, T10, T12) | ✅ nhập 2026-11-17 (§3b); chưa bấm thử luồng |
+| Quyền PCD Address / Phone (T04) | ⏳ chủ dự án |
