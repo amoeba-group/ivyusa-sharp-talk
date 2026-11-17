@@ -104,7 +104,7 @@
     "aiSenderName": "AI送信者名",
     "aiSenderNameHint": "カスタムウィジェットがアバター行を使うときAIメッセージに表示されます。空なら表示名を使います。",
     "agentSenderName": "担当者送信者名",
-    "agentSenderNameHint": "人間の担当者の汎用ラベル（例:「Go2Joyサポート」）。空なら担当者本人の名前を使います。",
+    "agentSenderNameHint": "人間の担当者の汎用ラベル（例:「サポートチーム」）。空なら担当者本人の名前を使います。",
     "launcherTeaser": "ランチャーのあいさつ",
     "launcherTeaserHint": "ランチャー横の吹き出しの文言です（テーマカード → あいさつの吹き出し）。{shop} は表示名に置き換わります。空なら既定文言。",
     "headerGreeting": "ヘッダーのあいさつ（ログインユーザー）",
@@ -224,9 +224,9 @@
       "subdomain": "your-company（your-company.gorgias.com の部分）",
       "email": "agent@example.com",
       "app_key": "yotpo app key",
-      "platform_name": "Go2Joy",
+      "platform_name": "マイストア",
       "description": "例: ホテルパートナー管理画面（自社開発）",
-      "base_url": "https://partner.go2joy.vn/"
+      "base_url": "https://example.com/"
     },
     "cafe24": {
       "title": "Cafe24",

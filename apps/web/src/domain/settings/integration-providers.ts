@@ -1,3 +1,5 @@
+import { GO2JOY_ENABLED } from '@/lib/deployment';
+
 /**
  * Web-side mirror of the e-commerce provider credential schema.
  *
@@ -39,7 +41,9 @@ export const ECOMMERCE_PROVIDERS: EcommerceProvider[] = [
 export const MARKETING_PROVIDERS: MarketingProvider[] = ['klaviyo', 'yotpo'];
 export const HELPDESK_PROVIDERS: HelpdeskProvider[] = ['gorgias'];
 export const SELF_PLATFORM_PROVIDER: SelfPlatformProvider = 'self';
-export const PARTNER_PROVIDERS: PartnerProvider[] = ['go2joy_partner'];
+// Not offered on a deployment that has Go2Joy switched off (lib/deployment.ts):
+// it drops out of the "Add a platform" row and of the connected cards alike.
+export const PARTNER_PROVIDERS: PartnerProvider[] = GO2JOY_ENABLED ? ['go2joy_partner'] : [];
 /** Anything the connected/add layout can show: Shopify or a generic-flow provider. */
 export type PlatformChoice = 'shopify' | GenericIntegrationProvider;
 /** The platforms tab's "Add a platform" row, in display order (PLN-261019 D3). */

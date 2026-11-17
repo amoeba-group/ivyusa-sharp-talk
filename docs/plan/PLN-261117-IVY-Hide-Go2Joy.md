@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | 🟨 **Chờ duyệt** (§6) |
+| Trạng thái | ✅ **Đã duyệt 2026-11-17** (`1. ok 2. a 3. a`) và đã làm — [RPT-261117](../implementation/RPT-261117-IVY-Hide-Go2Joy.md) |
 | Yêu cầu | Chủ dự án, 2026-11-17: "hãy ẩn hết những section có Go2joy trong dự án này" |
 | Phạm vi | `apps/web` (console). Không đụng API, widget, database |
 | Migration | Không có SQL |

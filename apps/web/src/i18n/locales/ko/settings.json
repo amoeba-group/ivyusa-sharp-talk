@@ -104,7 +104,7 @@
     "aiSenderName": "AI 발신자명",
     "aiSenderNameHint": "커스텀 위젯이 아바타 행을 쓸 때 AI 메시지에 표시됩니다. 비우면 표시명을 씁니다.",
     "agentSenderName": "상담원 발신자명",
-    "agentSenderNameHint": "사람 상담원의 일반 호칭(예: \"Go2Joy 고객지원\")입니다. 비우면 상담원 실명을 씁니다.",
+    "agentSenderNameHint": "사람 상담원의 일반 호칭(예: \"고객지원팀\")입니다. 비우면 상담원 실명을 씁니다.",
     "launcherTeaser": "런처 인사 말풍선",
     "launcherTeaserHint": "런처 옆 인사 말풍선 문구입니다(테마 카드 → 인사 말풍선). {shop}은 표시명으로 바뀝니다. 비우면 기본 문구를 씁니다.",
     "headerGreeting": "로그인 사용자 인사말(헤더)",
@@ -224,9 +224,9 @@
       "subdomain": "your-company (your-company.gorgias.com의 앞부분)",
       "email": "agent@example.com",
       "app_key": "yotpo app key",
-      "platform_name": "Go2Joy",
+      "platform_name": "내 스토어",
       "description": "예: 호텔 파트너 어드민(자체 개발)",
-      "base_url": "https://partner.go2joy.vn/"
+      "base_url": "https://example.com/"
     },
     "cafe24": {
       "title": "Cafe24",

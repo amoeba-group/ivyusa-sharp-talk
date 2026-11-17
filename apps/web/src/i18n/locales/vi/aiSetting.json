@@ -447,7 +447,7 @@
     "bulk": "Nhập hàng loạt",
     "bulkTitle": "Nhập câu hỏi hàng loạt",
     "bulkSubmit": "Nhập",
-    "bulkPlaceholder": "câu hỏi<TAB>dữ kiện1|dữ kiện2<TAB>từ cấm (tùy chọn)\nVD: Tôi có thể thanh toán cho Go2Joy như nào?\tTechcombank|19133261136016",
+    "bulkPlaceholder": "câu hỏi<TAB>dữ kiện1|dữ kiện2<TAB>từ cấm (tùy chọn)\nVD: Cửa hàng giao hàng qua hãng nào?\tUSPS|UPS",
     "bulkHint": "{{count}} dòng · tối đa {{max}} câu. Câu hỏi trùng nội dung chỉ được cập nhật dữ kiện.",
     "language": "Ngôn ngữ",
     "editFacts": "Sửa dữ kiện mong đợi",

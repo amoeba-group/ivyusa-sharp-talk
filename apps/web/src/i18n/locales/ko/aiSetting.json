@@ -447,7 +447,7 @@
     "bulk": "일괄 등록",
     "bulkTitle": "질문 일괄 등록",
     "bulkSubmit": "등록",
-    "bulkPlaceholder": "질문<TAB>기대 사실1|기대 사실2<TAB>금지어(선택)\n예) Tôi có thể thanh toán cho Go2Joy như nào?\tTechcombank|19133261136016",
+    "bulkPlaceholder": "질문<TAB>기대 사실1|기대 사실2<TAB>금지어(선택)\n예) 어떤 택배사로 배송하나요?\tUSPS|UPS",
     "bulkHint": "{{count}}줄 · 최대 {{max}}문항. 같은 문구의 질문이 있으면 기대 사실만 갱신합니다.",
     "language": "언어",
     "editFacts": "기대 사실 편집",

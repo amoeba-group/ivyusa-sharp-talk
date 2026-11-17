@@ -447,7 +447,7 @@
     "bulk": "Bulk add",
     "bulkTitle": "Bulk add questions",
     "bulkSubmit": "Add",
-    "bulkPlaceholder": "question<TAB>fact1|fact2<TAB>forbidden (optional)\ne.g. How do I pay Go2Joy?\tTechcombank|19133261136016",
+    "bulkPlaceholder": "question<TAB>fact1|fact2<TAB>forbidden (optional)\ne.g. Which carriers do you ship with?\tUSPS|UPS",
     "bulkHint": "{{count}} lines · up to {{max}} questions. A question with the same text only gets its facts updated.",
     "language": "Language",
     "editFacts": "Edit expected facts",

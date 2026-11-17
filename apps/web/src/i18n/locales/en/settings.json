@@ -104,7 +104,7 @@
     "aiSenderName": "AI sender name",
     "aiSenderNameHint": "Shown on AI messages when the custom widget uses avatar rows. Empty = display name.",
     "agentSenderName": "Agent sender name",
-    "agentSenderNameHint": "A generic label for human agents (e.g. \"Go2Joy Support\"). Empty = the agent's own name.",
+    "agentSenderNameHint": "A generic label for human agents (e.g. \"Support team\"). Empty = the agent's own name.",
     "launcherTeaser": "Launcher greeting",
     "launcherTeaserHint": "The greeting pill beside the launcher (theme card → Greeting pill). {shop} inserts the display name. Empty = default.",
     "headerGreeting": "Signed-in greeting (header)",
@@ -224,9 +224,9 @@
       "subdomain": "your-company (from your-company.gorgias.com)",
       "email": "agent@example.com",
       "app_key": "yotpo app key",
-      "platform_name": "Go2Joy",
+      "platform_name": "My store",
       "description": "e.g. Hotel partner admin (in-house)",
-      "base_url": "https://partner.go2joy.vn/"
+      "base_url": "https://example.com/"
     },
     "cafe24": {
       "title": "Cafe24",

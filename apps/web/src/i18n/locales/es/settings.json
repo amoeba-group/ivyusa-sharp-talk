@@ -104,7 +104,7 @@
     "aiSenderName": "Nombre del remitente IA",
     "aiSenderNameHint": "Se muestra en los mensajes de IA cuando el widget personalizado usa filas con avatar. Vacío = nombre para mostrar.",
     "agentSenderName": "Nombre del remitente agente",
-    "agentSenderNameHint": "Etiqueta genérica para agentes humanos (p. ej. \"Soporte Go2Joy\"). Vacío = el nombre del agente.",
+    "agentSenderNameHint": "Etiqueta genérica para agentes humanos (p. ej. \"Equipo de soporte\"). Vacío = el nombre del agente.",
     "launcherTeaser": "Saludo del lanzador",
     "launcherTeaserHint": "Texto de la burbuja junto al lanzador (tarjeta de tema → Burbuja de saludo). {shop} inserta el nombre para mostrar. Vacío = predeterminado.",
     "headerGreeting": "Saludo en la cabecera (usuario reconocido)",
@@ -224,9 +224,9 @@
       "subdomain": "su-empresa (de su-empresa.gorgias.com)",
       "email": "agente@ejemplo.com",
       "app_key": "yotpo app key",
-      "platform_name": "Go2Joy",
+      "platform_name": "Mi tienda",
       "description": "p. ej. Panel de socios hoteleros (propio)",
-      "base_url": "https://partner.go2joy.vn/"
+      "base_url": "https://example.com/"
     },
     "cafe24": {
       "title": "Cafe24",
