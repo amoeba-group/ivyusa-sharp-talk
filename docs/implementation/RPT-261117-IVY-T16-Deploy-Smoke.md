@@ -86,6 +86,8 @@ Nhập qua console `talk.ivyusa.com`, trong phiên đăng nhập Master của ch
 - **AI engine là Built-in Stub** (`AI off (stub)`): câu hỏi gõ tự do chỉ nhận câu dự phòng. Engine Anthropic của nền tảng: `hasApiKey: false`, `selectable: false`. Cần System Admin cấp key và mở cho tenant, hoặc tenant tự thêm engine bằng key riêng (Tenant Settings → Basic → Add engine).
 - `affiliate_details` (Learn more) giữ câu mặc định (GUIDE §3: tuỳ chọn). Apply now chưa bấm thử (sẽ gửi mail tới hello@ivyusa.com).
 
+**Menu console của tenant (2026-11-17, theo yêu cầu chủ dự án):** ở console quản trị nền tảng (Tenants → ivyusa → Menus, tài khoản System Admin do chủ dự án đăng nhập), đặt **Withhold** cho 3 menu: Issue board (`issues`), Customer Journey (`journey`), Work log (`work_log`). Server trả `provided: false` cho 3 menu, 20 / 23 còn cấp. Ẩn với mọi người trong tenant, kể cả Master. Hiện lại: cùng màn đó, đổi về **Follow plan**. Trạng thái trước khi sửa (cả 23 menu `Follow plan`) lưu ở `D:amoeba_localdevivy-prod-backup-20261117admin_tenant_menus_before.json`. Chưa đăng nhập lại bằng Master để nhìn thanh menu.
+
 ## 4. Trạng thái deploy
 
 | Mục | Trạng thái |
