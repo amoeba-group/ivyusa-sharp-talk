@@ -6,7 +6,7 @@ import { CONSENT_STATE, CONVERSATION_STATUS, CUSTOMER_TYPE, SESSION_IDENTITY, ca
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Session } from '../session/entity/session.entity';
-import { CONSENT_NOTICE_VERSION, sessionCacheKey } from '../session/session.service';
+import { CONSENT_NOTICE_VERSION, SessionService, sessionCacheKey } from '../session/session.service';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -104,6 +104,8 @@ export class EmbedService {
     @Optional() private readonly platformLinks?: CustomerPlatformLinkService,
     // A sign-in that files earlier conversations may join the person's room (PLN-261027 Merge-Add D1).
     @Optional() private readonly mergedRooms?: MergedRoomService,
+    // A platform customer continues their recent session (BUG-037).
+    @Optional() private readonly sessions?: SessionService,
   ) {}
 
   /** Platform prefix → resolver. The platform's own module registers it (no import cycle). */
@@ -225,9 +227,32 @@ export class EmbedService {
       throw new BusinessException(ERROR_CODE.EMBED_IDENTITY_INVALID, HttpStatus.UNAUTHORIZED);
     }
 
-    const customer =
-      (await this.resolvePlatformCustomer(Number(session.tenantId), input)) ??
-      (await this.upsertCustomer(Number(session.tenantId), input));
+    const platformCustomer = await this.resolvePlatformCustomer(Number(session.tenantId), input);
+    if (platformCustomer && this.sessions) {
+      // A storefront page load opens a NEW session and then identifies. Binding
+      // that one would start the shopper on an empty thread on every page —
+      // their chat stayed behind on the previous page's session (BUG-037). Hand
+      // back the customer's recent session instead, as the app proxy does; the
+      // widget adopts the token in the answer. The page's own session is left
+      // as it was: seconds old, and nothing was said on it.
+      const resumed =
+        session.customerId != null &&
+        Number(session.customerId) === Number(platformCustomer.id) &&
+        session.identityLevel === SESSION_IDENTITY.VERIFIED
+          ? session
+          : await this.sessions.findOrCreateForCustomer(
+              Number(session.tenantId),
+              Number(platformCustomer.id),
+              session.language ? String(session.language).toLowerCase() : undefined,
+            );
+      await this.redis.del(sessionCacheKey(resumed.sessionToken));
+      this.logger.log(
+        `identify ok (tenant ${session.tenantId}, customer ${platformCustomer.id}, platform id, ` +
+          `${resumed.sessionToken === session.sessionToken ? 'same session' : 'resumed the customer session'})`,
+      );
+      return resumed;
+    }
+    const customer = platformCustomer ?? (await this.upsertCustomer(Number(session.tenantId), input));
     session.customerId = Number(customer.id);
     session.identityLevel = SESSION_IDENTITY.VERIFIED;
     // Replaced, never merged: a re-identify for a different hotel must not keep

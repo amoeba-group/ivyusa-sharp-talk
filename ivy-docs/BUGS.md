@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-037 | Khách đã đăng nhập (nhận diện bằng chữ ký từ theme) **mất đoạn chat mỗi lần chuyển trang** | API · Widget | 🔴 | Fixed code (2026-11-18); chờ chủ dự án thử lại | — |
 | BUG-036 | iPhone: chạm vào ô nhập của widget thì **cả trang bị phóng to** và không thu lại (ô nhập chữ ~11px, iOS phóng to khi dưới 16px) | Widget | 🔴 | Fixed code (2026-11-18, [FIX](../docs/bug-fix/FIX-261118-Widget-iOS-Zoom-On-Focus.md)); chờ chủ dự án thử lại trên máy thật | T15 |
 | BUG-035 | Đơn đã **Delivered bị kéo về In Transit** ở lượt đồng bộ kế tiếp: `upsertOrder` gán lại trạng thái theo `fulfillment_status` chung của đơn mỗi lần chạy | API | 🟠 | Fixed code (2026-11-18, [RPT](../docs/implementation/RPT-261118-Shopify-Sync-Fulfillment-Delivery.md)) | — |
 | BUG-034 | **Webhook Shopify không tới được production** (load balancer chặn client không phải trình duyệt, như BUG-004) → không đơn nào Delivered, không có mã vận đơn, không có thông báo giao hàng, không đơn nào viết được review | Infra · API | 🔴 | Workaround code (2026-11-18): lịch đồng bộ tự đọc thông tin giao hàng. Load balancer giữ nguyên. Production cần Re-sync sau deploy | — |
@@ -165,6 +166,13 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-037 · Khách đã đăng nhập mất đoạn chat khi chuyển trang
+- **Hiện tượng (chủ dự án, bản Preview, 2026-11-18):** sau khi bật nhận diện bằng chữ ký từ theme, gửi một tin trong Chat, chuyển sang trang khác của cửa hàng, mở lại khung talk: đoạn chat trống.
+- **Nguyên nhân:** mỗi lần tải trang, widget nhúng mở một phiên **mới** (bản nhúng không dùng lại token đã lưu) rồi gọi identify; identify **gắn chính phiên mới đó** vào khách. Hội thoại treo theo phiên, nên đoạn chat nằm lại ở phiên của trang trước. Đường App Proxy không bị vì nó trả về phiên gần nhất của khách (`findOrCreateForCustomer`).
+- **Fix:** với mã khách của nền tảng (Shopify) đã ký, identify trả về **phiên gần nhất của khách** (cùng cửa sổ dùng lại 24 giờ như App Proxy) thay vì gắn phiên của trang; widget nhận token trong câu trả lời và mọi truy vấn (chat, đơn, thông báo) đi theo token đó. Đồng ý (consent) lấy theo phiên được dùng lại. `embed.service.ts`, `useEmbedCommands.ts`; 3 ca mới trong `embed.service.spec.ts`.
+- **Giới hạn:** khách không dùng widget quá 24 giờ thì bắt đầu phiên mới, đoạn chat cũ không tự hiện (hành vi sẵn có của đường App Proxy). Phiên của trang (vài giây tuổi, chưa có tin nhắn) bị bỏ lại.
+- **Phòng ngừa:** hai đường nhận diện cùng một loại khách phải kết thúc ở cùng một phiên; khi thêm đường mới, đối chiếu với đường cũ cả phần "phiên nào được trả về", không chỉ phần "khách nào".
 
 ## BUG-036 · iPhone tự phóng to trang khi chạm vào ô nhập
 - **Hiện tượng (máy thật, 2026-11-18):** chạm "Ask Anything" trên iPhone → cả trang phóng to, ⚙ và ✕ ra ngoài mép phải, ô nhập và thanh menu dưới không còn thấy; đóng bàn phím vẫn phóng to.

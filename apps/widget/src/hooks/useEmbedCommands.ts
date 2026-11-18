@@ -46,6 +46,12 @@ export function useEmbedCommands(): void {
       const store = useWidgetStore.getState();
       try {
         const res = await identifyRequest(token, user);
+        // A platform customer (a theme-signed Shopify id) is handed their own
+        // recent session, not this page's new one — that is where their chat
+        // is (BUG-037). Every query is keyed on the token, so adopting it brings
+        // the thread, the orders and the notifications with it.
+        const resumed = !!res.sessionToken && res.sessionToken !== token;
+        if (resumed) store.setSessionToken(res.sessionToken);
         store.setAuthenticated(res.authenticated);
         // The host's name for its user, signed or claimed (PLN-261023): a
         // claimed session never becomes `authenticated`, so useSessionProfile
@@ -56,7 +62,9 @@ export function useEmbedCommands(): void {
         store.setThreadAvailable(!!res.threadAvailable);
         // A tenant whose host terms cover AI support records a signed user as
         // consented on identify (PLN-261015 D9) — drop the banner right away.
-        if (res.consentState === 'granted') adoptSessionConsent(res);
+        // A resumed session carries its OWN consent, whatever this page's
+        // short-lived session said: take it as it is, granted or not.
+        if (res.consentState === 'granted' || resumed) adoptSessionConsent(res);
         postToHost({ type: 'ivy:event', event: 'identified', ok: true });
       } catch {
         // A rejected signature leaves the visitor a guest: they can still ask

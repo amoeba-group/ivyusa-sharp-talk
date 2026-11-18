@@ -46,7 +46,7 @@ Chuỗi được ký: `shopify:<customer.id>:<epoch giây>`, HMAC-SHA256 hex v�
 1. Tạo khoá trong console, dán khối Liquid vào theme nháp (GUIDE mục 4b).
 2. Gỡ app `Ivyusa Talk Proxy`: khi nó còn, widget chờ tối đa 5 giây ở mỗi lần tải trang cho câu trả lời proxy không tới.
 3. Trên bản Preview, đã đăng nhập: tiêu đề "Hi, {tên}"; Notifications không còn màn Verify; My Orders có đơn.
-4. **Cần xem thêm:** chuyển sang trang khác rồi mở lại khung talk, đoạn chat trước còn hay không. Mỗi lần tải trang widget mở một phiên mới rồi gắn vào khách; đường App Proxy thì dùng lại phiên gần nhất của khách. Việc giữ đoạn chat trên đường identify phụ thuộc thiết lập tiếp nối hội thoại của tenant, chưa kiểm trên IVY.
+4. **Đã xem (chủ dự án, 2026-11-18): đoạn chat mất khi chuyển trang → BUG-037, đã sửa** — identify trả về phiên gần nhất của khách thay vì gắn phiên mới của trang; widget nhận token đó. Chờ thử lại sau deploy. Ghi chú cũ: Mỗi lần tải trang widget mở một phiên mới rồi gắn vào khách; đường App Proxy thì dùng lại phiên gần nhất của khách. Việc giữ đoạn chat trên đường identify phụ thuộc thiết lập tiếp nối hội thoại của tenant, chưa kiểm trên IVY.
 
 ## 6. Trạng thái deploy
 

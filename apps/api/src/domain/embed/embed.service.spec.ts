@@ -721,3 +721,59 @@ describe('EmbedService.identify — signed Shopify customer', () => {
     expect(h.customers[0]).toMatchObject({ externalCustomerId: userId });
   });
 });
+
+/**
+ * BUG-037: a storefront page load opens a new session and then identifies.
+ * Binding that session left the shopper's chat behind on every navigation.
+ */
+describe('EmbedService.identify — a platform customer continues their own session', () => {
+  const now = () => Math.floor(Date.now() / 1000);
+  const userId = () => `shopify:7001:${now()}`;
+  const signed = (id: string) => ({ sessionToken: 'tok', userId: id, hash: EmbedService.sign(SECRET, id) });
+
+  function buildWithSessions(current: Record<string, unknown>, recent: Record<string, unknown>) {
+    const tenantRepo = { findOne: jest.fn(async () => ({ id: 1, embedSecret: SECRET })) };
+    const customerRepo = { findOne: jest.fn(), create: jest.fn(), save: jest.fn(async (c: unknown) => c) };
+    const sessionRepo = { findOne: jest.fn(async () => current), save: jest.fn(async (s: unknown) => s) };
+    const redis = { del: jest.fn(async () => undefined) };
+    const sessions = { findOrCreateForCustomer: jest.fn(async () => recent) };
+    const svc = new EmbedService(
+      tenantRepo as never, customerRepo as never, sessionRepo as never, redis as never,
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      sessions as never,
+    );
+    svc.registerPlatformIdentity('shopify', (async () => ({ id: 42, tenantId: 1, name: 'Kiho' })) as never);
+    return { svc, sessionRepo, sessions, redis };
+  }
+
+  it("hands back the customer's recent session, leaving the page's new one alone", async () => {
+    const page = { id: 5, sessionToken: 'tok', tenantId: 1, customerId: null, identityLevel: 'guest', language: 'EN' };
+    const recent = { id: 3, sessionToken: 'yesterday', tenantId: 1, customerId: 42, identityLevel: 'verified' };
+    const h = buildWithSessions(page, recent);
+
+    const out = await h.svc.identify(signed(userId()));
+
+    expect(out.sessionToken).toBe('yesterday');
+    expect(h.sessions.findOrCreateForCustomer).toHaveBeenCalledWith(1, 42, 'en');
+    expect(h.sessionRepo.save).not.toHaveBeenCalled();
+    expect(page).toMatchObject({ customerId: null, identityLevel: 'guest' });
+    // The token→session cache must not keep serving a stale copy of the resumed session.
+    expect(h.redis.del).toHaveBeenCalledWith(expect.stringContaining('yesterday'));
+  });
+
+  it('identifying again on a session that is already theirs keeps it', async () => {
+    const mine = { id: 3, sessionToken: 'tok', tenantId: 1, customerId: 42, identityLevel: 'verified' };
+    const h = buildWithSessions(mine, { id: 9, sessionToken: 'other' });
+    const out = await h.svc.identify(signed(userId()));
+    expect(out.sessionToken).toBe('tok');
+    expect(h.sessions.findOrCreateForCustomer).not.toHaveBeenCalled();
+  });
+
+  it("a session bound to someone else does not stay with them: the signed customer's own is used", async () => {
+    const theirs = { id: 3, sessionToken: 'tok', tenantId: 1, customerId: 77, identityLevel: 'verified' };
+    const h = buildWithSessions(theirs, { id: 9, sessionToken: 'mine', customerId: 42 });
+    const out = await h.svc.identify(signed(userId()));
+    expect(out.sessionToken).toBe('mine');
+    expect(theirs.customerId).toBe(77);
+  });
+});
