@@ -622,3 +622,102 @@ describe('EmbedService.identify — unsigned host, claimed', () => {
     });
   });
 });
+
+/**
+ * A signed platform customer id (PLN-261118-IVY-Signed-Shopify-Identity).
+ *
+ * The storefront theme signs `shopify:<customer id>:<issued at>` for the
+ * customer who is logged in, because this store's app proxy cannot reach us.
+ * What is under test: that id lands on the SHOPIFY customer (the one orders are
+ * filed under), only while it is fresh, and never mints a row of its own.
+ */
+describe('EmbedService.identify — signed Shopify customer', () => {
+  const now = () => Math.floor(Date.now() / 1000);
+  const idAt = (issued: number, customer = '7001') => `shopify:${customer}:${issued}`;
+  const signed = (userId: string) => ({ sessionToken: 'tok', userId, hash: EmbedService.sign(SECRET, userId) });
+
+  function withResolver(outcome: unknown = { id: 42, tenantId: 1, name: 'Kiho Lee', email: 'k@example.com' }) {
+    const h = build();
+    const resolver = jest.fn(async () => outcome);
+    h.service.registerPlatformIdentity('shopify', resolver as never);
+    return { ...h, resolver };
+  }
+
+  it('binds the session to the Shopify customer, not to a new host-id row', async () => {
+    const h = withResolver();
+    const session = await h.service.identify(signed(idAt(now())));
+    expect(h.resolver).toHaveBeenCalledWith(1, '7001');
+    expect(session.identityLevel).toBe('verified');
+    expect(session.customerId).toBe(42);
+    expect(h.customers).toHaveLength(0);
+  });
+
+  it('rejects a tampered customer id (the signature covers the whole string)', async () => {
+    const h = withResolver();
+    const good = idAt(now());
+    await expect(
+      h.service.identify({ sessionToken: 'tok', userId: good.replace('7001', '7002'), hash: EmbedService.sign(SECRET, good) }),
+    ).rejects.toMatchObject({ errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code });
+    expect(h.resolver).not.toHaveBeenCalled();
+  });
+
+  it('accepts an id signed 23 hours ago and rejects one signed 25 hours ago', async () => {
+    const h = withResolver();
+    await expect(h.service.identify(signed(idAt(now() - 23 * 3600)))).resolves.toMatchObject({ customerId: 42 });
+    await expect(h.service.identify(signed(idAt(now() - 25 * 3600)))).rejects.toMatchObject({
+      errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code,
+    });
+  });
+
+  it('rejects an id dated in the future beyond clock slack', async () => {
+    const h = withResolver();
+    await expect(h.service.identify(signed(idAt(now() + 120)))).resolves.toMatchObject({ customerId: 42 });
+    await expect(h.service.identify(signed(idAt(now() + 3600)))).rejects.toMatchObject({
+      errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code,
+    });
+  });
+
+  it('leaves an erased customer a guest', async () => {
+    const h = withResolver(null);
+    await expect(h.service.identify(signed(idAt(now())))).rejects.toMatchObject({
+      errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code,
+    });
+    expect(h.saved).toHaveLength(0);
+  });
+
+  it('a tenant with no Shopify connection does not turn the id into a host user', async () => {
+    // The timestamp makes every page load a different user id: falling back to
+    // the host path would mint a customer per visit.
+    const h = withResolver('not_connected');
+    await expect(h.service.identify(signed(idAt(now())))).rejects.toMatchObject({
+      errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code,
+    });
+    expect(h.customers).toHaveLength(0);
+  });
+
+  it('the unsigned name fills a blank and never overwrites the name Shopify gave', async () => {
+    const blank = { id: 43, tenantId: 1, name: null, email: null } as Record<string, unknown>;
+    const h1 = withResolver(blank);
+    await h1.service.identify({ ...signed(idAt(now())), name: '  Kiho ' });
+    expect(blank.name).toBe('Kiho');
+
+    const known = { id: 44, tenantId: 1, name: 'Kiho Lee', email: 'k@example.com' } as Record<string, unknown>;
+    const h2 = withResolver(known);
+    await h2.service.identify({ ...signed(idAt(now())), name: 'Someone Else', email: 'attacker@example.com' });
+    expect(known).toMatchObject({ name: 'Kiho Lee', email: 'k@example.com' });
+  });
+
+  it('an ordinary host user id still takes the host path', async () => {
+    const h = withResolver();
+    await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH });
+    expect(h.resolver).not.toHaveBeenCalled();
+    expect(h.customers[0]).toMatchObject({ externalCustomerId: USER });
+  });
+
+  it('with no resolver registered, a shopify-shaped id is just a host user id', async () => {
+    const h = build();
+    const userId = idAt(now());
+    await h.service.identify(signed(userId));
+    expect(h.customers[0]).toMatchObject({ externalCustomerId: userId });
+  });
+});

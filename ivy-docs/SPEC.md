@@ -369,7 +369,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 
 | ID | Câu hỏi | Mặc định nếu chưa có trả lời |
 |---|---|---|
-| Q-01 | Khách vãng lai thấy gì ở header và tab Notifications? | Header "Hi there", giữ cổng Verify identity / Guest order lookup |
+| Q-01 | Khách vãng lai thấy gì ở header và tab Notifications? | Header "Hi there", giữ cổng Verify identity / Guest order lookup  **2026-11-18:** trên ivyusa.com khách đã đăng nhập được nhận diện bằng chữ ký từ theme (App Proxy không tới được server) — PLN-261118-IVY-Signed-Shopify-Identity, GUIDE-261118 mục 4b. Màn Verify chỉ còn cho khách chưa đăng nhập |
 | Q-02 | Từ 2 ngày trở lên hiện **ngày tháng** (ghi chú) hay "2days ago" (thiết kế)? | ✅ **Chốt 2026-11-11:** "{n} days ago" tới 6 ngày, sau đó ngày tháng `MMM d`; ngày theo múi giờ máy khách |
 | Q-03 | Vào chế độ chọn để xoá bằng cách nào (nút "Edit", nhấn giữ…)? | Nút "Select" ở hàng chip |
 | Q-04 | 2 chip "??" sau "인기상품" trong Product Help là gì? | Ẩn, chỉ hiện "인기상품" — ✅ T10 (bỏ 2 chip) |

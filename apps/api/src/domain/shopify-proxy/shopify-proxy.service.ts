@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { SessionService } from '../session/session.service';
 import { CustomerService } from '../customer/customer.service';
 import { TenantService } from '../tenant/tenant.service';
@@ -6,6 +6,8 @@ import { ShopifyAdminClient } from '../order/shopify-admin.client';
 import { ShopifySyncService } from '../order/shopify-sync.service';
 import { verifyShopifyProxySignature } from '../../global/util/shopify-hmac.util';
 import { PLATFORM } from '../customer/customer-platform-link.service';
+import type { Customer } from '../customer/entity/customer.entity';
+import { EmbedService } from '../embed/embed.service';
 
 export interface ProxyIdentityResult {
   authenticated: boolean;
@@ -25,7 +27,7 @@ export type IdentityOutcome =
  * cross-origin widget authenticated without trusting any client-supplied identity.
  */
 @Injectable()
-export class ShopifyProxyService {
+export class ShopifyProxyService implements OnModuleInit {
   private readonly logger = new Logger(ShopifyProxyService.name);
 
   constructor(
@@ -34,7 +36,42 @@ export class ShopifyProxyService {
     private readonly tenantService: TenantService,
     private readonly adminClient: ShopifyAdminClient,
     private readonly syncService: ShopifySyncService,
+    // The signed-identify path (PLN-261118-IVY-Signed-Shopify-Identity): a theme
+    // that signs the logged-in customer's id reaches the same link as the proxy.
+    @Optional() private readonly embed?: EmbedService,
   ) {}
+
+  onModuleInit(): void {
+    this.embed?.registerPlatformIdentity('shopify', async (tenantId, shopifyCustomerId) => {
+      if (!(await this.tenantService.getShopifyConnection(tenantId))) return 'not_connected';
+      return this.linkCustomer(tenantId, shopifyCustomerId);
+    });
+  }
+
+  /**
+   * The customer row for a storefront customer Shopify (or a signature made
+   * with our secret) vouches for: found or created by their Shopify id, linked
+   * to the platform, with the profile and order history fetched in the
+   * background. Null when they asked to be erased.
+   */
+  async linkCustomer(tenantId: number, shopifyCustomerId: string): Promise<Customer | null> {
+    const customer = await this.customerService.findOrCreateByShopifyId(tenantId, shopifyCustomerId);
+    if (!customer) return null;
+    await this.customerService.linkPlatform(tenantId, customer.id, PLATFORM.SHOPIFY, shopifyCustomerId, customer.name);
+    // Enrich the row with the customer's real name/email from the Admin API when
+    // we don't have them yet (we are only handed the numeric id). Fire-and-
+    // forget: nothing in the response needs it, and it must not add Admin API
+    // latency to the widget handshake — it feeds the agent console + later lookups.
+    if (!customer.email || !customer.name) {
+      void this.backfillProfile(tenantId, shopifyCustomerId);
+    }
+    // Pull this customer's order history into the cache so "my orders" is
+    // populated on first sign-in. Fire-and-forget like the profile backfill;
+    // the sync service suppresses repeat runs per customer (identity resolves
+    // on every page load).
+    void this.backfillOrders(tenantId, shopifyCustomerId);
+    return customer;
+  }
 
   async resolveIdentity(query: Record<string, unknown>): Promise<IdentityOutcome> {
     const secret = process.env.SHOPIFY_API_SECRET;
@@ -72,10 +109,7 @@ export class ShopifyProxyService {
       return { status: 'ok', result: { authenticated: false } };
     }
 
-    const customer = await this.customerService.findOrCreateByShopifyId(
-      tenant.id,
-      shopifyCustomerId,
-    );
+    const customer = await this.linkCustomer(tenant.id, shopifyCustomerId);
     // This shopper asked to be erased. They are still signed into the storefront —
     // Shopify knows them, we deliberately no longer do — so report them as anonymous
     // rather than rebuilding the profile they deleted. The widget then behaves as it
@@ -83,20 +117,6 @@ export class ShopifyProxyService {
     if (!customer) {
       return { status: 'ok', result: { authenticated: false } };
     }
-    await this.customerService.linkPlatform(tenant.id, customer.id, PLATFORM.SHOPIFY, shopifyCustomerId, customer.name);
-    // Enrich the row with the customer's real name/email from the Admin API when
-    // we don't have them yet (the proxy only hands us the numeric id). Fire-and-
-    // forget: nothing in this response needs it, and it must not add Admin API
-    // latency to the widget handshake — it feeds the agent console + later lookups.
-    if (!customer.email || !customer.name) {
-      void this.backfillProfile(tenant.id, shopifyCustomerId);
-    }
-    // Pull this customer's order history into the cache so "my orders" is
-    // populated on first sign-in (webhooks only cover orders placed after the
-    // store connected). Fire-and-forget like the profile backfill: the widget
-    // handshake must not wait on the Admin API, and the sync service suppresses
-    // repeat runs per customer (identity resolves on every page load).
-    void this.backfillOrders(tenant.id, shopifyCustomerId);
     const locale = typeof query.locale === 'string' ? query.locale : undefined;
     // Resume the shopper's recent session rather than minting one per page load —
     // conversations hang off the session, so a new one would empty the chat every

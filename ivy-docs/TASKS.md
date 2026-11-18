@@ -333,3 +333,9 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Chủ dự án duyệt:** `1. ok 2. a 3. a 4. a` — bỏ nút đính kèm, bỏ dòng công bố AI + End chat, chữ trắng trên `#2B7FFF`.
 - Ba tuỳ chọn mới của Custom widget: `attachIcon: none`, `disclosurePlacement: hidden`, `onBrand: white`. Seed đã đặt; production đặt trong console sau deploy.
 - TC-08-07, TC-08-08.
+
+### Bổ sung 2026-11-18 · Nhận diện khách đã đăng nhập bằng chữ ký từ theme — ✅ code · ⏳ khoá + theme · [PLN](../docs/plan/PLN-261118-IVY-Signed-Shopify-Identity.md) · [RPT](../docs/implementation/RPT-261118-IVY-Signed-Shopify-Identity.md)
+- **Vì sao:** không nhận diện được khách thì mọi màn có dữ liệu cá nhân hiện "Verify your identity"; thiết kế chỉ vẽ khách đã đăng nhập.
+- **Cách A (App Proxy) đã thử và bị chặn:** app Dev Dashboard `Ivyusa Talk Proxy` cài xong, `ivyusa.com/apps/ivy/identity` trả 504 sau 60 giây — Shopify không kết nối được tới `talk.ivyusa.com` (cùng nguyên nhân với BUG-034).
+- **Cách B (đã làm, duyệt `1. ok 2. a`):** theme ký `shopify:<mã khách>:<thời điểm>` bằng khoá Sign-in integration; API nối với khách Shopify và kéo đơn; chữ ký hết hạn sau 24 giờ.
+- **Việc của chủ dự án:** GUIDE-261118 mục 4b (tạo khoá, dán Liquid), gỡ app proxy.

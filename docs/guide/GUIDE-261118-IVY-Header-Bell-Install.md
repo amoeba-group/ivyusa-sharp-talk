@@ -84,6 +84,39 @@ Mở `layout/theme.liquid`, dán ngay **trước** `</body>`:
 - Cả hai địa chỉ phải có `/widget`. Thiếu thì trang vẫn tải "thành công" nhưng không có widget.
 - Nếu trong theme đã có khối `IVY_WIDGET_CONFIG` cũ thì xoá nó, không để hai khối cùng lúc.
 
+## 4b. Nhận diện khách đã đăng nhập (để widget chào tên và hiện đơn hàng)
+
+Thiếu bước này, widget coi mọi người là khách vãng lai: tiêu đề ghi tên cửa hàng, và Notifications / My Orders hiện màn "Verify your identity".
+
+Đường App Proxy của Shopify không dùng được cho ivyusa.com (đã thử ngày 2026-11-18: Shopify không kết nối được tới `talk.ivyusa.com`, trả 504 sau 60 giây). Thay vào đó theme tự ký danh tính của khách:
+
+1. Console → **Tenant Settings → Widget → Embed & SDK → Sign-in integration → Generate**. Khoá (`shtk_…`) chỉ hiện **một lần**; chép lại. Không gửi khoá qua chat hay email.
+2. Trong `layout/theme.liquid`, dán khối sau **ngay trên** khối `SHARPTALK_WIDGET_CONFIG` của mục 4, thay `KHOÁ_BÍ_MẬT` bằng khoá vừa tạo:
+
+```liquid
+{% if customer %}
+  {%- assign st_issued = 'now' | date: '%s' -%}
+  {%- assign st_user = 'shopify:' | append: customer.id | append: ':' | append: st_issued -%}
+  <script>
+    window.SharpTalk = window.SharpTalk || { q: [] };
+    window.SharpTalk.q.push(['identify', {
+      userId: {{ st_user | json }},
+      hash: {{ st_user | hmac_sha256: 'KHOÁ_BÍ_MẬT' | json }},
+      name: {{ customer.first_name | json }}
+    }]);
+  </script>
+{% endif %}
+```
+
+- Khối này chỉ chạy khi khách đã đăng nhập. Khoá nằm trong mã Liquid và **không** xuất hiện trong trang gửi tới trình duyệt; người có quyền sửa theme thì đọc được nó.
+- Chữ ký được tạo mới ở mỗi lần tải trang và có hạn **24 giờ**. Khách không thấy gì khác; một cặp (mã khách, chữ ký) bị chép ra ngoài thì hết dùng được sau một ngày.
+- **Regenerate** trong console làm mọi chữ ký cũ mất hiệu lực ngay: phải thay khoá trong theme cùng lúc, nếu không khách lại thành vãng lai.
+- `name` chỉ dùng để chào "Hi, {tên}" khi hệ thống chưa lấy được tên từ Shopify; email và đơn hàng luôn lấy từ Shopify theo mã khách đã ký.
+
+**Kiểm:** đăng nhập ivyusa.com trên bản Preview, mở khung talk → tiêu đề "Hi, {tên}", tab Notifications không còn màn Verify, My Orders hiện đơn (lần đầu có thể trống vài giây trong lúc đơn được lấy về). Nếu vẫn là vãng lai: mở F12 → Network, tìm yêu cầu `embed/identify`; mã 401 nghĩa là khoá trong theme không khớp khoá trong console, hoặc đồng hồ ký lệch quá 24 giờ.
+
+**App "Ivyusa Talk Proxy"** (cài lúc thử App Proxy) nên gỡ: khi nó còn, mỗi lần tải trang widget chờ thêm tối đa 5 giây cho một câu trả lời không bao giờ tới.
+
 ## 5. Chuyển kiểu mở trên console
 
 Chỉ làm sau khi đã thấy chuông trên bản Preview.
@@ -127,7 +160,7 @@ Nếu vẫn thấy nút tròn: widget không tìm thấy chuông. Nó chờ kho�
 
 **Đã thử trên theme nháp `Ivyusa Talk Staging` ngày 2026-11-18** (link Preview, desktop 1440×900 và cửa sổ 390×844): chuông hiện cạnh giỏ hàng; bấm mở panel IVY (2 tab, lời chào, 8 nút) ở 176px; bấm lại chuông và bấm ra ngoài đều đóng; không có nút tròn; cửa sổ hẹp có nút ✕ và đóng được. Chưa thử trên điện thoại thật, và chưa thử với khách đã đăng nhập.
 
-- **Khách đã đăng nhập ivyusa.com chưa được nhận ra tự động.** Widget hỏi `https://ivyusa.com/apps/ivy/identity` để biết khách là ai; địa chỉ này đang trả 404, tức App Proxy của app Shopify chưa được cấu hình. Cho tới khi có, khách thấy "Hi there" và phải xác minh (Verify your identity / Guest order lookup) mới xem được đơn. Đây là việc riêng, ngoài phạm vi bản hướng dẫn này.
+- **Nhận diện khách đã đăng nhập** cần mục 4b. Chưa làm mục đó thì khách thấy tên cửa hàng ở tiêu đề và phải xác minh (Verify your identity / Guest order lookup) mới xem được đơn.
 - **Trên điện thoại, header ẩn khi cuộn xuống**, nên chuông cũng ẩn theo; khách phải cuộn lên để thấy chuông. Đây là hành vi của theme. Khung đang mở không bị ảnh hưởng.
 - **Bàn phím ảo:** khung tự co vừa phần màn hình còn thấy khi bàn phím mở. Nếu trên một dòng máy nào đó việc này gây giật hoặc sai vị trí, thêm `keyboardFit: false` vào đoạn mã ở mục 4 để tắt, rồi báo lại.
 - **Test tự động** cho kiểu chuông (TC-17-01..07) chạy trên một trang dựng giống ivyusa.com, không chạy trên theme thật. Mục 6 vẫn phải kiểm bằng tay trên Preview, và trên điện thoại thật trước khi Publish.

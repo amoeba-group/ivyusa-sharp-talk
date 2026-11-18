@@ -40,6 +40,31 @@ export interface IdentifyInput {
   attributes?: Record<string, unknown> | null;
 }
 
+/**
+ * A signed user id that names a commerce platform's own customer
+ * (PLN-261118-IVY-Signed-Shopify-Identity): `shopify:<customer id>:<issued at,
+ * epoch seconds>`. The storefront theme signs it for the customer who is
+ * logged in — the path for a store whose app proxy cannot reach us.
+ *
+ * The timestamp is inside the signed string, so it cannot be moved: a copied
+ * (id, hash) pair stops working a day later instead of lasting until the
+ * secret is rotated.
+ */
+const PLATFORM_USER_ID = /^([a-z0-9]{2,20}):(\d{1,20}):(\d{9,11})$/;
+export const PLATFORM_IDENTITY_MAX_AGE_MS = 24 * 3_600_000;
+export const PLATFORM_IDENTITY_MAX_SKEW_MS = 5 * 60_000;
+
+/**
+ * Turns a platform's customer id into our customer row.
+ *  - a Customer: the person, linked and ready
+ *  - null: the platform knows them but we may not (they asked to be erased)
+ *  - 'not_connected': this tenant has no such platform — the id means nothing here
+ */
+export type PlatformIdentityResolver = (
+  tenantId: number,
+  platformCustomerId: string,
+) => Promise<Customer | null | 'not_connected'>;
+
 /** `shtk_` prefix so a leaked value is recognisable in a log or a paste. */
 const SECRET_PREFIX = 'shtk_';
 
@@ -80,6 +105,49 @@ export class EmbedService {
     // A sign-in that files earlier conversations may join the person's room (PLN-261027 Merge-Add D1).
     @Optional() private readonly mergedRooms?: MergedRoomService,
   ) {}
+
+  /** Platform prefix → resolver. The platform's own module registers it (no import cycle). */
+  private readonly platformIdentities = new Map<string, PlatformIdentityResolver>();
+
+  registerPlatformIdentity(platform: string, resolver: PlatformIdentityResolver): void {
+    this.platformIdentities.set(platform, resolver);
+  }
+
+  /**
+   * The customer a signed platform id stands for, or `undefined` when the user
+   * id is an ordinary host id. Throws E5048 — as every identify failure does —
+   * for a platform id that is stale, belongs to a platform this tenant does not
+   * have, or names a person we must not rebuild.
+   */
+  private async resolvePlatformCustomer(
+    tenantId: number,
+    input: IdentifyInput,
+  ): Promise<Customer | undefined> {
+    const m = PLATFORM_USER_ID.exec(input.userId);
+    const resolver = m ? this.platformIdentities.get(m[1]) : undefined;
+    if (!m || !resolver) return undefined;
+    const reject = (why: string): never => {
+      this.logger.warn(`identify rejected — ${m[1]} id ${why} (tenant ${tenantId}, user ${maskId(m[2])})`);
+      throw new BusinessException(ERROR_CODE.EMBED_IDENTITY_INVALID, HttpStatus.UNAUTHORIZED);
+    };
+    const age = Date.now() - Number(m[3]) * 1000;
+    if (age > PLATFORM_IDENTITY_MAX_AGE_MS) reject('expired');
+    if (age < -PLATFORM_IDENTITY_MAX_SKEW_MS) reject('dated in the future');
+    const outcome = await resolver(tenantId, m[2]);
+    // Not falling back to a host id here on purpose: the timestamp makes every
+    // page load a different user id, which would mint a customer per visit.
+    if (outcome === 'not_connected') return reject('for a platform this tenant is not connected to');
+    if (!outcome) return reject('names an erased customer');
+    // The name the theme sends is not signed: it may fill a blank, so the
+    // header can greet the shopper before the platform profile arrives, and
+    // nothing more. Email is never taken from the browser on this path.
+    const name = input.name?.trim();
+    if (name && !outcome.name) {
+      outcome.name = name.slice(0, 200);
+      await this.customerRepo.save(outcome);
+    }
+    return outcome;
+  }
 
   /**
    * A sign-in that names a hotel makes sure the hotel exists as a company,
@@ -157,7 +225,9 @@ export class EmbedService {
       throw new BusinessException(ERROR_CODE.EMBED_IDENTITY_INVALID, HttpStatus.UNAUTHORIZED);
     }
 
-    const customer = await this.upsertCustomer(Number(session.tenantId), input);
+    const customer =
+      (await this.resolvePlatformCustomer(Number(session.tenantId), input)) ??
+      (await this.upsertCustomer(Number(session.tenantId), input));
     session.customerId = Number(customer.id);
     session.identityLevel = SESSION_IDENTITY.VERIFIED;
     // Replaced, never merged: a re-identify for a different hotel must not keep
