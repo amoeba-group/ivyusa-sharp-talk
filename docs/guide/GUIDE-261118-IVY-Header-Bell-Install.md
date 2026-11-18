@@ -70,7 +70,7 @@ Mở `layout/theme.liquid`, dán ngay **trước** `</body>`:
 <!-- SharpTalk widget — IVY, header bell -->
 <script>
   window.SHARPTALK_WIDGET_CONFIG = {
-    shop: {{ shop.permanent_domain | json }},
+    shop: "ivyusa.myshopify.com",
     widgetUrl: "https://talk.ivyusa.com/widget",
     trigger: "#st-bell"
   };
@@ -78,7 +78,7 @@ Mở `layout/theme.liquid`, dán ngay **trước** `</body>`:
 <script src="https://talk.ivyusa.com/widget/embed.js" defer></script>
 ```
 
-- `shop` phải là tên miền `…myshopify.com` của cửa hàng, đúng với tên miền đã nhập ở console → Platforms → Shopify. `{{ shop.permanent_domain | json }}` tự điền giá trị đó.
+- `shop` phải là **đúng** tên miền tenant đang dùng trên `talk.ivyusa.com`: `ivyusa.myshopify.com`. **Không** dùng `{{ shop.permanent_domain }}`: với cửa hàng này Shopify trả `chillhouse-wholesale.myshopify.com`, và production trả lỗi `E5005 Unknown shop domain` cho tên đó (kiểm ngày 2026-11-18).
 - Cả hai địa chỉ phải có `/widget`. Thiếu thì trang vẫn tải "thành công" nhưng không có widget.
 - Nếu trong theme đã có khối `IVY_WIDGET_CONFIG` cũ thì xoá nó, không để hai khối cùng lúc.
 
