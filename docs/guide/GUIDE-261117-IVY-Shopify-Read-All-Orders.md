@@ -2,6 +2,8 @@
 
 Dành cho: chủ dự án / người quản lý app Shopify của IVY. Kèm [PLN-261117](../plan/PLN-261117-Orders-Search-And-Sync-Backfill.md) (câu 4: chọn **b**).
 
+> **Kết quả kiểm tra 2026-11-18: với app IVY đang dùng thì KHÔNG cần làm gì.** Token của app tạo trong trang admin của cửa hàng đã đọc được đơn cũ hơn 60 ngày: console → Orders → **Look up on Shopify** lấy về `IVY-100000` (đặt 2026-06-16) và `IVY-50000` (đặt 2026-02-15), dù bảng chọn quyền của app không có `read_all_orders`. Phần dưới chỉ còn dùng khi đổi sang app loại khác (Dev Dashboard / Partner).
+
 ## 1. Vì sao cần
 
 Shopify chỉ cho một app đọc đơn hàng của **60 ngày gần nhất**, trừ khi app được cấp thêm quyền `read_all_orders`. Đây là quy định của Shopify (tài liệu đối tượng `Order` của Admin API), không phải giới hạn của SharpTalk.
