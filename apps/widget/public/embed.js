@@ -112,6 +112,12 @@
   // `[data-sharptalk-badge]`). The tenant's theme can also switch this on.
   var triggerMode = !!cfg.trigger;
   var triggerOffset = 0;
+  // Where the docked panel starts, measured from the storefront header the
+  // opener sits in (PLN-261118 bell). null = nothing to measure against, so the
+  // tenant's fixed offset applies. `dockCover`: too little room is left under
+  // the header (a phone on its side), so the panel takes the full height.
+  var dockTop = null;
+  var dockCover = false;
   // Trigger mode hides the floating launcher, so a tenant who switches the mode
   // on before the storefront has the opener element would leave shoppers with no
   // way to open the widget at all (FIX-260916). The loader is the only side that
@@ -444,20 +450,91 @@
   var PANEL_GUTTER = 20;
   var frameSize = { w: 444, h: 680 };
   var OPEN = { w: 'min(444px, 100vw)', h: 'min(680px, 100vh)' };
+  // --- Docked panel follows the storefront header (PLN-261118 bell) -----------
+  // The header is the page's, and it moves: it sits under announcement bars at
+  // the top of the page, sticks to the window on scroll, hides on a phone, and
+  // is taller on a tablet. A fixed offset is right for one of those at best.
+  var DOCK_GAP = 8; // desktop: the panel reads as a card under the header
+  var DOCK_MIN_HEIGHT = 360; // less room than this under the header → cover it
+  function dockTopPx() {
+    if (!triggerMode) return 0;
+    return dockTop == null ? triggerOffset : dockTop;
+  }
+  function dockAnchor() {
+    try {
+      if (cfg.anchor) return document.querySelector(String(cfg.anchor));
+      var opener = cfg.trigger ? document.querySelector(String(cfg.trigger)) : null;
+      return opener && opener.closest ? opener.closest('header, [role="banner"]') : null;
+    } catch (_) {
+      return null; // invalid selector — same as no anchor
+    }
+  }
+  /** Re-measure; returns true when the open box changed. */
+  function measureDock() {
+    if (!triggerMode) return false;
+    var anchor = dockAnchor();
+    var top = triggerOffset;
+    if (anchor) {
+      var bottom = anchor.getBoundingClientRect().bottom;
+      // Scrolled out of view (a phone hiding its header): start at the top.
+      top = bottom <= 0 ? 0 : Math.round(bottom) + (COMPACT ? 0 : DOCK_GAP);
+    }
+    var cover = window.innerHeight - top < DOCK_MIN_HEIGHT;
+    if (cover) top = 0;
+    var next = anchor || cover ? top : null;
+    if (next === dockTop && cover === dockCover) return false;
+    dockTop = next;
+    dockCover = cover;
+    return true;
+  }
+  function applyDock() {
+    if (!measureDock()) return;
+    recomputeOpen();
+    placeFrame();
+    if (isOpen) {
+      frame.style.width = OPEN.w;
+      frame.style.height = OPEN.h;
+    }
+  }
+  // One measurement per animation frame, and a short tail after the last event:
+  // a sticky header finishes its own transition after the scroll that started it.
+  var dockFrames = 0;
+  var dockScheduled = false;
+  function dockTick() {
+    dockScheduled = false;
+    if (!triggerMode || !isOpen) return;
+    applyDock();
+    if (--dockFrames > 0) scheduleDock(0);
+  }
+  function scheduleDock(tail) {
+    if (tail > dockFrames) dockFrames = tail;
+    if (dockScheduled) return;
+    dockScheduled = true;
+    (window.requestAnimationFrame || function (fn) { return setTimeout(fn, 16); })(dockTick);
+  }
+  function onDockEvent() {
+    if (triggerMode && isOpen) scheduleDock(30);
+  }
+  window.addEventListener('scroll', onDockEvent, { passive: true, capture: true });
+  window.addEventListener('resize', onDockEvent);
+  window.addEventListener('orientationchange', onDockEvent);
+
   function recomputeOpen() {
     // A phone: the whole screen — under the storefront header when docked —
     // not a 680px sheet with the shop still showing above it (T15 D1). The
     // panel fills its frame edge to edge here, so nothing is held back for a gap.
+    var top = dockTopPx();
     if (COMPACT) {
       OPEN = {
         w: '100vw',
-        h: triggerMode && triggerOffset > 0 ? 'calc(' + FULL_H + ' - ' + triggerOffset + 'px)' : FULL_H,
+        h: triggerMode && top > 0 ? 'calc(' + FULL_H + ' - ' + top + 'px)' : FULL_H,
       };
       return;
     }
     // Floating keeps its old box exactly: bottom corner, nothing reserved.
-    var reserved = triggerMode
-      ? triggerOffset + Math.max(0, DOCK_BOTTOM_GAP - PANEL_GUTTER)
+    // Covering the header means covering the gap under the panel too.
+    var reserved = triggerMode && !dockCover
+      ? top + Math.max(0, DOCK_BOTTOM_GAP - PANEL_GUTTER)
       : 0;
     OPEN = {
       w: 'min(' + frameSize.w + 'px, 100vw)',
@@ -580,7 +657,7 @@
   // under the storefront header in trigger mode.
   function placeFrame() {
     if (triggerMode) {
-      frame.style.top = triggerOffset + 'px';
+      frame.style.top = dockTopPx() + 'px';
       frame.style.bottom = 'auto';
     } else {
       frame.style.top = 'auto';
@@ -988,7 +1065,12 @@
     if (e.origin !== baseOrigin) return;
     if (d.type === 'ivy:resize') {
       isOpen = !!d.open;
-      if (isOpen) openedAt = Date.now();
+      if (isOpen) {
+        openedAt = Date.now();
+        // The header may have moved since the last time this was open.
+        applyDock();
+        scheduleDock(30);
+      }
       frame.style.width = d.open ? OPEN.w : CLOSED.w;
       frame.style.height = d.open ? OPEN.h : CLOSED.h;
       frame.style.visibility = !d.open && triggerMode ? 'hidden' : 'visible';

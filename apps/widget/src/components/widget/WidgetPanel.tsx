@@ -191,16 +191,17 @@ export function WidgetPanel() {
   // replaces the words with the mark, as every tenant before it.
   const logoWithTitle = theme?.design?.headerLayout === 'logo-title';
   // Trigger mode (PLN-260916 P2): the storefront's own header element opens the
-  // panel, which docks under that header. The design drops the language pill
-  // and the X from the header; the loader closes on outside click / Esc, and on
-  // a phone (loader adds ?compact=1) the X stays because there is no "outside".
+  // panel, which docks under that header. The header keeps the same controls as
+  // the floating panel (PLN-261118 bell, SCR-IVY-02: greeting · language · gear ·
+  // X) — it used to drop the language pill and the X on anything wider than a
+  // phone, which left a tablet with no visible way out. The loader still closes
+  // on an outside click and on the opener.
   const triggerUnavailable = useWidgetStore((s) => s.triggerUnavailable);
   const triggerMode = resolveLauncher(theme).mode === 'trigger' && !isAppMode() && !triggerUnavailable;
   // A phone: the loader says so (`?compact=1`), or — with no loader — this page
   // is itself phone-sized (T15 D2, `useStandalonePhone`).
   const standalonePhone = useStandalonePhone();
   const compact = new URLSearchParams(window.location.search).get('compact') === '1' || standalonePhone;
-  const showClose = !triggerMode || compact;
   // A phone-sized page gets the bottom sheet; a host app gets the whole screen.
   const fullBleed = compact || isAppMode();
   // A greeting names the customer, so it wins over the brand mark: the shopper
@@ -386,7 +387,7 @@ export function WidgetPanel() {
         <div className="flex flex-shrink-0 items-center gap-0.5">
           {/* Each button is the tenant's to hide (PLN-261023-Widget-Header-Buttons);
               the close button is not — a touch device would lose its only way out. */}
-          {!showSettings && !triggerMode && headerControls.language && <LanguageSwitcher />}
+          {!showSettings && headerControls.language && <LanguageSwitcher />}
           {/* The design draws no box behind the gear (T13). Focus rings for
               the keyboard only, so a click does not leave one behind. In
               Settings the gear gives way to the header's ←. */}
@@ -400,19 +401,17 @@ export function WidgetPanel() {
             <Settings className="h-5 w-5" />
           </button>
           )}
-          {showClose && (
-            <button
-              onClick={dismiss}
-              aria-label={t('a11y.close')}
-              className={`st-header-control rounded-st-md p-1.5 focus:outline-none ${
-                showSettings
-                  ? 'hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-current'
-                  : 'text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:ring-2 focus:ring-primary-500'
-              }`}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
+          <button
+            onClick={dismiss}
+            aria-label={t('a11y.close')}
+            className={`st-header-control rounded-st-md p-1.5 focus:outline-none ${
+              showSettings
+                ? 'hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-current'
+                : 'text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:ring-2 focus:ring-primary-500'
+            }`}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
       </header>
 

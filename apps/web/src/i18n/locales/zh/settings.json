@@ -577,7 +577,7 @@
     "launcherModeTrigger": "店铺页眉触发 — 用你自己的元素（如铃铛图标）打开，停靠在页眉下方",
     "triggerSelector": "触发器选择器",
     "triggerOffset": "顶部偏移 (px)",
-    "triggerHint": "按示例在页眉放置打开元素，并把它的选择器写入代码片段的 trigger。未读数显示在 data-sharptalk-badge 元素中；面板在页眉下方右侧打开，点击外部关闭。 如果店铺中没有该元素，小部件会自动回退到悬浮按钮。",
+    "triggerHint": "按示例在页眉放置打开元素，并把它的选择器写入代码片段的 trigger。未读数显示在 data-sharptalk-badge 元素中；面板在页眉下方右侧打开，点击外部关闭。 如果店铺中没有该元素，小部件会自动回退到悬浮按钮。 面板会跟随包含打开元素的页眉；只有页面没有这样的页眉时才使用顶部偏移。",
     "logoAlt": "当前标志",
     "iconCustom": "上传的图标",
     "iconFile": "图标文件",

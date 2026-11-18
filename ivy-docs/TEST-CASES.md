@@ -391,6 +391,22 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 
 **Kết quả (2026-11-13):** T15 + T01 (desktop + mobile) 29/29. Thử ngược: bỏ phần sửa trong widget và loader thì đúng 8 ca đỏ (TC-15-01 380px, TC-15-05 focus ra ngoài, TC-15-06 ×6 cao 680); ca banner (TC-15-05 thứ 2) bỏ phần sửa thì 3/3 đỏ. TC-15-05 ×2 lặp 20 lần: 40/40. `npm run test:ci`: 132 / 132, chạy 2 lần (131 desktop + 1 mobile). Toàn bộ: 132 / 132 — cổng CI giờ gồm mọi test desktop và mobile. Unit widget 121/121.
 
+## T17 · Chuông trên header (`17-header-bell.spec.ts`)
+
+Trang thử dựng giống ivyusa.com: 80px thanh phía trên, header 91px dính khi cuộn, chuông `#st-bell` trong header.
+
+| TC | Tình huống | Kỳ vọng |
+|---|---|---|
+| TC-17-01 | Desktop 1280×900, bấm chuông | Đóng: khung 0×0. Mở: mép trên = dưới header + 8px (179), sát phải, vừa cửa sổ |
+| TC-17-02 | Cuộn trang rồi cuộn lại | Khung theo header: 99 khi header dính, 179 khi về đầu trang |
+| TC-17-03 | Header của khung | Có Language, Settings, Close. ✕, bấm lại chuông, bấm ra ngoài: đều đóng |
+| TC-17-04 | Chuông không nằm trong header nào | Dùng Top offset của tenant |
+| TC-17-05 | Máy tính bảng 768×1024 | Khung không đè header, có ✕ |
+| TC-17-06 | Điện thoại 390×844, header ẩn khi cuộn (`@responsive`, chạy cả project mobile) | Sát dưới header, tới đáy màn hình; header ẩn → từ 0, cao 844; header hiện lại → về dưới header |
+| TC-17-07 | Điện thoại xoay ngang 734×343 | Khung cao kín màn hình từ 0, có ✕ và đóng được |
+
+**Kết quả (2026-11-18, local):** `test:ci` 140/140 (8 lượt của T17: 7 desktop + TC-17-06 trên mobile). Unit loader `apps/widget/test`: 129/129, 8 ca mới trong `embed-dock-geometry.test.mjs`.
+
 ## T16 · Production smoke (`16-prod-smoke.spec.ts`, chỉ `E2E_TARGET=prod`, chỉ đọc)
 
 | TC | Mô tả | Kỳ vọng |

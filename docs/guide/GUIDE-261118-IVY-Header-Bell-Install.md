@@ -98,14 +98,9 @@ Bấm **Save**, chờ thông báo lưu thành công.
 
 Ở cùng trang, thẻ **Embed & SDK**, mục **Allowed domains**: thêm `https://ivyusa.com` và `https://www.ivyusa.com` nếu chưa có.
 
-**Chọn Top offset.** Panel được đặt cố định cách mép trên cửa sổ đúng số px này và **không đi theo header**. Header của ivyusa.com lại nằm ở hai vị trí khác nhau (bảng mục 1), nên phải chọn một trong hai:
+**Top offset** giờ chỉ là giá trị dự phòng. Từ bản T17 (2026-11-18), khung tự bám theo thẻ `<header>` chứa chuông: desktop cách mép dưới header 8px, điện thoại sát dưới header, và đi theo khi header dính, đổi cỡ hay ẩn. Top offset chỉ được dùng khi chuông không nằm trong thẻ `<header>` nào. Với ivyusa.com để 176 là được.
 
-| Giá trị | Ở đầu trang | Sau khi cuộn |
-|---|---|---|
-| **176** (khuyên dùng) | Panel nằm ngay dưới header | Panel cách header 85px |
-| **96** | Panel **đè lên** nửa dưới header, che cả chuông | Panel nằm ngay dưới header |
-
-Giá trị cho phép: 0 tới 240. **Áp dụng cho cả điện thoại**: ở đó panel rộng kín màn hình nhưng cũng bắt đầu từ đúng số px này, không phủ lên header (đo trên bản Preview ngày 2026-11-18, cửa sổ 390×844: panel từ 176px xuống đáy). Header điện thoại ở đầu trang kết thúc ở 176px nên 176 khít ở đó; khi cuộn xuống header ẩn đi và phía trên panel hở ra một dải trang.
+Nếu sau này header của theme không còn là thẻ `<header>`, thêm khoá `anchor: "<bộ chọn CSS của header>"` vào đoạn mã ở mục 4.
 
 ## 6. Kiểm tra
 
@@ -114,11 +109,11 @@ Mở bản Preview, tải lại trang bỏ cache (Ctrl+Shift+R). Lần tải đ�
 | # | Kiểm | Kết quả đúng |
 |---|---|---|
 | 1 | Góc phải dưới | Không có nút tròn |
-| 2 | Bấm chuông | Panel 380px mở bên phải, dưới header |
+| 2 | Bấm chuông | Khung 380px mở bên phải, cách mép dưới header 8px; header khung có 🌐, ⚙, ✕ |
 | 3 | Chấm đỏ trên chuông | Bằng số chưa đọc trong widget; 0 thì ẩn |
-| 4 | Bấm lại chuông, hoặc bấm ra ngoài panel | Panel đóng |
-| 5 | Cuộn trang rồi bấm chuông | Panel vẫn mở đúng chỗ (theo bảng Top offset) |
-| 6 | Điện thoại (hoặc cửa sổ hẹp hơn 640px) | Panel rộng kín màn hình, nằm dưới header, **có nút ✕** để đóng |
+| 4 | Bấm ✕, bấm lại chuông, hoặc bấm ra ngoài khung | Khung đóng |
+| 5 | Mở khung rồi cuộn trang | Khung đi theo header, luôn ngay dưới nó |
+| 6 | Điện thoại (hoặc cửa sổ hẹp hơn 640px) | Khung rộng kín màn hình, sát dưới header; cuộn xuống cho header ẩn thì khung lên sát đỉnh. Xoay ngang: khung cao kín màn hình. Luôn có ✕ |
 | 7 | Console của trình duyệt (F12) | Không có cảnh báo `launcher trigger "#st-bell" was not found` |
 | 8 | Trang đăng nhập của cửa hàng | Widget không hiện (đúng thiết kế) |
 
@@ -128,10 +123,9 @@ Nếu vẫn thấy nút tròn: widget không tìm thấy chuông. Nó chờ kho�
 
 **Đã thử trên theme nháp `Ivyusa Talk Staging` ngày 2026-11-18** (link Preview, desktop 1440×900 và cửa sổ 390×844): chuông hiện cạnh giỏ hàng; bấm mở panel IVY (2 tab, lời chào, 8 nút) ở 176px; bấm lại chuông và bấm ra ngoài đều đóng; không có nút tròn; cửa sổ hẹp có nút ✕ và đóng được. Chưa thử trên điện thoại thật, và chưa thử với khách đã đăng nhập.
 
-- **Trên desktop, panel mở từ chuông không có nút đổi ngôn ngữ và không có nút ✕.** Đó là hành vi hiện tại của trigger mode: đóng bằng cách bấm lại chuông hoặc bấm ra ngoài. Thiết kế header của panel (SCR-IVY-02) thì có cả hai nút. Chưa quyết theo bên nào: ivy-docs SPEC, G-26 và Q-17.
 - **Khách đã đăng nhập ivyusa.com chưa được nhận ra tự động.** Widget hỏi `https://ivyusa.com/apps/ivy/identity` để biết khách là ai; địa chỉ này đang trả 404, tức App Proxy của app Shopify chưa được cấu hình. Cho tới khi có, khách thấy "Hi there" và phải xác minh (Verify your identity / Guest order lookup) mới xem được đơn. Đây là việc riêng, ngoài phạm vi bản hướng dẫn này.
-- **Trên điện thoại, header ẩn khi cuộn xuống**, nên chuông cũng ẩn theo; khách phải cuộn lên để thấy chuông. Đây là hành vi của theme.
-- **Bộ test tự động của IVY chạy kiểu nút tròn.** Kiểu chuông chưa có test trên widget IVY, nên mục 6 phải kiểm bằng tay.
+- **Trên điện thoại, header ẩn khi cuộn xuống**, nên chuông cũng ẩn theo; khách phải cuộn lên để thấy chuông. Đây là hành vi của theme. Khung đang mở thì vẫn ở lại và đóng bằng ✕.
+- **Test tự động** cho kiểu chuông (TC-17-01..07) chạy trên một trang dựng giống ivyusa.com, không chạy trên theme thật. Mục 6 vẫn phải kiểm bằng tay trên Preview, và trên điện thoại thật trước khi Publish.
 
 ## 8. Quay lại kiểu cũ
 

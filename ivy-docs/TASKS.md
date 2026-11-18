@@ -41,6 +41,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 | 14 | T14 | i18n đủ 6 ngôn ngữ + copy KO theo thiết kế | I18N | P1 | T01–T13 | ✅ | TC-14-01..07 |
 | 15 | T15 | Responsive (390px) & a11y | UI | P2 | T01–T13 | ✅ | TC-15-01..06 |
 | 16 | T16 | Deploy talk.ivyusa.com + smoke production | Ops | P0 | mỗi đợt | ✅ (2026-11-17, bản `3b0263e8`) | TC-16-01..03 |
+| 17 | T17 | Điểm mở = chuông trên header: khung bám header, header khung có 🌐 · ⚙ · ✕ | UI · Loader · E2E | P0 | T01, T15 | ✅ code (2026-11-18) · ⏳ Publish theme | TC-17-01..07 |
 
 > Baseline E2E trên commit `583ce121` + tài liệu này: xem [TEST-CASES.md §0](TEST-CASES.md).
 
@@ -319,3 +320,10 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   4. Chạy `cd e2e && npm run test:prod`.
   5. Ghi RPT kèm SHA và trạng thái từng môi trường. Cập nhật `deploy/profiles/SharpTalk-USA-IVY/CHECKLIST.md` và `/SPEC.md §12` (BUG-005).
 - **TC:** TC-16-01..03.
+
+
+### T17 · Chuông trên header — ✅ code (2026-11-18) · [PLN](../docs/plan/PLN-261118-IVY-Bell-Panel-Follow-Header.md) · [RPT](../docs/implementation/RPT-261118-IVY-Bell-Panel-Follow-Header.md)
+- **Chủ dự án duyệt (2026-11-18):** `1. ok 2. a 3. a` (cách header 8px trên desktop; điện thoại lên sát đỉnh khi header ẩn).
+- **Vì sao có task này:** mockup `1006:2431` mở khung bằng chuông trên header; SPEC trước đó ghi nhầm là nút tròn góc phải dưới.
+- **Cài lên cửa hàng:** [GUIDE-261118-IVY-Header-Bell-Install](../docs/guide/GUIDE-261118-IVY-Header-Bell-Install.md). Theme nháp `Ivyusa Talk Staging` đã cài; theme đang chạy chưa.
+- **Còn lại:** chủ dự án thử trên điện thoại thật rồi Publish theme; đối chiếu lại vị trí khung với Figma khi mở được frame (Q-17).

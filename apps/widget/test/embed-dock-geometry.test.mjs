@@ -21,11 +21,21 @@ const WIDGET_ORIGIN = 'https://host.example';
  * Boot the real loader against a stub page and hand back the iframe's inline
  * style plus a way to post the widget's own messages at it.
  */
-function mount({
+function mount(opts = {}) {
+  const { frame, send } = mountPage(opts);
+  return { frame, send };
+}
+
+/** As `mount`, with the page pieces the header-following dock reads (PLN-261118). */
+function mountPage({
   config = { shop: 's.myshopify.com', trigger: '#st-bell' },
   hasTrigger = true,
   innerWidth = 1280,
+  innerHeight,
   dvh = false,
+  opener = { tagName: 'BUTTON' },
+  extra = {},
+  raf,
 } = {}) {
   const mounted = [];
   const handlers = {};
@@ -37,7 +47,7 @@ function mount({
     getElementById: () => null,
     // The storefront's opener. Without it the loader falls back to the floating
     // launcher on purpose (FIX-260916), which is a different geometry entirely.
-    querySelector: (sel) => (hasTrigger && sel === '#st-bell' ? { tagName: 'BUTTON' } : null),
+    querySelector: (sel) => (hasTrigger && sel === '#st-bell' ? opener : extra[sel] ?? null),
     querySelectorAll: () => [],
     addEventListener() {},
     createElement: () => ({ style: {}, setAttribute() {} }),
@@ -48,6 +58,8 @@ function mount({
     name: '',
     opener: null,
     innerWidth,
+    ...(innerHeight ? { innerHeight } : {}),
+    ...(raf ? { requestAnimationFrame: raf } : {}),
     // `100dvh` support, as `CSS.supports` reports it (T15 D1).
     ...(dvh ? { CSS: { supports: (prop, value) => prop === 'height' && value === '100dvh' } } : {}),
     SHARPTALK_WIDGET_CONFIG: config,
@@ -88,7 +100,10 @@ function mount({
   const send = (data, origin = WIDGET_ORIGIN) => {
     for (const fn of handlers.message || []) fn({ data, origin, source: null });
   };
-  return { frame, send };
+  const fire = (type) => {
+    for (const fn of handlers[type] || []) fn({});
+  };
+  return { frame, send, fire };
 }
 
 /** The widget reports its geometry, then the panel opens — the usual order. */
@@ -205,4 +220,94 @@ test('640px and wider is not a phone: the floating box is unchanged', () => {
   send({ type: 'ivy:resize', open: true });
   assert.equal(frame.style.width, 'min(444px, 100vw)');
   assert.equal(frame.style.height, 'min(680px, 100vh)');
+});
+
+/**
+ * The docked panel follows the storefront header (PLN-261118 bell).
+ *
+ * ivyusa.com's header ends at 171px at the top of the page, at 91px once it
+ * sticks, at 208px on a tablet, and leaves the window altogether on a phone
+ * scrolled down. One fixed offset is right for one of those at best.
+ */
+function mountWithHeader({ bottom, innerWidth = 1280, innerHeight = 900, config } = {}) {
+  const header = { bottom };
+  const rafQueue = [];
+  const m = mountPage({
+    config: config ?? { shop: 's.myshopify.com', trigger: '#st-bell' },
+    innerWidth,
+    innerHeight,
+    opener: { tagName: 'BUTTON', closest: () => ({ getBoundingClientRect: () => ({ bottom: header.bottom }) }) },
+    raf: (fn) => rafQueue.push(fn),
+  });
+  const flush = () => { for (let i = 0; i < 80 && rafQueue.length; i++) rafQueue.shift()(); };
+  m.send({ type: 'ivy:launcher', position: 'right', size: 96, mode: 'trigger', offsetTop: 176, trigger: '#st-bell', frame: { w: 420, h: 680 } });
+  m.send({ type: 'ivy:resize', open: true });
+  flush();
+  return { ...m, header, flush, scroll: () => { m.fire('scroll'); flush(); } };
+}
+
+test('the docked frame starts 8px under the header that holds the opener, not at the fixed offset', () => {
+  const { frame } = mountWithHeader({ bottom: 171 });
+  assert.equal(frame.style.top, '179px');
+  assert.equal(frame.style.height, 'min(680px, calc(100vh - 184px))');
+});
+
+test('it follows the header when the header sticks on scroll', () => {
+  const { frame, header, scroll } = mountWithHeader({ bottom: 171 });
+  header.bottom = 91;
+  scroll();
+  assert.equal(frame.style.top, '99px');
+  assert.equal(frame.style.height, 'min(680px, calc(100vh - 104px))');
+});
+
+test('a taller header (tablet) is not covered', () => {
+  const { frame } = mountWithHeader({ bottom: 208, innerWidth: 768, innerHeight: 1024 });
+  assert.equal(frame.style.top, '216px');
+});
+
+test('a phone sits flush under the header, and takes the whole screen once the header scrolls away', () => {
+  const { frame, header, scroll } = mountWithHeader({ bottom: 176, innerWidth: 390, innerHeight: 844 });
+  assert.equal(frame.style.top, '176px');
+  assert.equal(frame.style.height, 'calc(100vh - 176px)');
+  header.bottom = 0;
+  scroll();
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, '100vh');
+  header.bottom = 176;
+  scroll();
+  assert.equal(frame.style.top, '176px');
+});
+
+test('too little room under the header (a phone on its side): the panel covers it', () => {
+  const { frame } = mountWithHeader({ bottom: 175, innerWidth: 734, innerHeight: 343 });
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, 'min(680px, 100vh)');
+});
+
+test('nothing is measured while the panel is closed', () => {
+  const { frame, header, send, scroll } = mountWithHeader({ bottom: 171 });
+  send({ type: 'ivy:resize', open: false });
+  header.bottom = 91;
+  scroll();
+  assert.equal(frame.style.top, '179px');
+  send({ type: 'ivy:resize', open: true });
+  assert.equal(frame.style.top, '99px');
+});
+
+test('an explicit anchor selector wins over the opener\'s header', () => {
+  const m = mountPage({
+    config: { shop: 's.myshopify.com', trigger: '#st-bell', anchor: '#bar' },
+    innerHeight: 900,
+    opener: { tagName: 'BUTTON', closest: () => ({ getBoundingClientRect: () => ({ bottom: 500 }) }) },
+    extra: { '#bar': { getBoundingClientRect: () => ({ bottom: 60 }) } },
+    raf: () => 0,
+  });
+  m.send({ type: 'ivy:launcher', position: 'right', size: 96, mode: 'trigger', offsetTop: 176, trigger: '#st-bell', frame: { w: 420, h: 680 } });
+  m.send({ type: 'ivy:resize', open: true });
+  assert.equal(m.frame.style.top, '68px');
+});
+
+test('no header to measure: the tenant\'s offset still applies', () => {
+  const { frame } = openDocked({ offsetTop: 68 });
+  assert.equal(frame.style.top, '68px');
 });
