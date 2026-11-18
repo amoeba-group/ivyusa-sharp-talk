@@ -113,8 +113,8 @@ Chuông trên header ivyusa.com (chấm đỏ = số chưa đọc) ─► Panel 
 ### SCR-IVY-01 · Launcher & Panel
 - **Figma:** mockup desktop `1006:2431`, `1006:2455`, `1006:4258`, `1006:5260`, `1006:5374`, `1006:5398`, `1008:2755` (1903×901 trên nền ivyusa.com); mobile `1282:17` (iPhone 15 Pro).
 - **Điểm mở theo thiết kế: biểu tượng chuông trên header của ivyusa.com**, sau tài khoản và giỏ hàng, có chấm đỏ ghi số chưa đọc (mockup `1006:2431`: "3"). Mockup **không** có nút tròn nổi ở góc phải dưới. (Sửa 2026-11-18; trước đó mục này ghi "launcher tròn góc phải dưới", sai so với mockup.)
-- Trong code đây là **trigger mode** của `embed.js`: trang cửa hàng tự có phần tử mở, widget ẩn nút tròn, panel 380px mở dưới header, số chưa đọc ghi vào `[data-sharptalk-badge]`. Trang không có phần tử đó → loader tự quay về nút tròn (FIX-260916). Trên mobile < 640px → panel toàn màn hình.
-- Cài lên ivyusa.com: [GUIDE-261118-IVY-Header-Bell-Install](../docs/guide/GUIDE-261118-IVY-Header-Bell-Install.md). **Chưa cài** (2026-11-18: theme Hyper 1.3.1 chưa có chuông, chưa có đoạn mã widget).
+- Trong code đây là **trigger mode** của `embed.js`: trang cửa hàng tự có phần tử mở, widget ẩn nút tròn, panel 380px mở dưới header, số chưa đọc ghi vào `[data-sharptalk-badge]`. Trang không có phần tử đó → loader tự quay về nút tròn (FIX-260916). Trên mobile < 640px → panel rộng kín màn hình, bắt đầu từ `offsetTop` (dưới header), có nút ✕.
+- Cài lên ivyusa.com: [GUIDE-261118-IVY-Header-Bell-Install](../docs/guide/GUIDE-261118-IVY-Header-Bell-Install.md). **Chưa cài trên theme đang chạy** (2026-11-18: theme Hyper 1.3.1 chưa có chuông, chưa có đoạn mã widget). Đã cài và thử trên theme nháp `Ivyusa Talk Staging`; tenant production đã ở trigger mode (`#st-bell`, offset 176).
 - Vị trí panel khi mở từ chuông: chưa thấy frame nào vẽ panel trên nền trang (`1006:2455` chỉ có trang nền) → Q-17.
 - E2E của IVY chạy kiểu nút tròn (`Open support`); kiểu chuông chỉ có test của đợt PLN-260916 → G-26.
 - **Đã làm (T15, 2026-11-13):**

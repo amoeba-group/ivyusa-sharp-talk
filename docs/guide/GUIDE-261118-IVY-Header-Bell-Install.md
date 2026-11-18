@@ -105,7 +105,7 @@ Bấm **Save**, chờ thông báo lưu thành công.
 | **176** (khuyên dùng) | Panel nằm ngay dưới header | Panel cách header 85px |
 | **96** | Panel **đè lên** nửa dưới header, che cả chuông | Panel nằm ngay dưới header |
 
-Giá trị cho phép: 0 tới 240. Chỉ áp dụng cho desktop; trên điện thoại panel luôn kín màn hình.
+Giá trị cho phép: 0 tới 240. **Áp dụng cho cả điện thoại**: ở đó panel rộng kín màn hình nhưng cũng bắt đầu từ đúng số px này, không phủ lên header (đo trên bản Preview ngày 2026-11-18, cửa sổ 390×844: panel từ 176px xuống đáy). Header điện thoại ở đầu trang kết thúc ở 176px nên 176 khít ở đó; khi cuộn xuống header ẩn đi và phía trên panel hở ra một dải trang.
 
 ## 6. Kiểm tra
 
@@ -118,13 +118,15 @@ Mở bản Preview, tải lại trang bỏ cache (Ctrl+Shift+R). Lần tải đ�
 | 3 | Chấm đỏ trên chuông | Bằng số chưa đọc trong widget; 0 thì ẩn |
 | 4 | Bấm lại chuông, hoặc bấm ra ngoài panel | Panel đóng |
 | 5 | Cuộn trang rồi bấm chuông | Panel vẫn mở đúng chỗ (theo bảng Top offset) |
-| 6 | Điện thoại (hoặc cửa sổ hẹp hơn 640px) | Panel kín màn hình, **có nút ✕** để đóng |
+| 6 | Điện thoại (hoặc cửa sổ hẹp hơn 640px) | Panel rộng kín màn hình, nằm dưới header, **có nút ✕** để đóng |
 | 7 | Console của trình duyệt (F12) | Không có cảnh báo `launcher trigger "#st-bell" was not found` |
 | 8 | Trang đăng nhập của cửa hàng | Widget không hiện (đúng thiết kế) |
 
 Nếu vẫn thấy nút tròn: widget không tìm thấy chuông. Nó chờ khoảng 3,6 giây rồi quay về nút tròn. Kiểm lại tên `#st-bell` ở cả ba chỗ (mục 3, 4, 5).
 
 ## 7. Điều cần biết trước khi Publish
+
+**Đã thử trên theme nháp `Ivyusa Talk Staging` ngày 2026-11-18** (link Preview, desktop 1440×900 và cửa sổ 390×844): chuông hiện cạnh giỏ hàng; bấm mở panel IVY (2 tab, lời chào, 8 nút) ở 176px; bấm lại chuông và bấm ra ngoài đều đóng; không có nút tròn; cửa sổ hẹp có nút ✕ và đóng được. Chưa thử trên điện thoại thật, và chưa thử với khách đã đăng nhập.
 
 - **Trên desktop, panel mở từ chuông không có nút đổi ngôn ngữ và không có nút ✕.** Đó là hành vi hiện tại của trigger mode: đóng bằng cách bấm lại chuông hoặc bấm ra ngoài. Thiết kế header của panel (SCR-IVY-02) thì có cả hai nút. Chưa quyết theo bên nào: ivy-docs SPEC, G-26 và Q-17.
 - **Khách đã đăng nhập ivyusa.com chưa được nhận ra tự động.** Widget hỏi `https://ivyusa.com/apps/ivy/identity` để biết khách là ai; địa chỉ này đang trả 404, tức App Proxy của app Shopify chưa được cấu hình. Cho tới khi có, khách thấy "Hi there" và phải xác minh (Verify your identity / Guest order lookup) mới xem được đơn. Đây là việc riêng, ngoài phạm vi bản hướng dẫn này.
