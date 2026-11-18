@@ -41,7 +41,7 @@ Kênh thông báo: hiện chỉ thông báo trong widget là thật; email / SMS
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit / CI | ⏳ |
+| Commit / CI | `f92e0659` · IVY CI/CD run `44236718563` xanh (2026-11-18 04:25 UTC) |
 | Server `talkaibotprd01` | ⏳ (build lại `api`) |
 | Re-sync trên production | ⏳ |
 | Kết quả đo PLN §2.5 | ⏳ |

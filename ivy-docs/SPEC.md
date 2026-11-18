@@ -87,7 +87,7 @@ Mọi thiết kế đều giả định khách đã đăng nhập (tên mẫu: K
 ## 5. Kiến trúc thông tin
 
 ```
-Launcher (góc phải dưới) ─► Panel 380px
+Chuông trên header ivyusa.com (chấm đỏ = số chưa đọc) ─► Panel 380px
  ├─ Header: "Hi, {name}" · 🌐 EN ▾ · ⚙ Settings · ✕ Close
  ├─ Tab [Notifications ●4]
  │   ├─ Chip: Order | Delivery | Promo | Review
@@ -112,7 +112,11 @@ Launcher (góc phải dưới) ─► Panel 380px
 
 ### SCR-IVY-01 · Launcher & Panel
 - **Figma:** mockup desktop `1006:2431`, `1006:2455`, `1006:4258`, `1006:5260`, `1006:5374`, `1006:5398`, `1008:2755` (1903×901 trên nền ivyusa.com); mobile `1282:17` (iPhone 15 Pro).
-- Launcher tròn góc phải dưới; bấm → panel 380px nổi phía trên launcher; trên mobile ≤ 480px → panel toàn màn hình.
+- **Điểm mở theo thiết kế: biểu tượng chuông trên header của ivyusa.com**, sau tài khoản và giỏ hàng, có chấm đỏ ghi số chưa đọc (mockup `1006:2431`: "3"). Mockup **không** có nút tròn nổi ở góc phải dưới. (Sửa 2026-11-18; trước đó mục này ghi "launcher tròn góc phải dưới", sai so với mockup.)
+- Trong code đây là **trigger mode** của `embed.js`: trang cửa hàng tự có phần tử mở, widget ẩn nút tròn, panel 380px mở dưới header, số chưa đọc ghi vào `[data-sharptalk-badge]`. Trang không có phần tử đó → loader tự quay về nút tròn (FIX-260916). Trên mobile < 640px → panel toàn màn hình.
+- Cài lên ivyusa.com: [GUIDE-261118-IVY-Header-Bell-Install](../docs/guide/GUIDE-261118-IVY-Header-Bell-Install.md). **Chưa cài** (2026-11-18: theme Hyper 1.3.1 chưa có chuông, chưa có đoạn mã widget).
+- Vị trí panel khi mở từ chuông: chưa thấy frame nào vẽ panel trên nền trang (`1006:2455` chỉ có trang nền) → Q-17.
+- E2E của IVY chạy kiểu nút tròn (`Open support`); kiểu chuông chỉ có test của đợt PLN-260916 → G-26.
 - **Đã làm (T15, 2026-11-13):**
   - Điện thoại theo quy tắc của `embed.js`: màn < 640px → panel `100vw × 100dvh`, kể cả màn cao (chủ dự án chọn 2a; trước là bottom sheet 680px).
   - Trang widget mở thẳng trên điện thoại hiện giống vậy.
@@ -290,7 +294,7 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 
 | Phần tử | Selector | Trạng thái |
 |---|---|---|
-| Launcher | `getByRole('button', { name: 'Open support' })` | ✅ `Widget.tsx` |
+| Launcher (kiểu nút tròn; kiểu chuông thì phần tử mở thuộc trang cửa hàng, xem SCR-IVY-01) | `getByRole('button', { name: 'Open support' })` | ✅ `Widget.tsx` |
 | Panel | `getByRole('dialog', { name: 'Support widget' })` | ✅ `WidgetPanel.tsx` |
 | Lời chào header | `.st-header-title` (text "Hi, {firstName}") | ✅ class / ➕ nội dung |
 | Nút ngôn ngữ / Settings / Close | `getByRole('button', { name: 'Language' \| 'Settings' \| 'Close' })` | ✅ |
@@ -351,6 +355,7 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-23 | A11y chip lọc | ~~Chip không có `aria-pressed`~~ → có từ T02; badge tab có `aria-label` "{n} unread" ✓ | Bổ sung theo NFR-02 | UI | T15 ✅ (2026-11-13; thêm: focus không thoát khỏi panel, TC-15-05) |
 | G-24 | Mobile toàn màn hình | Có chế độ `compact=1` / `mode=app` | Kiểm thử 390px, sửa tràn | UI | T15 ✅ (2026-11-13; điện thoại kín màn `100dvh`; trang mở thẳng cũng vậy; 6 ngôn ngữ ở 390×844 không tràn) |
 | G-25 | Báo hàng về thật (재입고 알림) | `POST /restock/subscribe` có, nhưng `notifyRestock` không được gọi ở đâu (không có nguồn báo khi Shopify có hàng lại) và bản đăng ký không lưu tenant | Nguồn báo hàng về (webhook `inventory_levels/update` hoặc product sync) → thông báo trong app; chip Restock alert đăng ký cho sản phẩm cụ thể | API · UI | Task riêng (chủ dự án chốt 2026-11-12, T10 §8-4a) |
+| G-26 | Điểm mở = chuông trên header (SCR-IVY-01) | Trigger mode có sẵn (`embed.js`, console **Launcher mode**). Ở chế độ này trên desktop, panel **ẩn nút ngôn ngữ và nút ✕** (đóng bằng bấm lại chuông / bấm ra ngoài) — khác header SCR-IVY-02 | Cài chuông vào theme ivyusa.com + bật trigger mode (GUIDE-261118). Quyết định Q-17. E2E cho kiểu chuông trên widget IVY | CFG · UI · E2E | ⏳ chưa có task |
 
 **Đã khớp thiết kế (giữ nguyên):** menu 6 ngôn ngữ (`LanguageSwitcher.tsx`), nút Settings/Close, badge tab (99+), nhóm "Today's/Yesterday" (code: "Today's notifications"/"Yesterday"), thẻ giao hàng + stepper ngang (`TrackingStepperH.tsx`), chế độ chọn/xoá, review list + form, typing bubble "답변을 작성 중입니다…", Settings (consent + ngày + version, marketing opt-out, CCPA, export JSON, delete).
 
@@ -378,5 +383,6 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | Q-14 | Giữ nút đính kèm file trong composer? | Giữ (thiết kế không cấm) |
 | Q-15 | Contact Support của IVY gồm những kênh nào (thiết kế: chỉ email)? | Email + live chat khi có agent online. ✅ **Chốt (T11, 2026-11-12):** chỉ email, đúng thiết kế; tenant bật thêm live chat được ở console |
 | Q-16 | Mã coupon lấy từ đâu (Shopify discount code? nhập tay khi gửi campaign?) | Nhập trong campaign console, lưu ở metadata notification. **Chốt (T05, 2026-11-12):** nhập trong console Campaigns, lưu ở `content.couponCode` của campaign; mỗi campaign một mã. |
+| Q-17 | Mở từ chuông thì panel nằm ở đâu, và header của panel còn nút 🌐 / ✕ không (trigger mode hiện ẩn cả hai trên desktop)? | Panel dưới header, sát mép phải; giữ hành vi hiện tại của trigger mode cho tới khi designer trả lời |
 
 **Lỗi chính tả / copy trong Figma cần designer sửa** (không implement theo): "Today’s__" (placeholder), "Todays’__", "KR" lẫn "KO" ở nút ngôn ngữ, "구독 해택" → **혜택**, "4월 전" (nhiều khả năng là **4일 전**), tên frame "02.Pamyent", "03.Delievery".
