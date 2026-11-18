@@ -1,10 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { CJM_STAGE, ORDER_STATUS_INTERNAL, internalToUiStatus } from '@sharptalk/types';
+import {
+  CJM_STAGE,
+  FULFILLMENT_STATUS,
+  NOTIFICATION_REF,
+  ORDER_STATUS_INTERNAL,
+  internalToUiStatus,
+} from '@sharptalk/types';
 import { OrderCache } from './entity/order-cache.entity';
 import { OrderItem } from './entity/order-item.entity';
+import { Fulfillment } from './entity/fulfillment.entity';
+import { safeTrackingUrl } from './carrier-tracking';
 import { ShopifyAdminClient, ShopifyOrderDto } from './shopify-admin.client';
+import { ShipmentSummary, summarizeFulfillments } from './shopify-shipment';
 import { TenantService } from '../tenant/tenant.service';
 import { CustomerService } from '../customer/customer.service';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
@@ -50,6 +59,14 @@ function normalizeOrderNumber(v: string | number | null | undefined): string {
 /** Per-customer login backfill: page cap and re-run suppression window. */
 const CUSTOMER_BACKFILL_MAX_PAGES = 2;
 const CUSTOMER_BACKFILL_TTL_MS = 10 * 60_000;
+/**
+ * A shipment change older than this is recorded without telling the shopper
+ * (PLN-261118 §2.4): re-reading a store's history must not announce parcels
+ * that arrived weeks ago.
+ */
+const SHIPMENT_NOTICE_MAX_AGE_MS = 48 * 3_600_000;
+/** Clock slack for the delivery check logged by `syncBatch`. */
+const DELIVERY_AFTER_UPDATE_SLACK_MS = 5 * 60_000;
 
 /** Shopify topic → our webhook path (under /api/v1/webhooks/shopify/). */
 const WEBHOOK_TOPICS: Array<{ topic: string; path: string }> = [
@@ -91,6 +108,10 @@ export class ShopifySyncService {
     private readonly tenantService: TenantService,
     private readonly customerService: CustomerService,
     private readonly bus: EventBusService,
+    // Appended and optional so callers that build the service by hand keep working.
+    @Optional()
+    @InjectRepository(Fulfillment)
+    private readonly fulfillRepo?: Repository<Fulfillment>,
   ) {}
 
   /**
@@ -187,6 +208,8 @@ export class ShopifySyncService {
     let pages = 0;
     let pageInfo: string | null = null;
     let lastUpdated: Date | null = null;
+    let delivered = 0;
+    let deliveredUntouched = 0;
     try {
       do {
         const page = await this.client.fetchOrders(conn.shopDomain, conn.token, {
@@ -197,6 +220,15 @@ export class ShopifySyncService {
         for (const o of page.orders) {
           const at = o.updated_at ? new Date(o.updated_at) : null;
           if (at && !Number.isNaN(at.getTime()) && (!lastUpdated || at > lastUpdated)) lastUpdated = at;
+          // PLN-261118 §2.5: this sync finds an order by its `updated_at`. If a
+          // parcel can be delivered without the store touching the order, such
+          // orders show up here with a delivery later than their last update.
+          for (const f of o.fulfillments ?? []) {
+            const deliveredAt = f.delivered_at ? new Date(f.delivered_at).getTime() : NaN;
+            if (Number.isNaN(deliveredAt)) continue;
+            delivered++;
+            if (at && deliveredAt - at.getTime() > DELIVERY_AFTER_UPDATE_SLACK_MS) deliveredUntouched++;
+          }
         }
         pageInfo = page.nextPageInfo;
         pages++;
@@ -206,6 +238,13 @@ export class ShopifySyncService {
       // Partial progress is kept; report it but flag the interruption. The
       // cursor stays put so the unread pages are retried next run.
       return this.record(tenantId, true, synced, `Synced ${synced} order(s), interrupted: ${(e as Error).message}`);
+    }
+
+    if (delivered > 0) {
+      this.logger.log(
+        `Delivery check tenant=${tenantId}: ${delivered} delivered parcel(s) read, ` +
+          `${deliveredUntouched} delivered after the order's last update`,
+      );
     }
 
     if (pageInfo) {
@@ -395,7 +434,9 @@ export class ShopifySyncService {
       } else identityErased = true;
     }
 
-    const internal = this.mapStatus(o.financial_status, o.fulfillment_status);
+    const rollup = this.mapStatus(o.financial_status, o.fulfillment_status);
+    // Where the parcels are (PLN-261118). Null = this payload does not say.
+    const shipment = summarizeFulfillments(o.fulfillments);
     const shopifyOrderId = String(o.id);
     // Store the bare number. Webhooks carry `order_number` (1002) while the
     // GraphQL sync only has `name` ("#1002"), so the same order flipped format
@@ -439,6 +480,21 @@ export class ShopifySyncService {
     // the merchant's books but must not point at the person who asked to be deleted.
     row.customerId = identityErased ? null : customerId ?? row.customerId ?? null;
     row.orderNumber = orderNumber;
+    // The rollup only knows "fulfilled"; that every parcel arrived comes from
+    // the parcels. A payload silent about them (an order webhook, a store that
+    // refused the field) must not pull a delivered order back to In Transit —
+    // it used to, on the very next sync.
+    const wasDelivered = row.statusInternal === ORDER_STATUS_INTERNAL.DELIVERED;
+    const internal =
+      rollup !== ORDER_STATUS_INTERNAL.SHIPPING
+        ? rollup
+        : shipment
+          ? shipment.status === FULFILLMENT_STATUS.DELIVERED
+            ? ORDER_STATUS_INTERNAL.DELIVERED
+            : ORDER_STATUS_INTERNAL.SHIPPING
+          : wasDelivered
+            ? ORDER_STATUS_INTERNAL.DELIVERED
+            : rollup;
     row.statusInternal = internal;
     row.statusUi = internalToUiStatus(internal);
     row.total = total;
@@ -455,6 +511,7 @@ export class ShopifySyncService {
     }
     const saved = await this.orderRepo.save(row);
     await this.syncLineItems(tenantId, saved.id, o);
+    if (shipment) await this.syncShipment(saved, shipment);
 
     // Journey breadcrumb (PLN-260807 F3, A-7): only a genuinely NEW cached order
     // with a known customer — orders/updated webhooks and re-sync passes hit the
@@ -513,6 +570,75 @@ export class ShopifySyncService {
       if (rows.length) await this.itemRepo.save(rows);
     } catch (e) {
       this.logger.warn(`Line items for order ${orderId} not cached: ${(e as Error).message}`);
+    }
+  }
+
+  /**
+   * Keep the order's one `fulfillments` row in step with the store's parcels —
+   * the same row the fulfillment webhook writes, for a store whose webhooks do
+   * not reach us (PLN-261118). Never fatal: a failure here must not lose the order.
+   *
+   * The shopper hears about it only when the status actually moved, moved
+   * recently, and the order is theirs. A sync reads the same order again and
+   * again, and a re-sync reads months of them.
+   */
+  private async syncShipment(order: OrderCache, s: ShipmentSummary): Promise<void> {
+    if (!this.fulfillRepo) return;
+    try {
+      const url = safeTrackingUrl(s.trackingUrl ?? undefined);
+      let row = await this.fulfillRepo.findOne({ where: { orderId: order.id } });
+      const statusMoved = row?.status !== s.status;
+      if (!row) {
+        row = this.fulfillRepo.create({
+          tenantId: order.tenantId,
+          orderId: order.id,
+          status: s.status,
+          trackingNumber: s.trackingNumber,
+          carrier: s.carrier,
+          trackingUrl: url,
+        });
+      } else {
+        const next = {
+          trackingNumber: s.trackingNumber ?? row.trackingNumber,
+          carrier: s.carrier ?? row.carrier,
+          trackingUrl: url ?? row.trackingUrl,
+        };
+        const same =
+          !statusMoved &&
+          next.trackingNumber === row.trackingNumber &&
+          next.carrier === row.carrier &&
+          next.trackingUrl === row.trackingUrl &&
+          row.tenantId != null;
+        if (same) return;
+        row.status = s.status;
+        Object.assign(row, next);
+        row.tenantId = row.tenantId ?? order.tenantId;
+      }
+      await this.fulfillRepo.save(row);
+
+      const recent =
+        s.changedAt != null && Date.now() - s.changedAt.getTime() <= SHIPMENT_NOTICE_MAX_AGE_MS;
+      if (!statusMoved || !recent || order.customerId == null) return;
+      const statusUi = order.statusUi ?? s.status;
+      await this.bus.publish(EVENTS.NOTIFICATION, {
+        tenantId: order.tenantId,
+        customerId: order.customerId,
+        category: 'shipping',
+        title: 'Shipping update',
+        body: `Your order ${order.orderNumber} is now ${statusUi}.`,
+        statusBadge: statusUi,
+        refType: NOTIFICATION_REF.ORDER,
+        refId: order.id,
+      });
+      await this.bus.publish(EVENTS.CJM, {
+        tenantId: order.tenantId,
+        customerId: order.customerId,
+        stage: CJM_STAGE.DELIVERY,
+        eventType: 'shipment_update',
+        payload: { orderNumber: order.orderNumber, status: s.status },
+      });
+    } catch (e) {
+      this.logger.warn(`Shipment for order ${order.id} not cached: ${(e as Error).message}`);
     }
   }
 

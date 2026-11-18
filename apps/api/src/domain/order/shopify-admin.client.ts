@@ -61,6 +61,26 @@ export interface ShopifyOrderDto {
     /** The product's storefront page (PLN-260923 P3) — rich tier only, like image_url. */
     product_url?: string | null;
   }> | null;
+  /**
+   * The order's parcels (PLN-261118). Order webhooks deliver this natively; the
+   * GraphQL sync maps its own fields onto the same names. `undefined` means
+   * "this payload says nothing about shipment" and leaves the cache as it is.
+   */
+  fulfillments?: ShopifyOrderFulfillmentDto[] | null;
+}
+
+/** One parcel of an order, REST-shaped (see `ShopifyOrderDto.fulfillments`). */
+export interface ShopifyOrderFulfillmentDto {
+  /** success / cancelled / error / failure … — void parcels are skipped. */
+  status?: string | null;
+  shipment_status?: string | null;
+  tracking_number?: string | null;
+  tracking_company?: string | null;
+  tracking_url?: string | null;
+  tracking_urls?: string[] | null;
+  updated_at?: string | null;
+  /** GraphQL sync only. */
+  delivered_at?: string | null;
 }
 
 /** Subset of a Shopify fulfillment webhook payload we act on. */
@@ -133,6 +153,13 @@ interface OrderNode {
       } | null;
     }>;
   } | null;
+  fulfillments?: Array<{
+    status?: string | null;
+    displayStatus?: string | null;
+    updatedAt?: string | null;
+    deliveredAt?: string | null;
+    trackingInfo?: Array<{ number?: string | null; company?: string | null; url?: string | null }> | null;
+  }> | null;
 }
 
 interface OrdersQueryResponse {
@@ -195,11 +222,28 @@ export function productUrl(
   return handle ? `https://${shopDomain}/products/${encodeURIComponent(handle)}` : null;
 }
 
+/**
+ * The order's parcels (PLN-261118): where each one is and how to track it.
+ * Readable with `read_orders`. Asked for separately from the line-item tier so
+ * a store that refuses it still syncs its orders (see `fetchOrdersPage`).
+ */
+const FULFILLMENTS_PER_ORDER = 5;
+const FULFILLMENTS_SELECTION = `
+      fulfillments(first: ${FULFILLMENTS_PER_ORDER}) {
+        status
+        displayStatus
+        updatedAt
+        deliveredAt
+        trackingInfo(first: 1) { number company url }
+      }`;
+/** How long a store that refused the parcels is not asked again. */
+const FULFILLMENTS_RETRY_MS = 60 * 60_000;
+
 /** How much of a line item this call asks for. */
 type LineItemTier = 'rich' | 'basic' | 'none';
 
 /** Orders page query; the tier decides how much of each line item is selected. */
-function ordersQuery(tier: LineItemTier): string {
+function ordersQuery(tier: LineItemTier, withFulfillments = false): string {
   return `
 query Orders($first: Int!, $after: String, $query: String, $reverse: Boolean) {
   orders(first: $first, after: $after, query: $query, sortKey: UPDATED_AT, reverse: $reverse) {
@@ -218,7 +262,7 @@ query Orders($first: Int!, $after: String, $query: String, $reverse: Boolean) {
       totalShippingPriceSet { shopMoney { amount } }
       customer { legacyResourceId email firstName lastName }${
         tier === 'none' ? '' : lineItemsSelection(tier === 'rich')
-      }
+      }${withFulfillments ? FULFILLMENTS_SELECTION : ''}
     }
   }
 }`;
@@ -357,21 +401,59 @@ export class ShopifyAdminClient {
     return this.isAccessScopeError(e) || /not approved to access|protected customer data/i.test(msg);
   }
 
-  /** rich → basic → none, stepping down only on a scope/access denial. */
+  /**
+   * The store answered, and the answer was an error that taking the parcels out
+   * may cure: no access to the field, a query past what one request may cost, a
+   * field this API version does not have. A scope denial that names something
+   * else (a line-item field) belongs to the tier ladder instead. A transport
+   * failure (HTTP status, timeout) is not a refusal at all.
+   */
+  private isFulfillmentRefusal(e: unknown): boolean {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (!msg.startsWith('Admin API error:')) return false;
+    return !this.isAccessScopeError(e) || /fulfillment|tracking/i.test(msg);
+  }
+
+  /** Stores that refused the parcels, and until when they are not asked again. */
+  private readonly noFulfillmentsUntil = new Map<string, number>();
+
+  /**
+   * rich → basic → none, stepping down only on a scope/access denial. The
+   * parcels ride along and are dropped on their own, without costing a tier:
+   * an order sync must never fail because of them.
+   */
   private async fetchOrdersPage(
     shopDomain: string,
     token: string,
     vars: Record<string, unknown>,
   ): Promise<OrdersQueryResponse> {
     const tiers: LineItemTier[] = ['rich', 'basic', 'none'];
+    let withFulfillments = (this.noFulfillmentsUntil.get(shopDomain) ?? 0) < Date.now();
+    let refusal: Error | null = null;
     let lastError: unknown;
-    for (const tier of tiers) {
+    for (let i = 0; i < tiers.length; ) {
+      const tier = tiers[i];
       try {
-        return (await this.gql(shopDomain, token, ordersQuery(tier), vars)) as OrdersQueryResponse;
+        const body = (await this.gql(shopDomain, token, ordersQuery(tier, withFulfillments), vars)) as OrdersQueryResponse;
+        if (refusal) {
+          // Only now is it known the parcels were the cause: the same query
+          // went through without them. (A throttled store fails both ways.)
+          this.noFulfillmentsUntil.set(shopDomain, Date.now() + FULFILLMENTS_RETRY_MS);
+          this.logger.warn(
+            `Shipment details unavailable for ${shopDomain} (${refusal.message}) — syncing orders without them`,
+          );
+        }
+        return body;
       } catch (e) {
+        if (withFulfillments && this.isFulfillmentRefusal(e)) {
+          withFulfillments = false;
+          refusal = e as Error;
+          continue; // same tier, without the parcels
+        }
         if (!this.isAccessScopeError(e)) throw e;
+        i++;
         lastError = e;
-        const next = tiers[tiers.indexOf(tier) + 1];
+        const next = tiers[i];
         this.logger.warn(
           `Line item tier "${tier}" unavailable for ${shopDomain} (${(e as Error).message})` +
             (next ? ` — retrying as "${next}"` : ''),
@@ -658,6 +740,20 @@ export class ShopifyAdminClient {
             // bought; the product's featured image is the fallback.
             image_url: li.variant?.image?.url ?? li.variant?.product?.featuredImage?.url ?? null,
             product_url: productUrl(li.variant?.product, shopDomain),
+          }))
+        : undefined,
+      // Same rule as the lines: not asked for → undefined → cache untouched.
+      fulfillments: n.fulfillments
+        ? n.fulfillments.map((f) => ({
+            status: f.status?.toLowerCase() ?? null,
+            // DELIVERED / IN_TRANSIT / OUT_FOR_DELIVERY / ATTEMPTED_DELIVERY read
+            // the same as the REST `shipment_status` once lower-cased.
+            shipment_status: f.displayStatus?.toLowerCase() ?? null,
+            tracking_number: f.trackingInfo?.[0]?.number ?? null,
+            tracking_company: f.trackingInfo?.[0]?.company ?? null,
+            tracking_url: f.trackingInfo?.[0]?.url ?? null,
+            updated_at: f.updatedAt ?? null,
+            delivered_at: f.deliveredAt ?? null,
           }))
         : undefined,
     };

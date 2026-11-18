@@ -33,6 +33,8 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-035 | Đơn đã **Delivered bị kéo về In Transit** ở lượt đồng bộ kế tiếp: `upsertOrder` gán lại trạng thái theo `fulfillment_status` chung của đơn mỗi lần chạy | API | 🟠 | Fixed code (2026-11-18, [RPT](../docs/implementation/RPT-261118-Shopify-Sync-Fulfillment-Delivery.md)) | — |
+| BUG-034 | **Webhook Shopify không tới được production** (load balancer chặn client không phải trình duyệt, như BUG-004) → không đơn nào Delivered, không có mã vận đơn, không có thông báo giao hàng, không đơn nào viết được review | Infra · API | 🔴 | Workaround code (2026-11-18): lịch đồng bộ tự đọc thông tin giao hàng. Load balancer giữ nguyên. Production cần Re-sync sau deploy | — |
 | BUG-033 | Đồng bộ Shopify **dừng ở 500 đơn** rồi dời con trỏ qua phần chưa đọc: production có 500 / 181.188 đơn, bấm Sync now lại không thêm. Khách có hơn 100 đơn nhận 100 đơn cũ nhất khi đăng nhập | API | 🔴 | Fixed code (2026-11-17, [FIX](../docs/bug-fix/FIX-261117-Shopify-Sync-Stops-At-500.md)); production cần bấm Re-sync recent orders sau deploy | — |
 | BUG-032 | Popup trong console (ví dụ Tenant Settings → Platforms → Shopify connection): lớp nền mờ **hở 32px ở mép trên**, thấy một dải trang không bị làm mờ | Console | 🟡 | Fixed (2026-11-17) | — |
 | BUG-031 | Ô nhập chat không co lại được: khi font mặc định rộng (runner Linux của CI), nút **Send** bị đẩy ra ngoài mép panel 390px → TC-15-06 ×6 đỏ trên CI, xanh ở local | Widget | 🟠 | Fixed (2026-11-16) | T15 |
@@ -162,6 +164,26 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-034 · Webhook Shopify không tới được production
+- **Hiện tượng (2026-11-18):** đơn mới về theo từng đợt cách nhau đúng 30 phút (lịch `SHOPIFY_SYNC_INTERVAL_MIN`), không về trong vài giây. Lấy mẫu 100 đơn ở 5 trang của console Orders (đặt từ tháng 8 tới 18/11): chỉ có Confirmed và In Transit, không đơn nào Delivered.
+- **Đã loại trừ:**
+  - Đăng ký webhook: `Registered 0, already present 4, failed 0`.
+  - Địa chỉ: `SHOPIFY_APP_URL=https://talk.ivyusa.com`.
+  - nginx không ghi log: trong 60 phút `sharptalk_nginx` ghi đủ truy cập của trình duyệt và `ELB-HealthChecker`, nhưng **không** có yêu cầu nào tới `/api/v1/webhooks/shopify/*`.
+- **Nguyên nhân:** yêu cầu của Shopify bị chặn trước khi tới server. Load balancer trả 403 cho client không phải trình duyệt (BUG-004); luật nằm ở listener rule hay AWS WAF thì chưa biết.
+- **Phát hiện kèm:** `SHOPIFY_WEBHOOK_SECRET` trên server để trống. Kể cả khi thông đường, API sẽ từ chối mọi webhook (fail closed). Chủ dự án đã điền ngày 2026-11-18; có hiệu lực từ lần API khởi động lại kế tiếp.
+- **Hệ quả:** webhook `fulfillments/*` là nơi duy nhất ghi trạng thái Delivered, bản ghi `fulfillments` (mã vận đơn, hãng, link) và thông báo "Shipping update". Danh sách đơn được viết review chỉ nhận đơn Delivered, nên cũng trống.
+- **Quyết định của chủ dự án (2026-11-18):** không xin AWS mở đường; lịch đồng bộ tự đọc thông tin giao hàng ([PLN-261118](../docs/plan/PLN-261118-Shopify-Sync-Fulfillment-Delivery.md)). Độ trễ tối đa 30 phút được chấp nhận.
+- **Nếu sau này muốn webhook:** thêm ngoại lệ trên load balancer / WAF cho `POST /api/v1/webhooks/shopify/*` (yêu cầu được xác thực bằng HMAC của Shopify). Hai đường chạy song song được.
+- **Phòng ngừa:** "kết nối thành công" và "đăng ký webhook thành công" không chứng minh webhook tới nơi. Sau khi nối một cửa hàng, kiểm log truy cập của nginx cho `/webhooks/shopify/`, hoặc xem đơn mới có về giữa hai lượt đồng bộ không.
+
+## BUG-035 · Đơn Delivered bị kéo về In Transit
+- **Nguyên nhân:** `ShopifySyncService.upsertOrder` gán `statusInternal` ở mỗi lần chạy từ `fulfillment_status` chung của đơn, mà giá trị này chỉ biết `fulfilled` (→ In Transit). Trạng thái Delivered do webhook fulfillment ghi sẽ bị ghi đè ở lượt đồng bộ hoặc webhook đơn kế tiếp.
+- **Vì sao chưa ai thấy:** trên production chưa đơn nào Delivered (BUG-034). Lộ ra khi đọc code cho PLN-261118.
+- **Fix:** trạng thái tính từ các kiện khi payload có; payload không nói gì về kiện thì không hạ một đơn đang Delivered. Test U-03, U-04 trong [TCR-261118](../docs/test/TCR-261118-Shopify-Sync-Fulfillment-Delivery.md).
+- **Phòng ngừa:** khi hai nguồn cùng ghi một cột, nguồn biết ít hơn không được ghi đè nguồn biết nhiều hơn. "Payload không mang trường này" phải khác "trường này rỗng".
+
 
 ## BUG-030 · Trang widget mở thẳng trên điện thoại hiện kiểu máy tính
 - **Hiện tượng:** mở `talk.ivyusa.com/widget/?shop=…` trên điện thoại (trang chủ dự án dùng để thử, vì widget chưa gắn lên ivyusa.com). Panel hiện thẻ 370×600 lệch trái, trong khi khách vào qua `embed.js` thì nhận bố cục điện thoại. TC-15-01 đỏ từ đầu.
