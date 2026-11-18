@@ -31,7 +31,25 @@ Không có SQL, không đổi API, không thêm biến môi trường.
 
 **Trước khi sửa**, trên bản Preview của theme nháp `Ivyusa Talk Staging` (18 thiết bị giả lập: 9 iOS/iPadOS bằng WebKit, 9 Android bằng Chromium): 12 điện thoại dọc đạt; iPad Mini và iPad Pro 11 khung đè header 32px; iPhone 15 và Galaxy S24 xoay ngang khung chỉ cao 162–179px; mọi máy từ 640px trở lên không có ✕.
 
-**Sau khi deploy** cần chạy lại ma trận đó trên cùng link Preview (mục 4).
+**Sau khi deploy** (cùng link Preview, 2026-11-18), 18 thiết bị giả lập:
+
+| Nhóm | Kết quả |
+|---|---|
+| 12 điện thoại dọc | Khung sát dưới header (175px), tới đáy màn hình, có ✕, đóng được |
+| iPad Mini, iPad Pro 11, iPad gen 7 | Khung ở 216px = dưới header 208 + 8; không còn đè; có ✕ |
+| Galaxy Tab S4, Tab S9 | Khung ở 183px = dưới header 175 + 8; có ✕ |
+| iPhone 15, Galaxy S24 xoay ngang | Khung từ 0, cao 343 / 360px (trước: 162 / 179); có ✕ |
+
+Cuộn trang khi khung đang mở (header thật của ivyusa.com):
+
+| Thiết bị | Đầu trang | Sau khi cuộn | Cuộn về |
+|---|---|---|---|
+| Desktop 1440×900 | header 171 → khung 179 | header 91 → khung 99 | 179 |
+| iPhone 15 (WebKit) | header 175 → khung 175, cao 484 | header ẩn → khung 0, cao 659 (kín) | 175 |
+| Pixel 7 | header 175 → khung 175, cao 664 | header ẩn → khung 0, cao 839 (kín) | 175 |
+| iPad Pro 11 (WebKit) | header 208 → khung 216 | header ẩn → khung 0 | 216 |
+
+Ở lượt chạy đầu, ngay lúc server vừa khởi động lại, iPad Mini và iPad Pro 11 hiện khung mặc định 3 tab; chạy lại thì đúng bản IVY 2 tab. Nhiều khả năng do API chưa sẵn sàng ở thời điểm đó; chưa xác minh.
 
 Chưa kiểm trên thiết bị thật: việc của chủ dự án trước khi Publish theme.
 
@@ -40,7 +58,7 @@ Chưa kiểm trên thiết bị thật: việc của chủ dự án trước khi
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit / CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ (build lại `widget`, `web`) |
-| Ma trận 18 thiết bị trên Preview sau deploy | ⏳ |
+| Commit / CI | `564615dd` · IVY CI/CD run `44248374124` xanh (2026-11-18) |
+| Server `talkaibotprd01` | ✅ loader mới được phục vụ từ 06:09 UTC ngày 2026-11-18 (`/widget/embed.js` có `dockAnchor`) |
+| Ma trận 18 thiết bị trên Preview sau deploy | ✅ xem mục 3 |
 | Theme đang chạy của ivyusa.com | Chưa cài chuông; theme nháp `Ivyusa Talk Staging` đã cài |
