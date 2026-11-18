@@ -150,13 +150,16 @@ const IVY_WIDGET_PRESET = {
   widgetTheme: normalizeWidgetTheme({
     brand: DEFAULT_BRAND,
     headerStyle: WIDGET_HEADER_STYLE.WHITE,
-    // T08: white emoji chips (SCR-IVY-10) and the AI notice as one line under
-    // the composer (Q-13).
+    // T08: white emoji chips (SCR-IVY-10). PLN-261118 composer, owner's call
+    // (2a · 3a · 4a): the composer is the design's — no attach control, nothing
+    // under the input — and text on the brand blue is white, as drawn.
     design: {
       radius: 'lg',
       panel: { width: 380, height: 600 },
       quickReplyStyle: 'card',
-      disclosurePlacement: 'bottom',
+      attachIcon: 'none',
+      disclosurePlacement: 'hidden',
+      onBrand: 'white',
     },
   }),
   widgetCopy: {

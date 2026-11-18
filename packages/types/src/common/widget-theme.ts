@@ -150,7 +150,8 @@ export const MESSAGE_STYLE = { PLAIN: 'plain', AVATAR: 'avatar' } as const;
 export type MessageStyle = (typeof MESSAGE_STYLE)[keyof typeof MESSAGE_STYLE];
 
 /** Composer attach button glyph (PLN-261019 P4). */
-export const ATTACH_ICON = { PAPERCLIP: 'paperclip', IMAGE: 'image' } as const;
+/** `none` draws no attach control at all (ivy-docs PLN-261118 composer: the design's composer has none). */
+export const ATTACH_ICON = { PAPERCLIP: 'paperclip', IMAGE: 'image', NONE: 'none' } as const;
 export type AttachIcon = (typeof ATTACH_ICON)[keyof typeof ATTACH_ICON];
 
 /**
@@ -158,8 +159,24 @@ export type AttachIcon = (typeof ATTACH_ICON)[keyof typeof ATTACH_ICON];
  * above the thread every tenant has had, or one small line under the composer.
  * The wording stays a legal notice in both — only the placement is a design choice.
  */
-export const DISCLOSURE_PLACEMENT = { TOP: 'top', BOTTOM: 'bottom' } as const;
+export const DISCLOSURE_PLACEMENT = { TOP: 'top', BOTTOM: 'bottom', HIDDEN: 'hidden' } as const;
 export type DisclosurePlacement = (typeof DISCLOSURE_PLACEMENT)[keyof typeof DISCLOSURE_PLACEMENT];
+// `hidden` (ivy-docs PLN-261118 composer): the line is not drawn in the chat at
+// all — the tenant's decision, taken knowing the consent notice and the privacy
+// settings still say the replies are AI-generated. The "End chat" link lives in
+// that line and goes with it; the scenario's End chip and the panel's X remain.
+
+/**
+ * Text on the brand colour (ivy-docs PLN-261118 composer). `auto` keeps the
+ * rule every tenant has: white only where it clears 4.5:1. `white` is for a
+ * design that draws white on a mid blue (IVY: white on #2B7FFF is 3.7:1) — it
+ * is honoured down to 3:1, the floor for large text and controls, and ignored
+ * below that, so a yellow brand still cannot ship unreadable buttons.
+ */
+export const ON_BRAND = { AUTO: 'auto', WHITE: 'white' } as const;
+export type OnBrand = (typeof ON_BRAND)[keyof typeof ON_BRAND];
+/** The lowest contrast at which `onBrand: white` is still honoured. */
+export const MIN_FORCED_WHITE_CONTRAST = 3;
 
 /**
  * Image slots a design may fill with an uploaded icon asset (png/webp). Adding a
@@ -205,6 +222,8 @@ export interface WidgetDesign {
   attachIcon?: AttachIcon | null;
   /** Absent = `top` (bar above the thread) — PLN-261019 Csat/Disclosure P4. */
   disclosurePlacement?: DisclosurePlacement | null;
+  /** Absent = `auto` — see ON_BRAND. */
+  onBrand?: OnBrand | null;
   /** Uploaded images for the avatar slots; a missing slot draws the built-in glyph. */
   icons?: WidgetIconSlots | null;
   /**
@@ -457,6 +476,18 @@ export function buildThemeRamp(brandHex: string): Record<number, string> | null 
   return ramp;
 }
 
+/**
+ * Foreground on the brand itself: the readable one, unless the design asks for
+ * white and white is at least legible there (see ON_BRAND).
+ */
+export function brandForeground(
+  bg: [number, number, number],
+  onBrand?: OnBrand | null,
+): [number, number, number] {
+  if (onBrand === ON_BRAND.WHITE && contrastRatio(bg, WHITE) >= MIN_FORCED_WHITE_CONTRAST) return WHITE;
+  return readableForeground(bg);
+}
+
 /** How far down its own ramp the Settings bar may go and still read as the brand. */
 const BAR_STOPS = [500, 600, 700] as const;
 
@@ -487,7 +518,7 @@ export function buildThemeVariables(theme: WidgetTheme | null | undefined): Reco
   if (!rgb || !ramp) return {};
   const vars: Record<string, string> = {};
   for (const stop of RAMP_STOPS) vars[`--ivy-primary-${stop}`] = ramp[stop];
-  vars['--ivy-on-primary'] = toChannels(readableForeground(rgb));
+  vars['--ivy-on-primary'] = toChannels(brandForeground(rgb, theme?.design?.onBrand));
   const bar = brandBarColors(rgb, ramp);
   vars['--ivy-bar-bg'] = bar.bg;
   vars['--ivy-bar-fg'] = bar.fg;
@@ -581,7 +612,10 @@ export function normalizeDesign(input: unknown): WidgetDesign | null {
   if (raw.headerLayout === HEADER_LAYOUT.LOGO_TITLE) out.headerLayout = HEADER_LAYOUT.LOGO_TITLE;
   if (raw.messageStyle === MESSAGE_STYLE.AVATAR) out.messageStyle = MESSAGE_STYLE.AVATAR;
   if (raw.attachIcon === ATTACH_ICON.IMAGE) out.attachIcon = ATTACH_ICON.IMAGE;
+  if (raw.attachIcon === ATTACH_ICON.NONE) out.attachIcon = ATTACH_ICON.NONE;
   if (raw.disclosurePlacement === DISCLOSURE_PLACEMENT.BOTTOM) out.disclosurePlacement = DISCLOSURE_PLACEMENT.BOTTOM;
+  if (raw.disclosurePlacement === DISCLOSURE_PLACEMENT.HIDDEN) out.disclosurePlacement = DISCLOSURE_PLACEMENT.HIDDEN;
+  if (raw.onBrand === ON_BRAND.WHITE) out.onBrand = ON_BRAND.WHITE;
   if (raw.icons && typeof raw.icons === 'object') {
     const icons: WidgetIconSlots = {};
     for (const slot of ICON_SLOTS) {

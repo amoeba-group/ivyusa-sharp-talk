@@ -328,3 +328,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Cài lên cửa hàng:** [GUIDE-261118-IVY-Header-Bell-Install](../docs/guide/GUIDE-261118-IVY-Header-Bell-Install.md). Theme nháp `Ivyusa Talk Staging` đã cài; theme đang chạy chưa.
 - **Bổ sung cùng ngày ([PLN](../docs/plan/PLN-261118-IVY-Bell-Phone-Fullscreen.md) · [RPT](../docs/implementation/RPT-261118-IVY-Bell-Phone-Fullscreen.md), duyệt `1. ok 2. a 3. a`):** điện thoại theo frame `3050:24` — khung từ đỉnh màn hình tới mép trên thanh menu dưới; không đè thanh menu ở mọi cỡ; co theo bàn phím ảo. Theme cần thêm `bottomBar: ".mobile-nav"`.
 - **Còn lại:** chủ dự án thử trên điện thoại thật rồi Publish theme; đối chiếu lại vị trí khung với Figma khi mở được frame (Q-17).
+
+### Bổ sung 2026-11-18 · Màn Chat theo đúng thiết kế — ✅ code · ⏳ đặt tuỳ chọn trên production · [PLN](../docs/plan/PLN-261118-IVY-Chat-Composer-Match-Design.md) · [RPT](../docs/implementation/RPT-261118-IVY-Chat-Composer-Match-Design.md)
+- **Chủ dự án duyệt:** `1. ok 2. a 3. a 4. a` — bỏ nút đính kèm, bỏ dòng công bố AI + End chat, chữ trắng trên `#2B7FFF`.
+- Ba tuỳ chọn mới của Custom widget: `attachIcon: none`, `disclosurePlacement: hidden`, `onBrand: white`. Seed đã đặt; production đặt trong console sau deploy.
+- TC-08-07, TC-08-08.

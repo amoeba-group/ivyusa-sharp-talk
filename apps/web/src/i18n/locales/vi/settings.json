@@ -917,10 +917,16 @@
     "attachIcon": "Biểu tượng nút đính kèm",
     "attachPaperclip": "Kẹp giấy (mặc định)",
     "attachImage": "Hình ảnh",
+    "attachNone": "Không có nút đính kèm",
     "disclosurePlacement": "Vị trí thông báo AI",
     "disclosureTop": "Thanh phía trên chat (mặc định)",
     "disclosureBottom": "Một dòng dưới ô nhập",
-    "disclosureHint": "Cùng thông báo pháp lý, chỉ đổi chỗ. Dòng dưới cũng liên kết điều khoản dịch vụ (Thông báo bảo mật › URL điều khoản)."
+    "disclosureHidden": "Ẩn — không hiện trong chat",
+    "onBrand": "Chữ trên màu thương hiệu",
+    "onBrandAuto": "Tự động (dễ đọc)",
+    "onBrandWhite": "Luôn trắng",
+    "onBrandHint": "Tự động chọn chữ trắng hoặc tối theo độ tương phản (4,5:1). Luôn trắng theo thiết kế vẽ chữ trắng trên màu thương hiệu; bị bỏ qua khi chữ trắng xuống dưới 3:1.",
+    "disclosureHint": "Cùng thông báo pháp lý, chỉ đổi chỗ. Dòng dưới cũng liên kết điều khoản dịch vụ (Thông báo bảo mật › URL điều khoản). Ẩn sẽ bỏ dòng này và liên kết Kết thúc chat khỏi màn chat; thông báo đồng ý và phần cài đặt quyền riêng tư vẫn nêu nhà cung cấp AI. Hãy kiểm tra yêu cầu pháp lý trước khi chọn."
   },
   "settingsSnapshots": {
     "title": "Ảnh chụp cài đặt",

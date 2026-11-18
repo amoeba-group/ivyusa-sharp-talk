@@ -200,10 +200,12 @@ export interface WidgetDesignDraft {
   headerLayout?: 'logo' | 'logo-title';
   /** PLN-261019: 'plain' | 'avatar'. */
   messageStyle?: 'plain' | 'avatar';
-  /** PLN-261019: 'paperclip' | 'image'. */
-  attachIcon?: 'paperclip' | 'image';
-  /** PLN-261019 Csat/Disclosure: 'top' | 'bottom'. */
-  disclosurePlacement?: 'top' | 'bottom';
+  /** PLN-261019: 'paperclip' | 'image'; 'none' = no attach control (PLN-261118 composer). */
+  attachIcon?: 'paperclip' | 'image' | 'none';
+  /** PLN-261019 Csat/Disclosure: 'top' | 'bottom'; 'hidden' = not drawn (PLN-261118 composer). */
+  disclosurePlacement?: 'top' | 'bottom' | 'hidden';
+  /** PLN-261118 composer: text on the brand colour. */
+  onBrand?: 'auto' | 'white';
   /** PLN-261019: uploaded icon assets for the avatar slots. */
   botAvatarUuid?: string | null;
   agentAvatarUuid?: string | null;
@@ -274,6 +276,7 @@ export function designToWire(design: WidgetDesignDraft) {
     message_style: design.messageStyle ?? 'plain',
     attach_icon: design.attachIcon ?? 'paperclip',
     disclosure_placement: design.disclosurePlacement ?? 'top',
+    on_brand: design.onBrand ?? 'auto',
     bot_avatar_uuid: design.botAvatarUuid ?? null,
     agent_avatar_uuid: design.agentAvatarUuid ?? null,
   };

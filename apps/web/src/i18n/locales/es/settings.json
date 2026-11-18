@@ -917,10 +917,16 @@
     "attachIcon": "Icono del botón adjuntar",
     "attachPaperclip": "Clip (predeterminado)",
     "attachImage": "Imagen",
+    "attachNone": "Sin botón de adjuntar",
     "disclosurePlacement": "Posición del aviso de IA",
     "disclosureTop": "Barra sobre el chat (predeterminado)",
     "disclosureBottom": "Una línea bajo el cuadro de mensaje",
-    "disclosureHint": "El mismo aviso legal en otro sitio. La línea inferior también enlaza los términos del servicio (Aviso de privacidad › URL de términos)."
+    "disclosureHidden": "Oculto — no se muestra en el chat",
+    "onBrand": "Texto sobre el color de marca",
+    "onBrandAuto": "Automático (legible)",
+    "onBrandWhite": "Siempre blanco",
+    "onBrandHint": "Automático elige texto blanco u oscuro según el contraste (4,5:1). Siempre blanco sigue un diseño que dibuja blanco sobre el color de marca; se ignora si el blanco queda por debajo de 3:1.",
+    "disclosureHint": "El mismo aviso legal en otro sitio. La línea inferior también enlaza los términos del servicio (Aviso de privacidad › URL de términos). Oculto quita la línea y su enlace Finalizar chat; el aviso de consentimiento y los ajustes de privacidad siguen nombrando al proveedor de IA. Comprueba tus requisitos legales antes de elegirlo."
   },
   "settingsSnapshots": {
     "title": "Instantáneas de configuración",

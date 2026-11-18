@@ -1,4 +1,5 @@
 import {
+  brandForeground,
   buildThemeRamp,
   buildThemeVariables,
   contrastRatio,
@@ -350,5 +351,35 @@ describe('AI disclosure placement (PLN-261019 Csat/Disclosure P4)', () => {
     expect(normalizeDesign({ disclosurePlacement: 'top' })).toBeNull();
     expect(normalizeDesign({ disclosurePlacement: 'bottom' })).toEqual({ disclosurePlacement: 'bottom' });
     expect(normalizeDesign({ disclosurePlacement: 'sideways' })).toBeNull();
+  });
+});
+
+describe('composer and brand-text options (ivy-docs PLN-261118 composer)', () => {
+  it('keeps the new non-default choices and drops unknown ones', () => {
+    expect(normalizeDesign({ attachIcon: 'none', disclosurePlacement: 'hidden', onBrand: 'white' })).toEqual({
+      attachIcon: 'none',
+      disclosurePlacement: 'hidden',
+      onBrand: 'white',
+    });
+    expect(normalizeDesign({ attachIcon: 'gone', disclosurePlacement: 'nowhere', onBrand: 'black' })).toBeNull();
+    expect(normalizeDesign({ onBrand: 'auto' })).toBeNull();
+  });
+
+  it('white on the design blue is honoured when the design asks for it (3.7:1, above the 3:1 floor)', () => {
+    const blue: [number, number, number] = [43, 127, 255];
+    expect(brandForeground(blue)).toEqual([17, 24, 39]);
+    expect(brandForeground(blue, 'auto')).toEqual([17, 24, 39]);
+    expect(brandForeground(blue, 'white')).toEqual([255, 255, 255]);
+    expect(contrastRatio(blue, [255, 255, 255])).toBeGreaterThanOrEqual(3);
+  });
+
+  it('a brand too light for white ignores the request rather than ship unreadable buttons', () => {
+    expect(brandForeground([255, 212, 0], 'white')).toEqual([17, 24, 39]); // yellow: white is 1.4:1
+  });
+
+  it('reaches the stylesheet through --ivy-on-primary', () => {
+    const base = { brand: '#2B7FFF', headerStyle: 'white' as const };
+    expect(buildThemeVariables(base)['--ivy-on-primary']).toBe('17 24 39');
+    expect(buildThemeVariables({ ...base, design: { onBrand: 'white' } })['--ivy-on-primary']).toBe('255 255 255');
   });
 });

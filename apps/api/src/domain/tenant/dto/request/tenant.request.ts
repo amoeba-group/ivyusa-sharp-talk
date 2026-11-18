@@ -376,10 +376,12 @@ export class UpdateWidgetThemeRequest {
     header_layout?: string | null;
     /** PLN-261019: 'plain' (default) | 'avatar'. */
     message_style?: string | null;
-    /** PLN-261019: 'paperclip' (default) | 'image'. */
+    /** PLN-261019: 'paperclip' (default) | 'image' | 'none' (PLN-261118 composer). */
     attach_icon?: string | null;
-    /** PLN-261019 Csat/Disclosure: 'top' (default) | 'bottom'. */
+    /** PLN-261019 Csat/Disclosure: 'top' (default) | 'bottom' | 'hidden' (PLN-261118 composer). */
     disclosure_placement?: string | null;
+    /** PLN-261118 composer: 'auto' (default) | 'white'. */
+    on_brand?: string | null;
     /** PLN-261019: uploaded icon assets for the avatar slots (uuids checked like the launcher icon). */
     bot_avatar_uuid?: string | null;
     agent_avatar_uuid?: string | null;

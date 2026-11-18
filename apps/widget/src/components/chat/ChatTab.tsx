@@ -259,10 +259,17 @@ export function ChatTab() {
   const widgetCopy = useWidgetStore((s) => s.widgetCopy);
   const shopName = widgetCopy?.displayName || t('appName');
   // Composer attach glyph is a design option (PLN-261019 P4).
-  const attachImage = useWidgetStore((s) => s.widgetTheme?.design?.attachIcon) === 'image';
+  const attachIcon = useWidgetStore((s) => s.widgetTheme?.design?.attachIcon);
+  const attachImage = attachIcon === 'image';
+  // `none`: the design's composer has no attach control (PLN-261118 composer).
+  const attachHidden = attachIcon === 'none';
   // Satisfaction card kind + where the AI disclosure sits (PLN-261019 Csat/Disclosure).
   const csatMode = useWidgetStore((s) => s.csatMode);
-  const disclosureBottom = useWidgetStore((s) => s.widgetTheme?.design?.disclosurePlacement) === 'bottom';
+  const disclosurePlacement = useWidgetStore((s) => s.widgetTheme?.design?.disclosurePlacement);
+  const disclosureBottom = disclosurePlacement === 'bottom';
+  // The tenant's design draws no AI line in the chat (ivy-docs PLN-261118
+  // composer). The consent notice and Settings still carry the wording.
+  const disclosureHidden = disclosurePlacement === 'hidden';
   const termsUrl = useWidgetStore((s) => s.termsUrl);
   const disclosureLink = termsUrl || consent?.privacyPolicyUrl || null;
   // Gear hidden by the tenant (PLN-261023-Widget-Header-Buttons D4): the
@@ -818,7 +825,7 @@ export function ChatTab() {
       {/* AI disclosure + end-chat control. `bottom` placement moves the same
           notice to one line under the composer (PLN-261019 D4) — the words stay
           a legal notice, only the spot changes. */}
-      {!disclosureBottom && (
+      {!disclosureBottom && !disclosureHidden && (
       <div className="st-disclosure flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-3 py-1.5 text-[11px] text-gray-500">
         <Sparkles className="h-3 w-3 flex-shrink-0 text-primary-400" />
         <span className="min-w-0 flex-1">
@@ -1123,27 +1130,31 @@ export function ChatTab() {
         onSubmit={submitInput}
         className="st-composer flex items-center gap-2 border-t border-gray-100 px-3 py-3"
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept=".jpg,.jpeg,.png,.gif,.webp,.heic,.heif,.avif,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx"
-          className="hidden"
-          onChange={(e) => {
-            void pickFiles(e.target.files);
-            // Reset so picking the same file twice still fires a change event.
-            e.target.value = '';
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={sending}
-          aria-label={t('chat.attachment.attach')}
-          className="st-attach flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-st-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-40"
-        >
-          {attachImage ? <ImageIcon className="h-[18px] w-[18px]" /> : <Paperclip className="h-4 w-4" />}
-        </button>
+        {!attachHidden && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".jpg,.jpeg,.png,.gif,.webp,.heic,.heif,.avif,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx"
+              className="hidden"
+              onChange={(e) => {
+                void pickFiles(e.target.files);
+                // Reset so picking the same file twice still fires a change event.
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={sending}
+              aria-label={t('chat.attachment.attach')}
+              className="st-attach flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-st-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-40"
+            >
+              {attachImage ? <ImageIcon className="h-[18px] w-[18px]" /> : <Paperclip className="h-4 w-4" />}
+            </button>
+          </>
+        )}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}

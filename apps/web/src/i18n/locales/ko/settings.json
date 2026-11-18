@@ -917,10 +917,16 @@
     "attachIcon": "첨부 버튼 아이콘",
     "attachPaperclip": "클립(기본)",
     "attachImage": "사진",
+    "attachNone": "첨부 버튼 없음",
     "disclosurePlacement": "AI 고지 위치",
     "disclosureTop": "채팅 위 바(기본)",
     "disclosureBottom": "입력창 아래 한 줄",
-    "disclosureHint": "같은 법적 고지를 자리만 바꿉니다. 하단 줄은 이용약관(개인정보 안내 › 약관 URL)도 링크합니다."
+    "disclosureHidden": "숨김 — 채팅에 표시하지 않음",
+    "onBrand": "브랜드 색 위의 글자",
+    "onBrandAuto": "자동(가독성 기준)",
+    "onBrandWhite": "항상 흰색",
+    "onBrandHint": "자동은 대비(4.5:1)에 따라 흰색 또는 어두운 글자를 고릅니다. 항상 흰색은 브랜드 색 위에 흰 글자를 쓰는 디자인을 따르며, 흰색 대비가 3:1 미만이면 무시됩니다.",
+    "disclosureHint": "같은 법적 고지를 자리만 바꿉니다. 하단 줄은 이용약관(개인정보 안내 › 약관 URL)도 링크합니다. 숨김은 이 줄과 상담 종료 링크를 채팅에서 없앱니다. 동의 안내와 개인정보 설정에는 AI 제공자가 계속 표시됩니다. 선택 전에 법적 요건을 확인하세요."
   },
   "settingsSnapshots": {
     "title": "설정 스냅샷",

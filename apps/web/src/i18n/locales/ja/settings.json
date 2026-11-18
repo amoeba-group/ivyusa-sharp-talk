@@ -917,10 +917,16 @@
     "attachIcon": "添付ボタンのアイコン",
     "attachPaperclip": "クリップ（既定）",
     "attachImage": "画像",
+    "attachNone": "添付ボタンなし",
     "disclosurePlacement": "AI告知の位置",
     "disclosureTop": "チャット上のバー（既定）",
     "disclosureBottom": "入力欄の下に1行",
-    "disclosureHint": "同じ法的告知の場所を変えるだけです。下部の行は利用規約（プライバシー告知 › 規約URL）にもリンクします。"
+    "disclosureHidden": "非表示 — チャットに表示しない",
+    "onBrand": "ブランドカラー上の文字",
+    "onBrandAuto": "自動（読みやすさ優先）",
+    "onBrandWhite": "常に白",
+    "onBrandHint": "自動はコントラスト（4.5:1）で白または濃い文字を選びます。常に白は、ブランドカラーの上に白文字を描くデザインに従います。白のコントラストが 3:1 を下回る場合は無視されます。",
+    "disclosureHint": "同じ法的告知の場所を変えるだけです。下部の行は利用規約（プライバシー告知 › 規約URL）にもリンクします。 非表示にすると、この行とチャット終了リンクがチャットから消えます。同意の案内とプライバシー設定には AI 提供者が引き続き表示されます。選ぶ前に法的要件を確認してください。"
   },
   "settingsSnapshots": {
     "title": "設定スナップショット",

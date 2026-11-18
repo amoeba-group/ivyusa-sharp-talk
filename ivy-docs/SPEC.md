@@ -74,7 +74,7 @@ Mọi thiết kế đều giả định khách đã đăng nhập (tên mẫu: K
 | Nút phụ | "Track Order": viền xám, full-width, bo 8px | |
 | Nút xoá | "Delete Selected": nền xanh dương · "Delete All": viền xanh dương | |
 | Bubble bot | nền xám nhạt (~#F3F4F6), bo 12px | |
-| Bubble khách | nền xanh dương (~#2F80ED), chữ trắng | |
+| Bubble khách | nền xanh dương **#2B7FFF** (chủ dự án xác nhận từ Figma, 2026-11-18), chữ trắng | Trắng trên #2B7FFF là 3,7:1, dưới AA 4,5:1; chủ dự án chọn theo thiết kế (PLN-261118 composer, 3a) |
 | Quick-reply chip | nền trắng, viền xám 1px, bo tròn, có emoji đầu | chip đang chọn: viền xanh |
 | Composer | input bo tròn "Ask Anything" + nút gửi tròn xanh 40px | form liên hệ: "Type your message" + nút gửi xám |
 | Icon promo | coupon: nền **Deep Navy #1A2E6B** (gift) · event: **Bright Magenta #E91E8C** / hồng (sparkle) | bộ 8 icon coupon ở node `993:1254`, dùng 32–40px |
@@ -197,7 +197,7 @@ Chuông trên header ivyusa.com (chấm đỏ = số chưa đọc) ─► Panel 
   - Placeholder là cấu hình tenant (`widgetCopy.composerPlaceholder`).
   - Lời chào và 7 nút là cấu hình tenant: seed cho DB mới; production nhập theo GUIDE-261112-IVY-Chat-Home-Config.
   - **T12 (2026-11-13):** thêm nút thứ 8 "💼 Affiliate" ở cuối (chủ dự án chọn PLN-261113 §8-3a), vì thiết kế có kịch bản SCR-IVY-14 nhưng không vẽ lối vào.
-  - Giữ nút đính kèm (Q-14) và dòng công bố AI dưới ô nhập (Q-13).
+  - ~~Giữ nút đính kèm (Q-14) và dòng công bố AI dưới ô nhập (Q-13).~~ **Đổi 2026-11-18** (PLN-261118 composer): ô nhập chỉ còn ô chữ và nút Send, không có gì bên dưới; chữ trên nền màu thương hiệu là trắng.
 
 ### SCR-IVY-11 · Kịch bản My Orders
 - **Figma:** `1006:5530`.
@@ -344,8 +344,8 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | G-10 | Review: "⭐ Write Review" | Đã có (`ReviewItemList.tsx`, `ReviewForm.tsx`) — copy "Write a review"; **lưu review lỗi bị nuốt** (BUG-009) | Chỉnh copy, thêm toast lỗi/thành công | UI · I18N | T06 ✅ (2026-11-12) |
 | G-11 | Chọn nhiều + "Delete Selected Notifications" / "Delete All Notifications" | Đã có: nút "Select", "Delete selected (n)", "Delete all notifications" + `window.confirm` (`NotificationsTab.tsx` 324-333, 391-410) | Copy theo thiết kế; thay `window.confirm` bằng xác nhận trong panel; toast kết quả; (tuỳ chọn) vuốt trái để xoá | UI · I18N · API | T07 ✅ (2026-11-12; "Delete All" chỉ xoá chip đang xem; vuốt trái để xoá → T15) |
 | G-12 | Chat home: chip trắng viền có **emoji**, xếp wrap; lời chào IVY | Lưới 2 cột pill xanh nhạt hoặc thẻ có icon; nút scenario không có trường emoji (`ScenarioMenu.tsx`, `/ai-config/scenario`) | Thêm trường `emoji` cho nút scenario + kiểu hiển thị "chip wrap"; cấu hình 7 nút + lời chào cho tenant | UI · API · CFG | T08 ✅ (2026-11-12; emoji + chip trắng; nút / lời chào là cấu hình tenant) |
-| G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 ✅ (2026-11-12; placeholder là cấu hình tenant; giữ nút đính kèm) |
-| G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 ✅ (2026-11-12; `disclosurePlacement: bottom` = 1 dòng dưới ô nhập) |
+| G-13 | Composer "Ask Anything", không thấy nút đính kèm | "Type a message…" + nút đính kèm (`ChatTab.tsx` 776-815) | Placeholder theo copy tenant; giữ/ẩn đính kèm theo Q-14 | UI · CFG | T08 ✅ (2026-11-12; placeholder là cấu hình tenant). **2026-11-18:** bỏ nút đính kèm theo thiết kế — tuỳ chọn thiết kế `attachIcon: none` |
+| G-14 | Không vẽ thanh công bố AI | Có thanh "This chat is AI-powered…" + banner consent (bắt buộc pháp lý) | **Giữ** (compliance), thu gọn cho gần thiết kế — Q-13 | UI | T08 ✅ (2026-11-12). **2026-11-18:** chủ dự án quyết bỏ dòng công bố AI và liên kết End chat theo thiết kế — `disclosurePlacement: hidden`. AI vẫn được nêu ở khung đồng ý lần đầu và Settings |
 | G-15 | My Orders: thẻ đơn bấm được + chip 배송 조회 · 주문 취소 · 처음으로 | Thẻ không bấm được; chip ẩn khi đang hiện thẻ (`ChatTab.tsx` 439-445); không có chip "처음으로" ở đâu cả | Thẻ mở Order Detail; luôn hiện follow-up chip; thêm chip **처음으로** (start over) dùng chung cho mọi kịch bản | UI · I18N | T09 ✅ (2026-11-12; Start over là chip widget tự thêm, dùng chung cho T10–T12) |
 | G-16 | Product Help: 11 danh mục + 인기상품; menu con 사용법/성분/교환·반품/재입고 | Menu con có; **thiếu danh mục & sản phẩm phổ biến**; API sẵn có nhưng chưa dùng: `GET /products/categories`, `/products?category=`, `/products/recommendations` | Luồng danh mục → sản phẩm phổ biến; "재입고 알림" gọi `POST /restock/subscribe` | UI | T10 ✅ (2026-11-12; danh mục = collection cấu hình tenant, popular = Shopify best-selling; restock → G-25) |
 | G-17 | Contact Support: chỉ thẻ email `help@ivy.com` | 3 thẻ (điện thoại 1588-0000, email, live chat) **hard-code trong locale** (`ContactCard.tsx`) | Lấy kênh liên hệ từ cấu hình tenant; IVY chỉ bật email (+ live chat nếu có agent — Q-15) | UI · API · CFG | T11 ✅ (2026-11-13; `widgetCopy.supportEmail` / `supportPhone` / `contactLiveChat`; IVY: hello@ivyusa.com, chỉ email) |
@@ -381,8 +381,8 @@ Loại thay đổi: **CFG** = cấu hình tenant (console/DB, không sửa code)
 | Q-10 | Có chip "All/전체" không (biến thể `992:246` có, Master không có)? | Không — theo Master |
 | Q-11 | Tab "Orders" hiện tại bỏ hẳn hay ẩn sau chip Order/Delivery? | Bỏ tab qua cấu hình `widget_tabs` (chip tự gộp) |
 | Q-12 | CSAT 4 mặt (thiết kế) hay 5 mặt (code, thang 1–5 đang lưu DB)? | Giữ thang 1–5 trong DB; hiển thị 4 mặt map → 1 · 3 · 4 · 5. ✅ **Làm (T12, 2026-11-13)** đúng như vậy; chế độ survey giữ 5 mặt |
-| Q-13 | Thanh công bố AI ("This chat is AI-powered…") không có trong thiết kế — giữ dạng nào? | Giữ (pháp lý), thu gọn 1 dòng dưới composer |
-| Q-14 | Giữ nút đính kèm file trong composer? | Giữ (thiết kế không cấm) |
+| Q-13 | Thanh công bố AI ("This chat is AI-powered…") không có trong thiết kế — giữ dạng nào? | Giữ (pháp lý), thu gọn 1 dòng dưới composer  **Đổi (2026-11-18):** chủ dự án chọn bỏ hẳn (2a), đã được báo trước về ghi chú "bắt buộc pháp lý" |
+| Q-14 | Giữ nút đính kèm file trong composer? | Giữ (thiết kế không cấm)  **Đổi (2026-11-18):** bỏ (4a); khách gửi ảnh qua form Contact Support |
 | Q-15 | Contact Support của IVY gồm những kênh nào (thiết kế: chỉ email)? | Email + live chat khi có agent online. ✅ **Chốt (T11, 2026-11-12):** chỉ email, đúng thiết kế; tenant bật thêm live chat được ở console |
 | Q-16 | Mã coupon lấy từ đâu (Shopify discount code? nhập tay khi gửi campaign?) | Nhập trong campaign console, lưu ở metadata notification. **Chốt (T05, 2026-11-12):** nhập trong console Campaigns, lưu ở `content.couponCode` của campaign; mỗi campaign một mã. |
 | Q-17 | Mở từ chuông thì khung nằm ở đâu so với header? | Dưới header, sát mép phải. **Chốt (T17, 2026-11-18):** chủ dự án chọn cách header 8px trên desktop; nút 🌐 / ✕ có đủ. Chưa đối chiếu được với Figma (hết lượt gọi MCP hôm đó; chưa thấy frame vẽ khung mở trên nền trang) — xem lại khi mở được |

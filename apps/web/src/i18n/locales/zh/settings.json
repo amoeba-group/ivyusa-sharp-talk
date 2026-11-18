@@ -917,10 +917,16 @@
     "attachIcon": "附件按钮图标",
     "attachPaperclip": "回形针（默认）",
     "attachImage": "图片",
+    "attachNone": "不显示附件按钮",
     "disclosurePlacement": "AI 声明位置",
     "disclosureTop": "聊天上方的横条（默认）",
     "disclosureBottom": "输入框下方一行",
-    "disclosureHint": "同一法律声明，只是位置不同。底部行还会链接服务条款（隐私声明 › 条款 URL）。"
+    "disclosureHidden": "隐藏 — 不在聊天中显示",
+    "onBrand": "品牌色上的文字",
+    "onBrandAuto": "自动（保证可读）",
+    "onBrandWhite": "始终白色",
+    "onBrandHint": "自动会按对比度（4.5:1）选择白色或深色文字。始终白色遵循在品牌色上使用白字的设计；当白字对比度低于 3:1 时会被忽略。",
+    "disclosureHint": "同一法律声明，只是位置不同。底部行还会链接服务条款（隐私声明 › 条款 URL）。 选择隐藏会把这一行及其“结束聊天”链接从聊天中移除；同意提示和隐私设置仍会说明 AI 提供方。选择前请确认法律要求。"
   },
   "settingsSnapshots": {
     "title": "设置快照",

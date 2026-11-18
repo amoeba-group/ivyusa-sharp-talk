@@ -235,6 +235,8 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-08-04 | Composer | placeholder "Ask Anything"; Send disabled khi rỗng, enabled khi có chữ | G-13 |
 | TC-08-05 | Hỏi–đáp thật | gửi câu hỏi → `POST /chat/message` < 300 → bubble khách + câu trả lời bot hiện | BR-16 |
 | TC-08-06 | Lần vẽ đầu | MutationObserver ghi màu nền chip **ngay khi chip xuất hiện** = trắng (không vẽ kiểu mặc định rồi đổi). Bỏ cơ chế chờ thì đỏ 6/6 (BUG-023) | PLN-261112-T08 |
+| TC-08-07 | Ô nhập theo thiết kế (PLN-261118 composer) | Không có nút "Attach a file", không có ô chọn file, không có `.st-disclosure`, không có chữ "AI-generated replies", không có "End chat"; ô chữ nằm sát lề trái của hàng |
+| TC-08-08 | Bong bóng của khách | Chữ `rgb(255, 255, 255)` trên nền `rgb(43, 127, 255)` |
 
 **Kết quả (2026-11-12):** 6/6, lặp ×4 (3 worker): 24/24. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T13`) ×2: 140/140. Toàn bộ desktop: 82 pass / 15 fail, mọi ca đỏ thuộc T09–T12 chưa làm.
 

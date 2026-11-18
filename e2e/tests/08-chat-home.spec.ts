@@ -58,6 +58,32 @@ test.describe('T08 · Chat home', () => {
     await widget.panel.getByPlaceholder('Ask Anything').fill('Hello');
     await expect(widget.sendButton).toBeEnabled();
   });
+
+  // PLN-261118-IVY-Chat-Composer-Match-Design (owner's 2a · 3a · 4a): the design's
+  // composer is the input and Send, with nothing beside or under it; text on the
+  // brand blue is white.
+  test('TC-08-07 the composer has no attach control and nothing under it @T08 @design', async ({ widget }) => {
+    const composer = widget.panel.locator('.st-composer');
+    await expect(composer).toBeVisible();
+    await expect(widget.panel.getByRole('button', { name: 'Attach a file' })).toHaveCount(0);
+    await expect(composer.locator('input[type="file"]')).toHaveCount(0);
+    await expect(widget.panel.locator('.st-disclosure')).toHaveCount(0);
+    await expect(widget.panel.getByText(/AI-generated replies/)).toHaveCount(0);
+    await expect(widget.panel.getByRole('button', { name: 'End chat' })).toHaveCount(0);
+    // The input is the first thing in the row, flush with the composer's padding.
+    const row = (await composer.boundingBox())!;
+    const input = (await widget.panel.getByPlaceholder('Ask Anything').boundingBox())!;
+    expect(Math.round(input.x - row.x), 'no gap where the attach button was').toBeLessThanOrEqual(13);
+  });
+
+  test("TC-08-08 the shopper's bubble is white text on the brand blue @T08 @design", async ({ widget }) => {
+    await widget.panel.getByPlaceholder('Ask Anything').fill('Hello');
+    await widget.sendButton.click();
+    const mine = widget.panel.locator('.st-message-user').first();
+    await expect(mine).toBeVisible();
+    await expect(mine).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await expect(mine).toHaveCSS('background-color', 'rgb(43, 127, 255)');
+  });
 });
 
 test.describe('T08 · Chat home — first paint', () => {

@@ -49,7 +49,7 @@ Trong trình sửa code của theme, tìm chuỗi `cart-drawer-button` để ra 
 </button>
 <style>
   #st-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;
-    width:24px;height:24px;padding:0;margin-left:12px;border:0;background:none;
+    width:24px;height:24px;padding:0;border:0;background:none;
     color:currentColor;cursor:pointer}
   #st-bell [data-sharptalk-badge]{position:absolute;top:-6px;right:-8px;min-width:16px;height:16px;
     padding:0 4px;border-radius:8px;background:#E02B2B;color:#fff;font:600 10px/16px sans-serif;
@@ -59,7 +59,7 @@ Trong trình sửa code của theme, tìm chuỗi `cart-drawer-button` để ra 
 
 - `id="st-bell"` là tên widget sẽ tìm. Đổi tên được, nhưng phải đổi giống hệt ở mục 4 và mục 5.
 - `data-sharptalk-badge` là chỗ widget ghi số chưa đọc. Số bằng 0 thì chấm tự ẩn; quá 99 hiện `99+`.
-- Kích thước, khoảng cách và màu chấm ở trên là điểm khởi đầu; chỉnh trong khối `<style>` cho khớp header thật. Tôi chưa xem được đoạn này chạy trên theme của IVY.
+- Chuông không cần `margin`: nhóm biểu tượng của theme đã tự cách nhau 16px (điện thoại) / 24px (desktop). Bản đầu của hướng dẫn này có `margin-left:12px`, làm chuông cách giỏ hàng xa hơn các biểu tượng khác; đã bỏ ngày 2026-11-18.
 - Thẻ giỏ hàng trên desktop rộng 48px, trên điện thoại 24px. Kiểm chuông ở cả hai cỡ màn.
 
 ## 4. Dán đoạn mã widget

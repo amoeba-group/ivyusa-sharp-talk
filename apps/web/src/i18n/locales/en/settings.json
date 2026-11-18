@@ -917,10 +917,16 @@
     "attachIcon": "Attach button icon",
     "attachPaperclip": "Paperclip (default)",
     "attachImage": "Picture",
+    "attachNone": "No attach button",
     "disclosurePlacement": "AI disclosure placement",
     "disclosureTop": "Bar above the chat (default)",
     "disclosureBottom": "One line under the composer",
-    "disclosureHint": "Same legal notice, different spot. The bottom line also links the terms of service (Privacy notice › Terms URL)."
+    "disclosureHidden": "Hidden — not shown in the chat",
+    "onBrand": "Text on brand colour",
+    "onBrandAuto": "Automatic (readable)",
+    "onBrandWhite": "Always white",
+    "onBrandHint": "Automatic picks white or dark text by contrast (4.5:1). Always white follows a design that draws white on the brand colour; it is ignored when white would fall under 3:1.",
+    "disclosureHint": "Same legal notice, different spot. The bottom line also links the terms of service (Privacy notice › Terms URL). Hidden removes the line and its End chat link from the chat; the consent notice and the privacy settings still name the AI provider. Check your legal requirements before choosing it."
   },
   "settingsSnapshots": {
     "title": "Settings snapshots",

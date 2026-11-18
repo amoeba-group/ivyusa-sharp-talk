@@ -36,6 +36,7 @@ const EMPTY: WidgetDesignDraft = {
   messageStyle: 'plain',
   attachIcon: 'paperclip',
   disclosurePlacement: 'top',
+  onBrand: 'auto',
   botAvatarUuid: null,
   agentAvatarUuid: null,
 };
@@ -54,8 +55,10 @@ function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
     customCss: d.customCss ?? '',
     headerLayout: d.headerLayout === 'logo-title' ? 'logo-title' : 'logo',
     messageStyle: d.messageStyle === 'avatar' ? 'avatar' : 'plain',
-    attachIcon: d.attachIcon === 'image' ? 'image' : 'paperclip',
-    disclosurePlacement: d.disclosurePlacement === 'bottom' ? 'bottom' : 'top',
+    attachIcon: d.attachIcon === 'image' || d.attachIcon === 'none' ? d.attachIcon : 'paperclip',
+    disclosurePlacement:
+      d.disclosurePlacement === 'bottom' || d.disclosurePlacement === 'hidden' ? d.disclosurePlacement : 'top',
+    onBrand: d.onBrand === 'white' ? 'white' : 'auto',
     botAvatarUuid: d.icons?.botAvatar?.uuid ?? null,
     agentAvatarUuid: d.icons?.agentAvatar?.uuid ?? null,
   };
@@ -429,18 +432,27 @@ export function WidgetDesignsCard() {
                 </>
               )}
               <FormRow label={t('widgetDesigns.attachIcon')}>
-                <Select value={ed.draft.attachIcon ?? 'paperclip'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, attachIcon: e.target.value as 'paperclip' | 'image' } })} className="w-44">
+                <Select value={ed.draft.attachIcon ?? 'paperclip'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, attachIcon: e.target.value as 'paperclip' | 'image' | 'none' } })} className="w-44">
                   <option value="paperclip">{t('widgetDesigns.attachPaperclip')}</option>
                   <option value="image">{t('widgetDesigns.attachImage')}</option>
+                  <option value="none">{t('widgetDesigns.attachNone')}</option>
                 </Select>
               </FormRow>
               <FormRow label={t('widgetDesigns.disclosurePlacement')}>
-                <Select value={ed.draft.disclosurePlacement ?? 'top'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, disclosurePlacement: e.target.value as 'top' | 'bottom' } })} className="w-44">
+                <Select value={ed.draft.disclosurePlacement ?? 'top'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, disclosurePlacement: e.target.value as 'top' | 'bottom' | 'hidden' } })} className="w-44">
                   <option value="top">{t('widgetDesigns.disclosureTop')}</option>
                   <option value="bottom">{t('widgetDesigns.disclosureBottom')}</option>
+                  <option value="hidden">{t('widgetDesigns.disclosureHidden')}</option>
                 </Select>
               </FormRow>
               <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.disclosureHint')}</p>
+              <FormRow label={t('widgetDesigns.onBrand')}>
+                <Select value={ed.draft.onBrand ?? 'auto'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, onBrand: e.target.value as 'auto' | 'white' } })} className="w-44">
+                  <option value="auto">{t('widgetDesigns.onBrandAuto')}</option>
+                  <option value="white">{t('widgetDesigns.onBrandWhite')}</option>
+                </Select>
+              </FormRow>
+              <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.onBrandHint')}</p>
               {cssAllowed && (
                 <FormRow label={t('widgetDesigns.customCss')}>
                   <textarea
