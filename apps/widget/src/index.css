@@ -107,3 +107,33 @@ html:lang(ko) {
   --ivy-bar-fg: 255 255 255;
   --ivy-header-dim: 0.6;
 }
+
+/*
+ * Fields on a touch device are 16px (ivy-docs BUG-036).
+ *
+ * iOS Safari zooms the whole page in when a focused field's text is under
+ * 16px — the storefront page, not just this frame — and does not zoom back
+ * when the keyboard closes. The widget's root size is the tenant's (IVY: 13px),
+ * which put the composer at 11px: tapping "Ask Anything" on an iPhone blew the
+ * panel up past the screen, with the gear and the X off the right edge and the
+ * composer under the keyboard. 16px is the size at which Safari leaves the page
+ * alone; it is also simply easier to read and hit on a phone.
+ *
+ * `!important` because every field carries a Tailwind size utility. The
+ * `@supports` block repeats the rule for iOS and iPadOS whatever they report
+ * as their pointer (an iPad with a trackpad says `fine`).
+ */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+@supports (-webkit-touch-callout: none) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

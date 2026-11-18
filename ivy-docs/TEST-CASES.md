@@ -390,6 +390,7 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 | TC-15-04 | ARIA | tab `aria-selected`; chip `aria-pressed` đổi theo lựa chọn | NFR-02, G-23 |
 | TC-15-05 ×2 | Focus không thoát | (1) Chờ panel tải xong, Tab ×40: focus luôn trong panel; Shift+Tab từ nút đầu (Language) vẫn trong panel; Tab tiếp → về Language. (2) Banner đồng ý: focus Accept, Enter → banner mất, focus vẫn trong panel; Tab tiếp vẫn trong panel | NFR-02, BUG-029 |
 | TC-15-06 ×6 | Điện thoại 390×844 qua `embed.js`, 6 ngôn ngữ (tag `@devices`) | Panel 390×844 tại (0,0). Mọi chip, Chat, Settings: không phần tử nào vượt mép panel, không chữ bị khung cắt | NFR-03, G-24 |
+| TC-15-07 | Thiết bị cảm ứng (project mobile): ô nhập chat và form liên hệ | Mọi ô ≥ 16px, để iOS không tự phóng to khi chạm (BUG-036) | NFR-03 |
 
 **Kết quả (2026-11-13):** T15 + T01 (desktop + mobile) 29/29. Thử ngược: bỏ phần sửa trong widget và loader thì đúng 8 ca đỏ (TC-15-01 380px, TC-15-05 focus ra ngoài, TC-15-06 ×6 cao 680); ca banner (TC-15-05 thứ 2) bỏ phần sửa thì 3/3 đỏ. TC-15-05 ×2 lặp 20 lần: 40/40. `npm run test:ci`: 132 / 132, chạy 2 lần (131 desktop + 1 mobile). Toàn bộ: 132 / 132 — cổng CI giờ gồm mọi test desktop và mobile. Unit widget 121/121.
 

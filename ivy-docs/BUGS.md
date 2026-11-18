@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-036 | iPhone: chạm vào ô nhập của widget thì **cả trang bị phóng to** và không thu lại (ô nhập chữ ~11px, iOS phóng to khi dưới 16px) | Widget | 🔴 | Fixed code (2026-11-18, [FIX](../docs/bug-fix/FIX-261118-Widget-iOS-Zoom-On-Focus.md)); chờ chủ dự án thử lại trên máy thật | T15 |
 | BUG-035 | Đơn đã **Delivered bị kéo về In Transit** ở lượt đồng bộ kế tiếp: `upsertOrder` gán lại trạng thái theo `fulfillment_status` chung của đơn mỗi lần chạy | API | 🟠 | Fixed code (2026-11-18, [RPT](../docs/implementation/RPT-261118-Shopify-Sync-Fulfillment-Delivery.md)) | — |
 | BUG-034 | **Webhook Shopify không tới được production** (load balancer chặn client không phải trình duyệt, như BUG-004) → không đơn nào Delivered, không có mã vận đơn, không có thông báo giao hàng, không đơn nào viết được review | Infra · API | 🔴 | Workaround code (2026-11-18): lịch đồng bộ tự đọc thông tin giao hàng. Load balancer giữ nguyên. Production cần Re-sync sau deploy | — |
 | BUG-033 | Đồng bộ Shopify **dừng ở 500 đơn** rồi dời con trỏ qua phần chưa đọc: production có 500 / 181.188 đơn, bấm Sync now lại không thêm. Khách có hơn 100 đơn nhận 100 đơn cũ nhất khi đăng nhập | API | 🔴 | Fixed code (2026-11-17, [FIX](../docs/bug-fix/FIX-261117-Shopify-Sync-Stops-At-500.md)); production cần bấm Re-sync recent orders sau deploy | — |
@@ -164,6 +165,12 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-036 · iPhone tự phóng to trang khi chạm vào ô nhập
+- **Hiện tượng (máy thật, 2026-11-18):** chạm "Ask Anything" trên iPhone → cả trang phóng to, ⚙ và ✕ ra ngoài mép phải, ô nhập và thanh menu dưới không còn thấy; đóng bàn phím vẫn phóng to.
+- **Nguyên nhân:** iOS Safari phóng to trang khi ô đang chọn có chữ dưới 16px. Ô nhập của widget là ~11,4px (gốc 13px của IVY × `text-sm`).
+- **Fix:** ô nhập / textarea / select là 16px trên thiết bị cảm ứng và trên iOS (`apps/widget/src/index.css`). [FIX](../docs/bug-fix/FIX-261118-Widget-iOS-Zoom-On-Focus.md). TC-15-07.
+- **Phòng ngừa:** giả lập không có hành vi này; thay đổi chạm tới ô nhập hoặc bố cục điện thoại cần thử trên iPhone thật.
 
 ## BUG-034 · Webhook Shopify không tới được production
 - **Hiện tượng (2026-11-18):** đơn mới về theo từng đợt cách nhau đúng 30 phút (lịch `SHOPIFY_SYNC_INTERVAL_MIN`), không về trong vài giây. Lấy mẫu 100 đơn ở 5 trang của console Orders (đặt từ tháng 8 tới 18/11): chỉ có Confirmed và In Transit, không đơn nào Delivered.

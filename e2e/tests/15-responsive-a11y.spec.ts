@@ -74,6 +74,29 @@ test.describe('T15 · Responsive & a11y', () => {
     expect(box.x).toBeLessThanOrEqual(vw * 0.03);
   });
 
+  // BUG-036: under 16px, iOS Safari zooms the whole storefront in when the field
+  // is focused and leaves it zoomed. Every field a shopper can type in on a
+  // touch device has to be at least 16px.
+  test('TC-15-07 on a touch device every field is at least 16px, so iOS does not zoom on focus @T15 @responsive @mobile-only', async ({ widget }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.openChat();
+    const composer = widget.panel.getByPlaceholder('Ask Anything');
+    await expect(composer).toBeVisible();
+    expect(parseFloat(await composer.evaluate((el) => getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+
+    // The contact form: name, email, message.
+    await widget.scenarioButton(/Contact Support/).click();
+    await widget.panel.getByRole('button', { name: /Email inquiry/i }).last().click();
+    await expect(widget.panel.getByTestId('contact-form')).toBeVisible();
+    const fields = widget.panel.locator('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]), textarea, select');
+    await expect.poll(() => fields.count()).toBeGreaterThan(1);
+    const sizes = await fields.evaluateAll((els) =>
+      els.map((el) => ({ what: el.getAttribute('placeholder') || el.getAttribute('name') || el.tagName, size: parseFloat(getComputedStyle(el).fontSize) })),
+    );
+    expect(sizes.filter((s) => s.size < 16), 'fields under 16px').toEqual([]);
+  });
+
   test('TC-15-02 no console errors while visiting every tab and chip @T15 @a11y @smoke', async ({ page, widget }) => {
     const errors = watchConsole(page);
     await widget.goto();
