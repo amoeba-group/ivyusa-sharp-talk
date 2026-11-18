@@ -48,8 +48,8 @@ Tenant local được đặt ba giá trị bằng tay (seed không ghi đè tena
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit / CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ (build lại `api`, `web`, `widget`) |
-| Đặt ba tuỳ chọn cho tenant ivyusa trên production | ⏳ sau deploy, trong console |
-| Kiểm trên bản Preview của theme nháp | ⏳ |
-| Chủ dự án xoá `margin-left:12px` trên theme nháp | ⏳ |
+| Commit / CI | `55397c1d` · IVY CI/CD run `44266124217` xanh (2026-11-18) |
+| Server `talkaibotprd01` | ✅ bản build mới của widget được phục vụ từ 08:27 UTC ngày 2026-11-18 |
+| Đặt ba tuỳ chọn cho tenant ivyusa trên production | ✅ 2026-11-18, thiết kế đang dùng "Ivyusa Talk" (id 1): `attachIcon: none`, `disclosurePlacement: hidden`, `onBrand: white`. Bản trước lưu ở `D:amoeba_localdevivy-prod-backup-20261117widget_designs_before_composer.json` |
+| Kiểm trên bản Preview của theme nháp | ✅ Desktop 1440, iPhone 15 (WebKit), Pixel 7: không có nút đính kèm, không có ô chọn file, không có dòng công bố, không có End chat; `--ivy-on-primary` = trắng; nút Accept và Send chữ trắng trên `rgb(43, 127, 255)`. Không gửi tin nhắn nào trên production, nên màu bong bóng của khách được xác nhận qua cùng biến màu và qua TC-08-08 ở local |
+| Chủ dự án xoá `margin-left:12px` trên theme nháp | ✅ đo lại: giỏ hàng → chuông 16px trên điện thoại (bằng tài khoản → giỏ hàng), 36px trên desktop |
