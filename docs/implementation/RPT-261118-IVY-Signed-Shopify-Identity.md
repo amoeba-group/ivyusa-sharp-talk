@@ -53,7 +53,7 @@ Chuỗi được ký: `shopify:<customer.id>:<epoch giây>`, HMAC-SHA256 hex v�
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit / CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ (build lại `api`) |
-| Khoá + Liquid trên theme nháp | ⏳ chủ dự án |
-| Kiểm trên Preview (mục 5) | ⏳ |
+| Commit / CI | `8ae16ee9` · IVY CI/CD run `44279395410` xanh (2026-11-18 09:52 UTC) |
+| Server `talkaibotprd01` | ✅ bản mới chạy: identify có chữ ký trả về khách Shopify (xem dòng dưới) |
+| Khoá + Liquid trên theme nháp | ✅ chủ dự án đã tạo khoá và dán khối Liquid (2026-11-18) |
+| Kiểm trên Preview (mục 5) | ✅ một phần — ảnh của chủ dự án, tài khoản thử đã đăng nhập: tiêu đề "Hi, cong11"; Notifications hiện 4 chip, "No notifications yet.", không còn màn Verify; Chat → My orders trả "No orders in the last 30 days." ⏳ Chưa kiểm: tài khoản có đơn; giữ đoạn chat khi chuyển trang; đã gỡ app proxy hay chưa |
