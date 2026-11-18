@@ -72,13 +72,15 @@ Mở `layout/theme.liquid`, dán ngay **trước** `</body>`:
   window.SHARPTALK_WIDGET_CONFIG = {
     shop: "ivyusa.myshopify.com",
     widgetUrl: "https://talk.ivyusa.com/widget",
-    trigger: "#st-bell"
+    trigger: "#st-bell",
+    bottomBar: ".mobile-nav"
   };
 </script>
 <script src="https://talk.ivyusa.com/widget/embed.js" defer></script>
 ```
 
 - `shop` phải là **đúng** tên miền tenant đang dùng trên `talk.ivyusa.com`: `ivyusa.myshopify.com`. **Không** dùng `{{ shop.permanent_domain }}`: với cửa hàng này Shopify trả `chillhouse-wholesale.myshopify.com`, và production trả lỗi `E5005 Unknown shop domain` cho tên đó (kiểm ngày 2026-11-18).
+- `bottomBar` là thanh menu dưới của theme trên điện thoại (`nav.mobile-nav`: Home · Shorts · My Bag · Beautizen · Round Table · My Ivy). Có dòng này thì khung talk dừng ở mép trên thanh menu; thiếu thì khung đè lên nó. Nếu theme đổi tên lớp của thanh menu, sửa giá trị này theo.
 - Cả hai địa chỉ phải có `/widget`. Thiếu thì trang vẫn tải "thành công" nhưng không có widget.
 - Nếu trong theme đã có khối `IVY_WIDGET_CONFIG` cũ thì xoá nó, không để hai khối cùng lúc.
 
@@ -98,7 +100,7 @@ Bấm **Save**, chờ thông báo lưu thành công.
 
 Ở cùng trang, thẻ **Embed & SDK**, mục **Allowed domains**: thêm `https://ivyusa.com` và `https://www.ivyusa.com` nếu chưa có.
 
-**Top offset** giờ chỉ là giá trị dự phòng. Từ bản T17 (2026-11-18), khung tự bám theo thẻ `<header>` chứa chuông: desktop cách mép dưới header 8px, điện thoại sát dưới header, và đi theo khi header dính, đổi cỡ hay ẩn. Top offset chỉ được dùng khi chuông không nằm trong thẻ `<header>` nào. Với ivyusa.com để 176 là được.
+**Top offset** giờ chỉ là giá trị dự phòng. Từ 640px trở lên, khung tự bám theo thẻ `<header>` chứa chuông, cách mép dưới header 8px, và đi theo khi header dính, đổi cỡ hay ẩn. Trên điện thoại (dưới 640px), khung đi từ **đỉnh màn hình** xuống mép trên thanh menu dưới, đúng thiết kế `3050:24`. Top offset chỉ được dùng khi chuông không nằm trong thẻ `<header>` nào. Với ivyusa.com để 176 là được.
 
 Nếu sau này header của theme không còn là thẻ `<header>`, thêm khoá `anchor: "<bộ chọn CSS của header>"` vào đoạn mã ở mục 4.
 
@@ -113,7 +115,9 @@ Mở bản Preview, tải lại trang bỏ cache (Ctrl+Shift+R). Lần tải đ�
 | 3 | Chấm đỏ trên chuông | Bằng số chưa đọc trong widget; 0 thì ẩn |
 | 4 | Bấm ✕, bấm lại chuông, hoặc bấm ra ngoài khung | Khung đóng |
 | 5 | Mở khung rồi cuộn trang | Khung đi theo header, luôn ngay dưới nó |
-| 6 | Điện thoại (hoặc cửa sổ hẹp hơn 640px) | Khung rộng kín màn hình, sát dưới header; cuộn xuống cho header ẩn thì khung lên sát đỉnh. Xoay ngang: khung cao kín màn hình. Luôn có ✕ |
+| 6 | Điện thoại dọc | Khung từ đỉnh màn hình (che header của trang) tới mép trên thanh menu dưới; thanh menu vẫn thấy và bấm được; ô nhập tin nằm trên thanh menu; có ✕ |
+| 6b | Điện thoại, gõ tin nhắn | Bàn phím mở: header của khung và ô nhập đều còn thấy, ô nhập ngay trên bàn phím. Bàn phím đóng: khung trở lại như dòng 6. **Chỉ kiểm được trên máy thật** |
+| 6c | Điện thoại xoay ngang; máy tính bảng nhỏ (640–767px) | Khung dạng thẻ bên phải, không đè thanh menu dưới |
 | 7 | Console của trình duyệt (F12) | Không có cảnh báo `launcher trigger "#st-bell" was not found` |
 | 8 | Trang đăng nhập của cửa hàng | Widget không hiện (đúng thiết kế) |
 
@@ -124,7 +128,8 @@ Nếu vẫn thấy nút tròn: widget không tìm thấy chuông. Nó chờ kho�
 **Đã thử trên theme nháp `Ivyusa Talk Staging` ngày 2026-11-18** (link Preview, desktop 1440×900 và cửa sổ 390×844): chuông hiện cạnh giỏ hàng; bấm mở panel IVY (2 tab, lời chào, 8 nút) ở 176px; bấm lại chuông và bấm ra ngoài đều đóng; không có nút tròn; cửa sổ hẹp có nút ✕ và đóng được. Chưa thử trên điện thoại thật, và chưa thử với khách đã đăng nhập.
 
 - **Khách đã đăng nhập ivyusa.com chưa được nhận ra tự động.** Widget hỏi `https://ivyusa.com/apps/ivy/identity` để biết khách là ai; địa chỉ này đang trả 404, tức App Proxy của app Shopify chưa được cấu hình. Cho tới khi có, khách thấy "Hi there" và phải xác minh (Verify your identity / Guest order lookup) mới xem được đơn. Đây là việc riêng, ngoài phạm vi bản hướng dẫn này.
-- **Trên điện thoại, header ẩn khi cuộn xuống**, nên chuông cũng ẩn theo; khách phải cuộn lên để thấy chuông. Đây là hành vi của theme. Khung đang mở thì vẫn ở lại và đóng bằng ✕.
+- **Trên điện thoại, header ẩn khi cuộn xuống**, nên chuông cũng ẩn theo; khách phải cuộn lên để thấy chuông. Đây là hành vi của theme. Khung đang mở không bị ảnh hưởng.
+- **Bàn phím ảo:** khung tự co vừa phần màn hình còn thấy khi bàn phím mở. Nếu trên một dòng máy nào đó việc này gây giật hoặc sai vị trí, thêm `keyboardFit: false` vào đoạn mã ở mục 4 để tắt, rồi báo lại.
 - **Test tự động** cho kiểu chuông (TC-17-01..07) chạy trên một trang dựng giống ivyusa.com, không chạy trên theme thật. Mục 6 vẫn phải kiểm bằng tay trên Preview, và trên điện thoại thật trước khi Publish.
 
 ## 8. Quay lại kiểu cũ

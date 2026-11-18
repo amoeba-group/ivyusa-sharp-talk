@@ -36,6 +36,7 @@ function mountPage({
   opener = { tagName: 'BUTTON' },
   extra = {},
   raf,
+  visualViewport,
 } = {}) {
   const mounted = [];
   const handlers = {};
@@ -60,6 +61,7 @@ function mountPage({
     innerWidth,
     ...(innerHeight ? { innerHeight } : {}),
     ...(raf ? { requestAnimationFrame: raf } : {}),
+    ...(visualViewport ? { visualViewport } : {}),
     // `100dvh` support, as `CSS.supports` reports it (T15 D1).
     ...(dvh ? { CSS: { supports: (prop, value) => prop === 'height' && value === '100dvh' } } : {}),
     SHARPTALK_WIDGET_CONFIG: config,
@@ -205,12 +207,13 @@ test('a phone is full screen on the very first open, before the widget reports i
   assert.equal(frame.style.height, '100dvh');
 });
 
-test('docked on a phone, the panel fills the screen under the storefront header', () => {
+test('docked on a phone, the panel takes the screen from the very top (Figma 3050:24), whatever the offset', () => {
   const { frame, send } = mount({ innerWidth: 390, dvh: true });
   send({ type: 'ivy:launcher', position: 'right', size: 96, mode: 'trigger', offsetTop: 68, trigger: '#st-bell', frame: { w: 420, h: 800 } });
   send({ type: 'ivy:resize', open: true });
   assert.equal(frame.style.width, '100vw');
-  assert.equal(frame.style.height, 'calc(100dvh - 68px)');
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, '100dvh');
 });
 
 test('640px and wider is not a phone: the floating box is unchanged', () => {
@@ -229,14 +232,27 @@ test('640px and wider is not a phone: the floating box is unchanged', () => {
  * sticks, at 208px on a tablet, and leaves the window altogether on a phone
  * scrolled down. One fixed offset is right for one of those at best.
  */
-function mountWithHeader({ bottom, innerWidth = 1280, innerHeight = 900, config } = {}) {
+function mountWithHeader({ bottom, innerWidth = 1280, innerHeight = 900, config, bar, visualViewport } = {}) {
   const header = { bottom };
   const rafQueue = [];
   const m = mountPage({
-    config: config ?? { shop: 's.myshopify.com', trigger: '#st-bell' },
+    config: config ?? { shop: 's.myshopify.com', trigger: '#st-bell', ...(bar ? { bottomBar: '.mobile-nav' } : {}) },
     innerWidth,
     innerHeight,
     opener: { tagName: 'BUTTON', closest: () => ({ getBoundingClientRect: () => ({ bottom: header.bottom }) }) },
+    // The storefront's fixed tab bar: `bar.height` px at the bottom of the window (0 = hidden).
+    extra: bar
+      ? {
+          '.mobile-nav': {
+            getBoundingClientRect: () => ({
+              top: bar.height ? innerHeight - bar.height : 0,
+              bottom: bar.height ? innerHeight : 0,
+              height: bar.height,
+            }),
+          },
+        }
+      : {},
+    visualViewport,
     raf: (fn) => rafQueue.push(fn),
   });
   const flush = () => { for (let i = 0; i < 80 && rafQueue.length; i++) rafQueue.shift()(); };
@@ -265,17 +281,84 @@ test('a taller header (tablet) is not covered', () => {
   assert.equal(frame.style.top, '216px');
 });
 
-test('a phone sits flush under the header, and takes the whole screen once the header scrolls away', () => {
+/**
+ * A phone (PLN-261118 phone, Figma 3050:24): the panel runs from the top of the
+ * screen — over the storefront header — to the top of the storefront's own
+ * bottom bar, which stays in reach.
+ */
+test('a phone starts at the top of the screen wherever the header is', () => {
   const { frame, header, scroll } = mountWithHeader({ bottom: 176, innerWidth: 390, innerHeight: 844 });
-  assert.equal(frame.style.top, '176px');
-  assert.equal(frame.style.height, 'calc(100vh - 176px)');
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, '100vh');
   header.bottom = 0;
   scroll();
   assert.equal(frame.style.top, '0px');
   assert.equal(frame.style.height, '100vh');
-  header.bottom = 176;
+});
+
+test('a phone stops at the storefront bottom bar instead of covering it', () => {
+  const { frame } = mountWithHeader({ bottom: 176, innerWidth: 390, innerHeight: 844, bar: { height: 67 } });
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, 'calc(100vh - 67px)');
+});
+
+test('a hidden bottom bar holds nothing back', () => {
+  const { frame } = mountWithHeader({ bottom: 176, innerWidth: 390, innerHeight: 844, bar: { height: 0 } });
+  assert.equal(frame.style.height, '100vh');
+});
+
+test('the bottom bar is measured again when the window changes', () => {
+  const bar = { height: 67 };
+  const { frame, scroll } = mountWithHeader({ bottom: 176, innerWidth: 390, innerHeight: 844, bar });
+  assert.equal(frame.style.height, 'calc(100vh - 67px)');
+  bar.height = 83; // e.g. a taller bar after rotation or a theme change
   scroll();
-  assert.equal(frame.style.top, '176px');
+  assert.equal(frame.style.height, 'calc(100vh - 83px)');
+});
+
+test('with the keyboard up, a phone fits what is left visible; and goes back when it closes', () => {
+  const visualViewport = { height: 844, offsetTop: 0, scale: 1, addEventListener() {} };
+  const { frame, scroll } = mountWithHeader({ bottom: 176, innerWidth: 390, innerHeight: 844, bar: { height: 67 }, visualViewport });
+  assert.equal(frame.style.height, 'calc(100vh - 67px)');
+  visualViewport.height = 508; // 336px of keyboard
+  visualViewport.offsetTop = 40; // Safari panned the page to show the input
+  scroll();
+  assert.equal(frame.style.top, '40px');
+  assert.equal(frame.style.height, '508px');
+  visualViewport.height = 844;
+  visualViewport.offsetTop = 0;
+  scroll();
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, 'calc(100vh - 67px)');
+});
+
+test('a pinch-zoom is not a keyboard', () => {
+  const visualViewport = { height: 422, offsetTop: 100, scale: 2, addEventListener() {} };
+  const { frame } = mountWithHeader({ bottom: 176, innerWidth: 390, innerHeight: 844, visualViewport });
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, '100vh');
+});
+
+test('keyboardFit: false in the snippet switches the keyboard fit off', () => {
+  const visualViewport = { height: 508, offsetTop: 0, scale: 1, addEventListener() {} };
+  const { frame } = mountWithHeader({
+    bottom: 176, innerWidth: 390, innerHeight: 844, visualViewport,
+    config: { shop: 's.myshopify.com', trigger: '#st-bell', keyboardFit: false },
+  });
+  assert.equal(frame.style.height, '100vh');
+});
+
+test('a small tablet keeps its card under the header, clear of the bottom bar', () => {
+  const { frame } = mountWithHeader({ bottom: 175, innerWidth: 700, innerHeight: 1000, bar: { height: 67 } });
+  assert.equal(frame.style.top, '183px');
+  // 183 top + 67 bar + 5 (the rest of the 25px gap under the card).
+  assert.equal(frame.style.height, 'min(680px, calc(100vh - 255px))');
+});
+
+test('a phone on its side covers the header but not the bottom bar', () => {
+  const { frame } = mountWithHeader({ bottom: 175, innerWidth: 734, innerHeight: 343, bar: { height: 67 } });
+  assert.equal(frame.style.top, '0px');
+  assert.equal(frame.style.height, 'min(680px, calc(100vh - 67px))');
 });
 
 test('too little room under the header (a phone on its side): the panel covers it', () => {

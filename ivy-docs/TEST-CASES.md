@@ -402,10 +402,11 @@ Trang thử dựng giống ivyusa.com: 80px thanh phía trên, header 91px dính
 | TC-17-03 | Header của khung | Có Language, Settings, Close. ✕, bấm lại chuông, bấm ra ngoài: đều đóng |
 | TC-17-04 | Chuông không nằm trong header nào | Dùng Top offset của tenant |
 | TC-17-05 | Máy tính bảng 768×1024 | Khung không đè header, có ✕ |
-| TC-17-06 | Điện thoại 390×844, header ẩn khi cuộn (`@responsive`, chạy cả project mobile) | Sát dưới header, tới đáy màn hình; header ẩn → từ 0, cao 844; header hiện lại → về dưới header |
-| TC-17-07 | Điện thoại xoay ngang 734×343 | Khung cao kín màn hình từ 0, có ✕ và đóng được |
+| TC-17-06 | Điện thoại 390×844, trang có thanh menu dưới 67px (`@responsive`, chạy cả project mobile) | Khung từ 0 tới 777 (= 844 − 67); ô nhập của Chat nằm trên thanh menu; cuộn trang không làm khung dịch; chạm thanh menu thì trang nhận được và khung đóng |
+| TC-17-07 | Điện thoại xoay ngang 734×343 | Khung từ 0, dừng ở mép trên thanh menu (276), có ✕ và đóng được |
+| TC-17-08 | Máy tính bảng nhỏ 700×1000 (theme vẫn hiện thanh menu) | Khung dạng thẻ dưới header + 8px, không đè thanh menu |
 
-**Kết quả (2026-11-18, local):** `test:ci` 140/140 (8 lượt của T17: 7 desktop + TC-17-06 trên mobile). Unit loader `apps/widget/test`: 129/129, 8 ca mới trong `embed-dock-geometry.test.mjs`.
+**Kết quả (2026-11-18, local):** `test:ci` 141/141 (9 lượt của T17: 8 desktop + TC-17-06 trên mobile). Unit loader `apps/widget/test`: 137/137; `embed-dock-geometry.test.mjs` có 16 ca cho kiểu chuông (header, thanh menu dưới, bàn phím ảo). Bàn phím ảo chỉ có test đơn vị: giả lập không có bàn phím thật.
 
 ## T16 · Production smoke (`16-prod-smoke.spec.ts`, chỉ `E2E_TARGET=prod`, chỉ đọc)
 

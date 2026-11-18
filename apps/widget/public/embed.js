@@ -118,6 +118,11 @@
   // the header (a phone on its side), so the panel takes the full height.
   var dockTop = null;
   var dockCover = false;
+  // Room held back at the bottom for the storefront's own fixed bar (a phone's
+  // tab bar), and the box the on-screen keyboard leaves visible, when it is up
+  // (PLN-261118 phone). Both are measured, never assumed.
+  var dockBottom = 0;
+  var dockKeyboard = null;
   // Trigger mode hides the floating launcher, so a tenant who switches the mode
   // on before the storefront has the opener element would leave shoppers with no
   // way to open the widget at all (FIX-260916). The loader is the only side that
@@ -458,7 +463,45 @@
   var DOCK_MIN_HEIGHT = 360; // less room than this under the header → cover it
   function dockTopPx() {
     if (!triggerMode) return 0;
+    if (dockKeyboard) return dockKeyboard.top;
     return dockTop == null ? triggerOffset : dockTop;
+  }
+  /**
+   * Height of the storefront's bottom bar, when it is showing and sits at the
+   * bottom of the window. The design ends the panel where that bar begins
+   * (Figma 3050:24); covering it took the shopper's navigation away and put the
+   * composer on top of it.
+   */
+  function bottomBarHeight() {
+    if (!cfg.bottomBar) return 0;
+    var bar;
+    try {
+      bar = document.querySelector(String(cfg.bottomBar));
+    } catch (_) {
+      return 0;
+    }
+    if (!bar || !bar.getBoundingClientRect) return 0;
+    var r = bar.getBoundingClientRect();
+    var vh = window.innerHeight;
+    // Hidden (the theme drops it on wide screens), not at the bottom, or so
+    // tall that it is clearly not a bar: nothing to hold back.
+    if (!(r.height > 0) || r.bottom < vh - 2 || r.top < vh / 2) return 0;
+    return Math.max(0, Math.round(vh - r.top));
+  }
+  /**
+   * The on-screen keyboard, on a phone. iOS Safari and current Android Chrome
+   * draw it over the page without resizing it, so a full-height fixed frame
+   * keeps its composer behind the keys. `visualViewport` is what is actually
+   * visible; fitting the frame to it keeps the header and the composer in view.
+   * A pinch-zoom also shrinks that viewport — not a keyboard, so it is left be.
+   * `keyboardFit: false` in the install snippet switches this off.
+   */
+  function keyboardBox() {
+    var vv = window.visualViewport;
+    if (!COMPACT || cfg.keyboardFit === false || !vv) return null;
+    if (Math.abs((vv.scale || 1) - 1) > 0.01) return null;
+    if (!(window.innerHeight - vv.height > 120)) return null;
+    return { top: Math.max(0, Math.round(vv.offsetTop)), height: Math.round(vv.height) };
   }
   function dockAnchor() {
     try {
@@ -472,19 +515,33 @@
   /** Re-measure; returns true when the open box changed. */
   function measureDock() {
     if (!triggerMode) return false;
-    var anchor = dockAnchor();
-    var top = triggerOffset;
-    if (anchor) {
-      var bottom = anchor.getBoundingClientRect().bottom;
-      // Scrolled out of view (a phone hiding its header): start at the top.
-      top = bottom <= 0 ? 0 : Math.round(bottom) + (COMPACT ? 0 : DOCK_GAP);
+    var barH = bottomBarHeight();
+    var kb = keyboardBox();
+    var next;
+    var cover = false;
+    if (COMPACT) {
+      // A phone: from the very top of the screen, over the storefront header
+      // (Figma 3050:24) — down to the storefront's bottom bar.
+      next = 0;
+    } else {
+      var anchor = dockAnchor();
+      var top = triggerOffset;
+      if (anchor) {
+        var bottom = anchor.getBoundingClientRect().bottom;
+        // Scrolled out of view (a tablet hiding its header): start at the top.
+        top = bottom <= 0 ? 0 : Math.round(bottom) + DOCK_GAP;
+      }
+      cover = window.innerHeight - top - barH < DOCK_MIN_HEIGHT;
+      if (cover) top = 0;
+      next = anchor || cover ? top : null;
     }
-    var cover = window.innerHeight - top < DOCK_MIN_HEIGHT;
-    if (cover) top = 0;
-    var next = anchor || cover ? top : null;
-    if (next === dockTop && cover === dockCover) return false;
+    var kbKey = kb ? kb.top + ':' + kb.height : '';
+    var wasKey = dockKeyboard ? dockKeyboard.top + ':' + dockKeyboard.height : '';
+    if (next === dockTop && cover === dockCover && barH === dockBottom && kbKey === wasKey) return false;
     dockTop = next;
     dockCover = cover;
+    dockBottom = barH;
+    dockKeyboard = kb;
     return true;
   }
   function applyDock() {
@@ -518,6 +575,11 @@
   window.addEventListener('scroll', onDockEvent, { passive: true, capture: true });
   window.addEventListener('resize', onDockEvent);
   window.addEventListener('orientationchange', onDockEvent);
+  // The keyboard coming and going resizes only the visual viewport.
+  if (window.visualViewport && window.visualViewport.addEventListener) {
+    window.visualViewport.addEventListener('resize', onDockEvent);
+    window.visualViewport.addEventListener('scroll', onDockEvent);
+  }
 
   function recomputeOpen() {
     // A phone: the whole screen — under the storefront header when docked —
@@ -525,17 +587,26 @@
     // panel fills its frame edge to edge here, so nothing is held back for a gap.
     var top = dockTopPx();
     if (COMPACT) {
+      if (triggerMode && dockKeyboard) {
+        // Exactly what the keyboard leaves; the bottom bar is behind the keys.
+        OPEN = { w: '100vw', h: dockKeyboard.height + 'px' };
+        return;
+      }
+      var held = triggerMode ? top + dockBottom : 0;
       OPEN = {
         w: '100vw',
-        h: triggerMode && top > 0 ? 'calc(' + FULL_H + ' - ' + top + 'px)' : FULL_H,
+        h: held > 0 ? 'calc(' + FULL_H + ' - ' + held + 'px)' : FULL_H,
       };
       return;
     }
     // Floating keeps its old box exactly: bottom corner, nothing reserved.
-    // Covering the header means covering the gap under the panel too.
-    var reserved = triggerMode && !dockCover
-      ? top + Math.max(0, DOCK_BOTTOM_GAP - PANEL_GUTTER)
-      : 0;
+    // Covering the header means covering the gap under the panel too — but
+    // never the storefront's bottom bar.
+    var reserved = !triggerMode
+      ? 0
+      : dockCover
+        ? dockBottom
+        : top + dockBottom + Math.max(0, DOCK_BOTTOM_GAP - PANEL_GUTTER);
     OPEN = {
       w: 'min(' + frameSize.w + 'px, 100vw)',
       h:

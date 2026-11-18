@@ -8,11 +8,16 @@ import { test, expect } from '../fixtures/widget';
  * floating launcher. The host page below is shaped like ivyusa.com: two bars
  * above the header at the top of the page (80px), a 91px header that sticks to
  * the window on scroll — and, on a phone, hides when the shopper scrolls down.
- * The panel has to stay under that header wherever it is.
+ * From 640px up the panel has to stay under that header wherever it is.
+ *
+ * Below 768px the storefront also has its own tab bar fixed to the bottom of
+ * the screen (67px). A phone's panel runs from the top of the screen down to
+ * that bar and never over it (PLN-261118-IVY-Bell-Phone-Fullscreen, Figma 3050:24).
  */
 const BARS = 80;
 const HEADER = 91;
 const GAP = 8;
+const TAB_BAR = 67;
 
 type Host = { hideOnScroll?: boolean; bareBell?: boolean };
 
@@ -31,12 +36,15 @@ async function openStorefront(page: Page, host: Host = {}) {
   header{height:${HEADER}px;box-sizing:border-box;position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;border-bottom:1px solid #ddd;transition:transform .1s}
   header.away{transform:translateY(-100%)}
   main{height:3000px;padding:16px}
+  .mobile-nav{position:fixed;left:0;right:0;bottom:0;height:${TAB_BAR}px;z-index:29;background:#dce1f5;display:flex;align-items:center;justify-content:space-around}
+  @media (min-width:768px){.mobile-nav{display:none}}
 </style></head>
 <body><div class="bars"></div>
 ${host.bareBell ? `<div style="height:${HEADER}px;padding:0 16px">${bell}</div>` : `<header><strong>IVY beauty</strong>${bell}</header>`}
 <main><p id="outside">Page content</p></main>
+<nav class="mobile-nav"><a id="tab-home" href="#home">Home</a><a href="#bag">My Bag</a><a href="#my">My Ivy</a></nav>
 <script>
-  window.SHARPTALK_WIDGET_CONFIG = { shop: 'ivyusa.myshopify.com', locale: 'en', widgetUrl: '${origin}', trigger: '#st-bell' };
+  window.SHARPTALK_WIDGET_CONFIG = { shop: 'ivyusa.myshopify.com', locale: 'en', widgetUrl: '${origin}', trigger: '#st-bell', bottomBar: '.mobile-nav' };
   ${host.hideOnScroll ? `addEventListener('scroll', function () { var h = document.querySelector('header'); if (h) h.classList.toggle('away', scrollY > 200); }, { passive: true });` : ''}
 </script>
 <script src="${origin}/embed.js"></script></body></html>`,
@@ -146,37 +154,60 @@ test.describe('T17 · Header bell — tablet 768x1024', () => {
 test.describe('T17 · Header bell — phone 390x844', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-  test('TC-17-06 flush under the header; the whole screen once the header scrolls away @T17 @responsive', async ({ page, mocks: _mocks }) => {
-    const { frame, open, settled } = await openStorefront(page, { hideOnScroll: true });
+  test('TC-17-06 from the top of the screen down to the storefront tab bar, which stays in reach @T17 @responsive', async ({ page, mocks: _mocks }) => {
+    const { frame, panel, open, settled } = await openStorefront(page, { hideOnScroll: true });
     await open();
     let box = await settled();
-    expect(box.y, 'no gap on a phone').toBe(BARS + HEADER);
+    expect(box.y, 'over the storefront header, from the very top').toBe(0);
     expect(box.w).toBe(390);
-    expect(box.y + box.h, 'down to the bottom of the screen').toBe(844);
-
-    await page.evaluate(() => window.scrollTo(0, 900));
-    box = await settled();
-    expect(box.y, 'header gone → from the top').toBe(0);
-    expect(box.h).toBe(844);
+    expect(box.y + box.h, 'ends where the tab bar begins').toBe(844 - TAB_BAR);
     await expect(frame.getByRole('button', { name: 'Close' })).toBeVisible();
 
-    await page.evaluate(() => window.scrollTo(0, 0));
-    expect((await settled()).y, 'header back → under it again').toBe(BARS + HEADER);
+    // The panel's own last row — the composer — is above the bar, not under it.
+    await frame.getByRole('tab', { name: 'Chat' }).click();
+    const input = frame.getByRole('textbox').first();
+    await expect(input).toBeVisible();
+    const ib = (await input.boundingBox())!;
+    expect(ib.y + ib.height, 'composer clear of the tab bar').toBeLessThanOrEqual(844 - TAB_BAR);
+
+    // Scrolling the page (the header hides) moves nothing.
+    await page.evaluate(() => window.scrollTo(0, 900));
+    box = await settled();
+    expect(box.y).toBe(0);
+    expect(box.y + box.h).toBe(844 - TAB_BAR);
+
+    // The tab bar is still the storefront's: a tap reaches it.
+    await page.locator('#tab-home').tap();
+    await expect(page).toHaveURL(/#home$/);
+    await expect(panel).toBeHidden(); // a tap outside the panel closes it
   });
 });
 
 test.describe('T17 · Header bell — phone on its side 734x343', () => {
   test.use({ viewport: { width: 734, height: 343 }, isMobile: true, hasTouch: true });
 
-  test('TC-17-07 too little room under the header: the panel takes the full height, X in reach @T17', async ({ page, mocks: _mocks }) => {
+  test('TC-17-07 too little room under the header: the panel covers it, stops at the tab bar, X in reach @T17', async ({ page, mocks: _mocks }) => {
     const { frame, open, settled } = await openStorefront(page);
     await open();
     const box = await settled();
     expect(box.y).toBe(0);
-    expect(box.h).toBe(343);
+    expect(box.y + box.h, 'full height, down to the tab bar').toBe(343 - TAB_BAR);
     const close = frame.getByRole('button', { name: 'Close' });
     await expect(close).toBeVisible();
     await close.click();
     await expect(page.locator('#ivy-talktalk-frame')).toBeHidden();
+  });
+});
+
+test.describe('T17 · Header bell — small tablet 700x1000 (tab bar still shown)', () => {
+  test.use({ viewport: { width: 700, height: 1000 }, isMobile: true, hasTouch: true });
+
+  test('TC-17-08 the card stays under the header and clear of the tab bar @T17', async ({ page, mocks: _mocks }) => {
+    const { frame, open, settled } = await openStorefront(page);
+    await open();
+    const box = await settled();
+    expect(box.y).toBe(BARS + HEADER + GAP);
+    expect(box.y + box.h, 'not over the tab bar').toBeLessThanOrEqual(1000 - TAB_BAR);
+    await expect(frame.getByRole('button', { name: 'Close' })).toBeVisible();
   });
 });
