@@ -59,7 +59,16 @@ Có ba điểm cộng lại:
   - Cuộc cũ: 409, không lưu tin; có dải báo, ô gửi khoá; nút Open Session đưa sang cuộc mới nhất.
   - Cuộc mới nhất đã kết thúc: trả lời thì mở lại (status `agent`, xoá thời điểm kết thúc, giao cho người trả lời); `sessions.updated_at` được cập nhật.
 
-## 5. Phòng ngừa
+## 5. Deploy
+
+| Mục | Trạng thái |
+|---|---|
+| SQL | Không có |
+| Commit / CI | `b0ff7e1a` · IVY CI/CD [44500480662](https://github.com/amoeba-group/ivyusa-sharp-talk/actions/runs/44500480662) xanh |
+| Production | ✅ 10:05:03 UTC ngày 2026-11-19, widget bundle `index-DCVE3BaY.js`. Kiểm chỉ đọc trong tab riêng: Session 12 (cuộc cũ của phiên 168) có dải báo "…Their chat shows Session 16" và ô gửi khoá; Session 16 (đã kết thúc) mời "Reply to reopen this conversation"; Session 10 gửi bình thường |
+| Chủ dự án thử | ⏳ trả lời trong Session 10 rồi mở chat trên theme có đoạn mã ký |
+
+## 6. Phòng ngừa
 
 - Thao tác nào ghi tin vào một cuộc trò chuyện cũng phải trả lời được câu hỏi "khách sẽ thấy tin này ở đâu". Nếu khách không thấy được thì không cho gửi, và chỉ chỗ đúng.
 - Thông báo cho khách và nội dung khách thấy phải cùng một phạm vi. Nếu thông báo tính theo khách mà khung chat lại theo phiên, chuông sẽ sáng ở chỗ không có gì để đọc.

@@ -359,7 +359,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - BUG-043 (thẻ đánh giá mất khi tải lại trang), TC-12-07.
 - Bổ sung (chủ dự án "ok"): dòng của cuộc trò chuyện đã được đánh giá hiện khuôn mặt khách chọn cạnh thời gian.
 
-### Bổ sung 2026-11-19 · BUG-044: tin nhân viên trả lời tới đúng khung chat của khách — ✅ code · [FIX](../docs/bug-fix/FIX-261119-Staff-Reply-Not-Seen-By-Shopper.md)
+### Bổ sung 2026-11-19 · BUG-044: tin nhân viên trả lời tới đúng khung chat của khách — ✅ deploy 10:05 UTC (`b0ff7e1a`; console production: Session 12 có dải báo trỏ về Session 16, Session 16 mời "Reply to reopen") · [FIX](../docs/bug-fix/FIX-261119-Staff-Reply-Not-Seen-By-Shopper.md)
 - **Chủ dự án duyệt:** `1. ok 2. a` — trả lời cuộc đã kết thúc thì mở lại cuộc đó.
 - Chỉ trả lời được cuộc mới nhất của phiên (E5165, dải báo + Open Session N); phiên vừa được trả lời thành phiên hiện tại; widget hỏi lại khi mở chat và chuyển phiên, đọc lại toàn bộ đoạn chat. TC-08-09..10.
 - **Cần chủ dự án:** thử trên theme có đoạn mã ký (Ivyusa Talk Staging) hoặc Publish theme đó, vì việc tự chuyển phiên chỉ có ở khách đã đăng nhập.

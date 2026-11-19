@@ -33,7 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
-| BUG-044 | Nhân viên trả lời trong console, **chuông trên website sáng nhưng mở chat không thấy tin**: tin nằm ở phiên chat khác của cùng khách | API · Widget · Console | 🔴 | Fixed code (2026-11-19, [FIX](../docs/bug-fix/FIX-261119-Staff-Reply-Not-Seen-By-Shopper.md), TC-08-09..10) | T08 |
+| BUG-044 | Nhân viên trả lời trong console, **chuông trên website sáng nhưng mở chat không thấy tin**: tin nằm ở phiên chat khác của cùng khách | API · Widget · Console | 🔴 | Fixed, deploy 2026-11-19 10:05 UTC (`b0ff7e1a`, [FIX](../docs/bug-fix/FIX-261119-Staff-Reply-Not-Seen-By-Shopper.md), TC-08-09..10); chờ chủ dự án thử | T08 |
 | BUG-043 | Đánh giá xong rồi **tải lại hay chuyển trang**: thẻ đánh giá biến mất, khách không còn thấy mình đã chọn mặt nào | Widget | 🟡 | Fixed code (2026-11-19, TC-12-07) | T12 |
 | BUG-042 | Số của tab Notifications đếm cả loại thông báo **không chip nào hiện** (`issue`, `review`) → có thể không bao giờ mất | API | 🟡 | Fixed code (2026-11-19, phòng ngừa: chưa thấy trên production) | T01 |
 | BUG-041 | Nhân viên trả lời → **số chưa đọc hiện ở tab Notifications** (nơi không có dòng nào để đọc) và **không bao giờ mất**; tab Chat không có số | API · Widget | 🔴 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T01 |
