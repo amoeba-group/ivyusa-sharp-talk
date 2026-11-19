@@ -320,6 +320,8 @@ export const AI_PROVIDER = {
   GOOGLE: 'google',
   AZURE: 'azure',
   CUSTOM: 'custom',
+  /** Claude on Amazon Bedrock, signed with the server's IAM role — no key (PLN-261119). */
+  BEDROCK: 'bedrock',
 } as const;
 export type AiProvider = (typeof AI_PROVIDER)[keyof typeof AI_PROVIDER];
 

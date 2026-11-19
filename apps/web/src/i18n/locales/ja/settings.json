@@ -727,6 +727,13 @@
       "model": "モデルエラー",
       "rate_limit": "レート制限",
       "unreachable": "接続不可"
+    },
+    "bedrock": {
+      "provider": "AWS Bedrock",
+      "sonnet": "Claude Sonnet 5.5 — メインのチャットボット",
+      "haiku": "Claude Haiku 5.5 — 短いタスク",
+      "modelHint": "サーバーに設定された推論プロファイルを使用します（{{env}}）。",
+      "authNote": "サーバーの AWS IAM ロールでサインインするため、ここにキーは保存しません。利用料金はその AWS アカウントに請求されます。"
     }
   },
   "aiUsage": {

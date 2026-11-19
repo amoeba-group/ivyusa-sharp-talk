@@ -29,6 +29,18 @@ export const ENGINE_HEALTH = {
 export type EngineHealth = (typeof ENGINE_HEALTH)[keyof typeof ENGINE_HEALTH];
 
 /**
+ * Providers that sign in with the server's cloud role instead of a key
+ * (PLN-261119: Bedrock uses the EC2 IAM role, and IVY's IT asked that no AWS
+ * key be stored). For them an empty key is the normal state, not "no key".
+ */
+export const KEYLESS_PROVIDERS: ReadonlySet<string> = new Set(['bedrock']);
+
+/** Whether an engine of this provider can only answer with a stored key. */
+export function needsApiKey(provider: string): boolean {
+  return !KEYLESS_PROVIDERS.has(provider);
+}
+
+/**
  * Provider messages differ; the phrases in them do not. Credit is checked
  * first: Anthropic reports it as a 400 invalid_request_error and OpenAI as a
  * 429, so the status code alone would file it as a bad request or a wait.
@@ -41,7 +53,8 @@ export function classifyEngineFailure(message: string): EngineFailure {
   if (/\b(401|403)\b|unauthorized|invalid[_ ]api[_ ]key|authentication|not configured/.test(m)) {
     return ENGINE_FAILURE.AUTH;
   }
-  if (/\b404\b|not[_ ]found|unknown model|model.*does not exist/.test(m)) {
+  // "model identifier": Bedrock's ValidationException for an unknown model or inference profile.
+  if (/\b404\b|not[_ ]found|unknown model|model.*does not exist|model identifier/.test(m)) {
     return ENGINE_FAILURE.MODEL;
   }
   if (/\b429\b|rate[_ ]limit|too many requests|overloaded/.test(m)) {
@@ -63,7 +76,7 @@ export interface EngineHealthInput {
 export function engineHealth(e: EngineHealthInput): EngineHealth {
   if (e.provider === 'stub') return ENGINE_HEALTH.STUB;
   if (e.status !== 'enabled') return ENGINE_HEALTH.DISABLED;
-  if (!e.hasKey) return ENGINE_HEALTH.NO_KEY;
+  if (!e.hasKey && needsApiKey(e.provider)) return ENGINE_HEALTH.NO_KEY;
   const ok = e.lastOkAt ? new Date(e.lastOkAt).getTime() : 0;
   const err = e.lastErrorAt ? new Date(e.lastErrorAt).getTime() : 0;
   if (err > ok) {

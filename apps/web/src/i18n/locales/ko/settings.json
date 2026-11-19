@@ -727,6 +727,13 @@
       "model": "모델 오류",
       "rate_limit": "한도 초과",
       "unreachable": "연결 불가"
+    },
+    "bedrock": {
+      "provider": "AWS Bedrock",
+      "sonnet": "Claude Sonnet 5.5 — 메인 챗봇",
+      "haiku": "Claude Haiku 5.5 — 빠른 작업",
+      "modelHint": "서버에 설정된 추론 프로필을 사용합니다 ({{env}}).",
+      "authNote": "서버의 AWS IAM 역할로 로그인하므로 여기에는 키를 저장하지 않습니다. 사용 요금은 해당 AWS 계정으로 청구됩니다."
     }
   },
   "aiUsage": {

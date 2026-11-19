@@ -363,3 +363,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Chủ dự án duyệt:** `1. ok 2. a` — trả lời cuộc đã kết thúc thì mở lại cuộc đó.
 - Chỉ trả lời được cuộc mới nhất của phiên (E5165, dải báo + Open Session N); phiên vừa được trả lời thành phiên hiện tại; widget hỏi lại khi mở chat và chuyển phiên, đọc lại toàn bộ đoạn chat. TC-08-09..10.
 - **Cần chủ dự án:** thử trên theme có đoạn mã ký (Ivyusa Talk Staging) hoặc Publish theme đó, vì việc tự chuyển phiên chỉ có ở khách đã đăng nhập.
+
+### Bổ sung 2026-11-19 · Claude qua AWS Bedrock của IVY — ✅ code · ⏳ .env + deploy + đo + duyệt kho kiến thức · [PLN](../docs/plan/PLN-261119-IVY-AWS-Bedrock-Claude.md) · [RPT](../docs/implementation/RPT-261119-IVY-AWS-Bedrock-Claude.md)
+- **Chủ dự án duyệt:** `1. ok 2. a 3. ok` — bật cho khách **sau khi duyệt kho kiến thức**; Sonnet 5.5 trả lời khách, Haiku 5.5 kiểm duyệt / phân loại.
+- Adapter `bedrock` (Converse API, ARN inference profile, IAM role `talk-ivyusa-bedrock` — không khoá), engine Bedrock trong console (chọn Sonnet / Haiku), `guardrailConfig` khi IVY gửi mã guardrail. Không SQL.
+- Còn lại: chủ dự án thêm 3 dòng `.env` trên server → push → tạo 2 engine + Test connection → đo `effort` / `maxTokens` → duyệt kho kiến thức → gán chức năng → báo IVY bật Guardrails.

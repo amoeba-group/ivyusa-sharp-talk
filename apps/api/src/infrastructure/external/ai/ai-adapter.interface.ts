@@ -9,6 +9,12 @@ export interface AiCompletionRequest {
   messages: AiMessage[];
   temperature?: number;
   maxTokens?: number;
+  /**
+   * How hard the model thinks — Claude's `output_config.effort` (low … max),
+   * from the tenant's per-function params (PLN-261119). Adapters that have no
+   * such setting ignore it.
+   */
+  effort?: string;
   model: string;
   apiKey?: string;
   endpoint?: string;

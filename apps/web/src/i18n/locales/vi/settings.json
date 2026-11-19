@@ -727,6 +727,13 @@
       "model": "Lỗi mô hình",
       "rate_limit": "Vượt giới hạn",
       "unreachable": "Không kết nối được"
+    },
+    "bedrock": {
+      "provider": "AWS Bedrock",
+      "sonnet": "Claude Sonnet 5.5 — chatbot chính",
+      "haiku": "Claude Haiku 5.5 — việc ngắn",
+      "modelHint": "Dùng inference profile đặt trên server ({{env}}).",
+      "authNote": "Đăng nhập bằng IAM Role AWS của server nên không lưu khoá ở đây. Chi phí tính vào tài khoản AWS đó."
     }
   },
   "aiUsage": {

@@ -3,6 +3,7 @@ import {
   ENGINE_HEALTH,
   classifyEngineFailure,
   engineHealth,
+  needsApiKey,
   providerErrorSummary,
 } from './engine-health';
 
@@ -76,6 +77,24 @@ describe('engineHealth', () => {
     expect(
       engineHealth({ ...base, lastErrorAt: t('2026-10-06T19:06:00Z'), lastErrorReason: 'weird' }),
     ).toBe(ENGINE_HEALTH.UNREACHABLE);
+  });
+});
+
+describe('keyless providers (PLN-261119)', () => {
+  const base = { status: 'enabled', hasKey: false, lastOkAt: null, lastErrorAt: null, lastErrorReason: null };
+
+  it('a Bedrock engine without a key is not "no key" — it signs in with the server role', () => {
+    expect(needsApiKey('bedrock')).toBe(false);
+    expect(engineHealth({ ...base, provider: 'bedrock' })).toBe('unknown');
+  });
+
+  it('every other provider still needs one', () => {
+    expect(needsApiKey('anthropic')).toBe(true);
+    expect(engineHealth({ ...base, provider: 'anthropic' })).toBe('no_key');
+  });
+
+  it("reads Bedrock's unknown inference profile as a model problem", () => {
+    expect(classifyEngineFailure('Bedrock API error 400 ValidationException: The provided model identifier is invalid.')).toBe('model');
   });
 });
 

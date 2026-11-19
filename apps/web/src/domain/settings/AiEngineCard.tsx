@@ -37,6 +37,13 @@ const KEY_PREFIX: Record<string, string> = { anthropic: 'sk-ant-', openai: 'sk-'
  * and the selector applies an engine (own, or a platform one the operator
  * opened) to every function in one step.
  */
+/** The inference profiles a Bedrock engine can point at; the ARNs live in the server's env (PLN-261119). */
+const BEDROCK_MODELS = ['sonnet', 'haiku'];
+const BEDROCK_ENV: Record<string, string> = {
+  sonnet: 'BEDROCK_SONNET_MODEL_ARN',
+  haiku: 'BEDROCK_HAIKU_MODEL_ARN',
+};
+
 export function AiEngineCard() {
   const { t } = useTranslation('settings');
   const { t: tc } = useTranslation('common');
@@ -56,6 +63,14 @@ export function AiEngineCard() {
   const [endpoint, setEndpoint] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [detailsOpen, setDetailsOpen] = useState(false);
+  // Bedrock signs in with the server's IAM role and picks a profile set there:
+  // no endpoint, no key, a choice of two models (PLN-261119).
+  const isBedrock = provider === 'bedrock';
+  const changeProvider = (next: string) => {
+    setProvider(next);
+    if (next === 'bedrock' && !BEDROCK_MODELS.includes(model)) setModel('sonnet');
+    if (next !== 'bedrock' && BEDROCK_MODELS.includes(model)) setModel('');
+  };
   const [choice, setChoice] = useState('');
 
   useEffect(() => {
@@ -332,10 +347,10 @@ export function AiEngineCard() {
                     name: name.trim(),
                     provider,
                     model: model.trim(),
-                    endpoint: endpoint.trim() || undefined,
+                    endpoint: isBedrock ? undefined : endpoint.trim() || undefined,
                     // Sent only when typed: an empty box means "keep the stored
                     // key", since the form can never show it.
-                    ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}),
+                    ...(!isBedrock && apiKey.trim() ? { api_key: apiKey.trim() } : {}),
                   },
                   { onSuccess: () => setOpen(false) },
                 )
@@ -354,23 +369,43 @@ export function AiEngineCard() {
             <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={64} autoComplete="off" />
           </FormRow>
           <FormRow label={t('aiEngines.provider')}>
-            <Select value={provider} onChange={(e) => setProvider(e.target.value)}>
+            <Select value={provider} onChange={(e) => changeProvider(e.target.value)}>
               {(engines.data?.providers ?? []).map((p) => (
                 <option key={p} value={p}>
-                  {p}
+                  {p === 'bedrock' ? t('aiEngines.bedrock.provider') : p}
                 </option>
               ))}
             </Select>
           </FormRow>
           <FormRow label={t('aiEngines.model')}>
-            <Input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="claude-opus-4-8"
-              maxLength={64}
-              autoComplete="off"
-            />
+            {isBedrock ? (
+              <>
+                <Select value={model} onChange={(e) => setModel(e.target.value)}>
+                  {BEDROCK_MODELS.map((m) => (
+                    <option key={m} value={m}>
+                      {t(`aiEngines.bedrock.${m}`)}
+                    </option>
+                  ))}
+                </Select>
+                <p className="mt-1 text-xs text-gray-500">
+                  {t('aiEngines.bedrock.modelHint', { env: BEDROCK_ENV[model] ?? BEDROCK_ENV.sonnet })}
+                </p>
+              </>
+            ) : (
+              <Input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="claude-opus-4-8"
+                maxLength={64}
+                autoComplete="off"
+              />
+            )}
           </FormRow>
+          {isBedrock ? (
+            // No endpoint, no key: the server's IAM role signs every call.
+            <p className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600">{t('aiEngines.bedrock.authNote')}</p>
+          ) : (
+            <>
           <FormRow label={t('aiEngines.endpoint')}>
             <Input
               type="url"
@@ -405,6 +440,8 @@ export function AiEngineCard() {
           </FormRow>
           {/* Who pays is a consequence of this field, so it is stated next to it. */}
           <p className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600">{t('aiEngines.billingNote')}</p>
+            </>
+          )}
         </div>
       </Modal>
     </Card>

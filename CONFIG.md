@@ -115,6 +115,9 @@ Copy the `.example` to the real filename on the server and fill in secrets — t
 | `ANTHROPIC_MODEL` | claude-opus-4-8 | claude-opus-4-8 | claude-opus-4-8 | |
 | `OPENAI_API_KEY` | — | optional | optional | fallback route; per-engine key in the console wins |
 | `OPENAI_MODEL` | gpt-4o-mini | gpt-4o-mini | gpt-4o-mini | used when the engine row names no model |
+| `AWS_REGION` | — | — | us-east-1 (IVY) | Claude on Amazon Bedrock (provider `bedrock`, PLN-261119). **No AWS keys anywhere**: the SDK signs with the EC2 instance's IAM role |
+| `BEDROCK_SONNET_MODEL_ARN` / `BEDROCK_HAIKU_MODEL_ARN` | — | — | IVY only | application inference profile ARNs from the AWS account owner; a `bedrock` engine with model `sonnet` / `haiku` uses them. Kept out of git (they carry the account number) |
+| `BEDROCK_GUARDRAIL_ID` / `BEDROCK_GUARDRAIL_VERSION` | — | — | when the owner sets one | sent as `guardrailConfig` on every Bedrock call; empty = none |
 | `IDLE_SWEEP_INTERVAL_SEC` | 30 | 30 | 30 | 방치 대화 순회 주기(0=비활성) |
 | `IDLE_PROMPT_AFTER_MIN` | 30 | 30 | 30 | 이 시간 무응답이면 "더 도와드릴까요?" |
 | `IDLE_CLOSE_AFTER_SEC` | 60 | 60 | 60 | 그 질문 후 대기 시간 |
@@ -219,7 +222,7 @@ curl -s https://shoptalk.amoeba.site/api/v1/health   # {"status":"ok","db":"up"}
 
 `https://sharptalk.amoeba.site` → host nginx (Let's Encrypt) → `127.0.0.1:8081` → `docker/self-hosted` stack in `/home/shoptalk/sharptalk-production` (containers `sharptalk_*`, MySQL loopback `3318`, `RESTART_POLICY=always`). Env: server-only `docker/self-hosted/.env.self-hosted` from profile `deploy/profiles/SharpTalk-KR-Production/`; secrets in `secrets/SharpTalk-KR-Production-server.md`. Deploy from branch `production`. The dedicated-host plan below stays valid for when a host is provisioned.
 
-**IVY USA production (a separate deployment):** `https://talk.ivyusa.com` → AWS load balancer (answers 403 to non-browser clients such as curl or Node `fetch`, while browsers on the same machine are served — observed 2026-11-17, ivy-docs BUG-004) → EC2 `talkaibotprd01`, `docker/self-hosted` stack in `/docker/apps/talktalk` (user `appops`, no sudo; access by AWS SSM Session Manager). Deploy from branch `deploy/talk-ivyusa`, never `main`: a push with green CI is pulled and deployed by `scripts/ivy-autodeploy.sh` (cron, every 2 minutes; log `~/ivy-autodeploy.log`). SQL is applied by hand before the push. Runbook: `docs/guide/GUIDE-261110-IVY-CICD.md`; profile `deploy/profiles/SharpTalk-USA-IVY/`.
+**IVY USA production (a separate deployment):** `https://talk.ivyusa.com` → AWS load balancer (answers 403 to non-browser clients such as curl or Node `fetch`, while browsers on the same machine are served — observed 2026-11-17, ivy-docs BUG-004) → EC2 `talkaibotprd01`, `docker/self-hosted` stack in `/docker/apps/talktalk` (user `appops`, no sudo; access by AWS SSM Session Manager). Deploy from branch `deploy/talk-ivyusa`, never `main`: a push with green CI is pulled and deployed by `scripts/ivy-autodeploy.sh` (cron, every 2 minutes; log `~/ivy-autodeploy.log`). SQL is applied by hand before the push. Runbook: `docs/guide/GUIDE-261110-IVY-CICD.md`; profile `deploy/profiles/SharpTalk-USA-IVY/`. AI: Claude on IVY's Amazon Bedrock (us-east-1), signed with the instance's IAM role `talk-ivyusa-bedrock` — reachable from inside the API container through IMDS (checked 2026-11-19); the inference profile ARNs are in `docker/self-hosted/.env.self-hosted` on the host (PLN-261119).
 
 ### 7.1 Original bring-up notes (dedicated host)
 

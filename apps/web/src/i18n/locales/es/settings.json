@@ -727,6 +727,13 @@
       "model": "Error de modelo",
       "rate_limit": "Límite de solicitudes",
       "unreachable": "Inaccesible"
+    },
+    "bedrock": {
+      "provider": "AWS Bedrock",
+      "sonnet": "Claude Sonnet 5.5 — chatbot principal",
+      "haiku": "Claude Haiku 5.5 — tareas rápidas",
+      "modelHint": "Usa el perfil de inferencia configurado en el servidor ({{env}}).",
+      "authNote": "Inicia sesión con el rol de IAM de AWS del servidor, así que aquí no se guarda ninguna clave. El uso se factura a esa cuenta de AWS."
     }
   },
   "aiUsage": {

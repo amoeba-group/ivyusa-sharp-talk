@@ -20,7 +20,8 @@ import {
 } from './admin.hooks';
 import type { AiEngine } from './admin.service';
 
-const PROVIDERS = ['openai', 'anthropic', 'google', 'azure'];
+// `bedrock` signs in with the server's IAM role — no key (PLN-261119).
+const PROVIDERS = ['openai', 'anthropic', 'google', 'azure', 'bedrock'];
 
 type OwnerFilter = 'all' | 'platform' | 'tenant';
 
@@ -247,7 +248,10 @@ export function AiEnginesPage() {
             <Button variant="secondary" onClick={() => setCreateOpen(false)}>
               {tc('cancel')}
             </Button>
-            <Button onClick={handleCreate} disabled={createEngine.isPending || !name || !model || !apiKey}>
+            <Button
+              onClick={handleCreate}
+              disabled={createEngine.isPending || !name || !model || (provider !== 'bedrock' && !apiKey)}
+            >
               {tc('create')}
             </Button>
           </>
@@ -268,6 +272,7 @@ export function AiEnginesPage() {
         <FormRow label={t('model')}>
           <Input value={model} onChange={(e) => setModel(e.target.value)} autoComplete="off" />
         </FormRow>
+        {provider !== 'bedrock' && (
         <FormRow label={t('apiKey')}>
           {/* `new-password`: Chrome ignores `off` on password fields and offers the console login. */}
           <Input
@@ -280,6 +285,7 @@ export function AiEnginesPage() {
             data-lpignore="true"
           />
         </FormRow>
+        )}
       </Modal>
 
       <Modal

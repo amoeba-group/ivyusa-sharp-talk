@@ -18,6 +18,7 @@ import { AiCreditAlertService } from './ai-credit-alert.service';
 import { AnthropicAdapter } from './adapters/anthropic.adapter';
 import { OpenAiAdapter } from './adapters/openai.adapter';
 import { VoyageAdapter } from './adapters/voyage.adapter';
+import { BedrockAdapter } from './adapters/bedrock.adapter';
 
 export interface GatewayRequest {
   tenantId: number;
@@ -92,12 +93,15 @@ export class AiGatewayService {
     private readonly usage: AiUsageService,
     // Appended and optional so positional test doubles that predate it stay valid.
     @Optional() private readonly creditAlert?: AiCreditAlertService,
+    // Claude on Amazon Bedrock (PLN-261119) — appended and optional for the same reason.
+    @Optional() bedrock?: BedrockAdapter,
   ) {
     this.adapters = new Map<string, AiAdapter>([
       [stub.provider, stub],
       [anthropic.provider, anthropic],
       [openai.provider, openai],
       [voyage.provider, voyage],
+      ...(bedrock ? ([[bedrock.provider, bedrock]] as Array<[string, AiAdapter]>) : []),
     ]);
   }
 
@@ -124,6 +128,8 @@ export class AiGatewayService {
         messages: req.messages,
         temperature: req.temperature ?? (params.temperature as number) ?? 0.3,
         maxTokens: req.maxTokens ?? (params.max_tokens as number) ?? 1024,
+        // Per-function thinking depth (PLN-261119); only adapters that have one use it.
+        effort: typeof params.effort === 'string' ? params.effort : undefined,
         model: engine?.model ?? 'stub-1',
         apiKey,
         endpoint: engine?.endpoint ?? undefined,

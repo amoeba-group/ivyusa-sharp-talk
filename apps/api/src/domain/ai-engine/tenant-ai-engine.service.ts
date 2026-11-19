@@ -10,6 +10,7 @@ import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.se
 import {
   ENGINE_FAILURE,
   classifyEngineFailure,
+  needsApiKey,
 } from '../../infrastructure/external/ai/engine-health';
 
 /**
@@ -19,7 +20,8 @@ import {
  * and in the admin form, but nothing can call them — offering them here would
  * let an operator save an engine that silently never answers.
  */
-export const TENANT_PROVIDERS = ['anthropic', 'openai'] as const;
+// `bedrock`: Claude on IVY's AWS account, signed with the server's IAM role (PLN-261119).
+export const TENANT_PROVIDERS = ['anthropic', 'openai', 'bedrock'] as const;
 export type TenantProvider = (typeof TENANT_PROVIDERS)[number];
 
 /**
@@ -113,8 +115,9 @@ export class TenantAiEngineService {
         // A key-less engine cannot answer, and an enabled engine that cannot
         // answer falls through to the stub without saying so — the failure this
         // project has already shipped once. Park it disabled with the reason on
-        // screen instead.
-        status: key ? 'enabled' : 'disabled',
+        // screen instead. A provider that signs in with the server's role
+        // (Bedrock) needs no key and starts enabled.
+        status: key || !needsApiKey(input.provider) ? 'enabled' : 'disabled',
         isDefault: 0,
       }),
     );
@@ -137,7 +140,7 @@ export class TenantAiEngineService {
       engine.apiKeyEncrypted = encryptSecret(input.apiKey.trim());
       if (engine.status === 'disabled') engine.status = 'enabled';
     }
-    if (!engine.apiKeyEncrypted) engine.status = 'disabled';
+    if (!engine.apiKeyEncrypted && needsApiKey(engine.provider)) engine.status = 'disabled';
     return this.engineRepo.save(engine);
   }
 
@@ -224,7 +227,7 @@ export async function runEngineTest(
   if (!adapter) {
     return { ok: false, reason: ENGINE_TEST_REASON.UNREACHABLE, detail: 'no adapter', elapsedMs: 0 };
   }
-  if (!engine.apiKeyEncrypted) {
+  if (!engine.apiKeyEncrypted && needsApiKey(engine.provider)) {
     return { ok: false, reason: ENGINE_TEST_REASON.AUTH, detail: 'no API key', elapsedMs: 0 };
   }
   const started = Date.now();
@@ -232,7 +235,7 @@ export async function runEngineTest(
     await adapter.complete({
       model: engine.model,
       endpoint: engine.endpoint ?? undefined,
-      apiKey: decryptSecret(engine.apiKeyEncrypted),
+      apiKey: engine.apiKeyEncrypted ? decryptSecret(engine.apiKeyEncrypted) : undefined,
       messages: [{ role: 'user', content: 'ping' }],
       // Smallest call that still proves the credentials and the model name.
       maxTokens: 1,

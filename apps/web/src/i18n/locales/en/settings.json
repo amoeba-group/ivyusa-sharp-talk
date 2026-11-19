@@ -727,6 +727,13 @@
       "model": "Model error",
       "rate_limit": "Rate limited",
       "unreachable": "Unreachable"
+    },
+    "bedrock": {
+      "provider": "AWS Bedrock",
+      "sonnet": "Claude Sonnet 5.5 — main chatbot",
+      "haiku": "Claude Haiku 5.5 — quick tasks",
+      "modelHint": "Uses the inference profile set on the server ({{env}}).",
+      "authNote": "Signs in with the server's AWS IAM role, so no key is stored here. Usage is billed to that AWS account."
     }
   },
   "aiUsage": {

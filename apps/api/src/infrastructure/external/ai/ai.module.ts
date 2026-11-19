@@ -11,12 +11,13 @@ import { StubAdapter } from './adapters/stub.adapter';
 import { AnthropicAdapter } from './adapters/anthropic.adapter';
 import { OpenAiAdapter } from './adapters/openai.adapter';
 import { VoyageAdapter } from './adapters/voyage.adapter';
+import { BedrockAdapter } from './adapters/bedrock.adapter';
 
 /** Global AI gateway available to RAG, summary, assist, moderation, and embedding. */
 @Global()
 @Module({
   imports: [TypeOrmModule.forFeature([AiEngine, TenantAiSetting, AiUsageDaily, Tenant])],
-  providers: [AiGatewayService, AiUsageService, AiCreditAlertService, StubAdapter, AnthropicAdapter, OpenAiAdapter, VoyageAdapter],
+  providers: [AiGatewayService, AiUsageService, AiCreditAlertService, StubAdapter, AnthropicAdapter, OpenAiAdapter, VoyageAdapter, BedrockAdapter],
   exports: [AiGatewayService, AiUsageService],
 })
 export class AiModule {}
