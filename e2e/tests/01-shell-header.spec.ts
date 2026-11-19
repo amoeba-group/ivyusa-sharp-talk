@@ -62,8 +62,8 @@ test.describe('T01 · Panel shell, header & tabs', () => {
       await widget.openNotifications();
       const feedUnread = mocks!.state.notifications.filter((n) => !n.read).length;
 
-      mocks!.state.chatNotices = 3; // the agent answers; the badge poll runs every 30s
-      await page.clock.fastForward(31_000);
+      mocks!.state.chatNotices = 3; // the agent answers; the badge poll runs every 10s
+      await page.clock.fastForward(11_000);
       await expect(widget.tabBadge(widget.tab('Chat'), 3)).toBeVisible();
       await expect(widget.tabBadge(widget.tab('Notifications'), feedUnread)).toBeVisible();
 

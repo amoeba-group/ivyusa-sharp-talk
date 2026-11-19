@@ -43,3 +43,13 @@ Chưa kiểm ở local với nhân viên thật trả lời: đường đó cầ
 | Server `talkaibotprd01` | ⏳ (build lại `api`, `web`, `widget`) |
 | Production: Agent sender name = "Ivyusa Support" (6 ngôn ngữ) + Agent name shown to shoppers = The generic label | ⏳ sau deploy, trong console |
 | Chủ dự án thử lại | ⏳ |
+
+## 5. Bổ sung cùng ngày: số chưa đọc hiện nhanh hơn
+
+Chủ dự án báo sau khi thử: nhân viên trả lời xong, số trên chuông ngoài website "đợi rất lâu" mới hiện.
+
+- **Nguyên nhân:** widget hỏi số chưa đọc mỗi 30 giây, và không hỏi lại khi tab được nhìn tới (`refetchOnWindowFocus: false` là mặc định của widget). Trình duyệt lại dừng bộ đếm giờ ở tab nền: người thử gõ ở tab console, quay về tab cửa hàng thì phải chờ thêm tới hết một chu kỳ.
+- **Sửa (`apps/widget/src/hooks/useNotifications.ts`):** hỏi mỗi **10 giây**, và hỏi **ngay** khi tab được nhìn tới lại. Phía server câu trả lời lấy từ cache 20 giây, cache này bị xoá mỗi khi có thông báo mới hoặc được đọc, nên số mới có ngay ở lượt hỏi kế tiếp.
+- **Giới hạn:** vẫn là hỏi định kỳ, không phải đẩy tức thời: chậm nhất khoảng 10 giây khi tab đang mở. Tức thời thật sự cần kênh đẩy (WebSocket / SSE), hiện widget không có.
+- **Tải:** mỗi trang cửa hàng đang mở của khách **đã đăng nhập** gửi 2–3 yêu cầu nhỏ mỗi 10 giây thay vì mỗi 30 giây. Khách vãng lai không gửi.
+- TC-01-10 chạy lại với chu kỳ 10 giây; `test:ci` 147 / 147.

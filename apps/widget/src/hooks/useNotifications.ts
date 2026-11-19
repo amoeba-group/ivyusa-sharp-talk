@@ -36,6 +36,9 @@ export function useNotifications(
  * (FIX-Widget-UnreadCount-Anon401-20260803). The query auto-enables the moment the
  * app-proxy handshake or AuthGate binds a customer and sets `authenticated`.
  */
+/** How often an open storefront page asks for the unread count. */
+export const UNREAD_POLL_MS = 10_000;
+
 export function useUnreadCount(
   sessionToken: string | null,
   authenticated: boolean,
@@ -45,7 +48,15 @@ export function useUnreadCount(
     queryKey: ['unread-count', sessionToken, scope ?? null],
     queryFn: () => unreadCount(sessionToken!, scope),
     enabled: !!sessionToken && authenticated,
-    refetchInterval: 30_000,
+    // The badge is how a shopper learns an agent answered (the storefront bell,
+    // the Chat tab). Every 30s made a reply look ignored; and a browser stops
+    // interval timers in a background tab, so a shopper coming back to the
+    // store waited out a whole interval on top. Ten seconds, and at once when
+    // the tab is looked at again. The server answers from a 20s cache that is
+    // dropped whenever a notice is written or read, so this stays cheap.
+    refetchInterval: UNREAD_POLL_MS,
+    refetchOnWindowFocus: 'always',
+    staleTime: 0,
   });
 }
 
