@@ -60,7 +60,8 @@
     "all": "全部",
     "queue": "需人工",
     "ended": "已结束",
-    "groups": "分组"
+    "groups": "分组",
+    "unread": "未读"
   },
   "sync": "同步",
   "syncHint": "立即获取最新消息",
@@ -373,7 +374,8 @@
     "saved": "会话已置顶。",
     "cleared": "已取消置顶。",
     "saveError": "无法更新置顶状态。",
-    "limitReached": "置顶已达上限（每店铺3个）。请先取消一个置顶。"
+    "limitReached": "置顶已达上限（每店铺3个）。请先取消一个置顶。",
+    "pinned": "已置顶"
   },
   "msgActions": {
     "translate": "翻译",
@@ -709,8 +711,8 @@
   },
   "threadEvent": {
     "callback": "回电请求",
-    "feedback": "客户反馈",
-    "stars": "{{n}} 星"
+    "rated": "客户已评价此会话",
+    "ratedAs": "评价：{{level}}"
   },
   "staff": {
     "label": "员工",
@@ -755,5 +757,48 @@
     "reopenedToast": "已重新打开。",
     "updateError": "无法更新此咨询。",
     "openConversation": "打开会话 #{{id}}"
+  },
+  "unread": {
+    "count": "{{count}} 条未读",
+    "navBadge": "{{count}} 个会话有未读消息",
+    "markRead": "标为已读",
+    "markUnread": "标为未读",
+    "markAllRead": "全部标为已读",
+    "allRead": "所有会话已标为已读。",
+    "nothing": "客户尚未在此发送消息，没有可标为未读的内容。",
+    "failed": "无法更新已读状态。",
+    "empty": "没有未读会话。"
+  },
+  "row": {
+    "from": "{{who}}：",
+    "customer": "客户",
+    "ai": "AI",
+    "notice": "通知",
+    "waiting": "需要客服",
+    "agent": "客服处理中",
+    "ended": "已结束"
+  },
+  "state": {
+    "ai": "AI 正在回复",
+    "aiOff": "AI 已关闭",
+    "waiting": "需要客服",
+    "agent": "{{name}} 处理中",
+    "agentUnknown": "客服处理中",
+    "ended": "已结束",
+    "draft": "草稿待审批"
+  },
+  "more": "更多",
+  "advanced": {
+    "label": "高级工具",
+    "hint": "显示分组、合并会话、AI 智能体分配、知识查询、简报、处理记录和回答评分。"
+  },
+  "acceptHint": "由你接手此会话，AI 将停止回复。",
+  "endHint": "结束会话，并邀请客户评价。",
+  "csatLevel": {
+    "1": "不满意",
+    "2": "有点不满意",
+    "3": "一般",
+    "4": "满意",
+    "5": "非常满意"
   }
 }

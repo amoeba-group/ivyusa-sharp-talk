@@ -98,6 +98,12 @@ export interface MergeCandidates {
 
 export interface AgentSession {
   id: string;
+  /** Customer messages the signed-in staff member has not opened (PLN-261119); 0 = read. */
+  unreadCount?: number;
+  /** Who wrote the last message: user | ai | agent | system. */
+  lastSenderType?: string | null;
+  /** The staff member behind the last message, when one wrote it. */
+  lastSenderName?: string | null;
   /** Same-customer merged room this row stands for (PLN-261023); null = a single session. */
   mergedRoom?: { id: string; sessionCount: number; openCount: number } | null;
   /** Session behind the row (row ids are conversation ids). */
@@ -512,6 +518,11 @@ export const liveChatService = {
       ...(channel && channel !== 'all' ? { channel } : {}),
       ...(aiAgentId && aiAgentId !== 'all' ? { ai_agent_id: aiAgentId } : {}),
     }),
+  /** Read / unread for the signed-in staff member (PLN-261119). */
+  unreadCount: () => apiGet<{ count: number }>('/agent/sessions/unread-count'),
+  markRead: (id: string) => apiPost<{ ok: boolean }>(`/agent/conversations/${id}/read`),
+  markUnread: (id: string) => apiPost<{ ok: boolean }>(`/agent/conversations/${id}/unread`),
+  readAll: () => apiPost<{ ok: boolean }>('/agent/sessions/read-all'),
   /** Find in one conversation (PLN-261023 S1). */
   searchMessages: (id: string, q: string) =>
     apiPost<{ items: MessageSearchHit[]; total: number }>(`/agent/conversations/${id}/messages/search`, { q: q.trim() }),

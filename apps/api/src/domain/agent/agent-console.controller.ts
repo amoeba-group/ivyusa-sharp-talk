@@ -94,6 +94,8 @@ import { MergedRoomService } from '../merged-room/merged-room.service';
 import { AnswerRatingService } from './answer-rating.service';
 import { CompanyService } from '../company/company.service';
 import { ConversationHandlersService } from './conversation-handlers.service';
+import { ConversationReadService } from './conversation-read.service';
+import { Message } from '../chat/entity/message.entity';
 
 function tenantOf(user: Principal): number {
   return user.actorType === 'user' ? user.tenantId : 0;
@@ -118,6 +120,7 @@ export class AgentConsoleController {
     private readonly mergedRooms: MergedRoomService,
     private readonly alertCenter: AlertCenterService,
     private readonly handlers: ConversationHandlersService,
+    private readonly reads: ConversationReadService,
   ) {}
 
   // ---- answer accuracy ratings (PLN-261015 D7) ----
@@ -531,6 +534,52 @@ export class AgentConsoleController {
     return this.sessionPage(user, query);
   }
 
+  // ---- read / unread per staff member (PLN-261119) ----
+
+  @Get('sessions/unread-count')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "How many conversations hold a customer message the caller has not opened" })
+  async unreadCount(@CurrentUser() user: Principal) {
+    const { total } = await this.agentService.listSessions(
+      tenantOf(user), 1, 1, undefined, 'unread', undefined, undefined, undefined, actorIdOf(user),
+    );
+    return { count: total };
+  }
+
+  @Post('sessions/read-all')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Mark every conversation as read for the caller' })
+  async readAll(@CurrentUser() user: Principal) {
+    await this.reads.markRead(tenantOf(user), actorIdOf(user));
+    return { ok: true };
+  }
+
+  /**
+   * Explicit, not a side effect of GET: the console re-fetches the open
+   * conversation every few seconds, and a read that rode on that poll would
+   * undo "mark as unread" before the agent looked away.
+   */
+  @Post('conversations/:id/read')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Mark a conversation (and its merged room) as read for the caller' })
+  async markRead(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    const tenantId = tenantOf(user);
+    const conversation = await this.agentService.findConversation(id, tenantId);
+    // A merged room is read as one transcript, so all of it is seen at once.
+    const room = await this.mergedRooms.roomConversations(tenantId, Number(conversation.sessionId));
+    await this.reads.markRead(tenantId, actorIdOf(user), [id, ...(room?.map((c) => Number(c.id)) ?? [])]);
+    return { ok: true };
+  }
+
+  @Post('conversations/:id/unread')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Mark a conversation as unread for the caller' })
+  async markUnread(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    const tenantId = tenantOf(user);
+    await this.agentService.findConversation(id, tenantId);
+    return { ok: await this.reads.markUnread(tenantId, actorIdOf(user), id) };
+  }
+
   /**
    * The same list, narrowed to conversations whose transcript contains `q`
    * (PLN-261023 S1). POST so the term — often a name, phone or order number —
@@ -562,7 +611,8 @@ export class AgentConsoleController {
     // 50, not the platform default 20: the list now includes live AI threads,
     // and a console that silently truncates the queue is worse than a long one.
     const { page, size } = normalizePage(query.page, query.size ?? '50');
-    const scope = query.status === 'queue' || query.status === 'ended' ? query.status : 'all';
+    const scope =
+      query.status === 'queue' || query.status === 'ended' || query.status === 'unread' ? query.status : 'all';
     const agentFilter =
       query.ai_agent_id && query.ai_agent_id !== 'all' ? Number(query.ai_agent_id) : undefined;
     const { items, total } = await this.agentService.listSessions(
@@ -574,6 +624,16 @@ export class AgentConsoleController {
       query.channel,
       Number.isFinite(agentFilter) ? agentFilter : undefined,
       contentQ,
+      actorIdOf(user),
+    );
+    // Per-reader unread counts and the name behind a staff member's last reply
+    // (PLN-261119) — one query each for the page.
+    const unread = await this.reads.unreadCounts(
+      actorIdOf(user),
+      items.map((i) => Number(i.conversation.id)),
+    );
+    const lastSenders = await this.agentService.resolveSenderNames(
+      items.map((i) => i.lastMessage).filter((m): m is Message => !!m && m.senderType === 'agent'),
     );
     const companyNames = await this.companyService.namesByIds(
       tenantOf(user),
@@ -610,6 +670,13 @@ export class AgentConsoleController {
             conversation.companyId != null ? (companyNames.get(String(conversation.companyId)) ?? null) : null,
             match,
             rooms.get(Number(conversation.sessionId)) ?? null,
+            {
+              unreadCount: unread.get(String(conversation.id)) ?? 0,
+              lastSenderName:
+                lastMessage?.senderType === 'agent' && lastMessage.senderId != null
+                  ? (lastSenders.get(String(lastMessage.senderId)) ?? null)
+                  : null,
+            },
           ),
       ),
       buildPagination(page, size, total),

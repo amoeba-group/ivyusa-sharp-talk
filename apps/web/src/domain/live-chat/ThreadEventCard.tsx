@@ -1,6 +1,7 @@
-import { PhoneCall, Star } from 'lucide-react';
+import { PhoneCall } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
+import { cn } from '@/lib/cn';
 import type { ThreadCallback, ThreadFeedback } from './live-chat.service';
 
 export type ThreadEvent =
@@ -14,6 +15,12 @@ export function threadEventsOf(callbacks?: ThreadCallback[], feedback?: ThreadFe
     ...(feedback ?? []).map((f): ThreadEvent => ({ type: 'feedback', at: f.ratedAt, key: `fb-${f.conversationId}`, item: f })),
   ].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
 }
+
+/** The widget's faces, by the 1–5 value each one stores (widget CsatCard). */
+const FACES = ['😞', '😕', '😐', '😊', '😍'];
+/** The one-question card offers four of them — 1 · 3 · 4 · 5 (ivy-docs SPEC Q-12). */
+const FOUR = [1, 3, 4, 5];
+const FIVE = [1, 2, 3, 4, 5];
 
 /**
  * A callback request or the customer's feedback, centred in the thread at the
@@ -52,24 +59,46 @@ export function ThreadEventCard({ event }: { event: ThreadEvent }) {
     );
   }
 
+  // The customer's rating, shown as what they tapped (PLN-261119): the same row
+  // of faces the widget offered, the chosen one lit. Stars made staff convert —
+  // the faces store 1 · 3 · 4 · 5, so "3 stars" was really the neutral face.
   const f = event.item;
+  const rating = Math.max(1, Math.min(5, Math.round(f.rating)));
+  // The survey card offers all five; the one-question card never stores a 2.
+  const scale = f.resolved != null || rating === 2 ? FIVE : FOUR;
+  const level = t(`csatLevel.${rating}`);
   return (
-    <div className="mx-auto my-2 w-fit max-w-[85%] rounded-lg border border-yellow-200 bg-yellow-50/70 px-3 py-2 text-xs text-gray-700">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-500" aria-hidden />
-        <span className="font-medium">{t('threadEvent.feedback')}</span>
+    <div
+      className="mx-auto my-3 w-fit max-w-[85%] rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs text-gray-700 shadow-sm"
+      data-testid="thread-feedback"
+    >
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className="font-medium text-gray-900">{t('threadEvent.rated')}</span>
         <span className="text-gray-400">{time(f.ratedAt)}</span>
-        <span aria-label={t('threadEvent.stars', { n: f.rating })} className="tracking-tight text-yellow-500">
-          {'★'.repeat(Math.max(0, Math.min(5, f.rating)))}
-          <span className="text-gray-300">{'★'.repeat(Math.max(0, 5 - f.rating))}</span>
+      </div>
+      <div className="mt-2 flex items-center gap-3">
+        <span role="img" aria-label={t('threadEvent.ratedAs', { level })} className="flex items-center gap-1">
+          {scale.map((value) => (
+            <span
+              key={value}
+              aria-hidden
+              data-chosen={value === rating || undefined}
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-full text-xl leading-none',
+                value === rating ? 'bg-primary-50 ring-2 ring-primary-500' : 'opacity-25 grayscale',
+              )}
+            >
+              {FACES[value - 1]}
+            </span>
+          ))}
         </span>
-        <span>{f.rating}</span>
+        <span className="text-sm font-semibold text-gray-900">{level}</span>
         {f.resolved != null && (
           <Badge tone={f.resolved ? 'success' : 'warning'}>{f.resolved ? t('handlers.resolved') : t('handlers.unresolved')}</Badge>
         )}
       </div>
       {(f.reason || f.comment) && (
-        <p className="mt-1 text-gray-600">
+        <p className="mt-2 text-gray-600">
           {f.reason && t(`csat.reasons.${f.reason}`, { ns: 'statistics', defaultValue: f.reason })}
           {f.reason && f.comment && ' · '}
           {f.comment && `"${f.comment}"`}

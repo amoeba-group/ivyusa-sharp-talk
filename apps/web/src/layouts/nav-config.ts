@@ -49,6 +49,8 @@ export interface NavItem {
    * /live-chat/inquiries, which has its own entry right below it.
    */
   notUnder?: string[];
+  /** A live count next to the label (PLN-261119: Live Chat's unread conversations). */
+  badge?: 'liveChatUnread';
 }
 
 /**
@@ -72,7 +74,7 @@ export const TENANT_NAV_GROUPS: NavGroup[] = [
   {
     key: 'conversations',
     items: [
-      { to: '/live-chat', labelKey: 'liveChat', icon: MessagesSquare, code: 'live_chat', capability: 'live_chat', keywords: ['chat', 'inbox', 'agent', 'alarm'], notUnder: ['/live-chat/inquiries'] },
+      { to: '/live-chat', labelKey: 'liveChat', icon: MessagesSquare, code: 'live_chat', capability: 'live_chat', keywords: ['chat', 'inbox', 'agent', 'alarm'], notUnder: ['/live-chat/inquiries'], badge: 'liveChatUnread' },
       // Contact forms from the widget. Same holders as Live Chat, and under its
       // path so the same gate covers it (as the alarm center is).
       { to: '/live-chat/inquiries', labelKey: 'inquiries', icon: Inbox, code: 'live_chat', capability: 'live_chat', keywords: ['contact', 'form', 'email', 'support'] },

@@ -45,7 +45,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T09 | 1 / 4 → **7 / 7** ✅ (T09, 2026-11-12; thêm TC-09-05..07) | tất cả | — |
 | T10 | 1 / 5 → **7 / 7** ✅ (T10, 2026-11-12; thêm TC-10-06..07) | tất cả | — |
 | T11 | 0 / 4 → **8 / 8** ✅ (T11, 2026-11-13; thêm TC-11-05..08) | tất cả | — |
-| T12 | 0 / 4 → **6 / 6** ✅ (T12, 2026-11-13; thêm TC-12-05..06) | tất cả | — |
+| T12 | 0 / 4 → 6 / 6 (T12, 2026-11-13; thêm TC-12-05..06) → **7 / 7** ✅ (2026-11-19; thêm TC-12-07, BUG-043) | tất cả | — |
 | T13 | 4 / 4 → 6 / 6 (T13) → **7 / 7** ✅ (2a, 2026-11-13; thêm TC-13-07) | tất cả | — |
 | T14 | 7 / 8 → 8 / 8 (nhờ T02) → **20 / 20** ✅ (T14, 2026-11-13; thêm TC-14-04..07) | tất cả | — |
 | T15 | 3 / 4 → **12 / 12** ✅ (T15, 2026-11-13; TC-15-01 sửa xong, thêm TC-15-05 ×2, TC-15-06 ×6) | tất cả | — |
@@ -345,6 +345,7 @@ Chạy với consent thật: Affiliate là kịch bản trên API thật (câu c
 | TC-12-04 | Bỏ qua | Skip → "chat has ended", thẻ biến mất, không gọi `/chat/csat` | BR-13 |
 | TC-12-05 | Apply now | Câu dẫn "…email you about the affiliate program"; form điền sẵn "join your affiliate program" → gửi → `POST /inquiries` có câu đó → thẻ "YOUR INQUIRY" | PLN-261113 §8-2a |
 | TC-12-06 | Learn more | Câu trả lời ("referral link") nằm **dưới** các thẻ bước (BUG-024); chip còn Apply now · Start over · End | G-19, BR-12 |
+| TC-12-07 | Đánh giá còn sau khi tải lại | End → Satisfied → tải lại trang → mở Chat: `csat-card` còn, **Satisfied** `aria-pressed=true`, 3 mặt kia `aria-pressed=false` và bị khoá, không có Skip, không hỏi lại "How was your chat today?", chỉ **1** lần `POST /chat/csat`, "chat has ended" nằm dưới thẻ | BR-13, BUG-043 |
 
 **Kết quả (2026-11-13):** 6/6, lặp ×3: 18/18. Cổng CI mới (thêm `@T12`) ×2: 196/196. Toàn bộ desktop: **108 / 108** xanh.
 

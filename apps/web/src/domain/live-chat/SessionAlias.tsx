@@ -19,6 +19,7 @@ export function SessionAlias({
   fallback,
   sessionLabel,
   compact,
+  weight,
 }: {
   conversationId: string;
   alias?: string | null;
@@ -29,6 +30,8 @@ export function SessionAlias({
   sessionLabel?: string;
   /** List row: smaller type, edit affordance only on hover/selection. */
   compact?: boolean;
+  /** List row's read state (PLN-261119): unread names are bold, read ones quiet. */
+  weight?: 'unread' | 'read';
 }) {
   const { t } = useTranslation('livechat');
   const save = useSetSessionAlias();
@@ -82,7 +85,18 @@ export function SessionAlias({
 
   return (
     <span className="flex min-w-0 items-center gap-1">
-      <span className={cn('truncate', compact ? 'text-sm font-medium text-gray-800' : 'font-semibold')}>
+      <span
+        className={cn(
+          'truncate',
+          !compact
+            ? 'font-semibold'
+            : weight === 'unread'
+              ? 'text-sm font-semibold text-gray-900'
+              : weight === 'read'
+                ? 'text-sm font-normal text-gray-600'
+                : 'text-sm font-medium text-gray-800',
+        )}
+      >
         {alias || fallback}
       </span>
       <button
@@ -93,7 +107,11 @@ export function SessionAlias({
         }}
         title={alias ? t('alias.edit') : t('alias.add')}
         aria-label={alias ? t('alias.edit') : t('alias.add')}
-        className="shrink-0 rounded p-0.5 text-gray-300 hover:bg-gray-100 hover:text-gray-500"
+        className={cn(
+          'shrink-0 rounded p-0.5 text-gray-300 hover:bg-gray-100 hover:text-gray-500',
+          // In a list row the pencil waits for the pointer, like the row's other tools.
+          compact && 'opacity-0 focus:opacity-100 group-hover:opacity-100',
+        )}
       >
         <Pencil className="h-3 w-3" />
       </button>

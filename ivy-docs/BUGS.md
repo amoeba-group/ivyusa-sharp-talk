@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-043 | Đánh giá xong rồi **tải lại hay chuyển trang**: thẻ đánh giá biến mất, khách không còn thấy mình đã chọn mặt nào | Widget | 🟡 | Fixed code (2026-11-19, TC-12-07) | T12 |
 | BUG-042 | Số của tab Notifications đếm cả loại thông báo **không chip nào hiện** (`issue`, `review`) → có thể không bao giờ mất | API | 🟡 | Fixed code (2026-11-19, phòng ngừa: chưa thấy trên production) | T01 |
 | BUG-041 | Nhân viên trả lời → **số chưa đọc hiện ở tab Notifications** (nơi không có dòng nào để đọc) và **không bao giờ mất**; tab Chat không có số | API · Widget | 🔴 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T01 |
 | BUG-040 | Thẻ Contact Support / My Orders **vẫn mất khi chuyển trang** với khách đã đăng nhập: lần lưu "rỗng" lúc trang mới tải đã xoá bản ghi sắp khôi phục | Widget | 🟠 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T11 |
@@ -171,6 +172,11 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-043 · Thẻ đánh giá mất sau khi tải lại trang
+- **Phát hiện (2026-11-19, chủ dự án hỏi "tại sao không để lại mức độ hài lòng với icons và actived icon đã chọn trong cuộc hội thoại"):** thẻ chỉ hiện khi server còn nhận đánh giá (`canRate`) hoặc khi khách vừa đánh giá trong lượt xem này (state React `ratedIn`). Tải lại hay chuyển trang thì state mất, còn `canRate` thành false vì đã có điểm, nên thẻ biến mất. Server vẫn trả `csatRating` mỗi lần đọc cuộc trò chuyện, nhưng widget bỏ qua giá trị này.
+- **Fix:** `useChat` giữ `csatRating` từ server. Thẻ hiện lại ở dạng chỉ đọc: mặt đã chọn sáng, các mặt khác mờ, không bấm được, không còn Skip. Câu hỏi và lời cảm ơn không lặp lại; dấu "chat has ended" nằm dưới thẻ. Chế độ khảo sát hiện 5 mặt, mức đã chọn và lời cảm ơn. Điểm cũ của thẻ 5 mặt (giá trị 2) hiện trên thang 5 mặt. [PLN-261119](../docs/plan/PLN-261119-Console-LiveChat-Unread-And-Csat-Faces.md).
+- **Phòng ngừa:** điều khách đã làm và đã thấy (đã chọn gì) phải đọc lại từ server, không chỉ giữ trong state của một lượt xem.
 
 ## BUG-042 · Số của tab Notifications có thể bị giữ bởi thông báo không chip nào hiện
 - **Phát hiện (2026-11-19, rà soát theo yêu cầu của chủ dự án sau BUG-041):** với widget một tab danh sách (IVY), chỉ thông báo loại `payment`, `shipping` (chip Order) và `event` (chip Promo) có dòng để mở và đọc. Chip Delivery và Review là danh sách đơn hàng, không phải thông báo. Số chưa đọc lại đếm mọi loại trừ `chat`, nên một thông báo loại `issue` (trạng thái issue đổi) hay `review` sẽ làm số tăng mà không có cách đọc — cùng lỗi với BUG-041. Chưa thấy xảy ra trên production (IVY không dùng issue; `requestReview` chưa được gọi ở đâu), đây là sửa phòng ngừa.

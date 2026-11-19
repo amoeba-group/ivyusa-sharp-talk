@@ -41,9 +41,16 @@ export function toSessionResponse(
   companyName: string | null = null,
   match: { snippet: string; count: number; messageId: string } | null = null,
   mergedRoom: { roomId: number; sessionCount: number; openCount: number } | null = null,
+  /** The caller's unread count and who spoke last (PLN-261119). */
+  read: { unreadCount: number; lastSenderName: string | null } = { unreadCount: 0, lastSenderName: null },
 ) {
   return {
     id: c.id,
+    /** Customer messages this staff member has not opened yet (PLN-261119); 0 = read. */
+    unreadCount: read.unreadCount,
+    /** Who wrote the last message: user | ai | agent | system — the row says "Customer:" / "AI:" / the name. */
+    lastSenderType: lastMessage?.senderType ?? null,
+    lastSenderName: read.lastSenderName,
     /** Same-customer merged room this row stands for (PLN-261023 D2); null = a single session. */
     mergedRoom: mergedRoom
       ? { id: String(mergedRoom.roomId), sessionCount: mergedRoom.sessionCount, openCount: mergedRoom.openCount }

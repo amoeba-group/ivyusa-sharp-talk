@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { useUiStore } from '@/store/ui-store';
 import { cn } from '@/lib/cn';
 import { useVisibleNav } from './use-shell';
+import { LiveChatUnreadBadge } from '@/domain/live-chat/LiveChatUnreadBadge';
 
 /** Brand block: the logo opens the all-menus overview (a logo that does nothing reads as broken). */
 function Brand({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
@@ -102,6 +103,7 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
                           aria-hidden
                         />
                         {!collapsed && <span className="truncate">{label}</span>}
+                        {item.badge === 'liveChatUnread' && <LiveChatUnreadBadge collapsed={collapsed} />}
                       </>
                       );
                     }}

@@ -112,7 +112,7 @@ export function ChatTab() {
   const consumeChatMessage = useWidgetStore((s) => s.consumeChatMessage);
   const analytics = useAnalytics();
 
-  const { messages, send, scenario, sending, status, escalate, pickConsultCategory, endChat, canRate, rate, conversationId } =
+  const { messages, send, scenario, sending, status, escalate, pickConsultCategory, endChat, canRate, csatRating, rate, conversationId } =
     useChat(sessionToken);
   // Consult categories (PLN-261024): offered before an agent request, or right
   // after the AI hands off; once per conversation.
@@ -211,9 +211,13 @@ export function ChatTab() {
   const [ratedOkIn, setRatedOkIn] = useState<string | null>(null);
   // Skip (ivy-docs T12 D3): no rating sent, the card gives way to the ended mark.
   const [skippedIn, setSkippedIn] = useState<string | null>(null);
-  const rated = !!conversationId && ratedOkIn === conversationId;
+  // Rated on an earlier visit (PLN-261119, BUG-043): the server still has the
+  // answer, so the card comes back read-only with the chosen face lit — without
+  // the question and thank-you lines around it, which were said back then.
+  const ratedBefore = !!conversationId && csatRating != null && ratedIn !== conversationId;
+  const rated = !!conversationId && (ratedOkIn === conversationId || csatRating != null);
   const skipped = !!conversationId && (skippedIn === conversationId || csatSkipped(conversationId));
-  const showCsat = !!conversationId && (canRate || ratedIn === conversationId) && !skipped;
+  const showCsat = !!conversationId && (canRate || ratedIn === conversationId || csatRating != null) && !skipped;
   // Still waiting for the shopper's answer: the ended mark waits below it (BR-13).
   const csatOpen = showCsat && !rated;
   // The close policy can ask for a rating while the chat is still live; the
@@ -223,7 +227,7 @@ export function ChatTab() {
   useEffect(() => {
     if (showCsat && conversationId && status !== 'ended' && csatLive !== conversationId) setCsatLive(conversationId);
   }, [showCsat, conversationId, status, csatLive]);
-  const csatOwnLines = showCsat && status === 'ended' && csatLive !== conversationId;
+  const csatOwnLines = showCsat && status === 'ended' && csatLive !== conversationId && !ratedBefore;
   function skipRating() {
     if (!conversationId) return;
     try {
@@ -1003,7 +1007,7 @@ export function ChatTab() {
           />
         )}
         {showCsat && conversationId && (
-          <CsatCard key={conversationId} mode={csatMode} onRate={rateHere} onSkip={skipRating} />
+          <CsatCard key={conversationId} mode={csatMode} onRate={rateHere} onSkip={skipRating} initial={csatRating} />
         )}
         {csatOwnLines && rated && csatMode !== 'survey' && (
           <MessageBubble

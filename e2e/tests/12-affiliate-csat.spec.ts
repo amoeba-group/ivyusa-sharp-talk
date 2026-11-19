@@ -92,4 +92,33 @@ test.describe('T12 · Affiliate & CSAT', () => {
     expect((await details.boundingBox())!.y).toBeGreaterThan((await steps.boundingBox())!.y);
     await expect(p.getByRole('button', { name: CHIPS })).toHaveText(['Apply now', 'Start over', 'End']);
   });
+
+  // BUG-043 / PLN-261119: the card used to vanish on reload, so the shopper
+  // could not see what they had chosen. It comes back read-only.
+  test('TC-12-07 after a reload the card still shows the chosen face, read-only @T12 @design', async ({ widget, mocks, page }) => {
+    await widget.panel.getByRole('button', { name: /^End$/ }).last().click();
+    await widget.panel.getByTestId('csat-card').getByRole('button', { name: 'Satisfied', exact: true }).click();
+    await expect.poll(() => mocks!.callsTo('POST', '/chat/csat').length).toBe(1);
+    await expect(widget.panel.getByText(/chat has ended/i)).toBeVisible();
+
+    await page.reload();
+    await expect(widget.launcher).toBeVisible();
+    await widget.open();
+    await widget.openChat();
+    const card = widget.panel.getByTestId('csat-card');
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('button', { name: 'Satisfied', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    for (const name of ['Dissatisfied', 'Neutral', 'Very satisfied']) {
+      const face = card.getByRole('button', { name, exact: true });
+      await expect(face).toHaveAttribute('aria-pressed', 'false');
+      await expect(face).toBeDisabled();
+    }
+    await expect(card.getByRole('button', { name: 'Skip', exact: true })).toHaveCount(0);
+    // Not asked again, nothing sent again, and the ended mark sits under the card.
+    await expect(widget.panel.getByText(/How was your chat today?/)).toHaveCount(0);
+    expect(mocks!.callsTo('POST', '/chat/csat')).toHaveLength(1);
+    const ended = widget.panel.getByText(/chat has ended/i);
+    await expect(ended).toBeVisible();
+    expect((await ended.boundingBox())!.y).toBeGreaterThan((await card.boundingBox())!.y);
+  });
 });

@@ -10,6 +10,8 @@ import { Assignment } from './entity/assignment.entity';
 import { AgentDailyStat } from './entity/agent-daily-stat.entity';
 import { AgentAlert } from './entity/agent-alert.entity';
 import { AgentAlertRead } from './entity/agent-alert-read.entity';
+import { ConversationRead } from './entity/conversation-read.entity';
+import { ConversationReadService } from './conversation-read.service';
 import { AlertCenterService } from './alert-center.service';
 import { UserAlertSettings } from './entity/user-alert-settings.entity';
 import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
@@ -61,6 +63,8 @@ import { AuditLog } from '../audit/entity/audit-log.entity';
       AgentDailyStat,
       AgentAlert,
       AgentAlertRead,
+      // Read / unread per staff member (PLN-261119).
+      ConversationRead,
       UserAlertSettings,
       AnswerRating,
       // Read-only: AI-agent names for queue rows/filter (REQ-260825 R6/R7).
@@ -117,6 +121,7 @@ import { AuditLog } from '../audit/entity/audit-log.entity';
     ChatCommentService,
     ChatGroupService,
     ConversationHandlersService,
+    ConversationReadService,
   ],
   exports: [AgentService, AgentAlertService],
 })

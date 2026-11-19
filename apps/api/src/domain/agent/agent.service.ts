@@ -41,6 +41,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { UpsertProfileRequest } from './dto/request/agent.request';
 import { SEARCH_MESSAGE_LIMIT, SEARCH_WINDOW_DAYS, likePattern, matchSnippet, searchTerm } from './message-search.util';
+import { unreadExistsSql } from './conversation-read.service';
 import { ChannelThread } from '../messenger/entity/channel-thread.entity';
 import { MessengerChannel } from '../messenger/entity/messenger-channel.entity';
 import { ReplyDraft } from '../chat/entity/reply-draft.entity';
@@ -298,11 +299,13 @@ export class AgentService {
     page: number,
     size: number,
     q?: string,
-    scope: 'all' | 'queue' | 'ended' = 'all',
+    scope: 'all' | 'queue' | 'ended' | 'unread' = 'all',
     channel?: string,
     aiAgentId?: number,
     /** Transcript text filter (PLN-261023 S1) — rows whose messages contain it. */
     contentQ?: string,
+    /** Whose unread it is — required by scope 'unread' (PLN-261119); ignored otherwise. */
+    readerId?: number,
   ): Promise<{
     items: Array<{
       conversation: Conversation;
@@ -331,6 +334,15 @@ export class AgentService {
         ? [CONVERSATION_STATUS.WAITING, CONVERSATION_STATUS.AGENT]
         : scope === 'ended'
           ? [CONVERSATION_STATUS.ENDED]
+          : scope === 'unread'
+            ? // Unread is about what the reader has not seen, whatever happened
+              // to the thread since — a chat the customer ended is still unseen.
+              [
+                CONVERSATION_STATUS.AI_ACTIVE,
+                CONVERSATION_STATUS.WAITING,
+                CONVERSATION_STATUS.AGENT,
+                CONVERSATION_STATUS.ENDED,
+              ]
           : [
               CONVERSATION_STATUS.AI_ACTIVE,
               CONVERSATION_STATUS.WAITING,
@@ -348,6 +360,12 @@ export class AgentService {
     // The same filters on `c2`, the newer conversation a merged room folds
     // this row into (PLN-261023 D2) — a room shows its newest row that passes.
     const foldFilters = ['c2.status IN (:...statuses)'];
+    if (scope === 'unread') {
+      // Without a reader there is nobody whose unread this could be.
+      if (readerId == null) return { items: [], total: 0 };
+      qb.andWhere(unreadExistsSql('c'), { readerId });
+      foldFilters.push(unreadExistsSql('c2'));
+    }
     const channelFilter = channel?.trim();
     if (channelFilter && channelFilter !== 'all') {
       if (channelFilter === 'widget') {
@@ -938,7 +956,8 @@ export class AgentService {
     const rows = await this.msgRepo
       .createQueryBuilder('m')
       // Only what the queue row shows — skips the retrieval_trace JSON payload.
-      .select(['m.id', 'm.conversationId', 'm.body', 'm.createdAt'])
+      // Sender type + id: the row says who spoke last (PLN-261119).
+      .select(['m.id', 'm.conversationId', 'm.senderType', 'm.senderId', 'm.body', 'm.createdAt'])
       .where(
         'm.id IN (SELECT MAX(id) FROM messages WHERE conversation_id IN (:...ids) GROUP BY conversation_id)',
         { ids },

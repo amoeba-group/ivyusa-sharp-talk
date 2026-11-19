@@ -60,7 +60,8 @@
     "all": "Tất cả",
     "queue": "Cần nhân viên",
     "ended": "Đã kết thúc",
-    "groups": "Nhóm"
+    "groups": "Nhóm",
+    "unread": "Chưa đọc"
   },
   "sync": "Đồng bộ",
   "syncHint": "Lấy tin nhắn mới nhất ngay",
@@ -373,7 +374,8 @@
     "saved": "Đã ghim cuộc trò chuyện.",
     "cleared": "Đã bỏ ghim.",
     "saveError": "Không thể cập nhật ghim.",
-    "limitReached": "Đã đạt giới hạn ghim (3 mỗi cửa hàng). Hãy bỏ ghim một mục trước."
+    "limitReached": "Đã đạt giới hạn ghim (3 mỗi cửa hàng). Hãy bỏ ghim một mục trước.",
+    "pinned": "Đã ghim"
   },
   "msgActions": {
     "translate": "Dịch",
@@ -709,8 +711,8 @@
   },
   "threadEvent": {
     "callback": "Yêu cầu gọi lại",
-    "feedback": "Phản hồi của khách",
-    "stars": "{{n}} sao"
+    "rated": "Khách đã đánh giá cuộc trò chuyện",
+    "ratedAs": "Đánh giá: {{level}}"
   },
   "staff": {
     "label": "Nhân viên",
@@ -755,5 +757,48 @@
     "reopenedToast": "Đã mở lại.",
     "updateError": "Không cập nhật được yêu cầu.",
     "openConversation": "Mở cuộc chat #{{id}}"
+  },
+  "unread": {
+    "count": "{{count}} chưa đọc",
+    "navBadge": "{{count}} cuộc trò chuyện có tin chưa đọc",
+    "markRead": "Đánh dấu đã đọc",
+    "markUnread": "Đánh dấu chưa đọc",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "allRead": "Đã đánh dấu tất cả cuộc trò chuyện là đã đọc.",
+    "nothing": "Khách chưa nhắn gì ở đây nên không có gì để đánh dấu chưa đọc.",
+    "failed": "Không cập nhật được trạng thái đã đọc.",
+    "empty": "Không có cuộc trò chuyện chưa đọc."
+  },
+  "row": {
+    "from": "{{who}}:",
+    "customer": "Khách",
+    "ai": "AI",
+    "notice": "Thông báo",
+    "waiting": "Cần nhân viên",
+    "agent": "Nhân viên đang xử lý",
+    "ended": "Đã kết thúc"
+  },
+  "state": {
+    "ai": "AI đang trả lời",
+    "aiOff": "AI đang tắt",
+    "waiting": "Cần nhân viên",
+    "agent": "{{name}} đang xử lý",
+    "agentUnknown": "Nhân viên đang xử lý",
+    "ended": "Đã kết thúc",
+    "draft": "Bản nháp chờ duyệt"
+  },
+  "more": "Thêm",
+  "advanced": {
+    "label": "Công cụ nâng cao",
+    "hint": "Hiện các công cụ nhóm, gộp phòng, chọn AI agent, tra cứu kiến thức, tóm tắt, lịch sử xử lý và đánh giá câu trả lời."
+  },
+  "acceptHint": "Bạn nhận xử lý cuộc trò chuyện này. AI ngừng trả lời.",
+  "endHint": "Kết thúc cuộc trò chuyện. Khách sẽ được mời đánh giá.",
+  "csatLevel": {
+    "1": "Không hài lòng",
+    "2": "Hơi không hài lòng",
+    "3": "Bình thường",
+    "4": "Hài lòng",
+    "5": "Rất hài lòng"
   }
 }

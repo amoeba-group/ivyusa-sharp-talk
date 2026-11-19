@@ -60,7 +60,8 @@
     "all": "전체",
     "queue": "상담 필요",
     "ended": "종료",
-    "groups": "그룹"
+    "groups": "그룹",
+    "unread": "안 읽음"
   },
   "sync": "싱크",
   "syncHint": "최근 대화를 지금 바로 가져옵니다",
@@ -373,7 +374,8 @@
     "saved": "대화를 상단에 고정했습니다.",
     "cleared": "핀을 해제했습니다.",
     "saveError": "핀 상태를 변경하지 못했습니다.",
-    "limitReached": "핀은 스토어당 3개까지입니다. 기존 핀을 해제해 주세요."
+    "limitReached": "핀은 스토어당 3개까지입니다. 기존 핀을 해제해 주세요.",
+    "pinned": "고정됨"
   },
   "msgActions": {
     "translate": "번역",
@@ -709,8 +711,8 @@
   },
   "threadEvent": {
     "callback": "콜백 요청",
-    "feedback": "고객 피드백",
-    "stars": "별점 {{n}}점"
+    "rated": "고객이 이 채팅을 평가했습니다",
+    "ratedAs": "평가: {{level}}"
   },
   "staff": {
     "label": "스탭",
@@ -755,5 +757,48 @@
     "reopenedToast": "다시 열었습니다.",
     "updateError": "문의를 변경하지 못했습니다.",
     "openConversation": "대화 #{{id}} 열기"
+  },
+  "unread": {
+    "count": "읽지 않음 {{count}}",
+    "navBadge": "읽지 않은 메시지가 있는 대화 {{count}}개",
+    "markRead": "읽음으로 표시",
+    "markUnread": "안 읽음으로 표시",
+    "markAllRead": "모두 읽음으로 표시",
+    "allRead": "모든 대화를 읽음으로 표시했습니다.",
+    "nothing": "고객이 아직 메시지를 보내지 않아 안 읽음으로 표시할 것이 없습니다.",
+    "failed": "읽음 상태를 변경하지 못했습니다.",
+    "empty": "읽지 않은 대화가 없습니다."
+  },
+  "row": {
+    "from": "{{who}}:",
+    "customer": "고객",
+    "ai": "AI",
+    "notice": "안내",
+    "waiting": "상담원 필요",
+    "agent": "상담원 응대 중",
+    "ended": "종료됨"
+  },
+  "state": {
+    "ai": "AI 응답 중",
+    "aiOff": "AI 꺼짐",
+    "waiting": "상담원 필요",
+    "agent": "{{name}} 응대 중",
+    "agentUnknown": "상담원 응대 중",
+    "ended": "종료됨",
+    "draft": "승인 대기 중인 초안"
+  },
+  "more": "더보기",
+  "advanced": {
+    "label": "고급 도구",
+    "hint": "그룹, 합친 대화방, AI 에이전트 지정, 지식 검색, 브리핑, 처리 이력, 답변 평가를 표시합니다."
+  },
+  "acceptHint": "이 채팅을 직접 맡습니다. AI는 더 이상 답하지 않습니다.",
+  "endHint": "채팅을 종료합니다. 고객에게 만족도 평가를 요청합니다.",
+  "csatLevel": {
+    "1": "불만족",
+    "2": "다소 불만족",
+    "3": "보통",
+    "4": "만족",
+    "5": "매우 만족"
   }
 }

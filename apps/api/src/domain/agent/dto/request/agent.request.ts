@@ -19,7 +19,7 @@ export class ListSessionsQuery {
   @IsOptional() @IsString() size?: string;
   /** Customer name/email filter (decrypt-then-filter window — see CustomerService). */
   @IsOptional() @IsString() q?: string;
-  /** 'all' (default, includes live AI threads) | 'queue' | 'ended'. */
+  /** 'all' (default, includes live AI threads) | 'queue' | 'ended' | 'unread' (the caller's, any status). */
   @IsOptional() @IsString() status?: string;
   /** Origin channel filter: 'all' (default) | widget | telegram | zalo | email … */
   @IsOptional() @IsString() channel?: string;

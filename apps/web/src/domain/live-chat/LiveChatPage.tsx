@@ -14,7 +14,6 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  RefreshCw,
   BookPlus,
   BookOpen,
   Bot,
@@ -25,6 +24,9 @@ import {
   Reply,
   Eye,
   X,
+  Mail,
+  MailOpen,
+  CheckCheck,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
@@ -81,6 +83,9 @@ import { KnowledgeCaptureModal } from './KnowledgeCaptureModal';
 import { MessageAttachments } from './MessageAttachments';
 import { useAgentUpload } from './useAgentUpload';
 import { IssuePanel } from './IssuePanel';
+import { MoreMenu, type MoreMenuItem } from './MoreMenu';
+import { useAdvancedTools } from './use-advanced-tools';
+import { useComments, useLiveChatUnreadCount, useMarkRead, useMarkUnread, useReadAll } from './live-chat.hooks';
 import { useAuthStore } from '@/store/auth-store';
 import { liveChatService } from './live-chat.service';
 import type { AgentSession, ChatMessage, CustomerContext } from './live-chat.service';
@@ -178,7 +183,10 @@ export function LiveChatPage() {
   // 'all' by default: the queue-only view is what hid the conversation a shopper
   // was having right now with the bot (PLN-260807 D1). 'groups' switches the
   // list to timeline/project groups (REQ-260824-Session-Grouping).
-  const [scope, setScope] = useState<'all' | 'queue' | 'ended' | 'groups'>('all');
+  const [scope, setScope] = useState<'all' | 'unread' | 'queue' | 'ended' | 'groups'>('all');
+  // Simple by default (PLN-261119): grouping, merged rooms, AI-agent routing,
+  // knowledge lookup, briefings and answer ratings show only when switched on.
+  const [advanced, setAdvanced] = useAdvancedTools();
 
   // Session grouping (REQ-260824): the open group room, the list's multi-select
   // mode, and the sessions checked for grouping (keyed by sessionId — two rows
@@ -208,6 +216,20 @@ export function LiveChatPage() {
   // AI-agent filter + roster (REQ-260825 R6/R7).
   const [agentFilter, setAgentFilter] = useState('all');
   const { data: aiRoster } = useAiAgentRoster();
+  // With one AI agent (IVY) its name on every row is noise; with several it says something.
+  const multiAgent = (aiRoster?.length ?? 0) > 1;
+  const toggleAdvanced = (on: boolean) => {
+    setAdvanced(on);
+    if (on) return;
+    // Filters whose controls are going away must not keep narrowing the list.
+    setChannel('all');
+    setAgentFilter('all');
+    exitSelectMode();
+    if (scope === 'groups') {
+      setScope('all');
+      setSelectedGroup(null);
+    }
+  };
 
   // Detail-header controls (REQ-260825 R8).
   const [assignOpen, setAssignOpen] = useState(false);
@@ -273,12 +295,53 @@ export function LiveChatPage() {
     searchIn,
   );
   const contentSearch = searchIn === 'content' && listSearch.trim().length >= 2;
+  // Read / unread for the signed-in staff member (PLN-261119).
+  const { data: unreadTotal } = useLiveChatUnreadCount();
+  const unreadConversations = unreadTotal?.count ?? 0;
+  const markRead = useMarkRead();
+  const markUnread = useMarkUnread();
+  const readAll = useReadAll();
+  // In the Unread view a conversation stops matching once it is opened. It
+  // keeps its place until another one is picked, so it does not vanish while
+  // being read.
+  const [kept, setKept] = useState<{ row: AgentSession; index: number } | null>(null);
+  useEffect(() => setKept(null), [scope]);
+  const listRows = useMemo(() => {
+    const rows = sessions ?? [];
+    if (scope !== 'unread' || !kept || kept.row.id !== selected || rows.some((r) => r.id === kept.row.id)) return rows;
+    const next = [...rows];
+    next.splice(Math.min(kept.index, next.length), 0, { ...kept.row, unreadCount: 0 });
+    return next;
+  }, [sessions, scope, kept, selected]);
   const { data: groups, isLoading: groupsLoading } = useGroups(scope === 'groups');
   // Staff view of a company room (PLN-261027 Merge-Add D9): one staff member's conversations only.
   const [staff, setStaff] = useState<string | null>(null);
   useEffect(() => setStaff(null), [selected]);
-  const { data: convo, isLoading: convoLoading, isFetching: convoFetching, refetch: refetchConvo } =
-    useConversation(selected, staff);
+  const { data: convo, isLoading: convoLoading } = useConversation(selected, staff);
+  // Internal notes decide whether their card shows in the simple view.
+  const { data: notes } = useComments(selected);
+
+  // What is on screen is read (PLN-261119): the conversation when it opens, and
+  // each customer message that arrives while it stays open — not while the
+  // browser tab is in the background, where nobody saw it.
+  const loaded = !!convo;
+  const lastCustomerId = [...(convo?.messages ?? [])].reverse().find((m) => m.senderType === 'user')?.id ?? null;
+  useEffect(() => {
+    if (!selected || !loaded) return;
+    const read = () => {
+      if (document.visibilityState === 'visible') markRead.mutate(selected);
+    };
+    read();
+    document.addEventListener('visibilitychange', read);
+    return () => document.removeEventListener('visibilitychange', read);
+  }, [selected, loaded, lastCustomerId]); // eslint-disable-line react-hooks/exhaustive-deps
+  /** Mark unread and leave it: kept open, the next message would read it again. */
+  const markUnreadAndClose = (id: string) =>
+    markUnread.mutate(id, {
+      onSuccess: (res) => {
+        if (res.ok && id === selected) setSelected(null);
+      },
+    });
 
   // Prefer the detail's channel (a deep-linked thread may not be in the list).
   const activeChannel = (
@@ -355,6 +418,11 @@ export function LiveChatPage() {
   const openConversation = (id: string) => {
     const seed = contentSearch ? listSearch.trim() : null;
     setSelectedGroup(null);
+    // Unread view: the row keeps its place while it is open (see listRows).
+    if (scope === 'unread') {
+      const index = sessions?.findIndex((r) => r.id === id) ?? -1;
+      if (index >= 0) setKept({ row: sessions![index], index });
+    }
     if (id === selected) {
       // Same room: the reset effect will not run, so open the finder here.
       if (seed) {
@@ -532,6 +600,21 @@ export function LiveChatPage() {
   const ended = convo?.status === 'ended';
   const aiAnswering = !!convo && !ended && convo.status !== 'agent' && convo.autoReplyEffective !== false;
   const pausedByStaff = !!convo && !ended && convo.status !== 'agent' && convo.autoReplyMode === 'off';
+  // The conversation's state in plain words (PLN-261119). It replaces the status
+  // badge, the auto-reply pill and the owner badge that used to sit side by side.
+  const stateChip: { tone: 'gray' | 'primary' | 'ai' | 'warning'; text: string } | null = !convo
+    ? null
+    : ended
+      ? { tone: 'gray', text: t('state.ended') }
+      : convo.pendingDraft
+        ? { tone: 'warning', text: t('state.draft') }
+        : convo.status === 'agent'
+          ? { tone: 'primary', text: convo.assignedTo ? t('state.agent', { name: convo.assignedTo }) : t('state.agentUnknown') }
+          : convo.status === 'waiting'
+            ? { tone: 'warning', text: t('state.waiting') }
+            : convo.autoReplyEffective === false
+              ? { tone: 'gray', text: t('state.aiOff') }
+              : { tone: 'ai', text: t('state.ai') };
   const pauseAi = () =>
     aiPause.mutate(undefined, {
       onSuccess: () => {
@@ -540,6 +623,66 @@ export function LiveChatPage() {
       },
       onError: (e: Error) => toast.error(e.message || t('takeover.failed'), { sticky: true }),
     });
+
+  // The header's less-used actions (PLN-261119). Sync is gone: the thread
+  // already refreshes every 5 s and whenever the tab is looked at again.
+  const moreItems: MoreMenuItem[] = !selected
+    ? []
+    : [
+        { key: 'find', label: t('search.inRoomPlaceholder'), icon: Search, onSelect: () => setFindOpen(true) },
+        {
+          key: 'pin',
+          label: selectedPinned ? t('pin.unpin') : t('pin.pin'),
+          icon: Pin,
+          disabled: setPin.isPending,
+          onSelect: () => setPin.mutate({ id: selected, pinned: !selectedPinned }),
+        },
+        { key: 'unread', label: t('unread.markUnread'), icon: Mail, onSelect: () => markUnreadAndClose(selected) },
+        ...(canAssign || multiAgent || advanced
+          ? [
+              {
+                key: 'assign',
+                label: t('agentControls.assignTitle'),
+                icon: User,
+                onSelect: () => {
+                  // One AI agent leaves nothing to choose there: a manager assigns a person.
+                  const toAi = multiAgent || !canAssign;
+                  setAssignType(toAi ? 'ai' : 'agent');
+                  setAssignTarget(toAi ? (convo?.aiAgentId ?? '') : '');
+                  setAssignOpen(true);
+                },
+              },
+            ]
+          : []),
+        ...(aiAnswering
+          ? [
+              {
+                key: 'pause',
+                label: t('takeover.pause'),
+                title: t('takeover.pauseHint'),
+                icon: PauseCircle,
+                disabled: aiPause.isPending,
+                onSelect: pauseAi,
+              },
+            ]
+          : []),
+        ...(advanced
+          ? [
+              {
+                key: 'issue',
+                label: t('agentControls.fileIssue'),
+                icon: ClipboardPlus,
+                separated: true,
+                onSelect: () => {
+                  setIssueType('other');
+                  setIssueTarget(null);
+                  setIssueMemo('');
+                  setIssueOpen(true);
+                },
+              },
+            ]
+          : []),
+      ];
 
   // Knowledge lookup (PLN-260810 S2/S3). Answer lives in component state, not
   // in the conversation: it is the agent checking, not a customer turn.
@@ -732,7 +875,30 @@ export function LiveChatPage() {
     // what used to push every pane header off screen.
     <div className="flex h-[calc(100dvh-112px)] flex-col">
       <div className="shrink-0">
-        <PageHeader title={t('title')} subtitle={t('subtitle')} />
+        <PageHeader
+          title={t('title')}
+          subtitle={t('subtitle')}
+          action={
+            <label
+              className="inline-flex cursor-pointer select-none items-center gap-2 text-xs font-medium text-gray-600"
+              title={t('advanced.hint')}
+            >
+              <input
+                type="checkbox"
+                role="switch"
+                checked={advanced}
+                onChange={(e) => toggleAdvanced(e.target.checked)}
+                className="peer sr-only"
+                data-testid="advanced-tools"
+              />
+              <span
+                aria-hidden
+                className="relative h-4 w-7 shrink-0 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-3 after:w-3 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-primary-600 peer-checked:after:translate-x-3 peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500 peer-focus-visible:ring-offset-1"
+              />
+              {t('advanced.label')}
+            </label>
+          }
+        />
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-4">
@@ -742,92 +908,113 @@ export function LiveChatPage() {
               scrolls (PLN-260829 R1). Opaque bg is required — the rows slide
               underneath. */}
           <div className="sticky top-0 z-10 bg-white">
-          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 text-sm font-medium text-gray-600">
+          <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3 text-sm font-medium text-gray-600">
             <span>
               {scope === 'groups'
                 ? `${t('groups.tab')} ${groups ? `(${groups.length})` : ''}`
-                : `${t('sessions')} ${sessions ? `(${sessions.length})` : ''}`}
+                : `${t('sessions')} ${sessions ? `(${listRows.length})` : ''}`}
             </span>
-            {scope !== 'groups' && (
-              <button
-                type="button"
-                onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
-                className={cn(
-                  'rounded-full border px-2 py-0.5 text-[11px]',
-                  selectMode
-                    ? 'border-primary-400 bg-primary-500/10 text-primary-700'
-                    : 'border-gray-200 text-gray-500 hover:bg-gray-50',
-                )}
-              >
-                {selectMode ? t('groups.cancel') : t('groups.selectMode')}
-              </button>
-            )}
+            <span className="flex items-center gap-1">
+              {scope === 'unread' && unreadConversations > 0 && (
+                <button
+                  type="button"
+                  onClick={() => readAll.mutate()}
+                  disabled={readAll.isPending}
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-primary-700 hover:bg-primary-50 disabled:opacity-50"
+                >
+                  <CheckCheck className="h-3.5 w-3.5" aria-hidden /> {t('unread.markAllRead')}
+                </button>
+              )}
+              {advanced && scope !== 'groups' && (
+                <button
+                  type="button"
+                  onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+                  className={cn(
+                    'rounded-full border px-2 py-0.5 text-[11px]',
+                    selectMode
+                      ? 'border-primary-400 bg-primary-500/10 text-primary-700'
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50',
+                  )}
+                >
+                  {selectMode ? t('groups.cancel') : t('groups.selectMode')}
+                </button>
+              )}
+            </span>
           </div>
-          {/* Two filter rows (REQ-260825 R4/R5): status tabs get their own
-              line so they can never be squeezed by the selects again. */}
-          <div className="flex gap-1 border-b border-gray-100 px-2 pt-2 pb-2">
-            {(['all', 'queue', 'ended'] as const).map((key) => (
+          {/* Status filters (REQ-260825 R4/R5), Unread first after All (PLN-261119). */}
+          <div className="flex flex-wrap gap-1 border-b border-gray-100 px-2 pt-2 pb-2">
+            {(['all', 'unread', 'queue', 'ended'] as const).map((key) => (
               <button
                 key={key}
                 type="button"
+                aria-pressed={scope === key}
+                data-testid={`scope-${key}`}
                 onClick={() => {
                   setScope(key);
                   setSelectedGroup(null);
                 }}
                 className={cn(
-                  'shrink-0 rounded-full border px-2.5 py-1 text-xs',
+                  'inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs',
                   scope === key
                     ? 'border-primary-400 bg-primary-500/10 text-primary-700'
                     : 'border-gray-200 text-gray-500 hover:bg-gray-50',
                 )}
               >
                 {t(`scope.${key}`)}
+                {key === 'unread' && unreadConversations > 0 && (
+                  <span className="min-w-[18px] rounded-full bg-primary-600 px-1 text-center text-[10px] font-semibold leading-4 text-white">
+                    {unreadConversations > 99 ? '99+' : unreadConversations}
+                  </span>
+                )}
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-1 border-b border-gray-100 px-2 py-2">
-            <button
-              type="button"
-              onClick={() => {
-                setScope('groups');
-                exitSelectMode();
-              }}
-              className={cn(
-                'shrink-0 rounded-full border px-2.5 py-1 text-xs',
-                scope === 'groups'
-                  ? 'border-primary-400 bg-primary-500/10 text-primary-700'
-                  : 'border-gray-200 text-gray-500 hover:bg-gray-50',
-              )}
-            >
-              {t('scope.groups')}
-            </button>
-            <select
-              value={channel}
-              onChange={(e) => setChannel(e.target.value)}
-              aria-label={t('channel.filterLabel')}
-              className="ml-auto rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
-            >
-              {CHANNEL_FILTERS.map((key) => (
-                <option key={key} value={key}>
-                  {key === 'all' ? t('channel.filterAll') : t(`channel.${key}`, { defaultValue: key })}
-                </option>
-              ))}
-            </select>
-            {/* AI-agent filter (REQ-260825 R7). */}
-            <select
-              value={agentFilter}
-              onChange={(e) => setAgentFilter(e.target.value)}
-              aria-label={t('agentControls.filterLabel')}
-              className="rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
-            >
-              <option value="all">{t('agentControls.filterAll')}</option>
-              {(aiRoster ?? []).map((a) => (
-                <option key={a.id} value={String(a.id)}>
-                  {a.displayName || a.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Groups and the channel / AI-agent filters: advanced only (PLN-261119). */}
+          {advanced && (
+            <div className="flex flex-wrap items-center gap-1 border-b border-gray-100 px-2 py-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setScope('groups');
+                  exitSelectMode();
+                }}
+                className={cn(
+                  'shrink-0 rounded-full border px-2.5 py-1 text-xs',
+                  scope === 'groups'
+                    ? 'border-primary-400 bg-primary-500/10 text-primary-700'
+                    : 'border-gray-200 text-gray-500 hover:bg-gray-50',
+                )}
+              >
+                {t('scope.groups')}
+              </button>
+              <select
+                value={channel}
+                onChange={(e) => setChannel(e.target.value)}
+                aria-label={t('channel.filterLabel')}
+                className="ml-auto rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
+              >
+                {CHANNEL_FILTERS.map((key) => (
+                  <option key={key} value={key}>
+                    {key === 'all' ? t('channel.filterAll') : t(`channel.${key}`, { defaultValue: key })}
+                  </option>
+                ))}
+              </select>
+              {/* AI-agent filter (REQ-260825 R7). */}
+              <select
+                value={agentFilter}
+                onChange={(e) => setAgentFilter(e.target.value)}
+                aria-label={t('agentControls.filterLabel')}
+                className="rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
+              >
+                <option value="all">{t('agentControls.filterAll')}</option>
+                {(aiRoster ?? []).map((a) => (
+                  <option key={a.id} value={String(a.id)}>
+                    {a.displayName || a.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="border-b border-gray-100 p-2">
             {/* What the box searches (PLN-261023 S1): customers, or what was said. */}
             <div className="mb-1.5 flex gap-1" role="group" aria-label={t('search.inLabel')}>
@@ -912,162 +1099,209 @@ export function LiveChatPage() {
               <Loader2 className="mx-auto h-5 w-5 animate-spin" />
             </div>
           )}
-          {scope !== 'groups' && !sessionsLoading && (!sessions || sessions.length === 0) && (
-            <p className="p-6 text-center text-sm text-gray-400">{t('noActiveSessions')}</p>
+          {scope !== 'groups' && !sessionsLoading && listRows.length === 0 && (
+            <p className="p-6 text-center text-sm text-gray-400">
+              {scope === 'unread' ? t('unread.empty') : t('noActiveSessions')}
+            </p>
           )}
+          {/* Rows (PLN-261119): unread = a bar on the left edge, the name in
+              bold and how many customer messages wait. Read rows carry no mark —
+              its absence is the signal. A third line only when there is
+              something to act on. */}
           <ul className="divide-y divide-gray-100">
-            {scope !== 'groups' && sessions?.map((s) => (
-              <li key={s.id}>
-                {/* A div, not a button: the row now contains its own controls
-                    (alias edit + input) and a button may not nest interactive
-                    elements. Keyboard access is kept explicitly. */}
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    if (selectMode) {
-                      toggleChecked(s);
-                    } else {
-                      openConversation(s.id);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.target !== e.currentTarget) return; // let the alias input type
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      if (selectMode) {
-                        toggleChecked(s);
-                      } else {
-                        openConversation(s.id);
-                      }
-                    }
-                  }}
-                  className={cn(
-                    'group flex w-full cursor-pointer items-start gap-2 px-4 py-3 text-left hover:bg-gray-50',
-                    selected === s.id && !selectMode && 'bg-primary-500/5',
-                    selectMode && s.sessionId && checked.has(s.sessionId) && 'bg-primary-500/5',
-                  )}
-                >
-                  {/* Multi-select for grouping (REQ-260824). */}
-                  {selectMode && (
-                    <input
-                      type="checkbox"
-                      checked={!!s.sessionId && checked.has(s.sessionId)}
-                      onChange={() => toggleChecked(s)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={t('groups.selectSession')}
-                      className="mt-1 shrink-0"
-                    />
-                  )}
-                  <div className="min-w-0 flex-1">
-                  {/* Line 1 (REQ-260824 R1 + REQ-260825 R6): name left, the
-                      session's AI agent right-aligned. */}
-                  <div className="flex items-center justify-between gap-2">
-                    <SessionAlias
-                      conversationId={s.id}
-                      alias={s.alias}
-                      fallback={
-                        // "customer / company" (PLN-261023): the registered
-                        // customer and hotel, else what the host claimed.
-                        sessionTitle(s.customerName || s.identity?.name, s.companyName || s.identity?.hotelName) ||
-                        s.customerEmail ||
-                        t('sessionLabel', { id: s.id })
-                      }
-                      compact
-                    />
-                    {s.aiAgentName && (
-                      <span className="shrink-0 rounded-full bg-primary-500/10 px-1.5 py-0.5 text-[10px] font-medium text-primary-600">
-                        {s.aiAgentName}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      <span className="shrink-0 text-[11px] text-gray-400">
-                        {t('sessionLabel', { id: s.id })}
-                      </span>
-                      {/* One row stands for the whole merged room (PLN-261023 D2). */}
-                      {s.mergedRoom && (
-                        <span
-                          className="shrink-0 rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
-                          title={t('merge.rowHint', { count: s.mergedRoom.sessionCount })}
-                        >
-                          {t('merge.badge', { count: s.mergedRoom.sessionCount })}
-                          {s.mergedRoom.openCount > 1 && ` · ${t('merge.openCount', { count: s.mergedRoom.openCount })}`}
-                        </span>
+            {scope !== 'groups' &&
+              listRows.map((s) => {
+                // The open row is being read, so it never shows as unread.
+                const unread = (s.unreadCount ?? 0) > 0 && s.id !== selected;
+                const who =
+                  s.lastSenderType === 'user'
+                    ? t('row.customer')
+                    : s.lastSenderType === 'ai'
+                      ? t('row.ai')
+                      : s.lastSenderType === 'agent'
+                        ? (s.lastSenderName ?? t('agent'))
+                        : s.lastSenderType === 'system'
+                          ? t('row.notice')
+                          : null;
+                const state: { text: string; className: string; title?: string } | null =
+                  s.status === 'waiting'
+                    ? { text: t('row.waiting'), className: 'text-amber-700' }
+                    : s.status === 'agent'
+                      ? { text: t('row.agent'), className: 'text-primary-700' }
+                      : s.status === 'ended' && scope !== 'ended'
+                        ? { text: t('row.ended'), className: 'text-gray-400' }
+                        : s.status === 'ai_active' && s.autoReplyEffective === false
+                          ? { text: t('autoReply.offShort'), className: 'text-gray-500', title: t('autoReply.offHint') }
+                          : null;
+                const otherChannel = !!s.channel && s.channel.toLowerCase() !== 'widget';
+                const id = s.identity;
+                const identityShown =
+                  !!id && (!!(id.hotelName || id.hotelId || id.region || id.province || id.role) || id.verified === false);
+                const extras = !!state || !!s.mergedRoom || otherChannel || identityShown;
+                const open = () => (selectMode ? toggleChecked(s) : openConversation(s.id));
+                return (
+                  <li key={s.id}>
+                    {/* A div, not a button: the row holds its own controls (alias
+                        edit, read toggle, pin) and a button may not nest them. */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-current={selected === s.id ? 'true' : undefined}
+                      data-testid="session-row"
+                      data-unread={unread ? 'true' : undefined}
+                      onClick={open}
+                      onKeyDown={(e) => {
+                        if (e.target !== e.currentTarget) return; // let the alias input type
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          open();
+                        }
+                      }}
+                      className={cn(
+                        'group relative flex w-full cursor-pointer items-start gap-2 py-3 pl-4 pr-3 text-left outline-none hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500',
+                        selected === s.id && !selectMode && 'bg-primary-500/5',
+                        selectMode && s.sessionId && checked.has(s.sessionId) && 'bg-primary-500/5',
                       )}
-                      <IdentityBadges identity={s.identity} compact />
-                    </span>
-                    <div className="flex shrink-0 items-center gap-1">
-                      {/* Team pin (PLN-260826 R1): filled and always visible
-                          when pinned; appears on hover to pin. Server keeps
-                          pinned rows on top and enforces the 3-per-store cap. */}
-                      {!selectMode && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPin.mutate({ id: s.id, pinned: !s.pinned });
-                          }}
-                          disabled={setPin.isPending}
-                          aria-label={s.pinned ? t('pin.unpin') : t('pin.pin')}
-                          title={s.pinned ? t('pin.unpin') : t('pin.pin')}
-                          className={cn(
-                            'rounded p-0.5',
-                            s.pinned
-                              ? 'text-primary-600'
-                              : 'text-gray-300 opacity-0 hover:text-gray-500 focus:opacity-100 group-hover:opacity-100',
+                    >
+                      {unread && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-primary-600" />}
+                      {/* Multi-select for grouping (REQ-260824). */}
+                      {selectMode && (
+                        <input
+                          type="checkbox"
+                          checked={!!s.sessionId && checked.has(s.sessionId)}
+                          onChange={() => toggleChecked(s)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={t('groups.selectSession')}
+                          className="mt-1 shrink-0"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="min-w-0 flex-1" title={t('sessionLabel', { id: s.id })}>
+                            <SessionAlias
+                              conversationId={s.id}
+                              alias={s.alias}
+                              fallback={
+                                // "customer / company" (PLN-261023): the registered
+                                // customer and hotel, else what the host claimed.
+                                sessionTitle(s.customerName || s.identity?.name, s.companyName || s.identity?.hotelName) ||
+                                s.customerEmail ||
+                                t('sessionLabel', { id: s.id })
+                              }
+                              compact
+                              weight={unread ? 'unread' : 'read'}
+                            />
+                          </span>
+                          {s.aiAgentName && (advanced || multiAgent) && (
+                            <span className="shrink-0 rounded-full bg-lavender-50 px-1.5 py-0.5 text-[10px] font-medium text-lavender-700">
+                              {s.aiAgentName}
+                            </span>
                           )}
-                        >
-                          <Pin className={cn('h-3.5 w-3.5', s.pinned && 'fill-current')} />
-                        </button>
+                          {s.pinned && (
+                            <Pin className="h-3 w-3 shrink-0 fill-current text-primary-600" aria-label={t('pin.pinned')} />
+                          )}
+                          <time
+                            dateTime={s.lastMessageAt ?? s.createdAt ?? undefined}
+                            title={`${t('createdShort')} ${absTime(s.createdAt)}${
+                              s.lastMessageAt ? ` · ${t('lastReplyShort')} ${absTime(s.lastMessageAt)}` : ''
+                            }`}
+                            className={cn(
+                              'shrink-0 text-[11px] tabular-nums',
+                              unread ? 'font-semibold text-primary-700' : 'text-gray-400',
+                            )}
+                          >
+                            {timeAgo(s.lastMessageAt ?? s.createdAt)}
+                          </time>
+                        </div>
+                        {contentSearch && s.match ? (
+                          // The matching line instead of the last one (PLN-261023 S1).
+                          <p className="mt-0.5 truncate text-xs text-gray-600" title={t('search.matchCount', { count: s.match.count })}>
+                            {s.match.count > 1 && (
+                              <span className="mr-1 rounded bg-amber-50 px-1 text-[10px] font-medium text-gray-600">
+                                {t('search.matchCount', { count: s.match.count })}
+                              </span>
+                            )}
+                            <SearchHighlight text={stripLiteMarkdown(s.match.snippet)} term={listSearch} />
+                          </p>
+                        ) : (
+                          <div className="mt-0.5 flex items-center gap-2">
+                            <p className={cn('min-w-0 flex-1 truncate text-xs', unread ? 'text-gray-800' : 'text-gray-500')}>
+                              {who && s.lastMessagePreview && (
+                                <span className={unread ? 'font-medium text-gray-900' : 'text-gray-600'}>
+                                  {t('row.from', { who })}{' '}
+                                </span>
+                              )}
+                              {/* One line, markers removed (PLN-261008 S4). */}
+                              {s.lastMessagePreview ? stripLiteMarkdown(s.lastMessagePreview).replace(/\s+/g, ' ') : '—'}
+                            </p>
+                            {unread && (
+                              <span
+                                aria-label={t('unread.count', { count: s.unreadCount })}
+                                className="min-w-[18px] shrink-0 rounded-full bg-primary-600 px-1 text-center text-[10px] font-semibold leading-4 text-white"
+                              >
+                                {(s.unreadCount ?? 0) > 99 ? '99+' : s.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {extras && (
+                          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px]">
+                            {state && (
+                              <span className={cn('shrink-0 font-medium', state.className)} title={state.title}>
+                                {state.text}
+                              </span>
+                            )}
+                            {/* One row stands for the whole merged room (PLN-261023 D2). */}
+                            {s.mergedRoom && (
+                              <span
+                                className="shrink-0 rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
+                                title={t('merge.rowHint', { count: s.mergedRoom.sessionCount })}
+                              >
+                                {t('merge.badge', { count: s.mergedRoom.sessionCount })}
+                                {s.mergedRoom.openCount > 1 && ` · ${t('merge.openCount', { count: s.mergedRoom.openCount })}`}
+                              </span>
+                            )}
+                            <IdentityBadges identity={s.identity} compact />
+                            {otherChannel && <ChannelBadge channel={s.channel} />}
+                          </div>
+                        )}
+                      </div>
+                      {/* Row tools on hover or keyboard focus: read state, pin. */}
+                      {!selectMode && (
+                        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-md bg-white p-0.5 opacity-0 shadow-sm ring-1 ring-gray-200 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (unread) markRead.mutate(s.id);
+                              else markUnreadAndClose(s.id);
+                            }}
+                            aria-label={unread ? t('unread.markRead') : t('unread.markUnread')}
+                            title={unread ? t('unread.markRead') : t('unread.markUnread')}
+                            data-testid="row-read-toggle"
+                            className="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                          >
+                            {unread ? <MailOpen className="h-3.5 w-3.5" /> : <Mail className="h-3.5 w-3.5" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPin.mutate({ id: s.id, pinned: !s.pinned });
+                            }}
+                            disabled={setPin.isPending}
+                            aria-label={s.pinned ? t('pin.unpin') : t('pin.pin')}
+                            title={s.pinned ? t('pin.unpin') : t('pin.pin')}
+                            className="rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                          >
+                            <Pin className={cn('h-3.5 w-3.5', s.pinned && 'fill-current text-primary-600')} />
+                          </button>
+                        </div>
                       )}
-                      {/* Silent thread, at a glance: the AI is not answering
-                          this one and no agent has taken it either. */}
-                      {s.autoReplyEffective === false && s.status !== 'agent' && (
-                        <span
-                          className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500"
-                          title={t('autoReply.offHint')}
-                        >
-                          {t('autoReply.offShort')}
-                        </span>
-                      )}
-                      <ChannelBadge channel={s.channel} />
-                      <StatusBadge
-                        status={s.status}
-                        label={t(`status.${s.status}`, { defaultValue: s.status })}
-                      />
                     </div>
-                  </div>
-                  {contentSearch && s.match ? (
-                    // The matching line instead of the last one (PLN-261023 S1).
-                    <p className="mt-1 truncate text-xs text-gray-600" title={t('search.matchCount', { count: s.match.count })}>
-                      {s.match.count > 1 && (
-                        <span className="mr-1 rounded bg-amber-50 px-1 text-[10px] font-medium text-gray-600">
-                          {t('search.matchCount', { count: s.match.count })}
-                        </span>
-                      )}
-                      <SearchHighlight text={stripLiteMarkdown(s.match.snippet)} term={listSearch} />
-                    </p>
-                  ) : (
-                    <p className="mt-1 truncate text-xs text-gray-500">
-                      {/* One line, markers removed (PLN-261008 S4). */}
-                      {s.lastMessagePreview ? stripLiteMarkdown(s.lastMessagePreview).replace(/\s+/g, ' ') : '—'}
-                    </p>
-                  )}
-                  <p
-                    className="mt-0.5 text-[11px] text-gray-400"
-                    title={`${t('createdShort')} ${absTime(s.createdAt)}${
-                      s.lastMessageAt ? ` · ${t('lastReplyShort')} ${absTime(s.lastMessageAt)}` : ''
-                    }`}
-                  >
-                    {t('createdShort')} {timeAgo(s.createdAt)} · {t('lastReplyShort')}{' '}
-                    {timeAgo(s.lastMessageAt)}
-                  </p>
-                  </div>
-                </div>
-              </li>
-            ))}
+                  </li>
+                );
+              })}
           </ul>
           {/* Grouping action bar (REQ-260824): visible only in select mode. */}
           {selectMode && scope !== 'groups' && (
@@ -1100,172 +1334,100 @@ export function LiveChatPage() {
           )}
           {!selectedGroup && selected && (
             <>
-              {/* Two header rows (REQ-260825 R3): info on top, actions below. */}
+              {/* One header row (PLN-261119): who it is, what state it is in,
+                  and the two things done every time — take it, end it. The rest
+                  is under More, or under Advanced tools. */}
               <div className="space-y-2 border-b border-gray-100 px-4 py-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  {/* Same editor as the list row, so the name can be set from
-                      wherever the agent happens to be (PLN-260812 D-2). */}
-                  <SessionAlias
-                    conversationId={selected}
-                    alias={convo?.alias}
-                    fallback={
-                      sessionTitle(
-                        convo?.customer?.name || convo?.identity?.name,
-                        convo?.company?.name || convo?.identity?.hotelName,
-                      ) || t('conversation')
-                    }
-                    sessionLabel={t('sessionLabel', { id: selected })}
-                  />
-                  <StatusBadge
-                    status={convo?.status}
-                    label={
-                      convo?.status
-                        ? t(`status.${convo.status}`, { defaultValue: convo.status })
-                        : undefined
-                    }
-                  />
-                  <AutoReplyControl
-                    conversationId={selected}
-                    mode={convo?.autoReplyMode}
-                    effective={convo?.autoReplyEffective}
-                    agentOwns={convo?.status === 'agent'}
-                    awaitingApproval={!!convo?.pendingDraft}
-                  />
-                  {/* Current owners as badges; changing them lives in [지정]. */}
-                  {convo?.aiAgentName && (
-                    <Badge tone="info">AI: {convo.aiAgentName}</Badge>
-                  )}
-                  <IdentityBadges identity={convo?.identity} />
-                  {convo?.consultCategory && (
-                    <Badge tone="primary">{t('consultCategoryBadge', { name: categoryName(convo.consultCategory) })}</Badge>
-                  )}
-                  {convo?.company && <Badge tone="info">{t('company.badge')}</Badge>}
-                  {convo?.assignedTo && (
-                    <Badge tone="primary">
-                      {t('agentControls.assignedTo')}: {convo.assignedTo}
-                    </Badge>
-                  )}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                    {/* Same editor as the list row, so the name can be set from
+                        wherever the agent happens to be (PLN-260812 D-2). */}
+                    <SessionAlias
+                      conversationId={selected}
+                      alias={convo?.alias}
+                      fallback={
+                        sessionTitle(
+                          convo?.customer?.name || convo?.identity?.name,
+                          convo?.company?.name || convo?.identity?.hotelName,
+                        ) || t('conversation')
+                      }
+                      sessionLabel={t('sessionLabel', { id: selected })}
+                    />
+                    {stateChip && (
+                      <span data-testid="conversation-state">
+                        <Badge tone={stateChip.tone}>{stateChip.text}</Badge>
+                      </span>
+                    )}
+                    {convo?.consultCategory && (
+                      <Badge tone="primary">{t('consultCategoryBadge', { name: categoryName(convo.consultCategory) })}</Badge>
+                    )}
+                    <IdentityBadges identity={convo?.identity} />
+                    {convo?.company && <Badge tone="info">{t('company.badge')}</Badge>}
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    {/* Handing back is only meaningful while a person owns the
+                        thread; on any other status the API refuses it (409). */}
+                    {convo?.status === 'agent' ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        title={t('handBackHint')}
+                        onClick={() => setHandBackOpen(true)}
+                        disabled={handBack.isPending}
+                      >
+                        <Bot className="h-4 w-4" /> {t('handBack')}
+                      </Button>
+                    ) : convo && !ended ? (
+                      <>
+                        {/* Taken over without accepting (PLN-261027 Takeover D6): the way back. */}
+                        {pausedByStaff && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            title={t('takeover.resumeHint')}
+                            onClick={() => setResumeOpen(true)}
+                            disabled={aiResume.isPending}
+                          >
+                            <PlayCircle className="h-4 w-4" /> {t('takeover.resume')}
+                          </Button>
+                        )}
+                        <Button size="sm" title={t('acceptHint')} onClick={() => accept.mutate()} disabled={accept.isPending}>
+                          <CheckCircle2 className="h-4 w-4" /> {t('accept')}
+                        </Button>
+                      </>
+                    ) : null}
+                    {convo && !ended && (
+                      <Button size="sm" variant="secondary" title={t('endHint')} onClick={() => end.mutate()} disabled={end.isPending}>
+                        <XCircle className="h-4 w-4 text-red-600" /> <span className="text-red-600">{t('end')}</span>
+                      </Button>
+                    )}
+                    <MoreMenu label={t('more')} items={moreItems} />
+                  </div>
                 </div>
-                {/* Earlier conversations | merged room on their own highlighted
-                    line (PLN-261027). Each control decides whether it shows, so
-                    the line only appears once one of them rendered a button;
-                    the divider hides when it ends up first or last. */}
-                <div className="hidden flex-wrap items-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-3 py-1.5 has-[>button]:flex">
-                  <CompanyThreadButton conversationId={selected} company={convo?.company} onOpen={setSelected} />
-                  <span aria-hidden className="h-4 w-px bg-primary-200 first:hidden last:hidden" />
-                  {/* Same-customer merged room (PLN-261023). */}
-                  <MergeRoomControl conversationId={selected} room={convo?.mergedRoom} onOpenConversation={setSelected} />
-                </div>
+                {advanced && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <AutoReplyControl
+                      conversationId={selected}
+                      mode={convo?.autoReplyMode}
+                      effective={convo?.autoReplyEffective}
+                      agentOwns={convo?.status === 'agent'}
+                      awaitingApproval={!!convo?.pendingDraft}
+                    />
+                    {convo?.aiAgentName && <Badge tone="ai">AI: {convo.aiAgentName}</Badge>}
+                  </div>
+                )}
+                {/* Earlier conversations | merged room (PLN-261027): advanced
+                    only. Each control decides whether it shows, so the line only
+                    appears once one of them rendered a button. */}
+                {advanced && (
+                  <div className="hidden flex-wrap items-center gap-2 rounded-md border border-primary-100 bg-primary-50 px-3 py-1.5 has-[>button]:flex">
+                    <CompanyThreadButton conversationId={selected} company={convo?.company} onOpen={setSelected} />
+                    <span aria-hidden className="h-4 w-px bg-primary-200 first:hidden last:hidden" />
+                    <MergeRoomControl conversationId={selected} room={convo?.mergedRoom} onOpenConversation={setSelected} />
+                  </div>
+                )}
                 {/* Open callback request (PLN-261026 D6) — nothing when there is none. */}
                 <CallbackBanner conversationId={selected} />
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant={findOpen ? 'primary' : 'secondary'}
-                    onClick={() => setFindOpen((v) => !v)}
-                    aria-pressed={findOpen}
-                    title={t('search.inRoom')}
-                  >
-                    <Search className="h-4 w-4" /> {t('search.inRoom')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setPin.mutate({ id: selected, pinned: !selectedPinned })}
-                    disabled={setPin.isPending}
-                    title={selectedPinned ? t('pin.unpin') : t('pin.pin')}
-                  >
-                    <Pin
-                      className={cn('h-4 w-4', selectedPinned && 'fill-current text-primary-600')}
-                    />
-                    {selectedPinned ? t('pin.unpin') : t('pin.pin')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      setAssignType('ai');
-                      setAssignTarget(convo?.aiAgentId ?? '');
-                      setAssignOpen(true);
-                    }}
-                  >
-                    <User className="h-4 w-4" /> {t('agentControls.assignButton')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      setIssueType('other');
-                      setIssueTarget(null);
-                      setIssueMemo('');
-                      setIssueOpen(true);
-                    }}
-                  >
-                    <ClipboardPlus className="h-4 w-4" /> {t('agentControls.fileIssue')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    title={t('syncHint')}
-                    onClick={() => void refetchConvo()}
-                    disabled={convoFetching}
-                  >
-                    <RefreshCw className={cn('h-4 w-4', convoFetching && 'animate-spin')} />
-                    {t('sync')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => accept.mutate()}
-                    disabled={accept.isPending}
-                  >
-                    <CheckCircle2 className="h-4 w-4" /> {t('accept')}
-                  </Button>
-                  {/* Handing back is only meaningful while a person owns the
-                      thread; on any other status the API refuses it (409). */}
-                  {convo?.status === 'agent' && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      title={t('handBackHint')}
-                      onClick={() => setHandBackOpen(true)}
-                      disabled={handBack.isPending}
-                    >
-                      <Bot className="h-4 w-4" /> {t('handBack')}
-                    </Button>
-                  )}
-                  {/* Without accepting (PLN-261027 Takeover D4/D6): stop the AI, answer, hand back. */}
-                  {aiAnswering && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      title={t('takeover.pauseHint')}
-                      onClick={pauseAi}
-                      disabled={aiPause.isPending}
-                    >
-                      <PauseCircle className="h-4 w-4" /> {t('takeover.pause')}
-                    </Button>
-                  )}
-                  {pausedByStaff && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      title={t('takeover.resumeHint')}
-                      onClick={() => setResumeOpen(true)}
-                      disabled={aiResume.isPending}
-                    >
-                      <PlayCircle className="h-4 w-4" /> {t('takeover.resume')}
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => end.mutate()}
-                    disabled={end.isPending}
-                  >
-                    <XCircle className="h-4 w-4" /> {t('end')}
-                  </Button>
-                </div>
               </div>
 
               {findOpen && (
@@ -1283,12 +1445,14 @@ export function LiveChatPage() {
 
               {/* Issue P1 (native tenants only — renders nothing when no issue). */}
               <IssuePanel conversationId={selected} />
-              {/* Same-person suggestion (PLN-261006 P1) — nothing for guests. */}
-              <RelatedSessionsBanner
-                conversationId={selected}
-                customerName={convo?.customer?.name ?? null}
-                onOpenConversation={(id) => setSelected(id)}
-              />
+              {/* Same-person suggestion (PLN-261006 P1) — nothing for guests; grouping is an advanced tool. */}
+              {advanced && (
+                <RelatedSessionsBanner
+                  conversationId={selected}
+                  customerName={convo?.customer?.name ?? null}
+                  onOpenConversation={(id) => setSelected(id)}
+                />
+              )}
 
               {/* Staff chips (PLN-261027 Merge-Add D9) — only when the room holds more than one staff member. */}
               {multiStaff && (
@@ -1436,8 +1600,9 @@ export function LiveChatPage() {
                         {m.senderType === 'ai' && (
                           <span className="mb-0.5 flex items-center gap-1 text-xs font-medium text-lavender-700">
                             <Bot className="h-3 w-3" /> {t('bubble.autoReply')}
-                            {/* The AI agent is per conversation; a merged room mixes conversations. */}
-                            {convo?.aiAgentName && (!m.conversationId || m.conversationId === selected) && (
+                            {/* The AI agent is per conversation; a merged room mixes conversations.
+                                With a single AI agent its name says nothing (PLN-261119). */}
+                            {convo?.aiAgentName && (advanced || multiAgent) && (!m.conversationId || m.conversationId === selected) && (
                               <span className="font-normal text-lavender-600">· {convo.aiAgentName}</span>
                             )}
                           </span>
@@ -1477,7 +1642,7 @@ export function LiveChatPage() {
                         {m.attachments && m.attachments.length > 0 && (
                           <MessageAttachments attachments={m.attachments} outbound={outbound} />
                         )}
-                        {m.senderType === 'ai' && canManageKnowledge && (
+                        {m.senderType === 'ai' && canManageKnowledge && advanced && (
                           <button
                             type="button"
                             onClick={() =>
@@ -1497,7 +1662,7 @@ export function LiveChatPage() {
                           </button>
                         )}
                         {/* Accuracy verdict (PLN-261015 D7) on AI and agent answers. */}
-                        {(m.senderType === 'ai' || m.senderType === 'agent') && selected && (
+                        {(m.senderType === 'ai' || m.senderType === 'agent') && selected && advanced && (
                           <AnswerRatingControl
                             key={`${m.id}-${m.rating?.updatedAt ?? ''}`}
                             conversationId={selected}
@@ -1515,22 +1680,24 @@ export function LiveChatPage() {
                             {renderTranslateControl(m.id)}
                             {msgActionsVisible && (
                               <>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setKbQuestion(m.body);
-                                    kbInputRef.current?.scrollIntoView({
-                                      behavior: 'smooth',
-                                      block: 'center',
-                                    });
-                                    kbInputRef.current?.focus({ preventScroll: true });
-                                  }}
-                                  aria-label={t('msgActions.knowledge')}
-                                  title={t('msgActions.knowledge')}
-                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                                >
-                                  <BookOpen className="h-3.5 w-3.5" />
-                                </button>
+                                {advanced && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setKbQuestion(m.body);
+                                      kbInputRef.current?.scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'center',
+                                      });
+                                      kbInputRef.current?.focus({ preventScroll: true });
+                                    }}
+                                    aria-label={t('msgActions.knowledge')}
+                                    title={t('msgActions.knowledge')}
+                                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                  >
+                                    <BookOpen className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => setQuote({ messageId: m.id, excerpt: m.body.replace(/\s+/g, ' ').trim().slice(0, 80) })}
@@ -1540,23 +1707,25 @@ export function LiveChatPage() {
                                 >
                                   <Reply className="h-3.5 w-3.5" />
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setIssueTarget({
-                                      messageId: m.id,
-                                      excerpt: m.body.replace(/\s+/g, ' ').trim().slice(0, 120),
-                                    });
-                                    setIssueType('other');
-                                    setIssueMemo('');
-                                    setIssueOpen(true);
-                                  }}
-                                  aria-label={t('msgActions.fileIssue')}
-                                  title={t('msgActions.fileIssue')}
-                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                                >
-                                  <ClipboardPlus className="h-3.5 w-3.5" />
-                                </button>
+                                {advanced && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIssueTarget({
+                                        messageId: m.id,
+                                        excerpt: m.body.replace(/\s+/g, ' ').trim().slice(0, 120),
+                                      });
+                                      setIssueType('other');
+                                      setIssueMemo('');
+                                      setIssueOpen(true);
+                                    }}
+                                    aria-label={t('msgActions.fileIssue')}
+                                    title={t('msgActions.fileIssue')}
+                                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                  >
+                                    <ClipboardPlus className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
                               </>
                             )}
                           </div>
@@ -1828,41 +1997,129 @@ export function LiveChatPage() {
           )}
         </div>
 
-        {/* Context + briefing */}
+        {/* Context (PLN-261119): the customer first — who this is and what
+            they ordered. Team tools follow, for those who switched them on. */}
         <div className="col-span-3 min-h-0 space-y-4 overflow-y-auto">
           {/* A group asks a different question than a thread does: not "what is
               this conversation about" but "what does this relationship look
-              like". So the briefing gives way to the journey report here, and
-              only here (PLN-260825). */}
+              like". So the journey report takes the column here (PLN-260825). */}
           {selectedGroup ? (
             <>
               {/* Journey management above the analysis (PLN-261006 P2). */}
               <JourneyCard groupId={selectedGroup} />
               <JourneyPanel groupId={selectedGroup} />
             </>
-          ) : (
+          ) : selected ? (
             <>
-              {/* Who handled it, in order (PLN-261027 S2). */}
-              <HandlerHistoryCard
-                conversationId={selected}
-                // Re-read on owner/status changes, an auto-reply switch and each staff reply (PLN-261027 Takeover).
-                version={`${convo?.status ?? ''}|${convo?.assignedTo ?? ''}|${convo?.autoReplyMode ?? ''}|${
-                  (convo?.messages ?? []).filter((m) => m.senderType === 'agent').length
-                }`}
-                aiAgentName={convo?.aiAgentName}
-              />
-              {/* On-demand briefing + translation (REQ-260824 R3). */}
-              <BriefingCard conversationId={selected} />
+              <div className="rounded-lg border border-gray-200 bg-white p-4" data-testid="customer-card">
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
+                  <User className="h-4 w-4 text-gray-500" /> {t('customer')}
+                </div>
+                {convo?.customer?.unverified && (
+                  // Filed under this customer by an unsigned host sign-in (PLN-261023 S4).
+                  <p className="mb-2">
+                    <Badge tone="warning">{t('unverifiedCustomer')}</Badge>
+                  </p>
+                )}
+                {convo?.customer ? (
+                  <dl className="space-y-2 text-sm">
+                    <Row label={t('name')} value={customerPanel.name} />
+                    <Row label={t('email')} value={customerPanel.email} />
+                    <Row label={t('phone')} value={customerPanel.phone} />
+                    <div className="flex items-center justify-between">
+                      <dt className="text-gray-500">{t('tier')}</dt>
+                      <dd>{convo.customer.tier ? <Badge tone="primary">{convo.customer.tier}</Badge> : '—'}</dd>
+                    </div>
+                  </dl>
+                ) : convo?.identity?.name || convo?.identity?.userId ? (
+                  // No customer on record, but the host said who this is (claimed).
+                  <dl className="space-y-2 text-sm">
+                    <Row label={t('name')} value={convo.identity.name ?? '—'} />
+                    <Row label={t('hostUserId')} value={convo.identity.userId ?? '—'} />
+                    {convo.identity.role && <Row label={t('hostRole')} value={convo.identity.role} />}
+                  </dl>
+                ) : (
+                  <p className="text-sm text-gray-400">{t('noCustomerContext')}</p>
+                )}
+                {advanced && <VisitorIpRow conversationId={selected} ip={convo?.visitorIp ?? null} canReveal={canRevealCustomer} />}
+                {convo?.customer && canRevealCustomer && customerPanel.masked !== false && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="mt-2"
+                    disabled={revealingCustomer}
+                    onClick={() => void onRevealCustomer()}
+                  >
+                    <Eye className="h-4 w-4" /> {t('revealCustomer')}
+                  </Button>
+                )}
+                {convo?.customer && customerPanel.masked === false && (
+                  <p className="mt-2 text-xs text-gray-500">{t('revealedNotice')}</p>
+                )}
+                {/* Linking a chat to a customer by hand: signed-in shoppers are
+                    linked already, so this is an advanced tool. */}
+                {advanced && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setMatchOpen(true);
+                      }}
+                    >
+                      <Search className="h-4 w-4" /> {t('matchCustomer')}
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => setCreateOpen(true)}>
+                      <UserPlus className="h-4 w-4" /> {t('createCustomer')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {convo?.hotel && <HotelCard hotel={convo.hotel} />}
+
+              {convo?.customer?.recentOrders && convo.customer.recentOrders.length > 0 && (
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <div className="mb-3 text-sm font-semibold text-gray-800">{t('recentOrders')}</div>
+                  <ul className="space-y-2">
+                    {convo.customer.recentOrders.map((o) => (
+                      <li key={o.id} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">#{o.id}</span>
+                        <StatusBadge status={o.status ?? undefined} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Internal notes (REQ-260824 R4): always where some exist, so a
+                  colleague's note is never hidden; otherwise an advanced tool. */}
+              {(advanced || (notes?.length ?? 0) > 0) && <CommentCard conversationId={selected} />}
+
+              {advanced && (
+                <>
+                  {/* Who handled it, in order (PLN-261027 S2). */}
+                  <HandlerHistoryCard
+                    conversationId={selected}
+                    // Re-read on owner/status changes, an auto-reply switch and each staff reply (PLN-261027 Takeover).
+                    version={`${convo?.status ?? ''}|${convo?.assignedTo ?? ''}|${convo?.autoReplyMode ?? ''}|${
+                      (convo?.messages ?? []).filter((m) => m.senderType === 'agent').length
+                    }`}
+                    aiAgentName={convo?.aiAgentName}
+                  />
+                  {/* On-demand briefing + translation (REQ-260824 R3). */}
+                  <BriefingCard conversationId={selected} />
+                </>
+              )}
             </>
-          )}
+          ) : null}
 
-          {/* Internal notes on the thread / its session (REQ-260824 R4). */}
-          <CommentCard conversationId={selected} />
-
-          {/* Knowledge lookup + draft delivery (PLN-260810 S2/S3). Read-only:
-              asking never touches the conversation, and sending goes through
-              the normal agent-reply path so moderation and the audit trail
-              apply exactly as they do to anything a person types. */}
+          {/* Knowledge lookup + draft delivery (PLN-260810 S2/S3) — advanced.
+              Read-only: asking never touches the conversation, and sending goes
+              through the normal agent-reply path so moderation and the audit
+              trail apply exactly as they do to anything a person types. */}
+          {advanced && (
           <div className="rounded-lg border border-gray-200 bg-white p-4">
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-800">
               <BookOpen className="h-4 w-4 text-primary-500" /> {t('kbLookup')}
@@ -1968,85 +2225,6 @@ export function LiveChatPage() {
               </div>
             )}
           </div>
-
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
-              <User className="h-4 w-4 text-gray-500" /> {t('customer')}
-            </div>
-            {convo?.customer?.unverified && (
-              // Filed under this customer by an unsigned host sign-in (PLN-261023 S4).
-              <p className="mb-2">
-                <Badge tone="warning">{t('unverifiedCustomer')}</Badge>
-              </p>
-            )}
-            {convo?.customer ? (
-              <dl className="space-y-2 text-sm">
-                <Row label={t('name')} value={customerPanel.name} />
-                <Row label={t('email')} value={customerPanel.email} />
-                <Row label={t('phone')} value={customerPanel.phone} />
-                <div className="flex items-center justify-between">
-                  <dt className="text-gray-500">{t('tier')}</dt>
-                  <dd>{convo.customer.tier ? <Badge tone="primary">{convo.customer.tier}</Badge> : '—'}</dd>
-                </div>
-              </dl>
-            ) : convo?.identity?.name || convo?.identity?.userId ? (
-              // No customer on record, but the host said who this is (claimed).
-              <dl className="space-y-2 text-sm">
-                <Row label={t('name')} value={convo.identity.name ?? '—'} />
-                <Row label={t('hostUserId')} value={convo.identity.userId ?? '—'} />
-                {convo.identity.role && <Row label={t('hostRole')} value={convo.identity.role} />}
-              </dl>
-            ) : (
-              <p className="text-sm text-gray-400">{t('noCustomerContext')}</p>
-            )}
-            {selected && <VisitorIpRow conversationId={selected} ip={convo?.visitorIp ?? null} canReveal={canRevealCustomer} />}
-            {convo?.customer && canRevealCustomer && customerPanel.masked !== false && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="mt-2"
-                disabled={revealingCustomer}
-                onClick={() => void onRevealCustomer()}
-              >
-                <Eye className="h-4 w-4" /> {t('revealCustomer')}
-              </Button>
-            )}
-            {convo?.customer && customerPanel.masked === false && (
-              <p className="mt-2 text-xs text-gray-500">{t('revealedNotice')}</p>
-            )}
-            {selected && (
-              <div className="mt-3 flex flex-col gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setMatchOpen(true);
-                  }}
-                >
-                  <Search className="h-4 w-4" /> {t('matchCustomer')}
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => setCreateOpen(true)}>
-                  <UserPlus className="h-4 w-4" /> {t('createCustomer')}
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {convo?.hotel && <HotelCard hotel={convo.hotel} />}
-
-          {convo?.customer?.recentOrders && convo.customer.recentOrders.length > 0 && (
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <div className="mb-3 text-sm font-semibold text-gray-800">{t('recentOrders')}</div>
-              <ul className="space-y-2">
-                {convo.customer.recentOrders.map((o) => (
-                  <li key={o.id} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">#{o.id}</span>
-                    <StatusBadge status={o.status ?? undefined} />
-                  </li>
-                ))}
-              </ul>
-            </div>
           )}
         </div>
       </div>

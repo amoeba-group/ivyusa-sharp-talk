@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { liveChatService } from './live-chat.service';
-import type { AnswerRatingValue, CustomerLead } from './live-chat.service';
+import type { AgentSession, AnswerRatingValue, CustomerLead } from './live-chat.service';
 import { useTenantKey } from '@/lib/use-tenant-key';
 import { toast } from '@/store/toast-store';
 
@@ -708,5 +708,90 @@ export function useRateAnswer(conversationId: string | null) {
       toast.success(v.rating === 'accurate' ? t('rating.savedAccurate') : t('rating.savedGap'));
     },
     onError: (e: Error) => toast.error(e.message || t('rating.saveError'), { sticky: true }),
+  });
+}
+
+// ---- read / unread per staff member (PLN-261119) ----
+
+const unreadCountKey = (tenantKey: unknown) => ['agent', tenantKey, 'unread-count'] as const;
+
+/** Conversations holding a customer message the signed-in staff member has not opened. */
+export const useLiveChatUnreadCount = () => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: unreadCountKey(tenantKey),
+    queryFn: () => liveChatService.unreadCount(),
+    // The sidebar shows it on every page; a quarter-minute is soon enough
+    // there, and the Live Chat list itself refreshes every 5 s. After a
+    // failure (say, no Live Chat permission) it stops asking on a timer.
+    refetchInterval: (query) => (query.state.status === 'error' ? false : 15_000),
+    refetchOnWindowFocus: 'always',
+    retry: false,
+  });
+};
+
+/** Set one row's unread count in every cached list, so the change shows at once. */
+function setRowUnread(qc: QueryClient, tenantKey: unknown, id: string, unreadCount: number) {
+  qc.setQueriesData<AgentSession[]>({ queryKey: ['agent', tenantKey, 'sessions'] }, (rows) =>
+    Array.isArray(rows) ? rows.map((r) => (r.id === id ? { ...r, unreadCount } : r)) : rows,
+  );
+}
+
+/**
+ * Mark a conversation read. Opening one does it, so success has no toast — the
+ * row's mark going away is the feedback. A failure is reported: the row would
+ * otherwise light up again with no reason given.
+ */
+export function useMarkRead() {
+  const { t } = useTranslation('livechat');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (id: string) => liveChatService.markRead(id),
+    onMutate: async (id) => {
+      // A list poll already on its way would put the old count back.
+      await qc.cancelQueries({ queryKey: ['agent', tenantKey, 'sessions'] });
+      setRowUnread(qc, tenantKey, id, 0);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: unreadCountKey(tenantKey) }),
+    onError: (e: Error) => {
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'sessions'] });
+      toast.error(e.message || t('unread.failed'));
+    },
+  });
+}
+
+/** Mark a conversation unread again: its customer's last message counts as new. */
+export function useMarkUnread() {
+  const { t } = useTranslation('livechat');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (id: string) => liveChatService.markUnread(id),
+    onSuccess: (res, id) => {
+      if (!res.ok) {
+        toast.warning(t('unread.nothing'));
+        return;
+      }
+      setRowUnread(qc, tenantKey, id, 1);
+      qc.invalidateQueries({ queryKey: unreadCountKey(tenantKey) });
+    },
+    onError: (e: Error) => toast.error(e.message || t('unread.failed'), { sticky: true }),
+  });
+}
+
+/** Mark every conversation read for the signed-in staff member. */
+export function useReadAll() {
+  const { t } = useTranslation('livechat');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: () => liveChatService.readAll(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'sessions'] });
+      qc.invalidateQueries({ queryKey: unreadCountKey(tenantKey) });
+      toast.success(t('unread.allRead'));
+    },
+    onError: (e: Error) => toast.error(e.message || t('unread.failed'), { sticky: true }),
   });
 }

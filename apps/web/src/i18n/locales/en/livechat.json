@@ -60,7 +60,8 @@
     "all": "All",
     "queue": "Needs agent",
     "ended": "Ended",
-    "groups": "Groups"
+    "groups": "Groups",
+    "unread": "Unread"
   },
   "sync": "Sync",
   "syncHint": "Fetch the latest messages now",
@@ -373,7 +374,8 @@
     "saved": "Conversation pinned.",
     "cleared": "Pin removed.",
     "saveError": "Could not update the pin.",
-    "limitReached": "Pin limit reached (3 per store). Unpin one first."
+    "limitReached": "Pin limit reached (3 per store). Unpin one first.",
+    "pinned": "Pinned"
   },
   "msgActions": {
     "translate": "Translate",
@@ -709,8 +711,8 @@
   },
   "threadEvent": {
     "callback": "Callback request",
-    "feedback": "Customer feedback",
-    "stars": "{{n}} stars"
+    "rated": "Customer rated this chat",
+    "ratedAs": "Rated {{level}}"
   },
   "staff": {
     "label": "Staff",
@@ -755,5 +757,48 @@
     "reopenedToast": "Opened again.",
     "updateError": "Couldn't update the inquiry.",
     "openConversation": "Open conversation #{{id}}"
+  },
+  "unread": {
+    "count": "{{count}} unread",
+    "navBadge": "{{count}} conversations with unread messages",
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
+    "markAllRead": "Mark all as read",
+    "allRead": "All conversations are marked as read.",
+    "nothing": "The customer has not written here yet, so there is nothing to mark as unread.",
+    "failed": "Could not update the read status.",
+    "empty": "No unread conversations."
+  },
+  "row": {
+    "from": "{{who}}:",
+    "customer": "Customer",
+    "ai": "AI",
+    "notice": "Notice",
+    "waiting": "Needs an agent",
+    "agent": "With an agent",
+    "ended": "Ended"
+  },
+  "state": {
+    "ai": "AI is answering",
+    "aiOff": "AI is off",
+    "waiting": "Needs an agent",
+    "agent": "With {{name}}",
+    "agentUnknown": "With an agent",
+    "ended": "Ended",
+    "draft": "Draft waiting for approval"
+  },
+  "more": "More",
+  "advanced": {
+    "label": "Advanced tools",
+    "hint": "Shows grouping, merged rooms, AI-agent routing, knowledge lookup, briefings, handling history and answer ratings."
+  },
+  "acceptHint": "You take this chat. The AI stops answering it.",
+  "endHint": "Ends the chat. The customer is asked to rate it.",
+  "csatLevel": {
+    "1": "Dissatisfied",
+    "2": "Somewhat dissatisfied",
+    "3": "Neutral",
+    "4": "Satisfied",
+    "5": "Very satisfied"
   }
 }

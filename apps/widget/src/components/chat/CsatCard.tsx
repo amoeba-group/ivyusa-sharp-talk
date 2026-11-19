@@ -27,6 +27,10 @@ import {
  * recorded against it — four faces on the same scale keep every average, old
  * and new, comparable. `survey` keeps all five in its segmented box.
  *
+ * Once rated, the card stays with the chosen face lit and the others dimmed,
+ * nothing pressable (PLN-261119). `initial` is the rating the server already
+ * holds, so the same card comes back after a reload instead of vanishing.
+ *
  * Skipping is a first-class outcome, not a failure. The parent owns it
  * (`onSkip`): it remembers the choice per conversation, so a shopper who does
  * not want to rate is not asked again every time they reopen the widget, and it
@@ -40,18 +44,21 @@ export function CsatCard({
   mode = 'rating',
   onRate,
   onSkip,
+  initial = null,
 }: {
   mode?: 'rating' | 'survey';
   onRate: (rating: number, survey?: CsatSurveyAnswers) => Promise<void>;
   onSkip: () => void;
+  /** A rating already on record — the card opens read-only with it lit. */
+  initial?: number | null;
 }) {
   const { t } = useTranslation();
-  const [submitted, setSubmitted] = useState<number | null>(null);
+  const [submitted, setSubmitted] = useState<number | null>(initial);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   // Survey answers held until [Submit].
   const [resolved, setResolved] = useState<boolean | null>(null);
-  const [rating, setRating] = useState<number | null>(null);
+  const [rating, setRating] = useState<number | null>(initial);
   const [reason, setReason] = useState<string | null>(null);
   const [comment, setComment] = useState('');
 
@@ -120,7 +127,8 @@ export function CsatCard({
       >
         <p className="mb-3 text-sm font-medium text-gray-800">{t('chat.csatTitle')}</p>
         <div className="flex justify-center gap-1" role="group" aria-label={t('chat.csatTitle')}>
-          {RATING_FACES.map((value) => {
+          {/* A rating from the old five-face card (a 2) shows on the scale it was given on. */}
+          {(submitted != null && !(RATING_FACES as readonly number[]).includes(submitted) ? [1, 2, 3, 4, 5] : RATING_FACES).map((value) => {
             const chosen = submitted === value;
             const label = t(`chat.csatLevel.${value}`);
             return (
@@ -195,7 +203,12 @@ export function CsatCard({
         )}
       </div>
       {submitted != null ? (
-        <p className="px-4 py-5 text-center text-sm text-gray-700">{t('chat.csatThanks')}</p>
+        // What was chosen stays visible (PLN-261119), with the thanks below it.
+        <div className="space-y-2 px-4 py-4">
+          {faces}
+          <p className="text-xs text-gray-500">{t(`chat.csatLevel.${submitted}`)}</p>
+          <p className="pt-1 text-center text-sm text-gray-700">{t('chat.csatThanks')}</p>
+        </div>
       ) : (
         <div className="space-y-4 px-4 py-4">
           <div className="space-y-2">

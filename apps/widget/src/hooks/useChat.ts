@@ -33,6 +33,9 @@ export function useChat(sessionToken: string | null) {
   // once the thread is handed off.
   const [status, setStatus] = useState<string>('none');
   const [canRate, setCanRate] = useState(false);
+  // The rating this conversation already has (PLN-261119): the card shows it,
+  // read-only, instead of disappearing once the page is reloaded.
+  const [csatRating, setCsatRating] = useState<number | null>(null);
   // Ref (not state) so the polling queryFn always sees the current value.
   const inFlight = useRef(false);
   // Highest server message id seen — the ?after_id= delta cursor (PERF-1).
@@ -50,6 +53,7 @@ export function useChat(sessionToken: string | null) {
         // The server decides whether rating is still open (24h window); the
         // widget must not offer stars the API would refuse.
         setCanRate(conv.canRate === true);
+        setCsatRating(typeof conv.csatRating === 'number' ? conv.csatRating : null);
         if (conv.conversationId != null) setConversationId(String(conv.conversationId));
         const serverMsgs = conv.messages ?? [];
         trackCursor(lastServerId, serverMsgs);
@@ -248,6 +252,7 @@ export function useChat(sessionToken: string | null) {
     if (!sessionToken || !conversationId) return;
     await rateChat(sessionToken, conversationId, rating, survey);
     setCanRate(false);
+    setCsatRating(rating);
   };
 
   return {
@@ -262,6 +267,7 @@ export function useChat(sessionToken: string | null) {
     append,
     conversationId,
     canRate,
+    csatRating,
     rate,
   };
 }

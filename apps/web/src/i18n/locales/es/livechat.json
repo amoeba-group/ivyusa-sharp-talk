@@ -60,7 +60,8 @@
     "all": "Todas",
     "queue": "Requiere agente",
     "ended": "Finalizadas",
-    "groups": "Grupos"
+    "groups": "Grupos",
+    "unread": "No leídos"
   },
   "sync": "Sincronizar",
   "syncHint": "Traer los mensajes más recientes ahora",
@@ -373,7 +374,8 @@
     "saved": "Conversación fijada.",
     "cleared": "Fijado eliminado.",
     "saveError": "No se pudo actualizar el fijado.",
-    "limitReached": "Límite de fijados alcanzado (3 por tienda). Desfija uno primero."
+    "limitReached": "Límite de fijados alcanzado (3 por tienda). Desfija uno primero.",
+    "pinned": "Fijado"
   },
   "msgActions": {
     "translate": "Traducir",
@@ -709,8 +711,8 @@
   },
   "threadEvent": {
     "callback": "Solicitud de llamada",
-    "feedback": "Opinión del cliente",
-    "stars": "{{n}} estrellas"
+    "rated": "El cliente valoró este chat",
+    "ratedAs": "Valoración: {{level}}"
   },
   "staff": {
     "label": "Personal",
@@ -755,5 +757,48 @@
     "reopenedToast": "Abierta de nuevo.",
     "updateError": "No se pudo actualizar la consulta.",
     "openConversation": "Abrir conversación #{{id}}"
+  },
+  "unread": {
+    "count": "{{count}} sin leer",
+    "navBadge": "{{count}} conversaciones con mensajes sin leer",
+    "markRead": "Marcar como leído",
+    "markUnread": "Marcar como no leído",
+    "markAllRead": "Marcar todo como leído",
+    "allRead": "Todas las conversaciones están marcadas como leídas.",
+    "nothing": "El cliente aún no ha escrito aquí, así que no hay nada que marcar como no leído.",
+    "failed": "No se pudo actualizar el estado de lectura.",
+    "empty": "No hay conversaciones sin leer."
+  },
+  "row": {
+    "from": "{{who}}:",
+    "customer": "Cliente",
+    "ai": "IA",
+    "notice": "Aviso",
+    "waiting": "Necesita un agente",
+    "agent": "Con un agente",
+    "ended": "Finalizada"
+  },
+  "state": {
+    "ai": "La IA está respondiendo",
+    "aiOff": "IA desactivada",
+    "waiting": "Necesita un agente",
+    "agent": "Con {{name}}",
+    "agentUnknown": "Con un agente",
+    "ended": "Finalizada",
+    "draft": "Borrador pendiente de aprobación"
+  },
+  "more": "Más",
+  "advanced": {
+    "label": "Herramientas avanzadas",
+    "hint": "Muestra grupos, salas combinadas, asignación de agentes de IA, consulta de conocimiento, resúmenes, historial de atención y valoración de respuestas."
+  },
+  "acceptHint": "Te encargas de este chat. La IA deja de responder.",
+  "endHint": "Finaliza el chat. Se pide al cliente que lo valore.",
+  "csatLevel": {
+    "1": "Insatisfecho",
+    "2": "Algo insatisfecho",
+    "3": "Neutral",
+    "4": "Satisfecho",
+    "5": "Muy satisfecho"
   }
 }

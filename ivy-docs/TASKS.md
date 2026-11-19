@@ -248,7 +248,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
   - Contact Support trả lời **trong luồng chat** (BUG-024): bong bóng khách, "Please choose how you'd like to reach us.", thẻ 📧 Email inquiry · Open 24 hours · Reply within 1 business day · email, chip Start over.
   - Thẻ email mở form Name · Email · Message (điền sẵn tên và email khi đã đăng nhập). Lỗi hiện dưới từng ô, không gọi API. Gửi lỗi → toast lỗi, form giữ nội dung. Gửi xong → thẻ tối "YOUR INQUIRY" + bong bóng "Your message has been sent successfully."
   - API `POST /inquiries { name, email, message }`: cần consent; cùng luật kiểm tra với widget (`inquiryProblems`); khách chưa đăng nhập được tạo lead từ email; tối đa 5 lần / phiên / giờ; email đã xin xoá thì từ chối. Mail tới email hỗ trợ (Reply-To = khách) nếu server có SMTP.
-  - Console → chuông 🔔 → View all → Alarm center → tab **Inquiries** (`/live-chat/alerts?tab=inquiries`, không có trong menu trái): danh sách (email che bớt), mở một inquiry (đọc đầy đủ, ghi audit), **Reply by email**, **Mark answered** / Open again.
+  - Console → menu trái **Inquiries** (`/live-chat/inquiries`, từ 2026-11-19); vẫn có ở chuông 🔔 → View all → Alarm center → tab Inquiries: danh sách (email che bớt), mở một inquiry (đọc đầy đủ, ghi audit), **Reply by email**, **Mark answered** / Open again.
   - Xoá dữ liệu cá nhân xoá luôn tên / email / nội dung của inquiry; DSAR xuất 3 trường này.
   - Thêm `@T11` vào `test:ci`.
 - **TC:** TC-11-01..08 — **8/8** ✅ (05: thẻ live chat khi tenant bật; 06: gửi lỗi; 07: tenant không cấu hình; 08: gửi thật lên API).
@@ -348,3 +348,12 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 ### Bổ sung 2026-11-19 · Số chưa đọc của Chat và tên nhân viên hiện với khách — ✅ code · ⏳ đặt trên production · [RPT](../docs/implementation/RPT-261119-IVY-Chat-Badge-And-Agent-Label.md)
 - BUG-041: thông báo "nhân viên đã trả lời" tính vào tab Chat, tự đọc khi mở Chat.
 - Tuỳ chọn thiết kế `agentName: label`: khách thấy nhãn chung (Tenant Settings → Agent sender name, ví dụ "Ivyusa Support") thay cho tên và ảnh của nhân viên. Chủ dự án yêu cầu ngày 2026-11-19.
+
+### Bổ sung 2026-11-19 · Console: menu Inquiries, ẩn tab Callback requests — ✅ deploy · [RPT](../docs/implementation/RPT-261119-IVY-Console-Inquiries-Menu.md)
+- Inquiries có mục riêng ở menu trái; tab Callback requests chỉ hiện khi tenant dùng gọi lại.
+
+### Bổ sung 2026-11-19 · Console Live Chat: đã đọc / chưa đọc, ít nút hơn, mặt đánh giá — ✅ code · ⏳ SQL + deploy · [PLN](../docs/plan/PLN-261119-Console-LiveChat-Unread-And-Csat-Faces.md) · [RPT](../docs/implementation/RPT-261119-Console-LiveChat-Unread-And-Csat-Faces.md)
+- **Chủ dự án duyệt:** `1. ok 2. a 3. a 4. ok` — chưa đọc tính riêng cho từng nhân viên; mặt đánh giá ở cả widget và console; chủ dự án chạy SQL trên server.
+- Bảng mới `conversation_reads` (`sql/261119-conversation-reads.sql`, **chạy trước khi push**). Bộ lọc Unread, số ở menu trái, Mark as unread / Mark all as read.
+- Đầu cuộc trò chuyện còn Accept · End · More; công cụ nhóm (gộp phòng, nhóm, chọn AI agent, tra cứu kiến thức, tóm tắt, lịch sử xử lý, chấm câu trả lời) nằm sau công tắc **Advanced tools**. Bỏ nút Sync.
+- BUG-043 (thẻ đánh giá mất khi tải lại trang), TC-12-07.
