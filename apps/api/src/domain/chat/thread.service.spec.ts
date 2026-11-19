@@ -135,14 +135,18 @@ describe('ThreadService', () => {
   describe('previousExcerpt', () => {
     const conv = { id: 50, prevConversationId: 40 } as never;
     it('formats the last turns, scrubs a phone number the customer typed, dates the excerpt', async () => {
-      const prev = { id: '40', createdAt: new Date('2026-10-20T03:00:00Z') };
+      // Relative, not a calendar date: an excerpt older than 30 days is dropped,
+      // so the fixed '2026-10-20' this used to carry turned the test red on
+      // 2026-11-19 with nothing changed (and with it the deploy gate).
+      const created = new Date(Date.now() - 10 * 86_400_000);
+      const prev = { id: '40', createdAt: created };
       const msgs = [
         { senderType: 'ai', body: 'Kiểm tra trong mục Đối soát.' },
         { senderType: 'user', body: 'Gọi tôi 0901234567 về đối soát' },
       ];
       const svc = new ThreadService(repo({ findOne: jest.fn(async () => prev) }), repo({ find: jest.fn(async () => msgs) }), tenantOn(), repo(), aiConfig());
       const text = await svc.previousExcerpt(4, conv);
-      expect(text).toContain('(2026-10-20)');
+      expect(text).toContain(`(${created.toISOString().slice(0, 10)})`);
       expect(text).toContain('Customer: ');
       expect(text).toContain('Support: Kiểm tra');
       expect(text).not.toContain('0901234567');

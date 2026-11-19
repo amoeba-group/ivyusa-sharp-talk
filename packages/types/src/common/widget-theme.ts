@@ -173,6 +173,15 @@ export type DisclosurePlacement = (typeof DISCLOSURE_PLACEMENT)[keyof typeof DIS
  * is honoured down to 3:1, the floor for large text and controls, and ignored
  * below that, so a yellow brand still cannot ship unreadable buttons.
  */
+/**
+ * The "Knowledge referenced" list under an AI answer (ivy-docs PLN-261119).
+ * `shown` is what every tenant has had. `hidden` draws nothing there: the
+ * list names internal documents and makes each answer long. Agents still see
+ * an answer's sources in the console.
+ */
+export const CITATIONS_DISPLAY = { SHOWN: 'shown', HIDDEN: 'hidden' } as const;
+export type CitationsDisplay = (typeof CITATIONS_DISPLAY)[keyof typeof CITATIONS_DISPLAY];
+
 export const ON_BRAND = { AUTO: 'auto', WHITE: 'white' } as const;
 export type OnBrand = (typeof ON_BRAND)[keyof typeof ON_BRAND];
 /** The lowest contrast at which `onBrand: white` is still honoured. */
@@ -224,6 +233,8 @@ export interface WidgetDesign {
   disclosurePlacement?: DisclosurePlacement | null;
   /** Absent = `auto` — see ON_BRAND. */
   onBrand?: OnBrand | null;
+  /** Absent = `shown` — see CITATIONS_DISPLAY. */
+  citations?: CitationsDisplay | null;
   /** Uploaded images for the avatar slots; a missing slot draws the built-in glyph. */
   icons?: WidgetIconSlots | null;
   /**
@@ -616,6 +627,7 @@ export function normalizeDesign(input: unknown): WidgetDesign | null {
   if (raw.disclosurePlacement === DISCLOSURE_PLACEMENT.BOTTOM) out.disclosurePlacement = DISCLOSURE_PLACEMENT.BOTTOM;
   if (raw.disclosurePlacement === DISCLOSURE_PLACEMENT.HIDDEN) out.disclosurePlacement = DISCLOSURE_PLACEMENT.HIDDEN;
   if (raw.onBrand === ON_BRAND.WHITE) out.onBrand = ON_BRAND.WHITE;
+  if (raw.citations === CITATIONS_DISPLAY.HIDDEN) out.citations = CITATIONS_DISPLAY.HIDDEN;
   if (raw.icons && typeof raw.icons === 'object') {
     const icons: WidgetIconSlots = {};
     for (const slot of ICON_SLOTS) {

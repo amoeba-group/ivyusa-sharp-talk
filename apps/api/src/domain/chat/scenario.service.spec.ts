@@ -86,6 +86,27 @@ describe('ScenarioService consent gate', () => {
     expect(result.followUps.length).toBeGreaterThan(0);
   });
 
+  // BUG-038: the widget draws the pressed button's label at once. Storing the
+  // script's own sentence instead made the bubble change when the thread was re-read.
+  it("keeps the pressed button's label as the shopper's line", async () => {
+    effectiveConsentFor.mockResolvedValue(CONSENT_STATE.GRANTED);
+    await svc.handle(session, 'delivery_status', undefined, '  Delivery   inquiry ');
+    const userTurn = msgSave.mock.calls[0][0];
+    expect(userTurn).toMatchObject({ senderType: 'user', body: 'Delivery inquiry' });
+    // Which script ran is still on the record for the console and reports.
+    expect(userTurn.retrievalTrace).toMatchObject({ scenario: 'delivery_status', kind: 'button' });
+  });
+
+  it("falls back to the script's own sentence when no label is sent, and caps a long one", async () => {
+    effectiveConsentFor.mockResolvedValue(CONSENT_STATE.GRANTED);
+    await svc.handle(session, 'shipping_policy');
+    expect(msgSave.mock.calls[0][0].body).toBe('How long does shipping take?');
+    await svc.handle(session, 'shipping_policy', undefined, 'x'.repeat(300));
+    expect(msgSave.mock.calls[2][0].body).toHaveLength(120);
+    await svc.handle(session, 'shipping_policy', undefined, '   ');
+    expect(msgSave.mock.calls[4][0].body).toBe('How long does shipping take?');
+  });
+
   it('records the tapped chip as an Inquiry step, like a typed message (REQ-261008 F3)', async () => {
     effectiveConsentFor.mockResolvedValue(CONSENT_STATE.GRANTED);
     await svc.handle(session, 'shipping_policy');

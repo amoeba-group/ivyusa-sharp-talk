@@ -318,6 +318,7 @@ export class WidgetDesignService {
       attachIcon: d.attachIcon ?? null,
       disclosurePlacement: d.disclosurePlacement ?? null,
       onBrand: d.onBrand ?? null,
+      citations: d.citations ?? null,
       icons: Object.fromEntries(ICON_SLOTS.map((slot) => [slot, byRole.get(slot) ?? null])),
     });
     if (!design) throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);

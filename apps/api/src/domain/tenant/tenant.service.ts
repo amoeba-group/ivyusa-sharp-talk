@@ -890,6 +890,7 @@ export class TenantService {
       attachIcon: d.attach_icon ?? null,
       disclosurePlacement: d.disclosure_placement ?? null,
       onBrand: d.on_brand ?? null,
+      citations: d.citations ?? null,
       icons: {
         botAvatar: await ref(d.bot_avatar_uuid, 'icon'),
         agentAvatar: await ref(d.agent_avatar_uuid, 'icon'),

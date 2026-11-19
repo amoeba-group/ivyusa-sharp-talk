@@ -383,3 +383,11 @@ describe('composer and brand-text options (ivy-docs PLN-261118 composer)', () =>
     expect(buildThemeVariables({ ...base, design: { onBrand: 'white' } })['--ivy-on-primary']).toBe('255 255 255');
   });
 });
+
+describe('knowledge references option (ivy-docs PLN-261119)', () => {
+  it('keeps only the non-default choice', () => {
+    expect(normalizeDesign({ citations: 'hidden' })).toEqual({ citations: 'hidden' });
+    expect(normalizeDesign({ citations: 'shown' })).toBeNull();
+    expect(normalizeDesign({ citations: 'gone' })).toBeNull();
+  });
+});

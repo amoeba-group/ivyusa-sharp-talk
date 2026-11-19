@@ -33,6 +33,8 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-039 | Test `thread.service.spec.ts` **tự đỏ từ 2026-11-19** (ghi cứng ngày, code có giới hạn 30 ngày) → chặn cổng deploy | API · Test | 🟠 | Fixed (2026-11-19) | — |
+| BUG-038 | Bấm nút có kịch bản ("Delivery inquiry"): **bong bóng tự đổi** thành câu soạn sẵn ("How long does shipping take?") sau vài giây | API · Widget | 🟠 | Fixed code (2026-11-19) | T08 |
 | BUG-037 | Khách đã đăng nhập (nhận diện bằng chữ ký từ theme) **mất đoạn chat mỗi lần chuyển trang** | API · Widget | 🔴 | Fixed code (2026-11-18); chờ chủ dự án thử lại | — |
 | BUG-036 | iPhone: chạm vào ô nhập của widget thì **cả trang bị phóng to** và không thu lại (ô nhập chữ ~11px, iOS phóng to khi dưới 16px) | Widget | 🔴 | Fixed code (2026-11-18, [FIX](../docs/bug-fix/FIX-261118-Widget-iOS-Zoom-On-Focus.md)); chờ chủ dự án thử lại trên máy thật | T15 |
 | BUG-035 | Đơn đã **Delivered bị kéo về In Transit** ở lượt đồng bộ kế tiếp: `upsertOrder` gán lại trạng thái theo `fulfillment_status` chung của đơn mỗi lần chạy | API | 🟠 | Fixed code (2026-11-18, [RPT](../docs/implementation/RPT-261118-Shopify-Sync-Fulfillment-Delivery.md)) | — |
@@ -166,6 +168,18 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-038 · Bong bóng của khách tự đổi chữ sau khi bấm nút có kịch bản
+- **Hiện tượng (chủ dự án, 2026-11-19):** bấm "Delivery inquiry" → bong bóng ghi "Delivery inquiry", vài giây sau thành "How long does shipping take?".
+- **Nguyên nhân:** widget vẽ ngay tên nút; `ScenarioService.handle` lưu `script.utterance` (câu soạn sẵn của kịch bản) làm lời của khách. `useChat` đồng bộ lại với server sau mỗi lượt và thay bong bóng tạm bằng bản đã lưu.
+- **Fix:** widget gửi `label`; server lưu tên nút đã bấm, câu soạn sẵn chỉ là dự phòng. [RPT](../docs/implementation/RPT-261119-IVY-Chat-Continuity-And-References.md).
+- **Phòng ngừa:** cái được vẽ ngay và cái được lưu phải là cùng một chuỗi; nếu server tự chọn nội dung thì widget phải lấy nội dung đó từ câu trả lời, không tự đoán.
+
+## BUG-039 · Test tự đỏ theo ngày: `thread.service.spec.ts`
+- **Hiện tượng (2026-11-19):** `previousExcerpt › formats the last turns…` đỏ mà không ai sửa gì; cổng `verify` của CI sẽ đỏ theo và chặn mọi lần deploy.
+- **Nguyên nhân:** test ghi cứng `createdAt: new Date('2026-10-20T03:00:00Z')`, còn code bỏ đoạn trích cũ hơn 30 ngày (`EXCERPT_MAX_AGE_MS`). Đúng 30 ngày sau, hàm trả `undefined`.
+- **Fix:** ngày tương đối (10 ngày trước lúc chạy).
+- **Phòng ngừa:** test của code có so sánh với "bây giờ" phải dựng mốc thời gian từ `Date.now()` hoặc dùng đồng hồ giả, không ghi ngày lịch. Trong `apps/api/src` còn khoảng 80 chỗ `new Date('2026-…')` trong các file spec; chưa rà hết.
 
 ## BUG-037 · Khách đã đăng nhập mất đoạn chat khi chuyển trang
 - **Hiện tượng (chủ dự án, bản Preview, 2026-11-18):** sau khi bật nhận diện bằng chữ ký từ theme, gửi một tin trong Chat, chuyển sang trang khác của cửa hàng, mở lại khung talk: đoạn chat trống.

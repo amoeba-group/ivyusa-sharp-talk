@@ -6,6 +6,7 @@ import { useWidgetStore } from '../../store/widgetStore';
 import { useChat } from '../../hooks/useChat';
 import { useScenario } from '../../hooks/useScenario';
 import { useAttachmentUpload } from '../../hooks/useAttachmentUpload';
+import { clearThreadInserts, loadThreadInserts, saveThreadInserts } from '../../lib/thread-inserts';
 import { adoptTenantConfig, getShopDomain } from '../../hooks/useSession';
 import { ensureSession, setConsent } from '../../services/sessionService';
 import { getStoredConsent, setStoredConsent } from '../../lib/consent';
@@ -177,6 +178,9 @@ export function ChatTab() {
   const [afterAuth, setAfterAuth] = useState<Inline>(null);
   const [inserts, setInserts] = useState<ThreadInsert[]>([]);
   const insertSeq = useRef(0);
+  // Which (session, conversation) the cards on screen were last matched
+  // against the tab's storage for — see the two effects below.
+  const insertsSyncedFor = useRef<string | null>(null);
   // The label to echo when the My Orders answer has to wait for a sign-in.
   const askedOrdersRef = useRef<string | null>(null);
   // Order Detail opened from a card in the thread, drawn over the chat (T09 D1).
@@ -401,6 +405,31 @@ export function ChatTab() {
     // to travel by email, so ask before the shopper walks away (PLN-260806).
     else if (res.needsContactEmail) setInline('contactEmail');
   }
+
+  // The widget's own cards (Contact Support, the contact form, Product Help,
+  // My Orders) survive a page change (PLN-261119): brought back once per
+  // (session, conversation), saved on every change after that. An ended chat
+  // starts clean.
+  useEffect(() => {
+    if (!sessionToken) return;
+    const scope = `${sessionToken}|${conversationId ?? ''}`;
+    if (insertsSyncedFor.current === scope) return;
+    insertsSyncedFor.current = scope;
+    setInserts((current) => {
+      if (current.length) return current; // added on this page already — keep what the shopper sees
+      const restored = loadThreadInserts<ThreadInsert>(sessionToken, conversationId ?? null);
+      for (const x of restored) {
+        const n = Number(String(x.key).split('-').pop());
+        if (Number.isFinite(n) && n > insertSeq.current) insertSeq.current = n;
+      }
+      return restored;
+    });
+  }, [sessionToken, conversationId]);
+  useEffect(() => {
+    if (!sessionToken || insertsSyncedFor.current == null) return;
+    if (status === 'ended') clearThreadInserts(sessionToken);
+    else saveThreadInserts(sessionToken, conversationId ?? null, inserts);
+  }, [inserts, sessionToken, conversationId, status]);
 
   // Auto-send a message queued from another tab (e.g. "Ask about this order").
   useEffect(() => {
@@ -653,8 +682,12 @@ export function ChatTab() {
   const lastMessage = messages[messages.length - 1];
   // Something the widget added after the last message owns the end of the
   // thread: its own chips, not the last message's or the fallback row.
-  const insertAtEnd = inserts.some((x) => x.at === messages.length);
-  const lastInsert = inserts[inserts.length - 1];
+  // A card brought back after a page change remembers how many messages were
+  // above it; if fewer came back (a local-only line is gone), it sits at the
+  // end rather than nowhere.
+  const placedInserts = inserts.map((x) => (x.at > messages.length ? { ...x, at: messages.length } : x));
+  const insertAtEnd = placedInserts.some((x) => x.at === messages.length);
+  const lastInsert = placedInserts[placedInserts.length - 1];
   const showFallbackActions =
     !!lastMessage &&
     lastMessage.senderType !== 'user' &&
@@ -667,7 +700,7 @@ export function ChatTab() {
     status !== 'ended';
 
   const renderInserts = (at: number) =>
-    inserts
+    placedInserts
       .filter((x) => x.at === at)
       .map((x) =>
         x.kind === 'orders' ? (

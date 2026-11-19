@@ -926,6 +926,10 @@
     "onBrandAuto": "Automático (legible)",
     "onBrandWhite": "Siempre blanco",
     "onBrandHint": "Automático elige texto blanco u oscuro según el contraste (4,5:1). Siempre blanco sigue un diseño que dibuja blanco sobre el color de marca; se ignora si el blanco queda por debajo de 3:1.",
+    "citations": "Referencias de conocimiento",
+    "citationsShown": "Mostradas bajo cada respuesta (predeterminado)",
+    "citationsHidden": "Ocultas",
+    "citationsHint": "La lista «Conocimiento consultado» bajo una respuesta de IA: los documentos usados, con enlaces de productos y vídeos. Ocultas quita toda la lista para el comprador; los agentes siguen viendo las fuentes en la consola.",
     "disclosureHint": "El mismo aviso legal en otro sitio. La línea inferior también enlaza los términos del servicio (Aviso de privacidad › URL de términos). Oculto quita la línea y su enlace Finalizar chat; el aviso de consentimiento y los ajustes de privacidad siguen nombrando al proveedor de IA. Comprueba tus requisitos legales antes de elegirlo."
   },
   "settingsSnapshots": {

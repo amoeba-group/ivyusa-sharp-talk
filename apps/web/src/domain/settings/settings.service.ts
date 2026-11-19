@@ -206,6 +206,8 @@ export interface WidgetDesignDraft {
   disclosurePlacement?: 'top' | 'bottom' | 'hidden';
   /** PLN-261118 composer: text on the brand colour. */
   onBrand?: 'auto' | 'white';
+  /** PLN-261119: the "Knowledge referenced" list under an AI answer. */
+  citations?: 'shown' | 'hidden';
   /** PLN-261019: uploaded icon assets for the avatar slots. */
   botAvatarUuid?: string | null;
   agentAvatarUuid?: string | null;
@@ -277,6 +279,7 @@ export function designToWire(design: WidgetDesignDraft) {
     attach_icon: design.attachIcon ?? 'paperclip',
     disclosure_placement: design.disclosurePlacement ?? 'top',
     on_brand: design.onBrand ?? 'auto',
+    citations: design.citations ?? 'shown',
     bot_avatar_uuid: design.botAvatarUuid ?? null,
     agent_avatar_uuid: design.agentAvatarUuid ?? null,
   };

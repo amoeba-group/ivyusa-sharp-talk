@@ -103,7 +103,7 @@ export class ScenarioService {
     };
   }
 
-  async handle(session: Session, action: string, text?: string): Promise<ScenarioTurnResult> {
+  async handle(session: Session, action: string, text?: string, label?: string): Promise<ScenarioTurnResult> {
     // A console BUTTON action is not always a script key: "delivery_status"
     // runs `shipping_policy`. Resolve first, or the fallback below would treat
     // a perfectly good scripted button as scriptless and answer it with RAG —
@@ -146,6 +146,14 @@ export class ScenarioService {
 
     const conversation = await this.chatService.getOrCreateConversation(session.id, session);
 
+    // The shopper's line is the button they pressed. The widget draws that
+    // label at once; storing the script's own sentence instead ("How long does
+    // shipping take?" for a button that says "Delivery inquiry") made the
+    // bubble change under them a few seconds later, when the thread was
+    // re-read (BUG-038). The script's sentence stays the fallback for a caller
+    // that sends no label, and `retrievalTrace.scenario` says which script ran.
+    const said = (label ?? '').replace(/\s+/g, ' ').trim().slice(0, 120) || script.utterance;
+
     await this.msgRepo.save(
       this.msgRepo.create({
         // Explicit tenant stamp — see ChatService.persist for why we don't rely
@@ -153,7 +161,7 @@ export class ScenarioService {
         tenantId: session.tenantId ?? null,
         conversationId: conversation.id,
         senderType: SENDER_TYPE.USER,
-        body: script.utterance,
+        body: said,
         lang: session.language,
         retrievalTrace: { scenario: action, kind: 'button' },
       }),

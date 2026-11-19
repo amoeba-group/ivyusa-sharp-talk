@@ -145,3 +145,27 @@ test.describe('T11 · contact form against the real API', () => {
     await expect(widget.panel.getByText('Your message has been sent successfully.')).toBeVisible();
   });
 });
+
+/**
+ * PLN-261119 chat continuity: the Contact Support card is the widget's own, not
+ * a stored message. A storefront page change reloads the widget, and the card
+ * used to be gone while the messages around it came back.
+ */
+test.describe('T11 · the card survives a page change', () => {
+  test('TC-11-07 Contact Support is still in the thread after the page reloads @T11', async ({ page, widget }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.openChat();
+    await widget.scenarioButton(/Contact Support/).click();
+    await expect(widget.panel.getByTestId('contact-support').last()).toBeVisible();
+    await expect(widget.panel.getByText(SUPPORT_EMAIL).last()).toBeVisible();
+
+    await page.reload();
+    await widget.open();
+    await widget.openChat();
+    await expect(widget.panel.getByTestId('contact-support').last()).toBeVisible();
+    await expect(widget.panel.getByText(SUPPORT_EMAIL).last()).toBeVisible();
+    // Brought back once, not once per render.
+    await expect(widget.panel.getByTestId('contact-support')).toHaveCount(1);
+  });
+});

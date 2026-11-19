@@ -339,3 +339,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Cách A (App Proxy) đã thử và bị chặn:** app Dev Dashboard `Ivyusa Talk Proxy` cài xong, `ivyusa.com/apps/ivy/identity` trả 504 sau 60 giây — Shopify không kết nối được tới `talk.ivyusa.com` (cùng nguyên nhân với BUG-034).
 - **Cách B (đã làm, duyệt `1. ok 2. a`):** theme ký `shopify:<mã khách>:<thời điểm>` bằng khoá Sign-in integration; API nối với khách Shopify và kéo đơn; chữ ký hết hạn sau 24 giờ.
 - **Việc của chủ dự án:** GUIDE-261118 mục 4b (tạo khoá, dán Liquid), gỡ app proxy.
+
+### Bổ sung 2026-11-19 · Chat: bong bóng không đổi chữ, thẻ còn sau khi chuyển trang, ẩn nguồn tham chiếu — ✅ code · ⏳ đặt tuỳ chọn trên production · [PLN](../docs/plan/PLN-261119-IVY-Chat-Continuity-And-References.md) · [RPT](../docs/implementation/RPT-261119-IVY-Chat-Continuity-And-References.md)
+- **Chủ dự án duyệt:** `1. ok 2. a 3. ok`.
+- BUG-038 (bong bóng đổi chữ), thẻ của widget nhớ theo tab, tuỳ chọn thiết kế `citations: hidden`. Kèm BUG-039 (test hẹn giờ).
+- **Chưa làm (2b):** lưu các lần bấm Contact Support / My Orders lên server để nhân viên thấy.

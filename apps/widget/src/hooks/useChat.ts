@@ -162,7 +162,7 @@ export function useChat(sessionToken: string | null) {
       setSending(true);
       inFlight.current = true;
       try {
-        const res = await sendScenario(sessionToken, action, text);
+        const res = await sendScenario(sessionToken, action, text, label);
         setConversationId(res.conversationId);
         // An empty body means the turn produced no visible reply — agent mode,
         // where the human answers through polling (PLN-261001 §1-2). Appending

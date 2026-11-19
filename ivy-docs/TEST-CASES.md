@@ -318,6 +318,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-11-04 | Gửi | `POST /inquiries {name, email, message}` → thẻ "YOUR INQUIRY" có đủ 3 giá trị, "Your message has been sent successfully.", "Please check your inbox…"; form biến mất | G-18 |
 | TC-11-05 | Tenant bật live chat | Có cả thẻ Email inquiry và "Chat with an agent" | G-17, Q-15 |
 | TC-11-06 | Gửi lỗi | `POST /inquiries` 500 → toast lỗi "Your message couldn't be sent…"; form giữ nội dung; không có thẻ đã gửi | CLAUDE.md §2 UX feedback |
+| TC-11-07 | Thẻ Contact Support sau khi tải lại trang (PLN-261119) | Thẻ và email hỗ trợ vẫn nằm trong đoạn chat, đúng một thẻ |
 | TC-11-07 | Tenant không cấu hình | Chỉ thẻ live chat; không có 1588-0000 / help@ivy.com / hello@ivyusa.com | BUG-010 |
 | TC-11-08 | API thật (khách chưa đăng nhập) | Đồng ý consent → form không điền sẵn → gửi → API trả 201 → bong bóng thành công | G-18, BR-14 |
 

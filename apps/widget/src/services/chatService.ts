@@ -112,11 +112,14 @@ export function sendScenario(
    * server answers it as a chat turn rather than 404ing (PLN-261001 §1-1).
    */
   text?: string,
+  /** What the pressed button says — stored as the shopper's line (BUG-038). */
+  label?: string,
 ): Promise<ScenarioReply> {
   return apiClient.post<ScenarioReply>('/chat/scenario', {
     session_token: sessionToken,
     action,
     text: text || undefined,
+    label: label ? label.slice(0, 120) : undefined,
   });
 }
 

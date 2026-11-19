@@ -37,6 +37,7 @@ const EMPTY: WidgetDesignDraft = {
   attachIcon: 'paperclip',
   disclosurePlacement: 'top',
   onBrand: 'auto',
+  citations: 'shown',
   botAvatarUuid: null,
   agentAvatarUuid: null,
 };
@@ -59,6 +60,7 @@ function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
     disclosurePlacement:
       d.disclosurePlacement === 'bottom' || d.disclosurePlacement === 'hidden' ? d.disclosurePlacement : 'top',
     onBrand: d.onBrand === 'white' ? 'white' : 'auto',
+    citations: d.citations === 'hidden' ? 'hidden' : 'shown',
     botAvatarUuid: d.icons?.botAvatar?.uuid ?? null,
     agentAvatarUuid: d.icons?.agentAvatar?.uuid ?? null,
   };
@@ -453,6 +455,13 @@ export function WidgetDesignsCard() {
                 </Select>
               </FormRow>
               <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.onBrandHint')}</p>
+              <FormRow label={t('widgetDesigns.citations')}>
+                <Select value={ed.draft.citations ?? 'shown'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, citations: e.target.value as 'shown' | 'hidden' } })} className="w-44">
+                  <option value="shown">{t('widgetDesigns.citationsShown')}</option>
+                  <option value="hidden">{t('widgetDesigns.citationsHidden')}</option>
+                </Select>
+              </FormRow>
+              <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.citationsHint')}</p>
               {cssAllowed && (
                 <FormRow label={t('widgetDesigns.customCss')}>
                   <textarea

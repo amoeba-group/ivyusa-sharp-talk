@@ -160,6 +160,8 @@ const IVY_WIDGET_PRESET = {
       attachIcon: 'none',
       disclosurePlacement: 'hidden',
       onBrand: 'white',
+      // PLN-261119: no "Knowledge referenced" list under an answer.
+      citations: 'hidden',
     },
   }),
   widgetCopy: {

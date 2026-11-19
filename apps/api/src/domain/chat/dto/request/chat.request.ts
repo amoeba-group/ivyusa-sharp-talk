@@ -43,6 +43,11 @@ export class ScenarioRequest {
    * button's own message, or its label. Ignored for scripted actions.
    */
   @IsOptional() @IsString() @MaxLength(500) text?: string;
+  /**
+   * What the button the shopper pressed says. Kept as their line in the thread,
+   * so the bubble they saw is the bubble that comes back (BUG-038).
+   */
+  @IsOptional() @IsString() @MaxLength(120) label?: string;
 }
 
 /** Address an off-hours shopper wants the answer sent to (PLN-260806). */

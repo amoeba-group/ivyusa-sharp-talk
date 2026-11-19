@@ -30,6 +30,8 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   // never chose it. AI and agent turns get a round avatar on the left and the
   // sender's name inside the bubble; the shopper's own turns are unchanged.
   const design = useWidgetStore((s) => s.widgetTheme?.design);
+  // The tenant's design may leave the "Knowledge referenced" list out (PLN-261119).
+  const citationsHidden = design?.citations === 'hidden';
   const widgetCopy = useWidgetStore((s) => s.widgetCopy);
   const language = useWidgetStore((s) => s.language);
   const isAi = message.senderType === 'ai';
@@ -132,7 +134,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         {message.attachments && message.attachments.length > 0 && (
           <MessageAttachments attachments={message.attachments} mine={mine} />
         )}
-        {message.citations && message.citations.length > 0 && (
+        {!citationsHidden && message.citations && message.citations.length > 0 && (
           <div className="mt-1.5 border-t border-gray-200 pt-1.5">
             <p className="mb-0.5 text-[10px] font-medium text-gray-500">{t('chat.citations')}</p>
             <ul className="space-y-0.5">

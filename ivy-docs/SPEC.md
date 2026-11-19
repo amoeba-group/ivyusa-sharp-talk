@@ -75,6 +75,7 @@ Mọi thiết kế đều giả định khách đã đăng nhập (tên mẫu: K
 | Nút xoá | "Delete Selected": nền xanh dương · "Delete All": viền xanh dương | |
 | Bubble bot | nền xám nhạt (~#F3F4F6), bo 12px | |
 | Bubble khách | nền xanh dương **#2B7FFF** (chủ dự án xác nhận từ Figma, 2026-11-18), chữ trắng | Trắng trên #2B7FFF là 3,7:1, dưới AA 4,5:1; chủ dự án chọn theo thiết kế (PLN-261118 composer, 3a) |
+| Nguồn tham chiếu dưới câu trả lời | **không hiện** ("Knowledge referenced") | Chủ dự án quyết 2026-11-19; tuỳ chọn thiết kế `citations: hidden`. Kéo theo: link sản phẩm / video AI gợi ý trong danh sách đó cũng không hiện |
 | Quick-reply chip | nền trắng, viền xám 1px, bo tròn, có emoji đầu | chip đang chọn: viền xanh |
 | Composer | input bo tròn "Ask Anything" + nút gửi tròn xanh 40px | form liên hệ: "Type your message" + nút gửi xám |
 | Icon promo | coupon: nền **Deep Navy #1A2E6B** (gift) · event: **Bright Magenta #E91E8C** / hồng (sparkle) | bộ 8 icon coupon ở node `993:1254`, dùng 32–40px |

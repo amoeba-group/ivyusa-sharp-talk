@@ -926,6 +926,10 @@
     "onBrandAuto": "Tự động (dễ đọc)",
     "onBrandWhite": "Luôn trắng",
     "onBrandHint": "Tự động chọn chữ trắng hoặc tối theo độ tương phản (4,5:1). Luôn trắng theo thiết kế vẽ chữ trắng trên màu thương hiệu; bị bỏ qua khi chữ trắng xuống dưới 3:1.",
+    "citations": "Nguồn tham chiếu",
+    "citationsShown": "Hiện dưới mỗi câu trả lời (mặc định)",
+    "citationsHidden": "Ẩn",
+    "citationsHint": "Danh sách “Knowledge referenced” dưới câu trả lời của AI: các tài liệu được dùng, kèm link sản phẩm và video. Ẩn sẽ bỏ cả danh sách khỏi màn hình của khách; nhân viên vẫn xem được nguồn trong console.",
     "disclosureHint": "Cùng thông báo pháp lý, chỉ đổi chỗ. Dòng dưới cũng liên kết điều khoản dịch vụ (Thông báo bảo mật › URL điều khoản). Ẩn sẽ bỏ dòng này và liên kết Kết thúc chat khỏi màn chat; thông báo đồng ý và phần cài đặt quyền riêng tư vẫn nêu nhà cung cấp AI. Hãy kiểm tra yêu cầu pháp lý trước khi chọn."
   },
   "settingsSnapshots": {
