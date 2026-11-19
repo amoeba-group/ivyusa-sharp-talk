@@ -104,6 +104,14 @@ export const ORDER_NOTIFICATION_CATEGORIES: readonly string[] = [
 export const NOTIFICATION_SCOPE = { ORDER: 'order', NOTICE: 'notice', FEED: 'feed', CHAT: 'chat' } as const;
 /** The category an agent's reply is filed under. */
 export const CHAT_NOTIFICATION_CATEGORY = 'chat';
+/**
+ * The notification categories the single list tab's chips can show — Order
+ * (`payment`, `shipping`) and Promo (`event`). Its Delivery and Review chips
+ * are lists of orders, not of notifications. A row of any other category
+ * (`issue`, `review`…) has no chip there, so it cannot be opened or read: it
+ * must not raise that tab's badge, or the badge can never be cleared (BUG-042).
+ */
+export const SINGLE_BAR_FEED_CATEGORIES: readonly string[] = ['payment', 'shipping', 'event'] as const;
 export type NotificationScope = (typeof NOTIFICATION_SCOPE)[keyof typeof NOTIFICATION_SCOPE];
 
 /**

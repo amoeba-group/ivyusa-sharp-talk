@@ -825,3 +825,57 @@ describe('NotificationService.markChatRead', () => {
     expect(h.del).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * BUG-042: with one list tab (IVY), only Order (payment, shipping) and Promo
+ * (event) rows can be shown. A notice of another category has no chip, so it
+ * cannot be read — it must not be counted, or the badge never clears.
+ */
+describe('NotificationService.unreadCount — a single list tab counts only what its chips list', () => {
+  function build(widgetTabs: string[] | null) {
+    let countWhere: Record<string, unknown> | undefined;
+    const notifRepo = {
+      count: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
+        countWhere = where;
+        return 0;
+      }),
+    } as unknown as Repository<Notification>;
+    const svc = new NotificationService(
+      notifRepo,
+      {} as unknown as Repository<NotificationPref>,
+      {} as unknown as Repository<Session>,
+      { findOne: jest.fn(async () => ({ id: 1, widgetTabs })) } as unknown as Repository<Tenant>,
+      { requireCustomerId: jest.fn(async () => 42), requireCustomer: jest.fn(async () => ({ tenantId: 1 })) } as never,
+      { subscribe: jest.fn(), publish: jest.fn() } as unknown as EventBusService,
+      { del: jest.fn(), get: jest.fn(async () => null), set: jest.fn(), available: () => false } as unknown as RedisService,
+    );
+    const categoryOf = () => countWhere!.category as unknown as { type?: string; value?: unknown } | string | undefined;
+    return { svc, categoryOf };
+  }
+
+  it('the tab badge (feed): payment, shipping, event — not issue, review or chat', async () => {
+    const h = build(['notifications', 'chat']);
+    await h.svc.unreadCount('tok', 'feed');
+    expect(h.categoryOf()).toMatchObject({ type: 'in', value: ['payment', 'shipping', 'event'] });
+  });
+
+  it('the storefront bell (no scope): the same, plus the agent replies the Chat tab shows', async () => {
+    const h = build(['notifications', 'chat']);
+    await h.svc.unreadCount('tok');
+    expect(h.categoryOf()).toMatchObject({ type: 'in', value: ['payment', 'shipping', 'event', 'chat'] });
+  });
+
+  it('the Chat badge is unaffected', async () => {
+    const h = build(['notifications', 'chat']);
+    await h.svc.unreadCount('tok', 'chat');
+    expect(h.categoryOf()).toBe('chat');
+  });
+
+  it('a widget with both list tabs keeps counting everything: its All chip lists every row', async () => {
+    const h = build(['notifications', 'orders', 'chat']);
+    await h.svc.unreadCount('tok');
+    expect(h.categoryOf()).toBeUndefined();
+    await h.svc.unreadCount('tok', 'feed');
+    expect(h.categoryOf()).toMatchObject({ type: 'not' });
+  });
+});

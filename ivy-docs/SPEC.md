@@ -137,6 +137,16 @@ Chuông trên header ivyusa.com (chấm đỏ = số chưa đọc) ─► Panel 
 - 2 tab **Notifications** và **Chat** (hiện tại code có thêm tab **Orders** → gộp vào chip Order/Delivery, xem gap §10).
 - Badge đỏ = số chưa đọc (Notifications: thông báo chưa đọc; Chat: tin nhắn chưa đọc). 0 thì ẩn badge.
 
+**Số chưa đọc được đếm thế nào (rà soát 2026-11-19, BUG-041 / BUG-042):**
+
+| Số | Đếm gì | Tăng khi | Mất khi |
+|---|---|---|---|
+| Tab **Notifications** | Thông báo chưa đọc loại `payment`, `shipping`, `event` | (1) Khách có đơn mới đã xác nhận, đặt trong 24 giờ gần nhất → dòng "Confirmed" (đơn cũ hơn được ghi sẵn là đã đọc). (2) Trạng thái giao hàng của một đơn đổi trong 48 giờ gần nhất (đã gửi / đang giao / đã giao). (3) IVY gửi một campaign từ console tới khách | Khách chạm vào dòng đó (mở Order Detail / coupon), hoặc xoá nó |
+| Tab **Chat** | Thông báo loại `chat` + tin tới trong lúc trang đang mở ở tab khác | Nhân viên trả lời | Khách mở tab Chat |
+| **Chuông** trên header | Tổng hai số trên | — | Khi cả hai về 0 |
+
+Độ trễ: đơn và trạng thái giao hàng tới qua lượt đồng bộ Shopify 30 phút (BUG-034); thông báo đơn được kiểm tối đa 5 phút một lần cho mỗi khách; widget hỏi số mỗi 10 giây. Chip Delivery và Review là danh sách đơn, không có trạng thái đã đọc và không làm tăng số nào.
+
 ### SCR-IVY-04 · Notifications — Order
 - **Figma:** Master `992:526` (KR, có chế độ chọn), `1006:7825` (EN), `1006:2930`, `1006:6868` ("Payment").
 - Nhóm theo ngày: **Today's** / **Yesterday's** / cũ hơn.

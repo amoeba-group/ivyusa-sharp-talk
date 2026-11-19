@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-042 | Số của tab Notifications đếm cả loại thông báo **không chip nào hiện** (`issue`, `review`) → có thể không bao giờ mất | API | 🟡 | Fixed code (2026-11-19, phòng ngừa: chưa thấy trên production) | T01 |
 | BUG-041 | Nhân viên trả lời → **số chưa đọc hiện ở tab Notifications** (nơi không có dòng nào để đọc) và **không bao giờ mất**; tab Chat không có số | API · Widget | 🔴 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T01 |
 | BUG-040 | Thẻ Contact Support / My Orders **vẫn mất khi chuyển trang** với khách đã đăng nhập: lần lưu "rỗng" lúc trang mới tải đã xoá bản ghi sắp khôi phục | Widget | 🟠 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T11 |
 | BUG-039 | Test `thread.service.spec.ts` **tự đỏ từ 2026-11-19** (ghi cứng ngày, code có giới hạn 30 ngày) → chặn cổng deploy | API · Test | 🟠 | Fixed (2026-11-19) | — |
@@ -170,6 +171,11 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-042 · Số của tab Notifications có thể bị giữ bởi thông báo không chip nào hiện
+- **Phát hiện (2026-11-19, rà soát theo yêu cầu của chủ dự án sau BUG-041):** với widget một tab danh sách (IVY), chỉ thông báo loại `payment`, `shipping` (chip Order) và `event` (chip Promo) có dòng để mở và đọc. Chip Delivery và Review là danh sách đơn hàng, không phải thông báo. Số chưa đọc lại đếm mọi loại trừ `chat`, nên một thông báo loại `issue` (trạng thái issue đổi) hay `review` sẽ làm số tăng mà không có cách đọc — cùng lỗi với BUG-041. Chưa thấy xảy ra trên production (IVY không dùng issue; `requestReview` chưa được gọi ở đâu), đây là sửa phòng ngừa.
+- **Fix:** tenant một tab danh sách → số của tab (`feed`) chỉ đếm `payment`, `shipping`, `event`; số của chuông (không phạm vi) đếm thêm `chat`. Tenant hai tab danh sách không đổi (chip All của họ liệt kê mọi dòng). `SINGLE_BAR_FEED_CATEGORIES`, `notification.service.ts`.
+- **Phòng ngừa:** con số chưa đọc chỉ được đếm thứ mà giao diện đó hiển thị được. Thêm chip hoặc loại thông báo mới: cập nhật `SINGLE_BAR_FEED_CATEGORIES` cùng lúc.
 
 ## BUG-041 · Nhân viên trả lời: số chưa đọc hiện ở tab Notifications và không bao giờ mất
 - **Hiện tượng (chủ dự án, bản Preview, 2026-11-19):** trả lời 2 tin từ live chat của console → chuông và tab **Notifications** hiện "2", tab Chat không có số. Mở Notifications: "No notifications yet.", số 2 vẫn còn.

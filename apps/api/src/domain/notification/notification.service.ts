@@ -20,6 +20,7 @@ import {
   NOTIFICATION_REF,
   CHAT_NOTIFICATION_CATEGORY,
   NOTIFICATION_SCOPE,
+  SINGLE_BAR_FEED_CATEGORIES,
   ORDER_NOTIFICATION_CATEGORIES,
   ORDER_STATUS_INTERNAL,
   ORDER_STATUS_UI,
@@ -586,9 +587,22 @@ export class NotificationService implements OnModuleInit {
       const hit = await this.redis.get(key);
       if (hit != null) return Number(hit);
     }
-    const count = await this.notifRepo.count({
-      where: { ...scopedWhere(customerId, 'all', scope), readAt: IsNull() },
-    });
+    const where = scopedWhere(customerId, 'all', scope);
+    // A widget with ONE list tab (IVY) can only show what its chips list. Count
+    // exactly that — for the tab's badge (`feed`) and for the storefront bell
+    // (no scope: the feed plus the agent replies the Chat tab shows). A notice
+    // nothing can display would otherwise hold the badge up for good (BUG-042).
+    if (scope === undefined || scope === NOTIFICATION_SCOPE.FEED) {
+      const tenantId = (await this.sessionService.requireCustomer(token))?.tenantId ?? null;
+      if (tenantId != null && (await this.showsOneListTab(tenantId))) {
+        where.category = In(
+          scope === undefined
+            ? [...SINGLE_BAR_FEED_CATEGORIES, CHAT_NOTIFICATION_CATEGORY]
+            : [...SINGLE_BAR_FEED_CATEGORIES],
+        );
+      }
+    }
+    const count = await this.notifRepo.count({ where: { ...where, readAt: IsNull() } });
     await this.redis.set(key, String(count), UNREAD_CACHE_TTL_SEC);
     return count;
   }
