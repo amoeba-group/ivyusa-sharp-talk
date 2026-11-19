@@ -37,7 +37,7 @@ Không có SQL.
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit / CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ (build lại `api`, `web`, `widget`) |
-| Knowledge references = Hidden trên production | ⏳ sau deploy, trong console |
-| Chủ dự án thử lại trên bản Preview | ⏳ |
+| Commit / CI | `5504ed3e` · IVY CI/CD run `44452218622` xanh (2026-11-19) |
+| Server `talkaibotprd01` | ✅ bản build mới của widget được phục vụ từ 03:39 UTC ngày 2026-11-19 |
+| Knowledge references = Hidden trên production | ✅ 2026-11-19, thiết kế "Ivyusa Talk"; ba tuỳ chọn hôm trước giữ nguyên (`none` · `hidden` · `white`). `session/ensure` trả `citations: hidden`. Bản trước lưu ở `D:/amoeba/_localdev/ivy-prod-backup-20261117/widget_designs_before_citations.json` |
+| Chủ dự án thử lại trên bản Preview | ⏳ Tôi chỉ kiểm khung talk vẫn mở bình thường trên Preview; không gửi tin nhắn nào trên production, nên ba hành vi mới (tên nút giữ nguyên, thẻ còn sau khi chuyển trang, không có danh sách nguồn) chờ chủ dự án thử |
