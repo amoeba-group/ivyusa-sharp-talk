@@ -39,9 +39,9 @@ Chưa kiểm ở local với nhân viên thật trả lời: đường đó cầ
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit / CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ (build lại `api`, `web`, `widget`) |
-| Production: Agent sender name = "Ivyusa Support" (6 ngôn ngữ) + Agent name shown to shoppers = The generic label | ⏳ sau deploy, trong console |
+| Commit / CI | `9f37fd31` (số chưa đọc + tên nhân viên) · `50a62e13` (hỏi mỗi 10 giây) — cả hai CI xanh (2026-11-19) |
+| Server `talkaibotprd01` | ✅ `9f37fd31` chạy từ 04:19 UTC, `50a62e13` từ 04:32 UTC ngày 2026-11-19 |
+| Production: Agent sender name = "Ivyusa Support" (6 ngôn ngữ) + Agent name shown to shoppers = The generic label | ✅ 2026-11-19 (chủ dự án xác nhận tên). Trước đó ô Agent sender name trống ở cả 6 ngôn ngữ. `session/ensure` trả `agentName: label` và `agentSenderName` = "Ivyusa Support" × 6; bốn tuỳ chọn thiết kế trước giữ nguyên |
 | Chủ dự án thử lại | ⏳ |
 
 ## 5. Bổ sung cùng ngày: số chưa đọc hiện nhanh hơn
