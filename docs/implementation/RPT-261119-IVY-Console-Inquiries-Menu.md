@@ -41,5 +41,5 @@ Tab Inquiries trong trang Alerts vẫn giữ, để link cũ và thói quen cũ 
 | Mục | Trạng thái |
 |---|---|
 | SQL | Không có |
-| Commit / CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ (build lại `web`, `api`) |
+| Commit / CI | `ef85eaa9` · IVY CI/CD xanh (2026-11-19) |
+| Server `talkaibotprd01` | ✅ 06:41 UTC ngày 2026-11-19: `/live-chat/inquiries` có tiêu đề "Inquiries", 5 dòng, mục Inquiries được đánh dấu hiện tại; trang Alerts còn hai tab "Alarms | Inquiries" (4 inquiry đang mở) |
