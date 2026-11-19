@@ -43,22 +43,52 @@ export function useChat(sessionToken: string | null) {
   // rows are newer than the cursor and must replace the optimistic bubbles.
   const lastServerId = useRef<string | null>(null);
 
+  // Which session and conversation the thread on screen belongs to (BUG-044).
+  const threadToken = useRef<string | null>(null);
+  const shownConversation = useRef<string | null>(null);
+
   useQuery({
     queryKey: ['conversation', sessionToken],
     queryFn: async () => {
-      const after = lastServerId.current;
-      const conv = await getConversation(sessionToken!, after);
+      // Another session — identify moved a signed-in shopper to the chat staff
+      // replied in (BUG-044): a new thread, so no cursor from the old one.
+      const newSession = threadToken.current != null && threadToken.current !== sessionToken;
+      let after = newSession ? null : lastServerId.current;
+      let conv = await getConversation(sessionToken!, after);
+      // The server now shows another conversation than the one on screen. A
+      // delta against the old thread's cursor would graft its rows onto the
+      // wrong history: read it whole instead.
+      const otherConversation =
+        !!after &&
+        conv.conversationId != null &&
+        shownConversation.current != null &&
+        String(conv.conversationId) !== shownConversation.current;
+      if (otherConversation) {
+        after = null;
+        conv = await getConversation(sessionToken!, null);
+      }
+      const replace = newSession || otherConversation;
       if (!inFlight.current) {
+        threadToken.current = sessionToken;
+        if (replace) lastServerId.current = null;
         if (conv.status) setStatus(conv.status);
         // The server decides whether rating is still open (24h window); the
         // widget must not offer stars the API would refuse.
         setCanRate(conv.canRate === true);
         setCsatRating(typeof conv.csatRating === 'number' ? conv.csatRating : null);
-        if (conv.conversationId != null) setConversationId(String(conv.conversationId));
+        if (conv.conversationId != null) {
+          setConversationId(String(conv.conversationId));
+          shownConversation.current = String(conv.conversationId);
+        } else if (replace) {
+          setConversationId(null);
+          shownConversation.current = null;
+        }
         const serverMsgs = conv.messages ?? [];
         trackCursor(lastServerId, serverMsgs);
+        // A switched thread replaces what was on screen; `reconcile` would keep
+        // the old one whenever the new one is shorter (its stale-poll guard).
         setMessages((prev) =>
-          after ? mergeDelta(prev, serverMsgs) : reconcile(prev, serverMsgs),
+          replace ? serverMsgs : after ? mergeDelta(prev, serverMsgs) : reconcile(prev, serverMsgs),
         );
       }
       return conv;
@@ -103,6 +133,7 @@ export function useChat(sessionToken: string | null) {
           attachments?.map((a) => a.id),
         );
         setConversationId(res.conversationId);
+        shownConversation.current = String(res.conversationId);
         // A message after an ended thread opened a fresh conversation — clear
         // the ended banner now rather than waiting for the next poll.
         setStatus((s) => (s === 'ended' ? 'ai_active' : s));
@@ -168,6 +199,7 @@ export function useChat(sessionToken: string | null) {
       try {
         const res = await sendScenario(sessionToken, action, text, label);
         setConversationId(res.conversationId);
+        shownConversation.current = String(res.conversationId);
         // An empty body means the turn produced no visible reply — agent mode,
         // where the human answers through polling (PLN-261001 §1-2). Appending
         // it would draw an empty bubble under the shopper's own message.

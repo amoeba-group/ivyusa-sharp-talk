@@ -41,11 +41,18 @@ export function useEmbedCommands(): void {
     // last of each is parked here and replayed as soon as the token lands.
     let pendingIdentify: IdentifyUser | null = null;
     let pendingSessionLocale: string | null = null;
+    // The page's signed identity, kept to ask again later (BUG-044): staff may
+    // answer in another of this shopper's chats, and the server then names that
+    // one as current. `identifying` keeps the asks from overlapping.
+    let lastUser: IdentifyUser | null = null;
+    let identifying = false;
 
     async function runIdentify(token: string, user: IdentifyUser) {
       const store = useWidgetStore.getState();
+      identifying = true;
       try {
         const res = await identifyRequest(token, user);
+        lastUser = user;
         // A platform customer (a theme-signed Shopify id) is handed their own
         // recent session, not this page's new one — that is where their chat
         // is (BUG-037). Every query is keyed on the token, so adopting it brings
@@ -69,7 +76,12 @@ export function useEmbedCommands(): void {
       } catch {
         // A rejected signature leaves the visitor a guest: they can still ask
         // a question, which is the part that must never depend on identity.
+        // An expired one (24 h) will not pass later either: stop asking until
+        // the next page brings a fresh signature.
+        lastUser = null;
         postToHost({ type: 'ivy:event', event: 'identified', ok: false });
+      } finally {
+        identifying = false;
       }
     }
 
@@ -85,6 +97,19 @@ export function useEmbedCommands(): void {
         pendingIdentify = null;
         void runIdentify(token, user);
       }
+    });
+
+    // Ask again where the shopper's chat is (BUG-044) when they open the panel
+    // or the Chat tab, or when a staff reply arrives (reidentifyNonce): staff
+    // may have answered in another of their chats, which the server now names
+    // as current. Its token is adopted as on page load (runIdentify).
+    const stopReidentifyWatch = useWidgetStore.subscribe((state, prev) => {
+      const opened = state.panelOpen && !prev.panelOpen;
+      const toChat = state.panelOpen && state.activeTab === 'chat' && prev.activeTab !== 'chat';
+      const nudged = state.reidentifyNonce !== prev.reidentifyNonce;
+      if (!opened && !toChat && !nudged) return;
+      if (!lastUser || identifying || !state.sessionToken) return;
+      void runIdentify(state.sessionToken, lastUser);
     });
 
     async function onMessage(raw: Record<string, unknown>) {
@@ -186,6 +211,7 @@ export function useEmbedCommands(): void {
     return () => {
       stopMessages();
       stopTokenWatch();
+      stopReidentifyWatch();
     };
   }, []);
 }

@@ -276,6 +276,7 @@ Chuông trên header ivyusa.com (chấm đỏ = số chưa đọc) ─► Panel 
 | BR-10 | Thông báo Review chỉ sinh khi đơn **Delivered**; "Write Review" mở form/trang review sản phẩm (Q-06). | `0:1` `3:3` |
 | BR-11 | Quick-reply ở Chat do tenant cấu hình (`/ai-config/scenario`), thứ tự & emoji theo §6 SCR-IVY-10. | `1008:2291` |
 | BR-12 | Mọi kịch bản có chip **처음으로** (quay về đầu); "종료" kết thúc phiên → CSAT. | `1006:5530…6290` |
+| BR-14 | Tin nhân viên trả lời phải tới khung chat khách đang thấy. Nhân viên chỉ trả lời được cuộc mới nhất của một phiên chat (cuộc cũ hơn: dải báo + nút mở cuộc mới nhất). Trả lời cuộc đã kết thúc thì mở lại cuộc đó. Khách đã đăng nhập được đưa sang phiên nhân viên vừa trả lời khi mở chat (2026-11-19, BUG-044). | — |
 | BR-13 | CSAT 4 mức + Bỏ qua; gửi xong hiện cảm ơn và đóng phiên. Thẻ giữ mặt đã chọn (sáng, các mặt khác mờ, không bấm lại được), kể cả sau khi tải lại trang (2026-11-19, BUG-043). Console Live Chat hiện đúng hàng mặt đó trong đoạn hội thoại, không dùng sao. | `1006:6110`, `1006:6290` |
 | BR-14 | Form liên hệ: Name/Email/Message bắt buộc, email đúng định dạng, email khách điền sẵn; tạo inquiry phía API; trả lời qua email. | `1006:6529`, `1006:6597` |
 | BR-15 | Email hỗ trợ hiển thị lấy theo cấu hình tenant (thiết kế ghi `help@ivy.com` — Q-08). | `1006:5650` |

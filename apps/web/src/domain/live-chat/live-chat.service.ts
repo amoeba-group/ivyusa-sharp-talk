@@ -252,6 +252,8 @@ export interface ConversationDetail {
   channel?: string | null;
   /** Current human owner's name (REQ-260825 R8-②); null = unassigned. */
   assignedTo?: string | null;
+  /** The conversation the customer's chat shows — staff replies go only there (BUG-044). */
+  latestConversationId?: string;
   aiAgentId?: string | null;
   aiAgentName?: string | null;
   identity?: SessionIdentity | null;

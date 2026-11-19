@@ -800,5 +800,13 @@
     "3": "Neutral",
     "4": "Satisfecho",
     "5": "Muy satisfecho"
-  }
+  },
+  "superseded": {
+    "text": "El cliente ya no ve esta conversación. Su chat muestra la sesión {{id}}.",
+    "open": "Abrir sesión {{id}}",
+    "placeholder": "Responde en la sesión {{id}} para llegar al cliente",
+    "blocked": "El cliente tiene una conversación más reciente. Responde allí para que la vea."
+  },
+  "reopened": "Conversación reabierta. El cliente puede responder en el mismo chat.",
+  "reopenPlaceholder": "Responde para reabrir esta conversación"
 }

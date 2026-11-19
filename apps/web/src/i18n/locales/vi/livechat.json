@@ -800,5 +800,13 @@
     "3": "Bình thường",
     "4": "Hài lòng",
     "5": "Rất hài lòng"
-  }
+  },
+  "superseded": {
+    "text": "Khách không còn thấy cuộc trò chuyện này. Khung chat của khách đang hiện Phiên {{id}}.",
+    "open": "Mở Phiên {{id}}",
+    "placeholder": "Trả lời ở Phiên {{id}} để khách thấy",
+    "blocked": "Khách đã có cuộc trò chuyện mới hơn. Hãy trả lời ở đó để khách thấy."
+  },
+  "reopened": "Đã mở lại cuộc trò chuyện. Khách có thể trả lời ngay trong khung chat cũ.",
+  "reopenPlaceholder": "Trả lời để mở lại cuộc trò chuyện này"
 }

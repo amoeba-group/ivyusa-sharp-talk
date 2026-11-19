@@ -217,7 +217,10 @@ export function ChatTab() {
   const ratedBefore = !!conversationId && csatRating != null && ratedIn !== conversationId;
   const rated = !!conversationId && (ratedOkIn === conversationId || csatRating != null);
   const skipped = !!conversationId && (skippedIn === conversationId || csatSkipped(conversationId));
-  const showCsat = !!conversationId && (canRate || ratedIn === conversationId || csatRating != null) && !skipped;
+  // A conversation staff reopened (BUG-044) is live again: its old rating card
+  // does not sit under the new messages; it returns if the chat ends again.
+  const showCsat =
+    !!conversationId && (canRate || ratedIn === conversationId || (csatRating != null && status === 'ended')) && !skipped;
   // Still waiting for the shopper's answer: the ended mark waits below it (BR-13).
   const csatOpen = showCsat && !rated;
   // The close policy can ask for a rating while the chat is still live; the
@@ -242,7 +245,8 @@ export function ChatTab() {
   // not rated. `end` is how the prompt's buttons finish it.
   const setCloseGuard = useWidgetStore((s) => s.setCloseGuard);
   const wroteHere = messages.some((m) => m.senderType === 'user');
-  const askOnClose = (status === 'ai_active' || status === 'agent') && wroteHere && ratedIn !== conversationId;
+  const askOnClose =
+    (status === 'ai_active' || status === 'agent') && wroteHere && ratedIn !== conversationId && csatRating == null;
   useEffect(() => {
     setCloseGuard({ ask: askOnClose, end: endChat });
   }, [askOnClose, endChat, setCloseGuard]);

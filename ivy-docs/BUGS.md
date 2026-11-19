@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-044 | Nhân viên trả lời trong console, **chuông trên website sáng nhưng mở chat không thấy tin**: tin nằm ở phiên chat khác của cùng khách | API · Widget · Console | 🔴 | Fixed code (2026-11-19, [FIX](../docs/bug-fix/FIX-261119-Staff-Reply-Not-Seen-By-Shopper.md), TC-08-09..10) | T08 |
 | BUG-043 | Đánh giá xong rồi **tải lại hay chuyển trang**: thẻ đánh giá biến mất, khách không còn thấy mình đã chọn mặt nào | Widget | 🟡 | Fixed code (2026-11-19, TC-12-07) | T12 |
 | BUG-042 | Số của tab Notifications đếm cả loại thông báo **không chip nào hiện** (`issue`, `review`) → có thể không bao giờ mất | API | 🟡 | Fixed code (2026-11-19, phòng ngừa: chưa thấy trên production) | T01 |
 | BUG-041 | Nhân viên trả lời → **số chưa đọc hiện ở tab Notifications** (nơi không có dòng nào để đọc) và **không bao giờ mất**; tab Chat không có số | API · Widget | 🔴 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T01 |
@@ -172,6 +173,20 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-044 · Tin nhân viên trả lời không tới khung chat khách đang thấy
+- **Phát hiện (2026-11-19, chủ dự án):** gửi 3 tin vào Session 10 của khách `cong11`; chuông trên website sáng nhưng khung chat hiện Session 11 (đã kết thúc) và không có 3 tin đó.
+- **Nguyên nhân:**
+  - Khách có 5 phiên chat (161, 162, 165, 166, 168); widget chỉ hiện cuộc mới nhất của phiên nó giữ (166), còn tin nằm ở phiên 165.
+  - Thông báo gửi theo khách nên chuông vẫn sáng.
+  - Thêm một lỗi tiềm ẩn: khi cuộc trò chuyện đổi, widget ghép tin mới vào lịch sử cuộc cũ.
+- **Fix (duyệt `1. ok 2. a`):**
+  - Chỉ trả lời được cuộc mới nhất của phiên (E5165); console có dải báo và nút **Open Session N**.
+  - Trả lời cuộc đã kết thúc thì mở lại cuộc đó cho nhân viên trả lời.
+  - Phiên vừa được trả lời thành phiên hiện tại của khách; widget hỏi lại khi mở chat hoặc khi có thông báo và chuyển sang phiên đó, đọc lại toàn bộ đoạn chat.
+
+  Chi tiết: [FIX-261119](../docs/bug-fix/FIX-261119-Staff-Reply-Not-Seen-By-Shopper.md).
+- **Phòng ngừa:** thao tác ghi tin cho khách phải chỉ ra được nơi khách thấy tin; thông báo và nội dung phải cùng phạm vi.
 
 ## BUG-043 · Thẻ đánh giá mất sau khi tải lại trang
 - **Phát hiện (2026-11-19, chủ dự án hỏi "tại sao không để lại mức độ hài lòng với icons và actived icon đã chọn trong cuộc hội thoại"):** thẻ chỉ hiện khi server còn nhận đánh giá (`canRate`) hoặc khi khách vừa đánh giá trong lượt xem này (state React `ratedIn`). Tải lại hay chuyển trang thì state mất, còn `canRate` thành false vì đã có điểm, nên thẻ biến mất. Server vẫn trả `csatRating` mỗi lần đọc cuộc trò chuyện, nhưng widget bỏ qua giá trị này.

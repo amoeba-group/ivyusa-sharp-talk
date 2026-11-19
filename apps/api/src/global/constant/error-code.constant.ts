@@ -368,6 +368,13 @@ export const ERROR_CODE = {
   /** The tenant's store could not be asked for the order (token, network, API limit). */
   ORDER_STORE_LOOKUP_FAILED: { code: 'E5164', message: 'The store could not be asked for this order' },
 
+  // E5165 — staff reply where the customer's chat is (BUG-044).
+  /** The conversation is not the newest of its chat session, so the customer's widget does not show it. */
+  CONVERSATION_SUPERSEDED: {
+    code: 'E5165',
+    message: 'The customer no longer sees this conversation; reply in their newest one',
+  },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

@@ -1285,6 +1285,17 @@ export class AgentService {
     attachmentIds?: string[],
   ): Promise<Message> {
     const conversation = await this.requireConversation(conversationId, tenantId);
+    // The customer's widget shows only the newest conversation of their chat
+    // session (ChatService.findLatestConversation). A reply to an older one was
+    // stored, notified — and never seen (BUG-044). Refused before anything is
+    // stored; the console points at the newest one instead.
+    const newest = await this.newestConversationIdOfSession(Number(conversation.sessionId), tenantId);
+    if (newest != null && newest !== Number(conversationId)) {
+      this.logger.warn(
+        `agent reply refused: conversation=${conversationId} is not the newest of session=${conversation.sessionId} (newest=${newest}) agent=${agentId}`,
+      );
+      throw new BusinessException(ERROR_CODE.CONVERSATION_SUPERSEDED, HttpStatus.CONFLICT);
+    }
     // Consent gate (PLN-Privacy-Control-Gap D-1, fail-closed): an agent reply is
     // processing of the visitor's conversation, so it too requires an effective
     // GRANTED (fresh read, current notice version). 4xx rejections are not
@@ -1337,6 +1348,12 @@ export class AgentService {
     if (moderated.decision === MODERATION_DECISION.BLOCKED) {
       throw new BusinessException(ERROR_CODE.MODERATION_BLOCKED, HttpStatus.UNPROCESSABLE_ENTITY);
     }
+    // A reply to an ended conversation reopens it, with the replying staff
+    // member as its owner (owner's choice, 2026-11-19, BUG-044): the customer
+    // answers in the same thread instead of starting a new one.
+    if (conversation.status === CONVERSATION_STATUS.ENDED) {
+      await this.reopenForReply(conversation, agentId, tenantId);
+    }
     const saved = await this.msgRepo.save(
       this.msgRepo.create({
         // Explicit tenant stamp — see ChatService.persist.
@@ -1355,6 +1372,10 @@ export class AgentService {
       conversationId,
     });
     await this.notifyCustomerOfReply(conversation.sessionId, tenantId);
+    // Where staff last replied is where the customer's chat now is: a signed-in
+    // shopper's widget resumes their most recently active session (identify →
+    // findOrCreateForCustomer), so this reply is what they see next (BUG-044).
+    await this.touchSession(Number(conversation.sessionId));
     await this.mailReplyIfOffHoursThread(conversation, tenantId, moderated.text, attached.length);
     // Answer reuse ingest (PLN-260808 Track C, D-C1): a human's moderated reply
     // paired with the question it answered is the highest-trust reuse source.
@@ -1365,6 +1386,44 @@ export class AgentService {
   }
 
   /** Pair the agent reply with the customer question right before it. */
+  /**
+   * The newest conversation of a chat session — the one the customer's widget
+   * shows (ChatService.findLatestConversation orders the same way). Staff
+   * replies go only there (BUG-044).
+   */
+  async newestConversationIdOfSession(sessionId: number, tenantId: number): Promise<number | null> {
+    const newest = await this.convRepo.findOne({
+      where: { sessionId, tenantId },
+      order: { id: 'DESC' },
+    });
+    return newest ? Number(newest.id) : null;
+  }
+
+  /**
+   * Reopen an ended conversation for a staff reply (BUG-044, owner's choice
+   * 2026-11-19). Same hand-over as Accept — capacity check, assignment, status
+   * 'agent' — and it stops being ended: no end time (the rating window and the
+   * Ended list key off it) and the idle-close cycle starts over.
+   */
+  private async reopenForReply(conversation: Conversation, agentId: number, tenantId: number): Promise<void> {
+    await this.accept(Number(conversation.id), agentId, tenantId);
+    await this.convRepo.update({ id: conversation.id }, { endedAt: null, idlePromptAt: null });
+    await this.auditAgentAction(agentId, tenantId, 'agent.conversation_reopened', `conversation:${conversation.id}`);
+  }
+
+  /**
+   * Mark a chat session as the customer's most recently active one. Best effort:
+   * the reply is already stored and delivered, and a failed touch only means a
+   * signed-in shopper reaches it on their next visit instead of now.
+   */
+  private async touchSession(sessionId: number): Promise<void> {
+    try {
+      await this.sessionRepo.update({ id: sessionId }, { updatedAt: () => 'CURRENT_TIMESTAMP(6)' });
+    } catch (err) {
+      this.logger.warn(`session touch failed (session ${sessionId}): ${String(err)}`);
+    }
+  }
+
   private async ingestReplyForReuse(
     conversationId: number,
     tenantId: number,

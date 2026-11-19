@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
@@ -56,6 +56,14 @@ export function useTabBar(): {
   // this page was showing another tab.
   const { data: chatNotices } = useUnreadCount(sessionToken, authenticated, NOTIFICATION_SCOPE.CHAT);
   const chatNoticeCount = chatNotices?.count ?? 0;
+  // Staff answered (BUG-044): the reply may be in another of a signed-in
+  // shopper's chats — ask where their chat is now, before they open it.
+  const requestReidentify = useWidgetStore((s) => s.requestReidentify);
+  const lastNoticeCount = useRef(chatNoticeCount);
+  useEffect(() => {
+    if (chatNoticeCount > lastNoticeCount.current) requestReidentify();
+    lastNoticeCount.current = chatNoticeCount;
+  }, [chatNoticeCount, requestReidentify]);
 
   // Looking at the chat is reading them: there is no row to tap for these.
   const readingChat = panelOpen && activeTab === 'chat';

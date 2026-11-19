@@ -41,7 +41,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | T05 | 0 / 4 → **7 / 7** ✅ (T05, 2026-11-12; thêm TC-05-05..07) | tất cả | — |
 | T06 | 0 / 3 → **5 / 5** ✅ (T06, 2026-11-12; thêm TC-06-04, 05) | tất cả | — |
 | T07 | 1 / 3 → **7 / 7** ✅ (T07, 2026-11-12; thêm TC-07-04..07) | tất cả | — |
-| T08 | 1 / 5 → **6 / 6** ✅ (T08, 2026-11-12; thêm TC-08-06) | tất cả | — |
+| T08 | 1 / 5 → 6 / 6 (T08, 2026-11-12; thêm TC-08-06) → **10 / 10** ✅ (2026-11-19; gồm TC-08-07..08 của 2026-11-18, thêm TC-08-09..10, BUG-044) | tất cả | — |
 | T09 | 1 / 4 → **7 / 7** ✅ (T09, 2026-11-12; thêm TC-09-05..07) | tất cả | — |
 | T10 | 1 / 5 → **7 / 7** ✅ (T10, 2026-11-12; thêm TC-10-06..07) | tất cả | — |
 | T11 | 0 / 4 → **8 / 8** ✅ (T11, 2026-11-13; thêm TC-11-05..08) | tất cả | — |
@@ -239,6 +239,8 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-08-06 | Lần vẽ đầu | MutationObserver ghi màu nền chip **ngay khi chip xuất hiện** = trắng (không vẽ kiểu mặc định rồi đổi). Bỏ cơ chế chờ thì đỏ 6/6 (BUG-023) | PLN-261112-T08 |
 | TC-08-07 | Ô nhập theo thiết kế (PLN-261118 composer) | Không có nút "Attach a file", không có ô chọn file, không có `.st-disclosure`, không có chữ "AI-generated replies", không có "End chat"; ô chữ nằm sát lề trái của hàng |
 | TC-08-08 | Bong bóng của khách | Chữ `rgb(255, 255, 255)` trên nền `rgb(43, 127, 255)` |
+| TC-08-09 | Server đổi cuộc trò chuyện (BUG-044) | Đang hiện cuộc A ("Old question…"); lần hỏi tin mới kế tiếp trả về cuộc B → đoạn chat **thay** bằng B ("Where is my order 1042?", "Your order 1042 ships today."), không còn tin của A |
+| TC-08-10 | Nhân viên trả lời ở phiên khác (BUG-044) | Storefront giả có identify; widget hiện phiên A. Server chỉ sang phiên B (nơi nhân viên vừa trả lời) → bấm sang Notifications rồi lại Chat → widget gọi identify lần nữa, chuyển sang B và hiện tin trả lời; không còn tin của A |
 
 **Kết quả (2026-11-12):** 6/6, lặp ×4 (3 worker): 24/24. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T08|@T13`) ×2: 140/140. Toàn bộ desktop: 82 pass / 15 fail, mọi ca đỏ thuộc T09–T12 chưa làm.
 

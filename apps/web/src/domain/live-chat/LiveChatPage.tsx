@@ -599,6 +599,12 @@ export function LiveChatPage() {
   const [aiStillOnNotice, setAiStillOnNotice] = useState(false);
   useEffect(() => setAiStillOnNotice(false), [selected]);
   const ended = convo?.status === 'ended';
+  // The customer's chat shows only the newest conversation of their session
+  // (BUG-044): a reply anywhere else would be stored and never seen.
+  const supersededBy =
+    convo?.latestConversationId && selected && convo.latestConversationId !== String(selected)
+      ? convo.latestConversationId
+      : null;
   const aiAnswering = !!convo && !ended && convo.status !== 'agent' && convo.autoReplyEffective !== false;
   const pausedByStaff = !!convo && !ended && convo.status !== 'agent' && convo.autoReplyMode === 'off';
   // The conversation's state in plain words (PLN-261119). It replaces the status
@@ -842,13 +848,16 @@ export function LiveChatPage() {
     // Ref, not `send.isPending`: two handler calls in the same tick both read the
     // render's stale value and both get through. This flips synchronously.
     // Files alone make a valid reply; an upload still running does not.
-    if ((!body && !attachmentIds.length) || !selected || sendingRef.current || uploads.busy) return;
+    if ((!body && !attachmentIds.length) || !selected || sendingRef.current || uploads.busy || supersededBy) return;
+    // A reply to an ended conversation reopens it (BUG-044) — said once it went out.
+    const reopening = ended;
     sendingRef.current = true;
     // Clear before awaiting: a reply takes seconds (moderation + mail), and the
     // text sitting in the box was half of how it got sent twice.
     setDraft('');
     try {
       await send.mutateAsync({ body, attachmentIds });
+      if (reopening) toast.success(t('reopened'));
       if (aiAnswering) setAiStillOnNotice(true);
       // Cleared only once the send succeeded: on failure the files are still
       // uploaded and still attachable, so the agent retries instead of
@@ -857,8 +866,11 @@ export function LiveChatPage() {
       setQuote(null);
     } catch (e) {
       setDraft(text);
-      const err = e as Error & { status?: number };
-      if (err.status === 422) {
+      const err = e as Error & { status?: number; code?: string };
+      if (err.code === 'E5165') {
+        // The customer moved on to a newer conversation meanwhile (BUG-044).
+        toast.warning(t('superseded.blocked'));
+      } else if (err.status === 422) {
         toast.warning(t('messageBlocked'));
       } else {
         toast.error(err.message || t('sendFailed'));
@@ -1939,6 +1951,19 @@ export function LiveChatPage() {
                   </select>
                 </div>
               )}
+              {/* Not the conversation the customer sees (BUG-044): say where it is and go there. */}
+              {supersededBy && (
+                <div
+                  className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                  role="status"
+                  data-testid="superseded-banner"
+                >
+                  <span className="min-w-0 flex-1">{t('superseded.text', { id: supersededBy })}</span>
+                  <Button size="sm" variant="secondary" onClick={() => setSelected(supersededBy)}>
+                    {t('superseded.open', { id: supersededBy })}
+                  </Button>
+                </div>
+              )}
               {aiStillOnNotice && aiAnswering && (
                 <div className="flex items-center gap-2 border-t border-warning/30 bg-warning/10 px-3 py-1.5 text-xs text-gray-700" role="status">
                   <span className="min-w-0 flex-1">{t('takeover.stillOn')}</span>
@@ -1970,7 +1995,7 @@ export function LiveChatPage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={receiveOnly}
+                  disabled={receiveOnly || !!supersededBy}
                   aria-label={t('attachment.attach')}
                   title={t('attachment.attach')}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
@@ -1987,8 +2012,16 @@ export function LiveChatPage() {
                     if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
                     void onSend();
                   }}
-                  disabled={receiveOnly}
-                  placeholder={receiveOnly ? t('channel.receiveOnlyHint') : t('replyPlaceholder')}
+                  disabled={receiveOnly || !!supersededBy}
+                  placeholder={
+                    receiveOnly
+                      ? t('channel.receiveOnlyHint')
+                      : supersededBy
+                        ? t('superseded.placeholder', { id: supersededBy })
+                        : ended
+                          ? t('reopenPlaceholder')
+                          : t('replyPlaceholder')
+                  }
                   className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
                 />
                 <Button
@@ -1997,6 +2030,7 @@ export function LiveChatPage() {
                   // so the composer says so instead of failing after the send.
                   disabled={
                     receiveOnly ||
+                    !!supersededBy ||
                     send.isPending ||
                     uploads.busy ||
                     (!draft.trim() && !uploads.ready.length)
@@ -2205,7 +2239,7 @@ export function LiveChatPage() {
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Button
                       size="sm"
-                      disabled={!selected || send.isPending || receiveOnly}
+                      disabled={!selected || send.isPending || receiveOnly || !!supersededBy}
                       onClick={() => void send.mutateAsync(askKnowledge.data!.answer)}
                     >
                       {t('kbSendToCustomer')}

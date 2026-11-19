@@ -121,6 +121,12 @@ interface WidgetState {
    * shopper opens the tab, since the messages are then on screen.
    */
   chatUnread: number;
+  /**
+   * Bumped when staff answered (a chat notice arrived): the reply may be in
+   * another of a signed-in shopper's chats, so the widget asks again where
+   * their chat is (BUG-044).
+   */
+  reidentifyNonce: number;
   setSessionToken: (t: string | null) => void;
   setActiveTab: (t: TabKey) => void;
   setPanelOpen: (open: boolean) => void;
@@ -172,6 +178,7 @@ interface WidgetState {
   setNotificationFilter: (f: string) => void;
   setTabLayout: (tabs: TabKey[], position: WidgetTabPosition) => void;
   bumpChatUnread: (n: number) => void;
+  requestReidentify: () => void;
   queueChatMessage: (m: string) => void;
   consumeChatMessage: () => string | null;
 }
@@ -216,6 +223,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   consultCategories: [],
   commerceEnabled: true,
   chatUnread: 0,
+  reidentifyNonce: 0,
   setSessionToken: (t) => {
     setStoredSessionToken(t);
     set({ sessionToken: t });
@@ -267,6 +275,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
       activeTab: tabs.includes(s.activeTab) ? s.activeTab : tabs[0],
     })),
   bumpChatUnread: (n) => set((s) => ({ chatUnread: s.chatUnread + n })),
+  requestReidentify: () => set((s) => ({ reidentifyNonce: s.reidentifyNonce + 1 })),
   updateConsentState: (state, consentAt, noticeVersion) =>
     set((s) => ({
       consent: {

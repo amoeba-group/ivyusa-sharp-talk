@@ -963,6 +963,10 @@ export class AgentConsoleController {
       // and the composer needs the channel to know whether a reply is possible.
       channel: conversation.channel || 'widget',
       status: conversation.status,
+      // The conversation the customer's chat shows; staff replies go only there (BUG-044).
+      latestConversationId: String(
+        (await this.agentService.newestConversationIdOfSession(Number(conversation.sessionId), tenantId)) ?? id,
+      ),
       // Current human owner, for the detail header (REQ-260825 R8-②).
       assignedTo:
         conversation.agentId != null
