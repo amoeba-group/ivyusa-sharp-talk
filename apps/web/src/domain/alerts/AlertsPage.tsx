@@ -21,6 +21,7 @@ import { CallbackRequestsTab } from './CallbackRequestsTab';
 import { useCallbackRequests } from './callbacks.hooks';
 import { InquiriesTab } from './InquiriesTab';
 import { useInquiries } from './inquiries.hooks';
+import { useAiConfig } from '../ai-settings/ai-settings.hooks';
 
 const PAGE_SIZE = 20;
 
@@ -37,6 +38,14 @@ export function AlertsPage() {
   // Badge = open callback requests; size 1 is enough, the count rides on the pagination.
   const openCallbacks = useCallbackRequests({ status: 'requested', page: 1, size: 1 });
   const openCount = openCallbacks.data?.total ?? 0;
+  // The Callback requests tab is for tenants that take callbacks. With the
+  // feature off and not one request ever made, it is an empty tab nobody can
+  // fill (owner's request, 2026-11-19). A request left over from when it was on
+  // keeps the tab, so nothing a shopper asked for becomes unreachable.
+  const anyCallbacks = useCallbackRequests({ status: 'all', page: 1, size: 1 });
+  const aiConfig = useAiConfig();
+  const showCallbacks =
+    raw === 'callbacks' || !!aiConfig.data?.handoffConfig?.callback?.enabled || (anyCallbacks.data?.total ?? 0) > 0;
   // Same for the widget's contact forms not yet answered (ivy-docs T11 D4).
   const openInquiries = useInquiries({ status: 'open', page: 1, size: 1 }).data?.total ?? 0;
   const countBadge = (n: number) =>
@@ -57,6 +66,7 @@ export function AlertsPage() {
         <button type="button" role="tab" aria-selected={tab === 'alarms'} className={tabBtn(tab === 'alarms')} onClick={() => setParams({}, { replace: true })}>
           {t('alarmCenter.tab_alarms')}
         </button>
+        {showCallbacks && (
         <button
           type="button"
           role="tab"
@@ -68,6 +78,7 @@ export function AlertsPage() {
           {t('alarmCenter.tab_callbacks')}
           {countBadge(openCount)}
         </button>
+        )}
         <button
           type="button"
           role="tab"

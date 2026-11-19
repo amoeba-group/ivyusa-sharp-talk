@@ -220,7 +220,7 @@ export class InquiryService {
         '',
         '—',
         'Reply to this email to answer the customer: it goes to their address.',
-        `Then mark it answered in the console: Live chat → Alerts → Inquiries (#${row.id}).`,
+        `Then mark it answered in the console: Inquiries, in the left menu (#${row.id}).`,
       ].join('\n'),
     });
     if (sent) this.logger.log(`inquiry ${row.id} mailed to the support address`);

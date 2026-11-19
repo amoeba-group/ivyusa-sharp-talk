@@ -44,6 +44,7 @@ function Brand({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () 
 function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const { t } = useTranslation('nav');
   const { groups } = useVisibleNav();
+  const { pathname } = useLocation();
 
   return (
     <nav className="flex-1 overflow-y-auto px-3 pb-4 pt-1" aria-label={t('console')}>
@@ -60,25 +61,30 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
             {group.items.map((item) => {
               const Icon = item.icon;
               const label = t(item.labelKey);
+              // A deeper path with an entry of its own is that entry's page, not this one's.
+              const elsewhere = !!item.notUnder?.some((p) => pathname === p || pathname.startsWith(`${p}/`));
               return (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
                     end={item.to === '/admin'}
+                    aria-current={elsewhere ? 'false' : 'page'}
                     onClick={onNavigate}
                     title={collapsed ? label : undefined}
                     aria-label={collapsed ? label : undefined}
                     className={({ isActive }) =>
                       cn(
                         'group relative flex items-center gap-3 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-colors',
-                        isActive
+                        isActive && !elsewhere
                           ? 'bg-primary-50 text-primary-700'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
                         collapsed && 'justify-center px-0',
                       )
                     }
                   >
-                    {({ isActive }) => (
+                    {({ isActive: matched }) => {
+                      const isActive = matched && !elsewhere;
+                      return (
                       <>
                         {isActive && (
                           <span
@@ -97,7 +103,8 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
                         />
                         {!collapsed && <span className="truncate">{label}</span>}
                       </>
-                    )}
+                      );
+                    }}
                   </NavLink>
                 </li>
               );

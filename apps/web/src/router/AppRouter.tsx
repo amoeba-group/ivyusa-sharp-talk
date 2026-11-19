@@ -20,6 +20,7 @@ import { AdminLoginPage } from '@/domain/auth/AdminLoginPage';
 const DashboardPage = lazy(() => import('@/domain/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })));
 const LiveChatPage = lazy(() => import('@/domain/live-chat/LiveChatPage').then((m) => ({ default: m.LiveChatPage })));
 const AlertsPage = lazy(() => import('@/domain/alerts/AlertsPage').then((m) => ({ default: m.AlertsPage })));
+const InquiriesPage = lazy(() => import('@/domain/alerts/InquiriesPage').then((m) => ({ default: m.InquiriesPage })));
 const IssueBoardPage = lazy(() => import('@/domain/issues/IssueBoardPage').then((m) => ({ default: m.IssueBoardPage })));
 const HistoryPage = lazy(() => import('@/domain/history/HistoryPage').then((m) => ({ default: m.HistoryPage })));
 const JourneyBoardPage = lazy(() =>
@@ -96,6 +97,8 @@ const router = createBrowserRouter([
       { path: '/live-chat', element: <LiveChatPage /> },
       // Alarm center (PLN-261024) — under /live-chat so the Live Chat menu gate covers it.
       { path: '/live-chat/alerts', element: <AlertsPage /> },
+      // Contact forms — its own sidebar entry; under /live-chat for the same gate.
+      { path: '/live-chat/inquiries', element: <InquiriesPage /> },
       { path: '/issues', element: <IssueBoardPage /> },
       { path: '/history', element: <HistoryPage /> },
       { path: '/journey', element: <JourneyBoardPage /> },

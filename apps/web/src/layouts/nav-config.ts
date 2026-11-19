@@ -1,4 +1,5 @@
 import {
+  Inbox,
   LayoutDashboard,
   MessagesSquare,
   SquareKanban,
@@ -42,6 +43,12 @@ export interface NavItem {
   superAdminOnly?: boolean;
   /** Extra words the ⌘K search should match (English, lower case). */
   keywords?: string[];
+  /**
+   * Paths under `to` that belong to ANOTHER entry: this one is not shown as the
+   * current page there. Live Chat owns /live-chat/alerts but not
+   * /live-chat/inquiries, which has its own entry right below it.
+   */
+  notUnder?: string[];
 }
 
 /**
@@ -65,7 +72,10 @@ export const TENANT_NAV_GROUPS: NavGroup[] = [
   {
     key: 'conversations',
     items: [
-      { to: '/live-chat', labelKey: 'liveChat', icon: MessagesSquare, code: 'live_chat', capability: 'live_chat', keywords: ['chat', 'inbox', 'agent', 'alarm'] },
+      { to: '/live-chat', labelKey: 'liveChat', icon: MessagesSquare, code: 'live_chat', capability: 'live_chat', keywords: ['chat', 'inbox', 'agent', 'alarm'], notUnder: ['/live-chat/inquiries'] },
+      // Contact forms from the widget. Same holders as Live Chat, and under its
+      // path so the same gate covers it (as the alarm center is).
+      { to: '/live-chat/inquiries', labelKey: 'inquiries', icon: Inbox, code: 'live_chat', capability: 'live_chat', keywords: ['contact', 'form', 'email', 'support'] },
       // Issue board (P4) — same holders as live chat; non-native tenants get a notice.
       { to: '/issues', labelKey: 'issueBoard', icon: SquareKanban, code: 'issues', capability: 'live_chat', keywords: ['ticket', 'kanban'] },
       { to: '/history', labelKey: 'history', icon: History, code: 'history', capability: 'history', keywords: ['transcript', 'archive'] },
