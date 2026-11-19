@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-040 | Thẻ Contact Support / My Orders **vẫn mất khi chuyển trang** với khách đã đăng nhập: lần lưu "rỗng" lúc trang mới tải đã xoá bản ghi sắp khôi phục | Widget | 🟠 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T11 |
 | BUG-039 | Test `thread.service.spec.ts` **tự đỏ từ 2026-11-19** (ghi cứng ngày, code có giới hạn 30 ngày) → chặn cổng deploy | API · Test | 🟠 | Fixed (2026-11-19) | — |
 | BUG-038 | Bấm nút có kịch bản ("Delivery inquiry"): **bong bóng tự đổi** thành câu soạn sẵn ("How long does shipping take?") sau vài giây | API · Widget | 🟠 | Fixed code (2026-11-19) | T08 |
 | BUG-037 | Khách đã đăng nhập (nhận diện bằng chữ ký từ theme) **mất đoạn chat mỗi lần chuyển trang** | API · Widget | 🔴 | Fixed code (2026-11-18); chờ chủ dự án thử lại | — |
@@ -168,6 +169,14 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-040 · Thẻ Contact Support vẫn mất sau khi chuyển trang (bản đầu của PLN-261119)
+- **Hiện tượng (chủ dự án, bản Preview, 2026-11-19):** sau khi deploy `5504ed3e`, bấm Contact Support, chuyển trang, mở lại: không thấy thẻ. Hai phần còn lại của PLN-261119 chạy đúng.
+- **Nguyên nhân:** ở trang mới, widget biết phiên trước rồi mới biết cuộc trò chuyện (khách đã đăng nhập: phiên của trang → phiên được dùng lại → `conversationId`). Trong khoảng đó nó chưa có thẻ nào, và hiệu ứng lưu chạy với danh sách rỗng; `saveThreadInserts` coi "rỗng" là "xoá", nên **xoá đúng bản ghi sắp được khôi phục**. Khi `conversationId` tới thì không còn gì để đọc.
+- **Vì sao test không bắt:** TC-11-07 chạy widget đứng riêng, nơi phiên và cuộc trò chuyện không đổi sau khi tải lại; chuỗi "phiên trước, cuộc trò chuyện sau" chỉ có ở bản nhúng với khách đã đăng nhập.
+- **Fix:** lưu danh sách rỗng không ghi và không xoá gì; chỉ `clearThreadInserts` (chat kết thúc) mới xoá. Test đơn vị dựng lại đúng chuỗi của trang mới (`thread-inserts.test.mjs`).
+- **Chưa kiểm được ở local:** tình huống thật cần khách đăng nhập trên cửa hàng Shopify; chờ chủ dự án thử lại.
+- **Phòng ngừa:** hàm lưu không được vừa là hàm xoá; "chưa có gì để lưu" và "đã bỏ hết" là hai việc khác nhau và phải có hai lời gọi khác nhau.
 
 ## BUG-038 · Bong bóng của khách tự đổi chữ sau khi bấm nút có kịch bản
 - **Hiện tượng (chủ dự án, 2026-11-19):** bấm "Delivery inquiry" → bong bóng ghi "Delivery inquiry", vài giây sau thành "How long does shipping take?".

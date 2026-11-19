@@ -46,13 +46,18 @@ export function loadThreadInserts<T>(sessionToken: string, conversationId: strin
   }
 }
 
+/**
+ * An empty list is never written and never deletes what is stored (BUG-040).
+ * After a storefront navigation the widget first knows the session and only
+ * later which conversation it is in: for that moment it holds no cards, and a
+ * save from that state wiped the very entry it was about to restore. Removal is
+ * `clearThreadInserts` — an ended chat — and nothing else; an entry left behind
+ * expires, and is ignored for any other conversation.
+ */
 export function saveThreadInserts<T>(sessionToken: string, conversationId: string | null, items: T[]): void {
   try {
     const key = keyFor(sessionToken);
-    if (!items.length) {
-      sessionStorage.removeItem(key);
-      return;
-    }
+    if (!items.length) return;
     const stored: Stored<T> = { conversationId: conversationId ?? null, savedAt: Date.now(), items: items.slice(-MAX_ITEMS) };
     sessionStorage.setItem(key, JSON.stringify(stored));
   } catch {

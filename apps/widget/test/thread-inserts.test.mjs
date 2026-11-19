@@ -56,14 +56,24 @@ test('the session token is not written into the storage key', async () => {
   assert.equal([...m.data.keys()].some((k) => k.includes('secret-session-token')), false);
 });
 
-test('saving an empty list, or clearing, removes the entry', async () => {
+// BUG-040: on a new page the widget knows its session before it knows the
+// conversation. For that moment it holds no cards — and a save from that state
+// deleted the stored cards just before they would have been restored.
+test('saving an empty list never deletes what is stored — the page-change sequence', async () => {
   const m = await load();
-  m.saveThreadInserts('tok-A', '42', [CARD]);
-  m.saveThreadInserts('tok-A', '42', []);
-  assert.equal(m.data.size, 0);
+  m.saveThreadInserts('tok-A', '42', [CARD]); // page 1: the shopper opened Contact Support
+  // page 2, in the order the widget learns things:
+  assert.deepEqual(m.loadThreadInserts('tok-A', null), []); // session known, conversation not yet
+  m.saveThreadInserts('tok-A', null, []); // the widget's own "nothing on screen" save
+  assert.deepEqual(m.loadThreadInserts('tok-A', '42'), [CARD]); // conversation arrives → restored
+});
+
+test('only an explicit clear removes the entry', async () => {
+  const m = await load();
   m.saveThreadInserts('tok-A', '42', [CARD]);
   m.clearThreadInserts('tok-A');
   assert.equal(m.data.size, 0);
+  assert.deepEqual(m.loadThreadInserts('tok-A', '42'), []);
 });
 
 test('a day-old entry is ignored', async () => {
