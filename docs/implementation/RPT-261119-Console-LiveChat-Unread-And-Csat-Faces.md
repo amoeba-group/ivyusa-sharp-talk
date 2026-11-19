@@ -58,7 +58,7 @@ Phân tích từng nút / khối ở [PLN §9.1](../plan/PLN-261119-Console-Live
 | Rollback | Lùi code trước, rồi `DROP TABLE conversation_reads;`. Không bảng nào khác phụ thuộc |
 
 - [x] Local (MySQL 3316): chạy 2 lần, 112 dòng cả hai lần
-- [ ] Production (`talkaibotprd01`, container `sharptalk_mysql`)
+- [x] Production (`talkaibotprd01`, container `sharptalk_mysql`): chủ dự án chạy 2026-11-19 trước khi push — bảng tạo xong, `seeded` = 16
 
 ## 3. Kiểm thử
 
@@ -88,6 +88,7 @@ Ba ca đỏ trên máy Windows, không liên quan thay đổi này; CI (Linux) x
 
 | Mục | Trạng thái |
 |---|---|
-| SQL production | ⏳ chờ chủ dự án chạy |
-| Commit / CI | ⏳ |
-| Server `talkaibotprd01` | ⏳ |
+| SQL production | ✅ 2026-11-19, trước khi push (`seeded` = 16) |
+| Commit / CI | `8f72842b` · IVY CI/CD [44487746906](https://github.com/amoeba-group/ivyusa-sharp-talk/actions/runs/44487746906) xanh (verify, e2e gate, deploy-gate) |
+| Server `talkaibotprd01` | ✅ 08:37:30 UTC ngày 2026-11-19: widget phục vụ bundle mới `index-B4itaz8m.js` (trước đó `index-Bt0Ahgzv.js`). Console Live Chat (kiểm chỉ đọc): bộ lọc All · Unread · Needs agent · Ended; Advanced tools tắt; 7 dòng, 0 chưa đọc (đúng: đã ghi sẵn); mở một cuộc trò chuyện đã đọc → nhãn "AI is answering", Accept · End · More, thẻ Customer đầu cột phải, bong bóng AI không còn Rate answer / Save as knowledge / "· Default" |
+| Chủ dự án thử | ⏳ (1) nhắn từ widget → dòng có vạch xanh + số ở menu trái, mở ra thì mất; (2) đánh giá rồi tải lại trang → mặt đã chọn còn sáng |

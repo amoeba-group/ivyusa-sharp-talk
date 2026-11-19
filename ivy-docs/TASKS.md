@@ -352,7 +352,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 ### Bổ sung 2026-11-19 · Console: menu Inquiries, ẩn tab Callback requests — ✅ deploy · [RPT](../docs/implementation/RPT-261119-IVY-Console-Inquiries-Menu.md)
 - Inquiries có mục riêng ở menu trái; tab Callback requests chỉ hiện khi tenant dùng gọi lại.
 
-### Bổ sung 2026-11-19 · Console Live Chat: đã đọc / chưa đọc, ít nút hơn, mặt đánh giá — ✅ code · ⏳ SQL + deploy · [PLN](../docs/plan/PLN-261119-Console-LiveChat-Unread-And-Csat-Faces.md) · [RPT](../docs/implementation/RPT-261119-Console-LiveChat-Unread-And-Csat-Faces.md)
+### Bổ sung 2026-11-19 · Console Live Chat: đã đọc / chưa đọc, ít nút hơn, mặt đánh giá — ✅ deploy (SQL chạy trước, `8f72842b`, 08:37 UTC) · ⏳ chủ dự án thử · [PLN](../docs/plan/PLN-261119-Console-LiveChat-Unread-And-Csat-Faces.md) · [RPT](../docs/implementation/RPT-261119-Console-LiveChat-Unread-And-Csat-Faces.md)
 - **Chủ dự án duyệt:** `1. ok 2. a 3. a 4. ok` — chưa đọc tính riêng cho từng nhân viên; mặt đánh giá ở cả widget và console; chủ dự án chạy SQL trên server.
 - Bảng mới `conversation_reads` (`sql/261119-conversation-reads.sql`, **chạy trước khi push**). Bộ lọc Unread, số ở menu trái, Mark as unread / Mark all as read.
 - Đầu cuộc trò chuyện còn Accept · End · More; công cụ nhóm (gộp phòng, nhóm, chọn AI agent, tra cứu kiến thức, tóm tắt, lịch sử xử lý, chấm câu trả lời) nằm sau công tắc **Advanced tools**. Bỏ nút Sync.
