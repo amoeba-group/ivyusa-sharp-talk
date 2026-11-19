@@ -182,6 +182,15 @@ export type DisclosurePlacement = (typeof DISCLOSURE_PLACEMENT)[keyof typeof DIS
 export const CITATIONS_DISPLAY = { SHOWN: 'shown', HIDDEN: 'hidden' } as const;
 export type CitationsDisplay = (typeof CITATIONS_DISPLAY)[keyof typeof CITATIONS_DISPLAY];
 
+/**
+ * Whose name a human agent's message carries in the widget (ivy-docs
+ * PLN-261119 chat badge). `person` — the agent's own name, the tenant's generic
+ * label only when they have none (every tenant before). `label` — the generic
+ * label ("Ivyusa Support") whenever one is set; staff names stay in the console.
+ */
+export const AGENT_NAME_DISPLAY = { PERSON: 'person', LABEL: 'label' } as const;
+export type AgentNameDisplay = (typeof AGENT_NAME_DISPLAY)[keyof typeof AGENT_NAME_DISPLAY];
+
 export const ON_BRAND = { AUTO: 'auto', WHITE: 'white' } as const;
 export type OnBrand = (typeof ON_BRAND)[keyof typeof ON_BRAND];
 /** The lowest contrast at which `onBrand: white` is still honoured. */
@@ -235,6 +244,8 @@ export interface WidgetDesign {
   onBrand?: OnBrand | null;
   /** Absent = `shown` — see CITATIONS_DISPLAY. */
   citations?: CitationsDisplay | null;
+  /** Absent = `person` — see AGENT_NAME_DISPLAY. */
+  agentName?: AgentNameDisplay | null;
   /** Uploaded images for the avatar slots; a missing slot draws the built-in glyph. */
   icons?: WidgetIconSlots | null;
   /**
@@ -628,6 +639,7 @@ export function normalizeDesign(input: unknown): WidgetDesign | null {
   if (raw.disclosurePlacement === DISCLOSURE_PLACEMENT.HIDDEN) out.disclosurePlacement = DISCLOSURE_PLACEMENT.HIDDEN;
   if (raw.onBrand === ON_BRAND.WHITE) out.onBrand = ON_BRAND.WHITE;
   if (raw.citations === CITATIONS_DISPLAY.HIDDEN) out.citations = CITATIONS_DISPLAY.HIDDEN;
+  if (raw.agentName === AGENT_NAME_DISPLAY.LABEL) out.agentName = AGENT_NAME_DISPLAY.LABEL;
   if (raw.icons && typeof raw.icons === 'object') {
     const icons: WidgetIconSlots = {};
     for (const slot of ICON_SLOTS) {

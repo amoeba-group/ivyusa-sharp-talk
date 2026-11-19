@@ -38,6 +38,7 @@ const EMPTY: WidgetDesignDraft = {
   disclosurePlacement: 'top',
   onBrand: 'auto',
   citations: 'shown',
+  agentName: 'person',
   botAvatarUuid: null,
   agentAvatarUuid: null,
 };
@@ -61,6 +62,7 @@ function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
       d.disclosurePlacement === 'bottom' || d.disclosurePlacement === 'hidden' ? d.disclosurePlacement : 'top',
     onBrand: d.onBrand === 'white' ? 'white' : 'auto',
     citations: d.citations === 'hidden' ? 'hidden' : 'shown',
+    agentName: d.agentName === 'label' ? 'label' : 'person',
     botAvatarUuid: d.icons?.botAvatar?.uuid ?? null,
     agentAvatarUuid: d.icons?.agentAvatar?.uuid ?? null,
   };
@@ -462,6 +464,13 @@ export function WidgetDesignsCard() {
                 </Select>
               </FormRow>
               <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.citationsHint')}</p>
+              <FormRow label={t('widgetDesigns.agentName')}>
+                <Select value={ed.draft.agentName ?? 'person'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, agentName: e.target.value as 'person' | 'label' } })} className="w-44">
+                  <option value="person">{t('widgetDesigns.agentNamePerson')}</option>
+                  <option value="label">{t('widgetDesigns.agentNameLabel')}</option>
+                </Select>
+              </FormRow>
+              <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.agentNameHint')}</p>
               {cssAllowed && (
                 <FormRow label={t('widgetDesigns.customCss')}>
                   <textarea

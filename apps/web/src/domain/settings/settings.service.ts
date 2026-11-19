@@ -208,6 +208,8 @@ export interface WidgetDesignDraft {
   onBrand?: 'auto' | 'white';
   /** PLN-261119: the "Knowledge referenced" list under an AI answer. */
   citations?: 'shown' | 'hidden';
+  /** PLN-261119: whose name a human agent's message carries in the widget. */
+  agentName?: 'person' | 'label';
   /** PLN-261019: uploaded icon assets for the avatar slots. */
   botAvatarUuid?: string | null;
   agentAvatarUuid?: string | null;
@@ -280,6 +282,7 @@ export function designToWire(design: WidgetDesignDraft) {
     disclosure_placement: design.disclosurePlacement ?? 'top',
     on_brand: design.onBrand ?? 'auto',
     citations: design.citations ?? 'shown',
+    agent_name: design.agentName ?? 'person',
     bot_avatar_uuid: design.botAvatarUuid ?? null,
     agent_avatar_uuid: design.agentAvatarUuid ?? null,
   };

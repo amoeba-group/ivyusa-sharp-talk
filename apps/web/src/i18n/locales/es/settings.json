@@ -930,6 +930,10 @@
     "citationsShown": "Mostradas bajo cada respuesta (predeterminado)",
     "citationsHidden": "Ocultas",
     "citationsHint": "La lista «Conocimiento consultado» bajo una respuesta de IA: los documentos usados, con enlaces de productos y vídeos. Ocultas quita toda la lista para el comprador; los agentes siguen viendo las fuentes en la consola.",
+    "agentName": "Nombre del agente que ve el comprador",
+    "agentNamePerson": "El nombre propio del agente (predeterminado)",
+    "agentNameLabel": "La etiqueta genérica",
+    "agentNameHint": "La etiqueta genérica es «Nombre del agente» en Ajustes del tenant (p. ej., «Equipo de soporte»). Al elegirla, el comprador ve esa etiqueta en cada respuesta humana, sin nombre ni foto del personal; si no hay etiqueta, se sigue mostrando el nombre del agente.",
     "disclosureHint": "El mismo aviso legal en otro sitio. La línea inferior también enlaza los términos del servicio (Aviso de privacidad › URL de términos). Oculto quita la línea y su enlace Finalizar chat; el aviso de consentimiento y los ajustes de privacidad siguen nombrando al proveedor de IA. Comprueba tus requisitos legales antes de elegirlo."
   },
   "settingsSnapshots": {

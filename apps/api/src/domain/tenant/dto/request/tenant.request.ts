@@ -384,6 +384,8 @@ export class UpdateWidgetThemeRequest {
     on_brand?: string | null;
     /** PLN-261119: 'shown' (default) | 'hidden' — the "Knowledge referenced" list under an AI answer. */
     citations?: string | null;
+    /** PLN-261119: 'person' (default) | 'label' — whose name a human agent's message carries. */
+    agent_name?: string | null;
     /** PLN-261019: uploaded icon assets for the avatar slots (uuids checked like the launcher icon). */
     bot_avatar_uuid?: string | null;
     agent_avatar_uuid?: string | null;

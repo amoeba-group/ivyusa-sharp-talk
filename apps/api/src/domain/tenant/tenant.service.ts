@@ -891,6 +891,7 @@ export class TenantService {
       disclosurePlacement: d.disclosure_placement ?? null,
       onBrand: d.on_brand ?? null,
       citations: d.citations ?? null,
+      agentName: d.agent_name ?? null,
       icons: {
         botAvatar: await ref(d.bot_avatar_uuid, 'icon'),
         agentAvatar: await ref(d.agent_avatar_uuid, 'icon'),

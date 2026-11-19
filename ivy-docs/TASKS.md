@@ -344,3 +344,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Chủ dự án duyệt:** `1. ok 2. a 3. ok`.
 - BUG-038 (bong bóng đổi chữ), thẻ của widget nhớ theo tab, tuỳ chọn thiết kế `citations: hidden`. Kèm BUG-039 (test hẹn giờ).
 - **Chưa làm (2b):** lưu các lần bấm Contact Support / My Orders lên server để nhân viên thấy.
+
+### Bổ sung 2026-11-19 · Số chưa đọc của Chat và tên nhân viên hiện với khách — ✅ code · ⏳ đặt trên production · [RPT](../docs/implementation/RPT-261119-IVY-Chat-Badge-And-Agent-Label.md)
+- BUG-041: thông báo "nhân viên đã trả lời" tính vào tab Chat, tự đọc khi mở Chat.
+- Tuỳ chọn thiết kế `agentName: label`: khách thấy nhãn chung (Tenant Settings → Agent sender name, ví dụ "Ivyusa Support") thay cho tên và ảnh của nhân viên. Chủ dự án yêu cầu ngày 2026-11-19.

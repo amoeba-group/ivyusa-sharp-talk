@@ -130,6 +130,13 @@ export class NotificationController {
     return { deleted };
   }
 
+  @Post('read-chat')
+  @Public()
+  @ApiOperation({ summary: "Mark the shopper's agent-reply notices read (the chat was opened)" })
+  async markChatRead(@Body() body: ReadNotificationRequest) {
+    return { read: await this.notificationService.markChatRead(body.session_token) };
+  }
+
   @Post(':id/read')
   @Public()
   @ApiOperation({ summary: 'Mark a notification read (verifies ownership)' })

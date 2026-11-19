@@ -307,14 +307,27 @@ describe('NotificationService scoping — order vs notice half', () => {
     // TypeORM nests the negated operator under `child`, not `value`.
     expect(op.type).toBe('not');
     expect(op.child?.type).toBe('in');
-    expect(op.child?.value).toEqual([...ORDER_NOTIFICATION_CATEGORIES]);
+    // …and "an agent replied" (BUG-041): that one is the Chat tab's.
+    expect(op.child?.value).toEqual([...ORDER_NOTIFICATION_CATEGORIES, 'chat']);
   });
 
-  it('the two halves are exact complements — no row belongs to both or neither', async () => {
+  it('the two halves and the chat notices share no row and miss none', async () => {
     await svc.list('tok', 'all', 1, 20, 'order');
     const orderOp = operatorOf(lastWhere);
     await svc.list('tok', 'all', 1, 20, 'notice');
-    expect(operatorOf(lastWhere).child?.value).toEqual(orderOp.value);
+    expect(operatorOf(lastWhere).child?.value).toEqual([...(orderOp.value as string[]), 'chat']);
+  });
+
+  // BUG-041: an agent's reply raised the Notifications badge, where no chip
+  // lists it, so the shopper could never read it away.
+  it('scope=feed is everything but the agent-reply notices; scope=chat is only those', async () => {
+    await svc.unreadCount('tok', 'feed');
+    const feed = countWhere!.category as unknown as { type?: string; value?: unknown; child?: unknown };
+    expect(feed.type).toBe('not');
+    expect((feed.value ?? feed.child) as unknown).toBe('chat');
+    await svc.unreadCount('tok', 'chat');
+    expect(countWhere!.category).toBe('chat');
+    expect(countWhere!.readAt).toBeDefined();
   });
 
   it('no scope means the whole feed — the single-list-tab configuration', async () => {
@@ -537,7 +550,8 @@ describe('NotificationService.remove', () => {
       const notice = operator(update.mock.calls[1][0].category);
       expect(notice.type).toBe('not');
       // FindOperator.value unwraps a nested operator: Not(In(x)).value === x.
-      expect(notice.value).toEqual(['payment', 'shipping', 'review']);
+      // 'chat' — an agent's reply is not a notice (BUG-041), so "delete all" here leaves it alone too.
+      expect(notice.value).toEqual(['payment', 'shipping', 'review', 'chat']);
     });
 
     it('categories win over scope; the "all" sentinel is not a category', async () => {
@@ -771,5 +785,43 @@ describe('NotificationService.ensureOrderNotices', () => {
       createdAt: 'DESC',
       id: 'DESC',
     });
+  });
+});
+
+/**
+ * BUG-041: "an agent replied" notices have no row to tap. Opening the chat is
+ * what reads them.
+ */
+describe('NotificationService.markChatRead', () => {
+  function build(affected: number) {
+    const update = jest.fn(async () => ({ affected }));
+    const del = jest.fn();
+    const svc = new NotificationService(
+      { update } as unknown as Repository<Notification>,
+      {} as unknown as Repository<NotificationPref>,
+      {} as unknown as Repository<Session>,
+      { findOne: jest.fn(async () => null) } as unknown as Repository<Tenant>,
+      { requireCustomerId: jest.fn(async () => 42), requireCustomer: jest.fn() } as never,
+      { subscribe: jest.fn(), publish: jest.fn() } as unknown as EventBusService,
+      { del, get: jest.fn(async () => null), set: jest.fn(), available: () => true } as unknown as RedisService,
+    );
+    return { svc, update, del };
+  }
+
+  it("marks only this shopper's unread chat notices, and drops every cached badge", async () => {
+    const h = build(2);
+    await expect(h.svc.markChatRead('tok')).resolves.toBe(2);
+    const [where, set] = h.update.mock.calls[0] as unknown as [Record<string, unknown>, Record<string, unknown>];
+    expect(where).toMatchObject({ customerId: 42, category: 'chat' });
+    expect(where.readAt).toBeDefined(); // IS NULL — already-read rows are left alone
+    expect(set.readAt).toBeInstanceOf(Date);
+    // Unscoped (the storefront bell) + order + notice + feed + chat.
+    expect(h.del).toHaveBeenCalledTimes(5);
+  });
+
+  it('with nothing to read it leaves the caches alone', async () => {
+    const h = build(0);
+    await expect(h.svc.markChatRead('tok')).resolves.toBe(0);
+    expect(h.del).not.toHaveBeenCalled();
   });
 });

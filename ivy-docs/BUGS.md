@@ -33,6 +33,7 @@
 | BUG-028 | Tiếng Hàn xuống dòng **giữa một từ**: "도와드릴 / 까요?", "요청에 / 만", "유지됩니 / 다." | Widget / i18n | 🟡 | Fixed (T14, 2026-11-13) | T13 · T14 |
 | BUG-029 | Bấm Tab thì focus **thoát khỏi panel** ra trang phía sau, dù panel là hộp thoại modal (`aria-modal`) | Widget / a11y | 🟡 | Fixed (T15, 2026-11-13) | T15 |
 | BUG-030 | Trang widget **mở thẳng** trên điện thoại (`talk.ivyusa.com/widget/`) hiện thẻ 370×600 lệch trái, không như khách thấy trên ivyusa.com | Widget | 🟡 | Fixed (T15, 2026-11-13) | T15 |
+| BUG-041 | Nhân viên trả lời → **số chưa đọc hiện ở tab Notifications** (nơi không có dòng nào để đọc) và **không bao giờ mất**; tab Chat không có số | API · Widget | 🔴 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T01 |
 | BUG-040 | Thẻ Contact Support / My Orders **vẫn mất khi chuyển trang** với khách đã đăng nhập: lần lưu "rỗng" lúc trang mới tải đã xoá bản ghi sắp khôi phục | Widget | 🟠 | Fixed code (2026-11-19); chờ chủ dự án thử lại | T11 |
 | BUG-039 | Test `thread.service.spec.ts` **tự đỏ từ 2026-11-19** (ghi cứng ngày, code có giới hạn 30 ngày) → chặn cổng deploy | API · Test | 🟠 | Fixed (2026-11-19) | — |
 | BUG-038 | Bấm nút có kịch bản ("Delivery inquiry"): **bong bóng tự đổi** thành câu soạn sẵn ("How long does shipping take?") sau vài giây | API · Widget | 🟠 | Fixed code (2026-11-19) | T08 |
@@ -169,6 +170,12 @@
 - **Phòng ngừa:**
   - Phần tử khai báo `aria-modal` thì phải giữ focus. Test bàn phím phải bấm Tab qua hết các nút, không chỉ một lần.
   - Test focus phải chờ panel tải xong, và có ca riêng cho phần tử biến mất dưới focus.
+
+## BUG-041 · Nhân viên trả lời: số chưa đọc hiện ở tab Notifications và không bao giờ mất
+- **Hiện tượng (chủ dự án, bản Preview, 2026-11-19):** trả lời 2 tin từ live chat của console → chuông và tab **Notifications** hiện "2", tab Chat không có số. Mở Notifications: "No notifications yet.", số 2 vẫn còn.
+- **Nguyên nhân:** mỗi câu trả lời của nhân viên tạo một thông báo loại `chat` (`AgentService.notifyCustomerOfReply`). Số chưa đọc của tab Notifications đếm **mọi** loại, nhưng danh sách chỉ có các chip Order / Delivery / Promo / Review, không chip nào liệt kê loại `chat`. Không có dòng để chạm thì không có cách đánh dấu đã đọc. Số của tab Chat thì chỉ đếm tin tới trong lúc trang đang mở.
+- **Fix:** phạm vi đếm mới — `feed` (mọi loại trừ `chat`) cho tab Notifications, `chat` cho tab Chat; `notice` cũng bỏ `chat`. Đếm không phạm vi (chuông trên trang cửa hàng) vẫn gồm tất cả. `POST /notifications/read-chat`: mở tab Chat là đã đọc. `notification.service.ts`, `useTabBar.ts`. TC-01-09, TC-01-10.
+- **Phòng ngừa:** thứ gì làm tăng một con số chưa đọc thì phải có đúng một chỗ để người dùng đọc nó ở cùng tab đó; thêm loại thông báo mới phải trả lời được "nó hiện ở chip nào".
 
 ## BUG-040 · Thẻ Contact Support vẫn mất sau khi chuyển trang (bản đầu của PLN-261119)
 - **Hiện tượng (chủ dự án, bản Preview, 2026-11-19):** sau khi deploy `5504ed3e`, bấm Contact Support, chuyển trang, mở lại: không thấy thẻ. Hai phần còn lại của PLN-261119 chạy đúng.

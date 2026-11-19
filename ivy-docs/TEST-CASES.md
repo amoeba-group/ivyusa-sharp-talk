@@ -76,6 +76,8 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-01-06 | Rộng 380px (theme thật) | bề rộng panel 378–382px, **chờ** theme của tenant về (panel có thể mở ở 404px mặc định trước đó, BUG-018) | G-03, §4 |
 | TC-01-07 | Settings | ⚙ → "Chat & AI consent"; Back → về tab | SCR-IVY-02 |
 | TC-01-08 ×11 | Mọi kích thước màn hình, mở qua **`embed.js` thật** trên một trang storefront (tag `@devices`) | Panel nằm trọn trong màn hình. ≥ 640px: 380 × min(600, frame − 20). < 640px: **kín màn hình** (từ T15; trước đó: cao min(680, màn hình), bám đáy). Header "Hi, Kiho", 2 tab và nút Close đều hiện trong panel | SCR-IVY-01, yêu cầu 2026-11-10 "PC, tablet, mọi mobile" |
+| TC-01-09 | Có 2 thông báo "nhân viên đã trả lời", mở khung (mặc định ở tab Chat) | Gọi `POST /notifications/read-chat`; tab Chat không có số; số của Notifications chỉ là số của danh sách (BUG-041) |
+| TC-01-10 | Đang ở tab Notifications thì nhân viên trả lời (3 thông báo, sau lượt hỏi 30 giây) | Tab Chat hiện 3, Notifications không đổi; mở Chat → gọi read-chat, số mất |
 
 **Kết quả T01 (2026-11-10, local):** 7/7 + TC-01-08 11/11 ✅. Kích thước đo được:
 

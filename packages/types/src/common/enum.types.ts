@@ -94,7 +94,16 @@ export const ORDER_NOTIFICATION_CATEGORIES: readonly string[] = [
  * Which half of the notification feed a request wants. Absent = the whole feed,
  * which is what a tenant with only one list tab should get.
  */
-export const NOTIFICATION_SCOPE = { ORDER: 'order', NOTICE: 'notice' } as const;
+/**
+ * `chat` — "an agent replied" (category `chat`). It is not a row of the feed:
+ * no chip lists it, so nothing there can mark it read. It belongs to the Chat
+ * tab's badge, and `feed` is the feed's own total without it (BUG-041).
+ * `notice` likewise leaves it out. The unscoped count still includes
+ * everything: that is the storefront bell.
+ */
+export const NOTIFICATION_SCOPE = { ORDER: 'order', NOTICE: 'notice', FEED: 'feed', CHAT: 'chat' } as const;
+/** The category an agent's reply is filed under. */
+export const CHAT_NOTIFICATION_CATEGORY = 'chat';
 export type NotificationScope = (typeof NOTIFICATION_SCOPE)[keyof typeof NOTIFICATION_SCOPE];
 
 /**

@@ -35,6 +35,8 @@ export interface MockOptions {
   mockScenario?: boolean;
   /** Start with an empty notification feed. */
   emptyFeed?: boolean;
+  /** Unread "an agent replied" notices (category `chat`) — they count on the Chat tab (BUG-041). */
+  chatNotices?: number;
   /** Make one endpoint fail (method + path prefix), e.g. { 'POST /reviews': 500 }. */
   failures?: Record<string, number>;
   /** Order Detail addresses: 'unavailable' = the store refused them (no PCD access, T04). */
@@ -90,7 +92,7 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     contact: null,
     ...opts,
   };
-  const state = { notifications: o.emptyFeed ? [] : seedNotifications() };
+  const state = { notifications: o.emptyFeed ? [] : seedNotifications(), chatNotices: o.chatNotices ?? 0 };
   const calls: RecordedCall[] = [];
 
   const record = (req: Request, path: string, url: URL) => {
@@ -145,7 +147,18 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
 
     // ── Notifications ──────────────────────────────────────────────────────────
     if (method === 'GET' && path === '/notifications/unread-count') {
-      return route.fulfill({ json: ok({ count: state.notifications.filter((n) => !n.read).length }) });
+      // As the API scopes it: `chat` = agent-reply notices only, `feed` = the
+      // feed without them, no scope = everything (the storefront bell).
+      const scope = url.searchParams.get('scope');
+      const feed = state.notifications.filter((n) => !n.read).length;
+      const count = scope === 'chat' ? state.chatNotices : scope ? feed : feed + state.chatNotices;
+      return route.fulfill({ json: ok({ count }) });
+    }
+    if (method === 'POST' && path === '/notifications/read-chat') {
+      record(req, path, url);
+      const read = state.chatNotices;
+      state.chatNotices = 0;
+      return route.fulfill({ json: ok({ read }) });
     }
     if (method === 'GET' && path === '/notifications') {
       record(req, path, url);

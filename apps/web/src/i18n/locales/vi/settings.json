@@ -930,6 +930,10 @@
     "citationsShown": "Hiện dưới mỗi câu trả lời (mặc định)",
     "citationsHidden": "Ẩn",
     "citationsHint": "Danh sách “Knowledge referenced” dưới câu trả lời của AI: các tài liệu được dùng, kèm link sản phẩm và video. Ẩn sẽ bỏ cả danh sách khỏi màn hình của khách; nhân viên vẫn xem được nguồn trong console.",
+    "agentName": "Tên nhân viên hiện với khách",
+    "agentNamePerson": "Tên riêng của nhân viên (mặc định)",
+    "agentNameLabel": "Nhãn chung",
+    "agentNameHint": "Nhãn chung là ô “Agent sender name” trong Tenant Settings (ví dụ “Support team”). Khi chọn, khách thấy nhãn đó ở mọi câu trả lời của nhân viên, không thấy tên hay ảnh hồ sơ của nhân viên; nếu chưa đặt nhãn thì vẫn hiện tên riêng.",
     "disclosureHint": "Cùng thông báo pháp lý, chỉ đổi chỗ. Dòng dưới cũng liên kết điều khoản dịch vụ (Thông báo bảo mật › URL điều khoản). Ẩn sẽ bỏ dòng này và liên kết Kết thúc chat khỏi màn chat; thông báo đồng ý và phần cài đặt quyền riêng tư vẫn nêu nhà cung cấp AI. Hãy kiểm tra yêu cầu pháp lý trước khi chọn."
   },
   "settingsSnapshots": {

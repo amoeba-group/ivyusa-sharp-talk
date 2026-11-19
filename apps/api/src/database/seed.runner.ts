@@ -162,6 +162,8 @@ const IVY_WIDGET_PRESET = {
       onBrand: 'white',
       // PLN-261119: no "Knowledge referenced" list under an answer.
       citations: 'hidden',
+      // Shoppers see the generic agent label, not a staff member's name.
+      agentName: 'label',
     },
   }),
   widgetCopy: {

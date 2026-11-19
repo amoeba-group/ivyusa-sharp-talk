@@ -391,3 +391,11 @@ describe('knowledge references option (ivy-docs PLN-261119)', () => {
     expect(normalizeDesign({ citations: 'gone' })).toBeNull();
   });
 });
+
+describe('agent name option (ivy-docs PLN-261119 chat badge)', () => {
+  it('keeps only the non-default choice', () => {
+    expect(normalizeDesign({ agentName: 'label' })).toEqual({ agentName: 'label' });
+    expect(normalizeDesign({ agentName: 'person' })).toBeNull();
+    expect(normalizeDesign({ agentName: 'nobody' })).toBeNull();
+  });
+});

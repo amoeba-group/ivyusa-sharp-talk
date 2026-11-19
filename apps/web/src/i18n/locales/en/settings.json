@@ -930,6 +930,10 @@
     "citationsShown": "Shown under each answer (default)",
     "citationsHidden": "Hidden",
     "citationsHint": "The “Knowledge referenced” list under an AI answer: the documents it drew on, with product links and videos. Hidden removes the whole list from the shopper’s view; agents still see the sources in the console.",
+    "agentName": "Agent name shown to shoppers",
+    "agentNamePerson": "The agent's own name (default)",
+    "agentNameLabel": "The generic label",
+    "agentNameHint": "The generic label is “Agent sender name” in Tenant Settings (e.g. “Support team”). With it chosen, shoppers see that label on every human reply and no staff name or profile picture; with no label set, the agent’s own name still shows.",
     "disclosureHint": "Same legal notice, different spot. The bottom line also links the terms of service (Privacy notice › Terms URL). Hidden removes the line and its End chat link from the chat; the consent notice and the privacy settings still name the AI provider. Check your legal requirements before choosing it."
   },
   "settingsSnapshots": {

@@ -40,6 +40,40 @@ test.describe('T01 · Panel shell, header & tabs', () => {
     await expect(widget.tabBadge(widget.tab('Notifications'), unread)).toBeVisible();
   });
 
+  // BUG-041: an agent's reply raised the Notifications badge, where no chip
+  // lists it — so it could never be read away. It is the Chat tab's.
+  test.describe('an agent replied while the shopper was away', () => {
+    test.use({ mockOptions: { chatNotices: 2 } });
+    test('TC-01-09 opening the panel on Chat reads the reply; it never counts on Notifications @T01', async ({ widget, mocks }) => {
+      await widget.goto();
+      await widget.open(); // the panel opens on Chat
+      const feedUnread = mocks!.state.notifications.filter((n) => !n.read).length;
+      await expect.poll(() => mocks!.callsTo('POST', '/notifications/read-chat').length).toBeGreaterThan(0);
+      await expect(widget.tab('Chat').getByLabel(/unread/)).toHaveCount(0);
+      // The feed's badge is the feed's own count — not that plus the two replies.
+      await expect(widget.tabBadge(widget.tab('Notifications'), feedUnread)).toBeVisible();
+    });
+
+    test('TC-01-10 a reply that arrives while another tab is showing counts on the Chat tab until Chat is opened @T01', async ({ page, widget, mocks }) => {
+      await page.clock.install();
+      await widget.goto();
+      await widget.open();
+      await expect.poll(() => mocks!.callsTo('POST', '/notifications/read-chat').length).toBeGreaterThan(0);
+      await widget.openNotifications();
+      const feedUnread = mocks!.state.notifications.filter((n) => !n.read).length;
+
+      mocks!.state.chatNotices = 3; // the agent answers; the badge poll runs every 30s
+      await page.clock.fastForward(31_000);
+      await expect(widget.tabBadge(widget.tab('Chat'), 3)).toBeVisible();
+      await expect(widget.tabBadge(widget.tab('Notifications'), feedUnread)).toBeVisible();
+
+      const before = mocks!.callsTo('POST', '/notifications/read-chat').length;
+      await widget.openChat();
+      await expect.poll(() => mocks!.callsTo('POST', '/notifications/read-chat').length).toBeGreaterThan(before);
+      await expect(widget.tab('Chat').getByLabel(/unread/)).toHaveCount(0);
+    });
+  });
+
   test.describe('empty feed', () => {
     test.use({ mockOptions: { emptyFeed: true } });
     test('TC-01-04 badge is hidden when nothing is unread @T01 @design', async ({ widget }) => {

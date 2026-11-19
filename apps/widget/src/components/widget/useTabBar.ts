@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { useUnreadCount } from '../../hooks/useNotifications';
+import { markChatRead } from '../../services/notificationService';
 import { useAnalytics } from '../../lib/analytics';
 import { NOTIFICATION_SCOPE } from '../../lib/widget-tabs';
 import { tabDefs, type TabDef } from './tab-defs';
@@ -27,6 +30,8 @@ export function useTabBar(): {
   const sessionToken = useWidgetStore((s) => s.sessionToken);
   const authenticated = useWidgetStore((s) => s.authenticated);
   const chatUnread = useWidgetStore((s) => s.chatUnread);
+  const panelOpen = useWidgetStore((s) => s.panelOpen);
+  const queryClient = useQueryClient();
   const analytics = useAnalytics();
 
   const defs = tabDefs(visibleTabs);
@@ -44,7 +49,30 @@ export function useTabBar(): {
    * page: the tally undercounts the orders half and the difference inflates the
    * notifications half. A count endpoint counts.
    */
-  const { data: total } = useUnreadCount(sessionToken, authenticated);
+  // The feed's own total. "An agent replied" is not in it: no chip lists that
+  // notice, so the feed badge it raised could never be read away (BUG-041).
+  const { data: total } = useUnreadCount(sessionToken, authenticated, NOTIFICATION_SCOPE.FEED);
+  // …it is the Chat tab's instead, on top of the messages that arrived while
+  // this page was showing another tab.
+  const { data: chatNotices } = useUnreadCount(sessionToken, authenticated, NOTIFICATION_SCOPE.CHAT);
+  const chatNoticeCount = chatNotices?.count ?? 0;
+
+  // Looking at the chat is reading them: there is no row to tap for these.
+  const readingChat = panelOpen && activeTab === 'chat';
+  useEffect(() => {
+    if (!readingChat || !sessionToken || !authenticated || chatNoticeCount === 0) return;
+    let cancelled = false;
+    markChatRead(sessionToken)
+      .then(() => {
+        if (!cancelled) void queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+      })
+      .catch(() => {
+        /* the badge simply stays until the next poll */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [readingChat, sessionToken, authenticated, chatNoticeCount, queryClient]);
   const { data: orderScoped } = useUnreadCount(
     split && authenticated ? sessionToken : null,
     authenticated,
@@ -57,7 +85,7 @@ export function useTabBar(): {
   );
 
   function countFor(key: TabKey): number {
-    if (key === 'chat') return chatUnread;
+    if (key === 'chat') return readingChat ? 0 : chatUnread + chatNoticeCount;
     if (!split) return total?.count ?? 0;
     return (key === 'orders' ? orderScoped?.count : noticeScoped?.count) ?? 0;
   }

@@ -29,6 +29,13 @@ export function markRead(
   });
 }
 
+/** The chat was opened: the shopper's "an agent replied" notices are read (BUG-041). */
+export function markChatRead(sessionToken: string): Promise<{ read: number }> {
+  return apiClient.post<{ read: number }>('/notifications/read-chat', {
+    session_token: sessionToken,
+  });
+}
+
 /** What a delete asks for: selected ids, or all of one chip (tab-chips deleteAllFilter). */
 export interface DeleteNotificationsInput {
   ids?: string[];

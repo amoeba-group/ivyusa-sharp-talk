@@ -39,15 +39,23 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   const avatarRow = design?.messageStyle === 'avatar' && (isAi || isAgent);
   // Agent: the person's own profile icon first, then the tenant's agent avatar
   // (PLN-261028 D3).
-  const staffAvatar = isAgent ? message.senderAvatar ?? null : null;
+  // No staff picture either when the tenant shows its generic label (see senderLabel below).
+  const hidesStaff = design?.agentName === 'label' && !!pickCopy(widgetCopy?.agentSenderName, language);
+  const staffAvatar = isAgent && !hidesStaff ? message.senderAvatar ?? null : null;
   const avatarRef = isAi ? design?.icons?.botAvatar : isAgent ? staffAvatar ?? design?.icons?.agentAvatar : null;
   // AI: the configured name, else the widget's display name. Agent: the
   // person's own display name, else the configured generic label ("Go2Joy
   // Support") — PLN-261028 D2 put the person first.
+  // `agentName: label` (ivy-docs PLN-261119): the tenant shows its generic
+  // label on every human reply — no staff name, no staff picture — whenever it
+  // has set one; the person's own name is the fallback, not the other way round.
+  const genericAgent = pickCopy(widgetCopy?.agentSenderName, language) ?? null;
+  const agentAsLabel = design?.agentName === 'label' && !!genericAgent;
+  const agentName = agentAsLabel ? genericAgent : message.senderName ?? null;
   const senderLabel = isAi
     ? pickCopy(widgetCopy?.aiSenderName, language) ?? widgetCopy?.displayName ?? null
     : isAgent
-      ? message.senderName ?? pickCopy(widgetCopy?.agentSenderName, language) ?? null
+      ? agentName ?? genericAgent
       : null;
   // Step cards (ivy-docs T12): only a scripted turn — the one kind that carries
   // chips. An AI or agent answer that numbers its points keeps its plain list.
@@ -88,7 +96,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         </div>
       )}
       <div className="min-w-0 max-w-[85%]">
-        {!avatarRow && isAgent && message.senderName && (
+        {!avatarRow && isAgent && agentName && (
           <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
             {/* Without the avatar-row design the icon rides on the name line (PLN-261028 D4). */}
             {staffAvatar && (
@@ -99,7 +107,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
                 className="st-avatar h-5 w-5 flex-shrink-0 rounded-full object-cover"
               />
             )}
-            {message.senderName}
+            {agentName}
           </div>
         )}
         {avatarRow && senderLabel && !message.body?.trim() && (

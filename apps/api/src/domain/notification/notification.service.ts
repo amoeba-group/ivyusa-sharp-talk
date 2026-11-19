@@ -18,6 +18,7 @@ import {
   EXTERNAL_CHANNELS,
   NOTIFICATION_CATEGORY,
   NOTIFICATION_REF,
+  CHAT_NOTIFICATION_CATEGORY,
   NOTIFICATION_SCOPE,
   ORDER_NOTIFICATION_CATEGORIES,
   ORDER_STATUS_INTERNAL,
@@ -79,6 +80,8 @@ function unreadCacheKeys(customerId: number): string[] {
     unreadCacheKey(customerId),
     unreadCacheKey(customerId, NOTIFICATION_SCOPE.ORDER),
     unreadCacheKey(customerId, NOTIFICATION_SCOPE.NOTICE),
+    unreadCacheKey(customerId, NOTIFICATION_SCOPE.FEED),
+    unreadCacheKey(customerId, NOTIFICATION_SCOPE.CHAT),
   ];
 }
 
@@ -104,7 +107,12 @@ function scopedWhere(
   if (scope === NOTIFICATION_SCOPE.ORDER) {
     where.category = In([...ORDER_NOTIFICATION_CATEGORIES]);
   } else if (scope === NOTIFICATION_SCOPE.NOTICE) {
-    where.category = Not(In([...ORDER_NOTIFICATION_CATEGORIES]));
+    // "An agent replied" is the Chat tab's, not a notice (BUG-041).
+    where.category = Not(In([...ORDER_NOTIFICATION_CATEGORIES, CHAT_NOTIFICATION_CATEGORY]));
+  } else if (scope === NOTIFICATION_SCOPE.FEED) {
+    where.category = Not(CHAT_NOTIFICATION_CATEGORY);
+  } else if (scope === NOTIFICATION_SCOPE.CHAT) {
+    where.category = CHAT_NOTIFICATION_CATEGORY;
   }
   return where;
 }
@@ -543,6 +551,22 @@ export class NotificationService implements OnModuleInit {
       return saved;
     }
     return notif;
+  }
+
+  /**
+   * The shopper opened the chat: every "an agent replied" notice of theirs is
+   * read. There is no row to tap for these — the thread itself is the reading
+   * of them — so without this the badge they raise could never clear (BUG-041).
+   */
+  async markChatRead(token: string): Promise<number> {
+    const customerId = await this.requireCustomerId(token);
+    const res = await this.notifRepo.update(
+      { customerId, category: CHAT_NOTIFICATION_CATEGORY, readAt: IsNull(), deletedAt: IsNull() },
+      { readAt: new Date() },
+    );
+    const affected = res.affected ?? 0;
+    if (affected > 0) await Promise.all(unreadCacheKeys(customerId).map((k) => this.redis.del(k)));
+    return affected;
   }
 
   /**
