@@ -357,3 +357,4 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - Bảng mới `conversation_reads` (`sql/261119-conversation-reads.sql`, **chạy trước khi push**). Bộ lọc Unread, số ở menu trái, Mark as unread / Mark all as read.
 - Đầu cuộc trò chuyện còn Accept · End · More; công cụ nhóm (gộp phòng, nhóm, chọn AI agent, tra cứu kiến thức, tóm tắt, lịch sử xử lý, chấm câu trả lời) nằm sau công tắc **Advanced tools**. Bỏ nút Sync.
 - BUG-043 (thẻ đánh giá mất khi tải lại trang), TC-12-07.
+- Bổ sung (chủ dự án "ok"): dòng của cuộc trò chuyện đã được đánh giá hiện khuôn mặt khách chọn cạnh thời gian.

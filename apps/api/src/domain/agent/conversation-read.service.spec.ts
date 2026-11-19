@@ -157,4 +157,9 @@ describe('toSessionResponse — unread fields', () => {
   it('a conversation with no message has no last sender', () => {
     expect(toSessionResponse(c, null).lastSenderType).toBeNull();
   });
+
+  it('carries the customer rating for the face on the row, null when not rated', () => {
+    expect(toSessionResponse(c, null).csatRating).toBeNull();
+    expect(toSessionResponse({ ...c, csatRating: 4 } as Conversation, null).csatRating).toBe(4);
+  });
 });

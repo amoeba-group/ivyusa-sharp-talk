@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
 import { cn } from '@/lib/cn';
 import type { ThreadCallback, ThreadFeedback } from './live-chat.service';
+import { CSAT_FACES, CSAT_FIVE, CSAT_FOUR } from './csat-faces';
 
 export type ThreadEvent =
   | { type: 'callback'; at: string; key: string; item: ThreadCallback }
@@ -15,12 +16,6 @@ export function threadEventsOf(callbacks?: ThreadCallback[], feedback?: ThreadFe
     ...(feedback ?? []).map((f): ThreadEvent => ({ type: 'feedback', at: f.ratedAt, key: `fb-${f.conversationId}`, item: f })),
   ].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
 }
-
-/** The widget's faces, by the 1–5 value each one stores (widget CsatCard). */
-const FACES = ['😞', '😕', '😐', '😊', '😍'];
-/** The one-question card offers four of them — 1 · 3 · 4 · 5 (ivy-docs SPEC Q-12). */
-const FOUR = [1, 3, 4, 5];
-const FIVE = [1, 2, 3, 4, 5];
 
 /**
  * A callback request or the customer's feedback, centred in the thread at the
@@ -65,7 +60,7 @@ export function ThreadEventCard({ event }: { event: ThreadEvent }) {
   const f = event.item;
   const rating = Math.max(1, Math.min(5, Math.round(f.rating)));
   // The survey card offers all five; the one-question card never stores a 2.
-  const scale = f.resolved != null || rating === 2 ? FIVE : FOUR;
+  const scale = f.resolved != null || rating === 2 ? CSAT_FIVE : CSAT_FOUR;
   const level = t(`csatLevel.${rating}`);
   return (
     <div
@@ -88,7 +83,7 @@ export function ThreadEventCard({ event }: { event: ThreadEvent }) {
                 value === rating ? 'bg-primary-50 ring-2 ring-primary-500' : 'opacity-25 grayscale',
               )}
             >
-              {FACES[value - 1]}
+              {CSAT_FACES[value - 1]}
             </span>
           ))}
         </span>

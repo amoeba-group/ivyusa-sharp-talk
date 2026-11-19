@@ -38,7 +38,11 @@ Phân tích từng nút / khối ở [PLN §9.1](../plan/PLN-261119-Console-Live
 - **Console:** dòng ★★★★★ trong đoạn hội thoại thành hàng mặt khách đã thấy; mặt đã chọn có vòng xanh, các mặt khác mờ, kèm chữ ("Very satisfied").
 - **Widget (BUG-043):** đánh giá xong rồi tải lại / chuyển trang, thẻ trở lại ở dạng chỉ đọc với mặt đã chọn sáng; không hỏi lại, không lặp lời cảm ơn; dấu "chat has ended" nằm dưới.
 
-### 1.4 File
+### 1.4 Bổ sung sau deploy: khuôn mặt trên dòng (chủ dự án trả lời "ok")
+
+Chủ dự án mở Session 11 và không thấy khuôn mặt: cuộc trò chuyện đó chưa được đánh giá. Cuộc đã đánh giá (Session 16, "Very satisfied") đã tự kết thúc và nằm ở **Ended**, nơi hàng khuôn mặt hiện đúng. Để khỏi phải mở từng cái, dòng của cuộc trò chuyện đã được đánh giá hiện luôn khuôn mặt khách chọn, cạnh thời gian (rê chuột: "Rated Very satisfied"). API trả thêm `csatRating` trên mỗi dòng; không cần SQL. File: `agent.mapper.ts` (+ spec), `live-chat.service.ts`, `LiveChatPage.tsx`, `csat-faces.ts` (mới, dùng chung với `ThreadEventCard.tsx`).
+
+### 1.5 File
 
 | Phần | File |
 |---|---|

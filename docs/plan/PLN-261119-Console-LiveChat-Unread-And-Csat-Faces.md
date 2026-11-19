@@ -246,3 +246,9 @@ Bật **Advanced tools** thì mọi thứ trong bảng 9.1 ghi "Advanced" hiện
 - Nhân viên tạo tài khoản sau này không nhận toàn bộ lịch sử là "chưa đọc": khi chưa có dấu đọc, chỉ tin nhắn sau ngày tạo tài khoản mới tính.
 - Trong bộ lọc Unread, dòng vừa mở giữ nguyên chỗ cho tới khi mở dòng khác, không biến mất giữa lúc đang đọc.
 - Bong bóng AI không còn ghi "· Default" khi cửa hàng chỉ có một AI agent.
+- **Bổ sung sau deploy (chủ dự án trả lời "ok", 2026-11-19):** chủ dự án tìm khuôn mặt ở một cuộc trò chuyện chưa được đánh giá; cuộc đã đánh giá thì đã kết thúc và nằm ở bộ lọc Ended. Dòng của cuộc trò chuyện đã được đánh giá giờ hiện khuôn mặt khách chọn, cạnh thời gian, để nhìn danh sách là biết, không phải mở từng cái:
+
+  ```
+   cong11                 😍  1h ago
+   AI: Here's what I found for you…
+  ```

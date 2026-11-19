@@ -55,6 +55,7 @@ Migration `sql/261119-conversation-reads.sql` chạy **hai lần** trên DB loca
 | Mặt đánh giá trong đoạn hội thoại | "Customer rated this chat" · 4 mặt, mặt đã chọn có vòng xanh, 3 mặt kia mờ · "Very satisfied" |
 | Advanced tools bật | Select, Groups, lọc kênh/AI agent, chế độ AI, gộp phòng, IP, gắn khách, Comments, Handling history, AI Briefing hiện lại |
 | 1280 px | Hàng lọc xuống dòng ở "Ended", không tràn |
+| Bộ lọc Ended: dòng đã được đánh giá có khuôn mặt cạnh thời gian (bổ sung sau deploy) | 16 dòng có mặt; nhãn đọc màn hình "Rated Satisfied" / "Rated Very satisfied" |
 | Lỗi console trình duyệt | Không có |
 
 ## 4. E2E widget (Playwright)

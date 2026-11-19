@@ -133,6 +133,8 @@ export interface AgentSession {
   pinned?: boolean;
   pinnedAt?: string | null;
   escalated?: boolean;
+  /** The customer's satisfaction rating (1–5) — a face on the row; null = not rated. */
+  csatRating?: number | null;
   lastMessagePreview?: string | null;
   lastMessageAt?: string | null;
   createdAt?: string;

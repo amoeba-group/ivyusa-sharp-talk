@@ -89,6 +89,8 @@ export function toSessionResponse(
     pinned: c.pinnedAt != null,
     pinnedAt: c.pinnedAt ?? null,
     escalated: c.escalated === 1,
+    /** The customer's satisfaction rating (1–5), shown as a face on the row; null = not rated. */
+    csatRating: c.csatRating ?? null,
     // In the clear (2026-10-23 decision, reversing PLN-260920 for lists): the
     // queue is how an agent finds a customer. Masking stays inside the
     // conversation (detail header, customer panel) and on AI-bound text.

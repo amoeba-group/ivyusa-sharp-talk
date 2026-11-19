@@ -85,6 +85,7 @@ import { useAgentUpload } from './useAgentUpload';
 import { IssuePanel } from './IssuePanel';
 import { MoreMenu, type MoreMenuItem } from './MoreMenu';
 import { useAdvancedTools } from './use-advanced-tools';
+import { csatFace } from './csat-faces';
 import { useComments, useLiveChatUnreadCount, useMarkRead, useMarkUnread, useReadAll } from './live-chat.hooks';
 import { useAuthStore } from '@/store/auth-store';
 import { liveChatService } from './live-chat.service';
@@ -1199,6 +1200,18 @@ export function LiveChatPage() {
                           )}
                           {s.pinned && (
                             <Pin className="h-3 w-3 shrink-0 fill-current text-primary-600" aria-label={t('pin.pinned')} />
+                          )}
+                          {/* The customer's rating at a glance — the face they tapped. */}
+                          {s.csatRating != null && (
+                            <span
+                              role="img"
+                              aria-label={t('threadEvent.ratedAs', { level: t(`csatLevel.${Math.max(1, Math.min(5, Math.round(s.csatRating)))}`) })}
+                              title={t('threadEvent.ratedAs', { level: t(`csatLevel.${Math.max(1, Math.min(5, Math.round(s.csatRating)))}`) })}
+                              data-testid="row-rating"
+                              className="shrink-0 text-[13px] leading-none"
+                            >
+                              {csatFace(s.csatRating)}
+                            </span>
                           )}
                           <time
                             dateTime={s.lastMessageAt ?? s.createdAt ?? undefined}
