@@ -57,6 +57,10 @@ Ví dụ: Exchange & refund, Cancel order, Affiliate, Shipping.
 - **Chưa đồng ý Chat & AI:** không gọi AI, trả `null` (PRD slide 14: rút đồng ý là dừng AI ngay).
 - Giới hạn 30 lần / phút mỗi phiên. Cache 10 phút theo dữ kiện.
 - Widget hiện chấm "đang gõ" trong lúc chờ. Có câu AI thì hiện câu đó, `null` thì hiện câu cố định như hiện nay.
+- **Popular products** (Product inquiry → danh mục, PRD slide 16 bước 6: "mô tả của AI + tối đa 3 thẻ"):
+  - loại `popular` `{category}`, dữ kiện là đúng 3 sản phẩm widget đang hiện (lấy từ cache), kèm cách chọn (cửa hàng chọn / bán chạy + review);
+  - AI viết 1–2 câu giới thiệu dưới 3 thẻ, không nhắc lại giá;
+  - `null` thì không thêm câu nào, giống hiện nay.
 
 ### 1.3 Khi nào bật
 

@@ -40,7 +40,7 @@
 | Có bản viết lại | Bản viết lại đi qua moderation (`scope: ai`), là câu trả về và câu được lưu |
 | Chưa đồng ý Chat & AI | Không xin bản viết lại |
 
-### 1.4 Câu cạnh thẻ — `card-note.service.spec.ts` (mới, 7 ca)
+### 1.4 Câu cạnh thẻ — `card-note.service.spec.ts` (mới, 8 ca)
 
 | Ca | Kỳ vọng |
 |---|---|
@@ -50,10 +50,11 @@
 | Câu có số lạ ("3 days") · moderation chặn | `null` |
 | Delivery | Dữ kiện có bước giao hàng, hãng vận chuyển, có link theo dõi hay không |
 | Stock | Dữ kiện lấy từ cùng kết quả tìm của widget (cache). Sản phẩm không có trong kết quả → `null` |
+| Popular | Dữ kiện là tối đa 3 sản phẩm của cùng kết quả widget có (sản phẩm thứ 4 bị bỏ), cách chọn "chosen by the store"; prompt dặn không nhắc lại giá. Không có sản phẩm → `null` |
 
 ## 2. E2E (widget, engine Stub)
 
-`09-my-orders`, `10-product-help`, `11-contact` (Payment / Delivery / Stock / Feedback / Contact) và `12-affiliate-csat`: **39 / 39** desktop.
+`09-my-orders`, `10-product-help`, `11-contact` (Payment / Delivery / Stock / Feedback / Contact) và `12-affiliate-csat`: **39 / 39** desktop. Sau khi thêm Popular: `10` + `11` chạy lại **23 / 23**.
 
 Với Stub, API trả `text: null`, nên widget giữ câu cũ và mọi assertion không đổi.
 
@@ -62,5 +63,5 @@ Với Stub, API trả `text: null`, nên widget giữ câu cũ và mọi asserti
 Kiểm khi chức năng chat của production có Bedrock (Haiku):
 
 1. Bấm Exchange & refund, Cancel order, Affiliate ở 2–3 ngôn ngữ. Câu đọc tự nhiên, số và link đúng như kịch bản, Affiliate vẫn hiện 3 thẻ bước.
-2. Payment check / Delivery inquiry / Stock inquiry: câu dưới thẻ khớp thẻ, không có ngày hay số tiền lạ.
+2. Payment check / Delivery inquiry / Stock inquiry / Popular products: câu dưới thẻ khớp thẻ, không có ngày hay số tiền lạ.
 3. Log API: tỉ lệ `script wording refused`. Nếu Haiku hay bị từ chối, chỉnh câu lệnh cho model; dữ kiện vẫn an toàn vì đã rơi về câu gốc.

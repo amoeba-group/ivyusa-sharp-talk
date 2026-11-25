@@ -16,6 +16,7 @@ import { Session } from '../session/entity/session.entity';
 import { SessionService } from '../session/session.service';
 import { ModerationService } from '../moderation/moderation.service';
 import { ProductRecommendationService } from '../product/product-recommendation.service';
+import { ProductPopularService } from '../product/product-popular.service';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { RedisService } from '../../infrastructure/infrastructure.module';
 import { replyLanguageRule } from '../chat/rag.service';
@@ -32,10 +33,17 @@ const SYSTEM =
   'You write one or two short sentences for a shopper in the chat widget of an online beauty store. ' +
   'They sit next to a card that already shows the details below.\n' +
   'Rules:\n' +
-  '- Use only these facts. Never invent dates, amounts, times, carriers or promises.\n' +
-  '- Say what the status means for the shopper and, when it helps, the next step they can take ' +
-  '(follow the delivery, or contact support).\n' +
+  '- Use only these facts. Never invent dates, amounts, times, carriers, product claims or promises.\n' +
   '- No greeting, no question, no sign-off. Output only the sentences.';
+
+/** What the sentences are for, per card. */
+const PURPOSE: Record<CardNoteKind, string> = {
+  payment:
+    '- Say what the payment status means for the shopper and, when it helps, the next step (follow the delivery, or contact support).',
+  delivery: '- Say where the order is and, when it helps, the next step (follow it from the card, or contact support).',
+  stock: '- Say whether they can buy it now; if it is out of stock, that they can check back later or contact support.',
+  popular: '- Introduce these picks warmly, without repeating their prices and without claims the facts do not make.',
+};
 
 export interface CardNote {
   text: string | null;
@@ -65,6 +73,9 @@ export class CardNoteService {
     private readonly products: ProductRecommendationService,
     private readonly ai: AiGatewayService,
     @Optional() private readonly redis?: RedisService,
+    // Popular products (C-02 "AI description + up to 3 product cards"). Last, so
+    // the positional doubles in the spec stay valid.
+    @Optional() private readonly popular?: ProductPopularService,
   ) {}
 
   async note(dto: CardNoteRequest): Promise<CardNote> {
@@ -81,7 +92,12 @@ export class CardNoteService {
     const provider = routing.engine?.provider;
     if (!provider || provider === 'stub') return NONE;
 
-    const facts = dto.kind === 'stock' ? await this.stockFacts(tenantId, dto) : await this.orderFacts(session, dto.kind, dto.order_id);
+    const facts =
+      dto.kind === 'stock'
+        ? await this.stockFacts(tenantId, dto)
+        : dto.kind === 'popular'
+          ? await this.popularFacts(dto)
+          : await this.orderFacts(session, dto.kind, dto.order_id);
     if (!facts) return NONE;
 
     const language = String(session.language || 'EN');
@@ -95,7 +111,7 @@ export class CardNoteService {
           tenantId,
           function: AI_FUNCTION.CHAT,
           feature: 'card_note',
-          system: `${SYSTEM}\n${replyLanguageRule(language.toLowerCase())}`,
+          system: `${SYSTEM}\n${PURPOSE[dto.kind]}\n${replyLanguageRule(language.toLowerCase())}`,
           messages: [{ role: 'user', content: facts }],
           temperature: 0.4,
           maxTokens: 200,
@@ -152,6 +168,28 @@ export class CardNoteService {
     return lines.join('\n');
   }
 
+  /**
+   * The (at most three) products the Popular products answer shows — the same
+   * cached read the widget just got, so the words match the cards.
+   */
+  private async popularFacts(dto: CardNoteRequest): Promise<string | null> {
+    const category = dto.category?.trim();
+    if (!category || !this.popular) return null;
+    const res = await this.popular.popularForSession(dto.session_token, category).catch(() => null);
+    const products = res?.available ? res.products.slice(0, 3) : [];
+    if (!products.length) return null;
+    const lines = [
+      'Card: popular products of one category (the cards show name, price and a link)',
+      `Category: ${category}`,
+      `Picked: ${pickedBy(res?.mode)}`,
+      ...products.map((p, i) => {
+        const price = p.price != null ? ` — ${Number(p.price).toFixed(2)} ${p.currency ?? ''}`.trimEnd() : '';
+        return `${i + 1}. ${p.title}${p.vendor ? ` (${p.vendor})` : ''}${price}`;
+      }),
+    ];
+    return lines.join('\n');
+  }
+
   /** Stock facts of a product the shopper picked from their own search. */
   private async stockFacts(tenantId: number, dto: CardNoteRequest): Promise<string | null> {
     const handle = dto.product_handle?.trim();
@@ -168,6 +206,19 @@ export class CardNoteService {
       `Stock: ${p.available === false ? 'out of stock' : 'in stock'}`,
     ];
     return lines.join('\n');
+  }
+}
+
+/** How the popular picks were chosen (IVY PRD v1 A-04 modes), in words. */
+function pickedBy(mode: string | null | undefined): string {
+  switch (mode) {
+    case 'admin':
+      return 'chosen by the store';
+    case 'auto_bestseller':
+      return "the store's best sellers";
+    default:
+      // 'auto', and 'admin_fallback' (the store's picks were out of stock).
+      return 'ranked by recent sales and reviews';
   }
 }
 

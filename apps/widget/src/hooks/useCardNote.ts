@@ -12,7 +12,13 @@ import { cardNote, type CardNoteRequest } from '../services/chatService';
  */
 export function useCardNote(sessionToken: string | null, req: CardNoteRequest | null) {
   const { i18n } = useTranslation();
-  const target = req ? (req.kind === 'stock' ? `${req.handle}|${req.q}` : req.orderId) : null;
+  const target = !req
+    ? null
+    : req.kind === 'stock'
+      ? `${req.handle}|${req.q}`
+      : req.kind === 'popular'
+        ? req.category
+        : req.orderId;
   const q = useQuery({
     queryKey: ['card-note', req?.kind ?? null, target, sessionToken, i18n.language],
     queryFn: () => cardNote(sessionToken!, req!).catch(() => null),

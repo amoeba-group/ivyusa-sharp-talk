@@ -162,7 +162,8 @@ export function requestCallback(
 /** The card an AI line sits next to (IVY PRD v1 C-02). */
 export type CardNoteRequest =
   | { kind: 'payment' | 'delivery'; orderId: string }
-  | { kind: 'stock'; handle: string; q: string };
+  | { kind: 'stock'; handle: string; q: string }
+  | { kind: 'popular'; category: string };
 
 /**
  * The AI's line for a payment / delivery / stock card (PLN-261125-Phase5 §1.2).
@@ -173,7 +174,9 @@ export async function cardNote(sessionToken: string, req: CardNoteRequest): Prom
   const body =
     req.kind === 'stock'
       ? { session_token: sessionToken, kind: req.kind, product_handle: req.handle, q: req.q }
-      : { session_token: sessionToken, kind: req.kind, order_id: req.orderId };
+      : req.kind === 'popular'
+        ? { session_token: sessionToken, kind: req.kind, category: req.category }
+        : { session_token: sessionToken, kind: req.kind, order_id: req.orderId };
   const res = await apiClient.post<{ text: string | null }>('/chat/card-note', body);
   return res?.text?.trim() || null;
 }

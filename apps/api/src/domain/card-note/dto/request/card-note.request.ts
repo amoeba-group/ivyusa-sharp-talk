@@ -1,7 +1,7 @@
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /** The data cards an AI line can sit next to (IVY PRD v1 C-02, PLN-261125-Phase5 §1.2). */
-export const CARD_NOTE_KINDS = ['payment', 'delivery', 'stock'] as const;
+export const CARD_NOTE_KINDS = ['payment', 'delivery', 'stock', 'popular'] as const;
 export type CardNoteKind = (typeof CARD_NOTE_KINDS)[number];
 
 export class CardNoteRequest {
@@ -16,4 +16,7 @@ export class CardNoteRequest {
   /** stock: the product the shopper picked, and the words they searched with. */
   @IsOptional() @IsString() @MaxLength(255) product_handle?: string;
   @IsOptional() @IsString() @MaxLength(80) q?: string;
+
+  /** popular: the Product Help category whose (at most three) products are on screen. */
+  @IsOptional() @IsString() @MaxLength(120) category?: string;
 }

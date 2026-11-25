@@ -13,6 +13,7 @@ describe('CardNoteService', () => {
     blocked?: boolean;
     products?: Array<Record<string, unknown>>;
     fulfillment?: Record<string, unknown> | null;
+    popular?: Record<string, unknown> | null;
   }) {
     const sessionService = {
       findByToken: jest.fn(async () => ({ ...SESSION })),
@@ -30,6 +31,7 @@ describe('CardNoteService', () => {
       complete: jest.fn(async () => ({ text: opts.text ?? 'Your payment of $42 for IVY-1042 went through. We are preparing your order.', provider: opts.provider ?? 'bedrock', tokensIn: 1, tokensOut: 1, model: 'haiku' })),
     };
     const redis = { get: jest.fn(async () => null), set: jest.fn(async () => undefined) };
+    const popular = { popularForSession: jest.fn(async () => opts.popular ?? { available: false, products: [], collectionUrl: null }) };
     const svc = new CardNoteService(
       orderRepo as never,
       itemRepo as never,
@@ -39,8 +41,9 @@ describe('CardNoteService', () => {
       products as never,
       ai as never,
       redis as never,
+      popular as never,
     );
-    return { svc, ai, moderation, orderRepo, products, redis };
+    return { svc, ai, moderation, orderRepo, products, redis, popular };
   }
 
   const req = (extra: Record<string, unknown>) => ({ session_token: 't', ...extra }) as never;
@@ -94,6 +97,35 @@ describe('CardNoteService', () => {
     expect(facts).toContain('Delivery: on the way');
     expect(facts).toContain('Carrier: UPS');
     expect(facts).toContain('Tracking link: available on the card');
+  });
+
+  it('popular: introduces the same (at most three) products the cards show', async () => {
+    const h = build({
+      popular: {
+        available: true,
+        mode: 'admin',
+        collectionUrl: null,
+        products: [
+          { handle: 'a', title: 'imPRESS Press-On Nails', vendor: 'KISS', price: 9.99, currency: 'USD' },
+          { handle: 'b', title: 'Gel Fantasy Nails', vendor: 'KISS', price: 12.5, currency: 'USD' },
+          { handle: 'c', title: 'Gel Pro Top Coat', vendor: null, price: null, currency: null },
+          { handle: 'd', title: 'Fourth', vendor: null, price: 1, currency: 'USD' },
+        ],
+      },
+      text: 'Our team picked these nail favorites for you — easy to apply and long-lasting.',
+    });
+    const r = await h.svc.note(req({ kind: 'popular', category: 'nails' }));
+    expect(r.text).toMatch(/nail favorites/);
+    expect(h.popular.popularForSession).toHaveBeenCalledWith('t', 'nails');
+    const call = h.ai.complete.mock.calls[0][0] as unknown as { system: string; messages: Array<{ content: string }> };
+    const facts = call.messages[0].content;
+    expect(facts).toContain('Picked: chosen by the store');
+    expect(facts).toContain('1. imPRESS Press-On Nails (KISS) — 9.99 USD');
+    expect(facts).toContain('3. Gel Pro Top Coat');
+    expect(facts).not.toContain('Fourth');
+    expect(call.system).toMatch(/without repeating their prices/);
+    // Nothing on screen, nothing to say.
+    expect(await build({}).svc.note(req({ kind: 'popular', category: 'nails' }))).toEqual({ text: null });
   });
 
   it('stock facts come from the same search the widget ran', async () => {

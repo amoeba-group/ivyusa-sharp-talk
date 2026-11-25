@@ -7,7 +7,9 @@ import { safeLink } from '../../lib/promo';
 import { usePopularProducts } from '../../hooks/usePopularProducts';
 import type { PopularProduct, ProductCategory } from '../../lib/types';
 import { MessageBubble } from './MessageBubble';
+import { TypingBubble } from './TypingBubble';
 import { ChatChip } from './ChatChip';
+import { useCardNote } from '../../hooks/useCardNote';
 import { categoryChips, OTHER_CATEGORIES_ID, productHelpChips, START_OVER_ID } from './reply-chips';
 
 /**
@@ -201,6 +203,9 @@ export function PopularProductsAnswer({
   const products = (data?.available ? data.products : []).slice(0, 3);
   const link = safeLink(data?.collectionUrl);
   const name = category.label;
+  // "AI description + up to 3 product cards" (IVY PRD v1 slide 16, C-02): the
+  // AI's words about the cards on screen; nothing extra while it has none.
+  const note = useCardNote(sessionToken, products.length ? { kind: 'popular', category: category.id } : null);
   const lead = isError || !data?.available
     ? t('chat.productHelp.popularUnavailable', { category: name })
     : products.length
@@ -237,6 +242,7 @@ export function PopularProductsAnswer({
               )}
             </div>
           )}
+          {note.loading ? <TypingBubble mode="ai" /> : note.text && <Bot id={`${insertKey}-note`} text={note.text} />}
           <ChipRow>
             {chips.map((c) => (
               <ChatChip
