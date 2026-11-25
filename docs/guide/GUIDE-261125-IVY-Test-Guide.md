@@ -49,14 +49,14 @@ Version 1.0 · 25 November 2026 · testing from Friday 27 November 2026
 
 ### 2.3 Not on yet (not a bug) · 아직 켜지지 않은 기능 (버그 아님)
 
-- **Bedrock Guardrail.** The AI (Claude, in IVY's own AWS account) is on since 25 November: Haiku for the quick replies and the wording, Sonnet for answers from the knowledge base. IVY's Guardrail is added when IVY sends its ID (2.2).
+- **Bedrock Guardrail.** The AI (Claude, in IVY's own AWS account) is on since 25 November: Haiku for the quick replies and the wording, Sonnet for answers from the knowledge base, and Haiku checks every AI and staff reply before it is sent. IVY's Guardrail is added when IVY sends its ID (2.2).
 - **Email form outside business hours (E-02):** switched on, but works only after IVY's support hours are set in the console.
 - **Klaviyo and Yotpo:** after IVY enters the keys (2.2).
 - **Cancelling on account.ivyusa.com:** after IVY's Shopify setting (2.2).
 
 ---
 
-- **Bedrock Guardrail.** AI(IVY AWS 계정의 Claude)는 11월 25일부터 켜져 있습니다. 빠른 답변과 문장 작성은 Haiku, 지식베이스 기반 답변은 Sonnet. IVY의 Guardrail은 IVY가 ID를 보내면 추가됩니다(2.2).
+- **Bedrock Guardrail.** AI(IVY AWS 계정의 Claude)는 11월 25일부터 켜져 있습니다. 빠른 답변과 문장 작성은 Haiku, 지식베이스 기반 답변은 Sonnet, 그리고 모든 AI·상담원 답변은 발송 전에 Haiku가 검사합니다. IVY의 Guardrail은 IVY가 ID를 보내면 추가됩니다(2.2).
 - **업무 시간 외 이메일 양식(E-02):** 켜져 있지만, 콘솔에 IVY 상담 시간이 설정되어야 동작합니다.
 - **Klaviyo·Yotpo:** IVY가 키를 입력한 뒤(2.2).
 - **account.ivyusa.com에서 직접 취소:** IVY의 Shopify 설정 뒤(2.2).
