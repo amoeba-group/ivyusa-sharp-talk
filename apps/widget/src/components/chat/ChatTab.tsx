@@ -51,6 +51,7 @@ import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
 // Deep import: a value import from `@sharptalk/types` breaks the browser build (CJS `export *`).
 import { CALLBACK_CHIP_ID, INQUIRY_FORM_CHIP_ID } from '../../../../../packages/types/src/common/chat-close';
 import { contactChannels, type InquiryInput } from '../../../../../packages/types/src/common/inquiry';
+import { POPULAR_CATEGORY_CHIP_PREFIX } from '../../../../../packages/types/src/common/recommend';
 
 type Inline = 'auth' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
 
@@ -748,6 +749,15 @@ export function ChatTab() {
 
   /** Scenario follow-up chip clicks: control actions or another script. */
   function handleQuickReply(id: string, label: string) {
+    // A category under a recommendation answer (IVY PRD v1 slide 16): that
+    // category's Popular products — the selector's picks, never the AI's guess.
+    if (id.startsWith(POPULAR_CATEGORY_CHIP_PREFIX)) {
+      const handle = id.slice(POPULAR_CATEGORY_CHIP_PREFIX.length);
+      const categories = scenarioButtons.find((b) => b.action === 'product_help')?.categories ?? [];
+      const category = categories.find((c) => c.id === handle) ?? { id: handle, label };
+      addInsert('popular', null, { category, categories });
+      return;
+    }
     switch (id) {
       case CALLBACK_CHIP_ID:
         // Queue-delay / off-hours notice (PLN-261026 B4): a form, not a script.

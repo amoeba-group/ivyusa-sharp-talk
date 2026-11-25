@@ -262,6 +262,27 @@ export class AiConfigService {
     return row?.answerFooter ?? null;
   }
 
+  /**
+   * The store categories offered under Product Help (ivy-docs T10 D2), from the
+   * tenant's enabled Product Help buttons, each once. A free-text product
+   * recommendation question is answered with these (IVY PRD v1 slide 16).
+   */
+  async getProductCategories(tenantId: number | null): Promise<ProductCategory[]> {
+    if (tenantId == null) return [];
+    const row = await this.configRepo.findOne({ where: { tenantId } });
+    const seen = new Set<string>();
+    const out: ProductCategory[] = [];
+    for (const b of row?.scenarioButtons ?? []) {
+      if (b.enabled === false || b.action !== 'product_help') continue;
+      for (const c of b.categories ?? []) {
+        if (!c?.id || seen.has(c.id)) continue;
+        seen.add(c.id);
+        out.push(c);
+      }
+    }
+    return out;
+  }
+
   /** Handoff routing for a tenant, or null when it has never been configured. */
   async getHandoffConfig(tenantId: number | null): Promise<HandoffConfig | null> {
     if (tenantId == null) return null;

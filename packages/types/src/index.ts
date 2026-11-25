@@ -16,6 +16,7 @@ export * from './common/promo';
 export * from './common/product-category';
 export * from './common/inquiry';
 export * from './common/review-request';
+export * from './common/recommend';
 export * from './domain/menu.types';
 export * from './domain/rbac.types';
 export * from './domain/status-map';

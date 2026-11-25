@@ -15,6 +15,7 @@ import {
   chatCopy,
   localized,
   readChatClosePolicy,
+  RECOMMEND_ASK_COPY,
 } from '@sharptalk/types';
 import type { ChatClosePolicy, LocalizedText } from '@sharptalk/types';
 import { endConversation, sayLine } from './chat-close.util';
@@ -46,6 +47,9 @@ import { RoutingCategoryService, consultLabel } from '../routing-category/routin
 import type { RoutingContext } from '../ai-engine/handoff-router.service';
 import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infrastructure.module';
 import { AttachmentService } from '../attachment/attachment.service';
+import { AiConfigService } from '../ai-engine/ai-config.service';
+import { ScriptWordingService } from './script-wording.service';
+import { categoryChips, isRecommendationAsk, matchCategory } from './recommend-ask';
 import { MessageAttachment } from '../attachment/entity/message-attachment.entity';
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { detectLanguage } from '../../global/util/detect-language.util';
@@ -289,6 +293,10 @@ export class ChatService {
     private readonly mergedRooms?: MergedRoomService,
     /** Consult categories the shopper may pick when asking for an agent (PLN-261024). */
     private readonly consultCategories?: RoutingCategoryService,
+    /** Product Help categories for a free-text recommendation question (IVY PRD v1 slide 16). */
+    private readonly aiConfig?: AiConfigService,
+    /** AI wording of the fixed lines this service sends (IVY PRD v1 C-02). */
+    private readonly wording?: ScriptWordingService,
   ) {}
 
   /**
@@ -957,6 +965,17 @@ export class ChatService {
       const body = sysMsg('authRequired', session.language);
       await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
       return { conversationId: String(conversation.id), reply: { senderType: 'system', body }, escalate: false, needsAuth: true };
+    }
+
+    // IVY PRD v1 slides 16–17 (A-02, C-04): "recommend your most popular
+    // product" is answered from the recommendation selector, never from the
+    // knowledge base — which holds no sales data; IVY's test caught it making up
+    // a ranking and mixing categories. The shopper picks a category (the one
+    // they named comes first) and the widget's Popular products answer shows
+    // the picks. A queued thread stays with the agent; a deny topic keeps its route.
+    if (!queued && !denyAnswersFirst) {
+      const recommend = await this.recommendationTurn(tenantId, conversation.id, session, intent, egressText);
+      if (recommend) return recommend;
     }
 
     // Answer-first deny rules skip that gate deliberately (REQ-260826). The
@@ -1773,6 +1792,52 @@ export class ChatService {
    * failed to resolve while more than one tenant exists — would land a row with
    * a null tenant_id and silently drop out of every tenant-scoped statistic.
    */
+  /**
+   * A free-text recommendation question → the store's categories as chips
+   * (`POPULAR_CATEGORY_CHIP_PREFIX` + handle). Null — and the turn goes on as
+   * any other question — unless the classifier read a product question AND the
+   * words ask for picks, the tenant offers Product Help categories, and the
+   * line passes moderation.
+   */
+  private async recommendationTurn(
+    tenantId: number,
+    conversationId: number,
+    session: Session,
+    intent: { intent?: string | null; fallback?: boolean; confidence?: number | null },
+    text: string,
+  ): Promise<ChatTurnResult | null> {
+    if (!this.aiConfig || intent.fallback || intent.intent !== 'product_inquiry' || !isRecommendationAsk(text)) {
+      return null;
+    }
+    const categories = await this.aiConfig.getProductCategories(tenantId);
+    const language = session.language ?? 'EN';
+    const chips = categoryChips(categories, language, matchCategory(text, categories));
+    if (!chips.length) return null;
+    const copy = localized(RECOMMEND_ASK_COPY, language);
+    const worded = this.wording ? await this.wording.word(tenantId, language, 'recommend_ask', copy) : copy;
+    const checked = await this.moderation.moderate({
+      tenantId,
+      scope: 'ai',
+      authorType: 'ai',
+      conversationId,
+      text: worded,
+    });
+    if (checked.decision === MODERATION_DECISION.BLOCKED) return null;
+    const saved = await this.persist(tenantId, conversationId, SENDER_TYPE.AI, checked.text, session.language, {
+      answeredFrom: 'recommendation',
+      kind: 'recommend',
+      // Stored like a scripted turn's chips, so a reload keeps them (chat.mapper).
+      followUps: chips,
+      intentConfidence: intent.confidence ?? null,
+    });
+    return {
+      conversationId: String(conversationId),
+      reply: { senderType: SENDER_TYPE.AI, body: checked.text, messageId: String(saved.id), quickReplies: chips },
+      escalate: false,
+      needsAuth: false,
+    };
+  }
+
   private async persist(
     tenantId: number | null,
     conversationId: number,

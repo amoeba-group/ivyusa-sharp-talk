@@ -62,7 +62,28 @@ Ví dụ: Exchange & refund, Cancel order, Affiliate, Shipping.
   - AI viết 1–2 câu giới thiệu dưới 3 thẻ, không nhắc lại giá;
   - `null` thì không thêm câu nào, giống hiện nay.
 
-### 1.3 Khi nào bật
+### 1.3 Câu hỏi gợi ý sản phẩm gõ tự do
+
+PRD slide 16–17, A-02 / C-04. IVY đã thấy lỗi: hỏi "Recommend your most popular product" thì AI trả lời từ kho kiến thức (không có số bán), tự bịa thứ hạng và lẫn danh mục.
+
+Từ nay câu hỏi đó đi qua **bộ chọn sản phẩm**:
+
+- Điều kiện: bộ phân loại đọc là `product_inquiry` **và** câu có từ hỏi gợi ý (popular / best seller / recommend…, 6 ngôn ngữ). Tenant phải có danh mục Product Help.
+- AI trả lời một câu ("…bạn muốn xem danh mục nào?", có thể do AI viết lại theo §1.1), qua moderation. Kèm **chip các danh mục**; danh mục khách đã nhắc tới đứng đầu.
+- Khách bấm chip: widget mở đúng phần Popular products của danh mục đó (Admin Selected / AI Auto, tối đa 3 thẻ, câu AI §1.2).
+- Thread đang chờ nhân viên, hoặc chủ đề nằm trong deny-list: đi theo đường cũ.
+
+```
+🧑 Recommend your most popular nail products
+🤖 I can show you our most popular picks. Which category would you like to see?
+   [Nails] [Hair] [K-Beauty] … [Start over]       ← chip; danh mục khách nhắc tới đứng đầu
+🧑 Nails                                           (bấm chip)
+🤖 Here are popular Nails products:
+   [thẻ 1] [thẻ 2] [thẻ 3]
+🤖 (câu giới thiệu AI §1.2)
+```
+
+### 1.4 Khi nào bật
 
 Cả hai phần dùng engine của chức năng **chat** (đang dùng để phân loại câu hỏi). Production đang là Stub, nên chưa đổi gì.
 

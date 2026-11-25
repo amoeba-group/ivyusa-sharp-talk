@@ -289,6 +289,12 @@ export interface ChatTurnResponse {
      * thread to the exact answer under discussion; the widget ignores it.
      */
     messageId?: string;
+    /**
+     * Chips under this answer, shown at once rather than after the next poll
+     * (IVY PRD v1 slide 16: a recommendation question is answered with the
+     * store's categories — `POPULAR_CATEGORY_CHIP_PREFIX` + collection handle).
+     */
+    quickReplies?: ScenarioFollowUpResponse[];
   } | null;
   /** True when this turn handed the conversation to a human (the widget then offers the consult-category picker). */
   escalate: boolean;

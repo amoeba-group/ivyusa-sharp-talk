@@ -15,6 +15,7 @@
 | Luồng kịch bản | Sau cổng đồng ý Chat & AI: bản viết lại → moderation → lưu và trả về | `chat/scenario.service.ts` |
 | Câu cạnh thẻ (API) | `POST /chat/card-note` `{kind: payment\|delivery\|stock\|popular}` → `{text}`, tối đa 30 lần / phút. Dữ kiện do máy chủ dựng: đơn phải của khách trong phiên; tồn kho và sản phẩm phổ biến lấy từ cùng kết quả widget vừa nhận (cache). Cần đồng ý Chat & AI và engine thật. Có bộ kiểm số + moderation; cache 10 phút | module mới `card-note/`, `product.module.ts` (export `ProductRecommendationService`, `ProductPopularService`), `app.module.ts` |
 | Câu cạnh thẻ (widget) | Payment check, Delivery inquiry, Stock inquiry: hiện "đang gõ" khi chờ; có câu AI thì dùng, `null` thì giữ câu cũ. Popular products: câu giới thiệu AI dưới 3 thẻ (`null` → không thêm gì) | `hooks/useCardNote.ts`, `services/chatService.ts`, `OrderStatusAnswers.tsx`, `StockInquiry.tsx`, `ProductHelp.tsx` |
+| Câu hỏi gợi ý gõ tự do | Khi bộ phân loại đọc là `product_inquiry` và câu có từ hỏi gợi ý (6 ngôn ngữ): trả 1 câu (AI viết lại được) + chip các danh mục Product Help (danh mục được nhắc tới đứng đầu), không qua RAG. Phản hồi tin nhắn có `quickReplies` để chip hiện ngay. Bấm chip mở Popular products của danh mục đó | `chat/recommend-ask.ts`, `chat.service.ts`, `ai-config.service.ts` (`getProductCategories`), `packages/types` (`recommend.ts`, `ChatTurnResponse.reply.quickReplies`), widget `useChat.ts`, `ChatTab.tsx` |
 
 **Khi nào có tác dụng:** khi chức năng **chat** của tenant có engine thật. Production hiện là Stub, nên chưa đổi gì với khách. Đề xuất gán Haiku cho chat và Sonnet cho rag, sau khi PM duyệt kho kiến thức.
 
@@ -22,8 +23,8 @@
 
 | Bộ | Kết quả |
 |---|---|
-| Unit mới: bộ kiểm 13 · viết lại 7 · card-note 8 · scenario +2 | Xanh |
-| E2E chat (Stub): 09, 10, 11, 12 | 39 / 39; sau khi thêm Popular: 10 + 11 = 23 / 23 |
+| Unit mới: bộ kiểm 13 · viết lại 7 · card-note 8 · scenario +2 · gợi ý gõ tự do 14 + 6 | Xanh |
+| E2E chat (Stub): 09, 10, 11, 12 | 39 / 39; sau khi thêm Popular: 10 + 11 = 23 / 23; sau khi thêm câu hỏi gợi ý: 08 ×2, 10, 12 = 26 / 26 |
 | API toàn bộ, typecheck, build | Xem §3 |
 
 ## 3. Trạng thái triển khai

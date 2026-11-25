@@ -174,6 +174,9 @@ export function useChat(sessionToken: string | null) {
             body: res.reply.body,
             createdAt: new Date().toISOString(),
             citations: res.reply.citations,
+            // Chips that come with the answer — the store's categories for a
+            // recommendation question (IVY PRD v1 slide 16) — show at once.
+            quickReplies: res.reply.quickReplies,
           });
         }
         return {
