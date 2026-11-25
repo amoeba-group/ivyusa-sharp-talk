@@ -20,8 +20,14 @@ describe('status-map — internalToUiStatus', () => {
     expect(internalToUiStatus('delivered')).toBe(ORDER_STATUS_UI.DELIVERED);
   });
 
+  // IVY PRD v1 N-02 (PLN-261125 §2.4): Shopify cancellations and full refunds end the order.
+  it('maps cancelled → Cancelled and refunded → Refunded', () => {
+    expect(internalToUiStatus('cancelled')).toBe(ORDER_STATUS_UI.CANCELLED);
+    expect(internalToUiStatus('refunded')).toBe(ORDER_STATUS_UI.REFUNDED);
+  });
+
   it('returns null for an unknown internal status', () => {
-    expect(internalToUiStatus('refunded')).toBeNull();
+    expect(internalToUiStatus('partially_refunded')).toBeNull();
     expect(internalToUiStatus('')).toBeNull();
   });
 });
