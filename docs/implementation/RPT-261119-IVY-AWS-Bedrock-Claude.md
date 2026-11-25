@@ -35,12 +35,15 @@ Không gọi Bedrock thật từ máy local: máy không có IAM Role. Gọi th�
 
 ## 3. Trạng thái triển khai
 
+Cập nhật 2026-11-25. Các bước làm trong ngày ghi chi tiết ở [RPT giai đoạn 4](RPT-261125-IVY-PRD-v1-Phase4.md) và [RPT giai đoạn 5](RPT-261125-IVY-PRD-v1-Phase5.md) của PRD v1.
+
 | Bước | Ai | Trạng thái |
 |---|---|---|
-| 1. Thêm `AWS_REGION`, `BEDROCK_SONNET_MODEL_ARN`, `BEDROCK_HAIKU_MODEL_ARN` vào `docker/self-hosted/.env.self-hosted` trên `talkaibotprd01` | Chủ dự án | ⏳ |
-| 2. Push → CI → tự deploy (chưa chức năng nào dùng Bedrock) | Tôi | ⏳ chờ bước 1 |
-| 3. Console → Settings → AI engines: tạo "Claude Sonnet 5.5 · Bedrock" (model Sonnet) và "Claude Haiku 5.5 · Bedrock" (model Haiku) → **Test connection** cả hai | Chủ dự án | ⏳ |
-| 4. Đo `effort` / `maxTokens` trên câu hỏi thật | Tôi | ⏳ |
-| 5. Duyệt kho kiến thức | Chủ dự án | ⏳ |
-| 6. AI settings: `rag`, `chat`, `summary`, `assist`, `coach` → Sonnet; `moderation` → Haiku | Chủ dự án | ⏳ sau bước 5 |
-| 7. Báo IVY để họ test và cấu hình Guardrails | Chủ dự án | ⏳ |
+| 1. Thêm `AWS_REGION`, `BEDROCK_SONNET_MODEL_ARN`, `BEDROCK_HAIKU_MODEL_ARN` vào `docker/self-hosted/.env.self-hosted` trên `talkaibotprd01` | Chủ dự án | ✅ 2026-11-25, trước deploy `5bbd4e48` |
+| 2. Push → CI → tự deploy | Tôi | ✅ Code Bedrock (`d2073407`) lên production cùng `01aaf899` lúc 06:25 UTC, khi chưa có `.env` nên chưa dùng. Env có hiệu lực từ deploy `5bbd4e48` lúc 07:35 UTC |
+| 3. Console → Settings → AI engines: tạo "Claude Sonnet 5.5 · Bedrock" (model Sonnet) và "Claude Haiku 5.5 · Bedrock" (model Haiku) → **Test connection** cả hai | Tôi, chủ dự án đồng ý | ✅ 2026-11-25: Sonnet (#3) Test OK 796 ms, Haiku (#4) Test OK 858 ms (RPT giai đoạn 4, bước 9) |
+| 4. Đo `effort` / `maxTokens` trên câu hỏi thật | Tôi | 🟡 Đã đo thời gian trả lời trên production ([TCR giai đoạn 5 §3](../test/TCR-261125-IVY-PRD-v1-Phase5.md), RPT giai đoạn 5 bước 5): kịch bản 1,1–1,2 giây; câu hỏi kho kiến thức 3,1 giây, 4,5 giây khi có kiểm duyệt AI; câu dưới thẻ 1,3–1,8 giây, 2,3–2,9 giây khi có kiểm duyệt AI. **Chưa chỉnh tham số:** không đặt `effort`; `max_tokens` 512 / 1024 được adapter nâng lên 4096. Chỉnh theo góp ý của đợt IVY test |
+| 5. Duyệt kho kiến thức | Chủ dự án / PM | ⏳ Chưa ghi nhận. Chủ dự án cho bật AI trước (2026-11-25); kho kiến thức được kiểm trong đợt IVY test từ 2026-11-27 |
+| 6. AI settings: gán chức năng | Tôi, theo lệnh chủ dự án | ✅ 2026-11-25, khác kế hoạch ban đầu: `chat` → Haiku, `rag` → Sonnet, `moderation` → Haiku; `coach` kế thừa Sonnet; `summary` / `assist` vẫn Stub (RPT giai đoạn 5, bước 3 và 5) |
+| 7. Báo IVY test và cấu hình Guardrail | Chủ dự án | 🟡 Đã ghi trong hướng dẫn test ([GUIDE-261125](../guide/GUIDE-261125-IVY-Test-Guide.md) §2.2 mục 2): IVY gửi Guardrail ID + version, cấp `bedrock:ApplyGuardrail` cho role EC2. Chờ gửi hướng dẫn cho IVY và IVY trả lời |
+| 8. Có Guardrail: thêm `BEDROCK_GUARDRAIL_ID`, `BEDROCK_GUARDRAIL_VERSION` vào `.env.self-hosted` → deploy lại API → kiểm AI vẫn trả lời | Chủ dự án, tôi | ⏳ Tới lúc đó, kiểm duyệt AI chỉ dùng tiêu chí an toàn chung (chủ dự án quyết 2026-11-25) |

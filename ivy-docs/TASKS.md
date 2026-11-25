@@ -364,10 +364,11 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - Chỉ trả lời được cuộc mới nhất của phiên (E5165, dải báo + Open Session N); phiên vừa được trả lời thành phiên hiện tại; widget hỏi lại khi mở chat và chuyển phiên, đọc lại toàn bộ đoạn chat. TC-08-09..10.
 - **Cần chủ dự án:** thử trên theme có đoạn mã ký (Ivyusa Talk Staging) hoặc Publish theme đó, vì việc tự chuyển phiên chỉ có ở khách đã đăng nhập.
 
-### Bổ sung 2026-11-19 · Claude qua AWS Bedrock của IVY — ✅ code · ⏳ .env + deploy + đo + duyệt kho kiến thức · [PLN](../docs/plan/PLN-261119-IVY-AWS-Bedrock-Claude.md) · [RPT](../docs/implementation/RPT-261119-IVY-AWS-Bedrock-Claude.md)
+### Bổ sung 2026-11-19 · Claude qua AWS Bedrock của IVY — ✅ live 2026-11-25 (chat → Haiku, rag → Sonnet, moderation → Haiku) · ⏳ duyệt kho kiến thức, Guardrail của IVY · [PLN](../docs/plan/PLN-261119-IVY-AWS-Bedrock-Claude.md) · [RPT](../docs/implementation/RPT-261119-IVY-AWS-Bedrock-Claude.md)
 - **Chủ dự án duyệt:** `1. ok 2. a 3. ok` — bật cho khách **sau khi duyệt kho kiến thức**; Sonnet 5.5 trả lời khách, Haiku 5.5 kiểm duyệt / phân loại.
 - Adapter `bedrock` (Converse API, ARN inference profile, IAM role `talk-ivyusa-bedrock` — không khoá), engine Bedrock trong console (chọn Sonnet / Haiku), `guardrailConfig` khi IVY gửi mã guardrail. Không SQL.
-- Còn lại: chủ dự án thêm 3 dòng `.env` trên server → push → tạo 2 engine + Test connection → đo `effort` / `maxTokens` → duyệt kho kiến thức → gán chức năng → báo IVY bật Guardrails.
+- Đã làm 2026-11-25: `.env`, deploy, 2 engine Test OK, gán chức năng (RPT §3).
+- Còn lại: duyệt kho kiến thức; chỉnh `effort` / `maxTokens` theo góp ý của đợt IVY test; IVY gửi Guardrail ID + version → thêm 2 dòng `.env`.
 
 ### Bổ sung 2026-11-25 · PRD v1.0 của IVY — giai đoạn 1 — ✅ live 06:25 UTC (`01aaf899`) · [REQ](../docs/analysis/REQ-261125-IVY-PRD-v1-Gap.md) · [PLN](../docs/plan/PLN-261125-IVY-PRD-v1-Alignment.md) · [TCR](../docs/test/TCR-261125-IVY-PRD-v1-Phase1.md) · [RPT](../docs/implementation/RPT-261125-IVY-PRD-v1-Phase1.md)
 - Thông báo New / Recent, giờ "N hours ago / N days ago", thẻ cũ cùng đơn tự đã đọc, badge tối đa 1 mỗi đơn, Recent 30 ngày; nhấn giữ / chuột phải → Delete; nút xe tải ở Order Detail → Delivery; báo huỷ / hoàn tiền.
