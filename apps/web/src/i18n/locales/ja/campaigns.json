@@ -31,5 +31,16 @@
   "couponCodeHelp": "英数字・-・_ 最大{{max}}文字",
   "promoLocked": "送信後は変更できません",
   "errorPromoInvalid": "種類とクーポンコードを確認してください。英数字・-・_のみ使用できます。",
-  "errorPromoLocked": "送信済みキャンペーンの種類とクーポンコードは変更できません。"
+  "errorPromoLocked": "送信済みキャンペーンの種類とクーポンコードは変更できません。",
+  "sendTo": "送信先",
+  "audienceAll": "すべての顧客",
+  "audienceCustomers": "特定の顧客",
+  "targetEmailsPlaceholder": "1行に1件のメールアドレス",
+  "targetEmailsHelp": "これらのメールアドレスを持つこのショップの顧客にのみ送信されます。",
+  "optOutNote": "マーケティングを停止した顧客、「販売・共有しない」を選んだ顧客には送信されません。",
+  "audienceCount_one": "{{count}}人",
+  "audienceCount_other": "{{count}}人",
+  "targetNotFound_one": "このショップの顧客ではないメールアドレス {{count}}件: {{list}}",
+  "targetNotFound_other": "このショップの顧客ではないメールアドレス {{count}}件: {{list}}",
+  "errorNoRecipients": "このショップの顧客であるメールアドレスがないため、送信先がありません。"
 }

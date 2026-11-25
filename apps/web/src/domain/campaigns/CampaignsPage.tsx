@@ -19,6 +19,12 @@ import { COUPON_CODE_MAX, isValidCouponCode } from '../../../../../packages/type
 
 type LinkType = 'none' | 'product' | 'url';
 type PromoKind = 'event' | 'coupon';
+type Audience = 'all' | 'customers';
+
+/** The pasted list: one address per line (commas and spaces work too), duplicates once. */
+function parseEmails(text: string): string[] {
+  return [...new Set(text.split(/[\s,;]+/).map((e) => e.trim().toLowerCase()).filter(Boolean))];
+}
 
 export function CampaignsPage() {
   const { t } = useTranslation('campaigns');
@@ -40,6 +46,9 @@ export function CampaignsPage() {
   // campaign made the way it always was behaves the way it always did.
   const [kind, setKind] = useState<PromoKind>('event');
   const [couponCode, setCouponCode] = useState('');
+  // Who it goes to (IVY PRD v1 N-04): everyone, or the customers listed by address.
+  const [audience, setAudience] = useState<Audience>('all');
+  const [targetText, setTargetText] = useState('');
 
   const close = () => {
     setOpen(false);
@@ -52,6 +61,8 @@ export function CampaignsPage() {
     setLinkUrl('');
     setKind('event');
     setCouponCode('');
+    setAudience('all');
+    setTargetText('');
   };
 
   const openCreate = () => {
@@ -70,6 +81,8 @@ export function CampaignsPage() {
     setLinkUrl(link?.type === 'url' ? (link.url ?? '') : '');
     setKind(r.content?.kind === 'coupon' ? 'coupon' : 'event');
     setCouponCode(typeof r.content?.couponCode === 'string' ? r.content.couponCode : '');
+    setAudience(r.targetCount != null ? 'customers' : 'all');
+    setTargetText((r.targetEmails ?? []).join('\n'));
     setOpen(true);
   };
 
@@ -96,16 +109,18 @@ export function CampaignsPage() {
     };
     if (!content.link) delete content.link;
     if (kind !== 'coupon') delete content.couponCode;
+    const target_emails = audience === 'customers' ? parseEmails(targetText) : null;
     if (editing) {
-      updateCampaign.mutate({ id: editing.id, name, content }, { onSuccess: close });
+      updateCampaign.mutate({ id: editing.id, name, content, target_emails }, { onSuccess: close });
     } else {
-      createCampaign.mutate({ name, content }, { onSuccess: close });
+      createCampaign.mutate({ name, content, target_emails }, { onSuccess: close });
     }
   };
 
   const linkIncomplete =
     (linkType === 'product' && !linkHandle.trim()) || (linkType === 'url' && !linkUrl.trim());
   const couponInvalid = kind === 'coupon' && !isValidCouponCode(couponCode.trim());
+  const targetsMissing = audience === 'customers' && parseEmails(targetText).length === 0;
   const saving = createCampaign.isPending || updateCampaign.isPending;
 
   const columns: Column<Campaign>[] = [
@@ -128,7 +143,7 @@ export function CampaignsPage() {
     {
       key: 'audienceSize',
       header: t('audience'),
-      render: (r) => (r.audienceSize ?? 0).toLocaleString(),
+      render: (r) => (r.targetCount == null ? t('audienceAll') : t('audienceCount', { count: r.targetCount })),
     },
     { key: 'sentCount', header: t('sent'), render: (r) => (r.sentCount ?? 0).toLocaleString() },
     {
@@ -184,7 +199,7 @@ export function CampaignsPage() {
             <Button variant="ghost" onClick={close}>
               {tc('cancel')}
             </Button>
-            <Button onClick={save} disabled={saving || !name || !message || linkIncomplete || couponInvalid}>
+            <Button onClick={save} disabled={saving || !name || !message || linkIncomplete || couponInvalid || targetsMissing}>
               {tc('save')}
             </Button>
           </>
@@ -192,6 +207,36 @@ export function CampaignsPage() {
       >
         <FormRow label={t('name')}>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
+        </FormRow>
+        <FormRow label={t('sendTo')}>
+          <div className="flex gap-5" role="radiogroup" aria-label={t('sendTo')}>
+            {(['all', 'customers'] as const).map((a) => (
+              <label key={a} className="flex items-center gap-2 text-sm text-gray-800">
+                <input
+                  type="radio"
+                  name="campaign-audience"
+                  value={a}
+                  checked={audience === a}
+                  onChange={() => setAudience(a)}
+                />
+                {t(a === 'all' ? 'audienceAll' : 'audienceCustomers')}
+              </label>
+            ))}
+          </div>
+          {audience === 'customers' && (
+            <>
+              <textarea
+                aria-label={t('audienceCustomers')}
+                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs outline-none focus:border-primary-500"
+                rows={4}
+                placeholder={t('targetEmailsPlaceholder')}
+                value={targetText}
+                onChange={(e) => setTargetText(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-gray-500">{t('targetEmailsHelp')}</p>
+            </>
+          )}
+          <p className="mt-1 text-xs text-gray-500">{t('optOutNote')}</p>
         </FormRow>
         <FormRow label={t('channel')}>
           <Select value={channel} onChange={(e) => setChannel(e.target.value)}>

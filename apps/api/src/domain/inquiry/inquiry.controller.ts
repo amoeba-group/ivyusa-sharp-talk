@@ -33,6 +33,7 @@ export class InquiryController {
       message: body.message,
       conversationId: body.conversation_id ?? null,
       orderId: body.order_id ?? null,
+      kind: body.kind ?? null,
     });
   }
 
@@ -54,7 +55,7 @@ export class AdminInquiryController {
   @RequireCapability(CAPABILITY.MODULE_CONSULT)
   @ApiOperation({ summary: 'List inquiries (address masked, message shortened)' })
   async list(@CurrentUser() user: Principal, @Query() query: AdminInquiryListQuery) {
-    return this.inquiryService.listAll(asTenantUser(user).tenantId, query.status, query.page, query.size);
+    return this.inquiryService.listAll(asTenantUser(user).tenantId, query.status, query.page, query.size, query.kind);
   }
 
   /** The address and the whole message — every read is audited, like a callback contact. */

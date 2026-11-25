@@ -91,6 +91,46 @@ export const ja: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: '最初に戻る',
     startOverLead: 'ほかに何をお手伝いしましょうか？',
+    /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
+    payment: {
+      lead: '最新のご注文のお支払い状況です。',
+      none: 'アカウントに最近のご注文が見つかりませんでした。',
+      state: {
+        paid: '支払い済み',
+        pending: '支払い待ち',
+        cancelled: 'キャンセル済み',
+        refunded: '返金済み',
+      },
+      guide: {
+        paid: '{{orderNumber}}のお支払いは完了しています。発送したらお知らせします。',
+        pending: '{{orderNumber}}のお支払いはまだ完了していません。請求されている場合はお問い合わせください。確認いたします。',
+        cancelled: '{{orderNumber}}はキャンセルされました。請求済みの場合は、元のお支払い方法に返金されます。',
+        refunded: '{{orderNumber}}は元のお支払い方法に返金されました。銀行に反映されるまで数日かかることがあります。',
+      },
+      total: '合計 {{amount}}',
+    },
+    delivery: {
+      lead: '最新のご注文の配送状況です。',
+      none: 'アカウントに最近のご注文が見つかりませんでした。',
+      guide: {
+        preparing: '{{orderNumber}}はまだ発送されていません。発送されたらすぐにお知らせします。',
+        inTransit: '{{orderNumber}}は配送中です。',
+        delivered: '{{orderNumber}}は配達済みです。問題があればお知らせください。',
+      },
+      policy: '配送ポリシー',
+    },
+    contactSupport: 'サポートに問い合わせ',
+    feedback: {
+      lead: 'ご意見をお聞かせください。いただいた内容はスタッフに直接届きます。',
+      placeholder: 'ご意見をご記入ください',
+      send: '意見を送信',
+      sending: '送信中…',
+      thanks: 'ありがとうございます。ご意見はスタッフに届きました。',
+      mine: 'お送りいただいたご意見',
+      failed: 'ご意見を送信できませんでした。もう一度お試しください。',
+      required: '内容をご記入ください。',
+      tooLong: '{{max}}文字まで入力できます。',
+    },
     /** After the My Orders answer (SCR-IVY-11). */
     orderAnswer: {
       followUp: 'ほかにお手伝いできることはありますか？',
@@ -293,6 +333,8 @@ export const ja: Translation = {
     phoneHint: 'タップして電話をかける',
     chatHint: 'このチャットでスタッフと直接お話しいただけます',
     form: {
+      /** The order a form is sent about (IVY PRD v1 E-01). */
+      order: '注文 {{orderNumber}}',
       lead: '連絡先とお問い合わせ内容をご入力ください。',
       name: 'お名前',
       namePlaceholder: 'お名前を入力',
@@ -392,6 +434,7 @@ export const ja: Translation = {
     back: '戻る',
     qty: '数量 {{count}}',
     askRow: 'お問い合わせ',
+    emailRow: 'この注文についてメールで問い合わせ',
     subtotal: '小計',
     discount: '割引',
     shipping: '送料',

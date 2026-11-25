@@ -737,7 +737,9 @@
       "name": "姓名",
       "email": "邮箱",
       "message": "内容",
-      "status": "状态"
+      "status": "状态",
+      "kind": "类型",
+      "order": "订单"
     },
     "status_open": "未回复",
     "status_answered": "已回复",
@@ -756,7 +758,11 @@
     "answeredToast": "已标记为已回复。",
     "reopenedToast": "已重新打开。",
     "updateError": "无法更新此咨询。",
-    "openConversation": "打开会话 #{{id}}"
+    "openConversation": "打开会话 #{{id}}",
+    "kind_all": "全部",
+    "kind_inquiry": "咨询",
+    "kind_feedback": "意见反馈",
+    "order": "订单 {{number}}"
   },
   "unread": {
     "count": "{{count}} 条未读",

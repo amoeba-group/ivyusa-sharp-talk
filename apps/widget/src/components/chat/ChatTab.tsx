@@ -28,7 +28,8 @@ import { ConsentBanner } from './ConsentBanner';
 import { ScenarioMenu } from './ScenarioMenu';
 import { AuthGate } from './AuthGate';
 import { ContactAnswer } from './ContactCard';
-import { ContactFormAnswer } from './ContactForm';
+import { ContactFormAnswer, FeedbackAnswer, type FormOrder } from './ContactForm';
+import { DeliveryStatusAnswer, PaymentStatusAnswer } from './OrderStatusAnswers';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import {
   AFFILIATE_APPLY_ID,
@@ -69,7 +70,18 @@ type Inline = 'auth' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory
  */
 type ThreadInsert = {
   key: string;
-  kind: 'orders' | 'menu' | 'product' | 'categories' | 'popular' | 'contact' | 'contactForm';
+  kind:
+    | 'orders'
+    | 'menu'
+    | 'product'
+    | 'categories'
+    | 'popular'
+    | 'contact'
+    | 'contactForm'
+    // IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check, Delivery inquiry, Feedback.
+    | 'payment'
+    | 'delivery'
+    | 'feedback';
   at: number;
   asked?: string | null;
   /** product / categories / popular: the tenant's Product Help categories. */
@@ -81,6 +93,10 @@ type ThreadInsert = {
   sent?: InquiryInput;
   /** contactForm: an affiliate application (T12 §8-2a) — its own lead line and message. */
   purpose?: 'affiliate';
+  /** contactForm: the shopper's order it is about (IVY PRD v1 E-01). */
+  order?: FormOrder | null;
+  /** feedback: what was sent from it. */
+  feedbackSent?: string;
 };
 
 /** A skipped rating is remembered per conversation (same key the card used before T12). */
@@ -110,6 +126,8 @@ export function ChatTab() {
   const language = useWidgetStore((s) => s.language);
   const pendingChatMessage = useWidgetStore((s) => s.pendingChatMessage);
   const consumeChatMessage = useWidgetStore((s) => s.consumeChatMessage);
+  const pendingContactOrder = useWidgetStore((s) => s.pendingContactOrder);
+  const consumeContactOrder = useWidgetStore((s) => s.consumeContactOrder);
   const analytics = useAnalytics();
 
   const { messages, send, scenario, sending, status, escalate, pickConsultCategory, endChat, canRate, csatRating, rate, conversationId } =
@@ -440,6 +458,14 @@ export function ChatTab() {
     else saveThreadInserts(sessionToken, conversationId ?? null, inserts);
   }, [inserts, sessionToken, conversationId, status]);
 
+  // "Email us about this order" from Order Detail on another tab (E-01).
+  useEffect(() => {
+    if (!pendingContactOrder) return;
+    const order = consumeContactOrder();
+    if (order) addInsert('contactForm', null, { order });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingContactOrder]);
+
   // Auto-send a message queued from another tab (e.g. "Ask about this order").
   useEffect(() => {
     if (!pendingChatMessage || !sessionToken) return;
@@ -452,8 +478,19 @@ export function ChatTab() {
     analytics.scenarioClick(button.action, button.label);
     switch (button.action) {
       case 'delivery_status':
-        // Scripted shipping scenario (FR-S1); order tracking via follow-up chip.
-        void scenario('shipping_policy', button.label).then(runPostAction);
+        // IVY PRD v1 C-01: the shopper's own delivery card when we know who
+        // they are; the shipping policy otherwise, as before (FR-S1).
+        if (authenticated) addInsert('delivery', button.label);
+        else void scenario('shipping_policy', button.label).then(runPostAction);
+        return;
+      case 'payment_status':
+        // IVY PRD v1 C-01: the latest order's payment card — orders are the
+        // shopper's own, so sign-in comes first.
+        openInsertOrAuth('payment', button.label);
+        return;
+      case 'feedback':
+        // IVY PRD v1 C-01: "Enter feedback → saved in admin".
+        addInsert('feedback', button.label);
         return;
       case 'my_orders':
         // Answer in the thread (frame 57) rather than throwing the shopper into
@@ -461,8 +498,10 @@ export function ChatTab() {
         openOrAuth('orders', button.label);
         return;
       case 'contact_support':
-        // In the thread, where it was asked (T11, BUG-024).
-        addInsert('contact', button.label);
+        // In the thread, where it was asked (T11, BUG-024). With email as the
+        // only way to reach the shop (IVY), a card to pick it from is one tap
+        // too many: "opens email inquiry form directly" (PRD v1 C-01).
+        addInsert(emailIsTheOnlyChannel() ? 'contactForm' : 'contact', button.label);
         return;
       case 'affiliate':
         // A script now (ivy-docs T12 D1): the server keeps the exchange, so the
@@ -541,6 +580,29 @@ export function ChatTab() {
     }
   }
 
+  /** The tenant's only contact channel is email (IVY): Contact Support opens the form itself. */
+  function emailIsTheOnlyChannel(): boolean {
+    const channels = contactChannels(widgetCopy);
+    return channels.length === 1 && channels[0].kind === 'email';
+  }
+
+  /** A thread insert that needs the shopper's orders: at once, or after sign-in. */
+  const insertAfterAuth = useRef<{ kind: ThreadInsert['kind']; asked: string | null } | null>(null);
+  function openInsertOrAuth(kind: ThreadInsert['kind'], asked?: string | null) {
+    if (authenticated) {
+      addInsert(kind, asked);
+      return;
+    }
+    insertAfterAuth.current = { kind, asked: asked ?? null };
+    setAfterAuth(null);
+    setInline('auth');
+  }
+
+  /** Contact Support from a card: the form, with the card's order on it (E-01). */
+  function contactAbout(order: FormOrder | null, label: string) {
+    addInsert('contactForm', label, { order });
+  }
+
   /** Show `target`, or the sign-in card first and `target` once that succeeds. */
   function openOrAuth(target: Inline, asked?: string | null) {
     if (target === 'orders') askedOrdersRef.current = asked ?? null;
@@ -556,7 +618,7 @@ export function ChatTab() {
   function addInsert(
     kind: ThreadInsert['kind'],
     asked?: string | null,
-    extra: Pick<ThreadInsert, 'categories' | 'category' | 'purpose'> = {},
+    extra: Pick<ThreadInsert, 'categories' | 'category' | 'purpose' | 'order'> = {},
   ) {
     insertSeq.current += 1;
     setInserts((prev) => [...prev, { key: `${kind}-${insertSeq.current}`, kind, at: messages.length, asked, ...extra }]);
@@ -570,6 +632,11 @@ export function ChatTab() {
   /** The contact form went through: it turns into the "Your inquiry" card (T11 D2). */
   function markSent(key: string, sent: InquiryInput) {
     setInserts((prev) => prev.map((x) => (x.key === key ? { ...x, sent } : x)));
+  }
+
+  /** The feedback went through: the box gives way to what was sent. */
+  function markFeedbackSent(key: string, feedbackSent: string) {
+    setInserts((prev) => prev.map((x) => (x.key === key ? { ...x, feedbackSent } : x)));
   }
 
   /** "Chat with an agent" — every route to a person goes through requestAgent. */
@@ -793,6 +860,7 @@ export function ChatTab() {
             lead={x.purpose === 'affiliate' ? t('contact.form.affiliateLead') : undefined}
             sessionToken={sessionToken}
             conversationId={conversationId}
+            order={x.order}
             defaults={{
               name: customerName ?? '',
               email: customerEmail ?? '',
@@ -802,6 +870,55 @@ export function ChatTab() {
             picked={x.picked}
             disabled={sending}
             onSent={(form) => markSent(x.key, form)}
+            onStartOver={() => {
+              markPicked(x.key, START_OVER_ID);
+              startOver();
+            }}
+          />
+        ) : x.kind === 'payment' ? (
+          <PaymentStatusAnswer
+            key={x.key}
+            insertKey={x.key}
+            sessionToken={sessionToken}
+            asked={x.asked}
+            active={x === lastInsert && x.at === messages.length && !sending}
+            picked={x.picked}
+            disabled={sending}
+            onPick={(id) => markPicked(x.key, id)}
+            onOpenOrder={setOpenOrder}
+            onTrack={deliveryShown ? (orderId) => void openDelivery(orderId) : undefined}
+            onContact={(order) => contactAbout(order, t('chat.contactSupport'))}
+            onStartOver={startOver}
+            onSettled={scrollToEnd}
+          />
+        ) : x.kind === 'delivery' ? (
+          <DeliveryStatusAnswer
+            key={x.key}
+            insertKey={x.key}
+            sessionToken={sessionToken}
+            asked={x.asked}
+            active={x === lastInsert && x.at === messages.length && !sending}
+            picked={x.picked}
+            disabled={sending}
+            onPick={(id) => markPicked(x.key, id)}
+            onOpenOrder={setOpenOrder}
+            onPolicy={(label) => void scenario('shipping_policy', label).then(runPostAction)}
+            onContact={(order) => contactAbout(order, t('chat.contactSupport'))}
+            onStartOver={startOver}
+            onSettled={scrollToEnd}
+          />
+        ) : x.kind === 'feedback' ? (
+          <FeedbackAnswer
+            key={x.key}
+            insertKey={x.key}
+            asked={x.asked}
+            sessionToken={sessionToken}
+            conversationId={conversationId}
+            defaults={{ name: customerName ?? '', email: customerEmail ?? '' }}
+            sent={x.feedbackSent}
+            picked={x.picked}
+            disabled={sending}
+            onSent={(message) => markFeedbackSent(x.key, message)}
             onStartOver={() => {
               markPicked(x.key, START_OVER_ID);
               startOver();
@@ -880,6 +997,10 @@ export function ChatTab() {
               }
             : undefined
         }
+        onEmailAboutOrder={(order) => {
+          setOpenOrder(null);
+          addInsert('contactForm', null, { order });
+        }}
       />
     );
   }
@@ -1077,7 +1198,12 @@ export function ChatTab() {
             sessionToken={sessionToken}
             onSuccess={() => {
               setAuthenticated(true);
-              if (afterAuth === 'orders') {
+              const pendingInsert = insertAfterAuth.current;
+              if (pendingInsert) {
+                insertAfterAuth.current = null;
+                setInline(null);
+                addInsert(pendingInsert.kind, pendingInsert.asked);
+              } else if (afterAuth === 'orders') {
                 setInline(null);
                 showOrders();
               } else {
@@ -1086,6 +1212,7 @@ export function ChatTab() {
               setAfterAuth(null);
             }}
             onCancel={() => {
+              insertAfterAuth.current = null;
               setInline(null);
               setAfterAuth(null);
             }}

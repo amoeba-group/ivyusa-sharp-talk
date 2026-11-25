@@ -435,6 +435,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
   const authenticated = useWidgetStore((s) => s.authenticated);
   const setAuthenticated = useWidgetStore((s) => s.setAuthenticated);
   const queueChatMessage = useWidgetStore((s) => s.queueChatMessage);
+  const queueContactOrder = useWidgetStore((s) => s.queueContactOrder);
   const visibleTabs = useWidgetStore((s) => s.visibleTabs);
   const storedFilter = useWidgetStore((s) => s.notificationFilter);
   const setStoredFilter = useWidgetStore((s) => s.setNotificationFilter);
@@ -633,6 +634,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
         onBack={() => setOpenOrder(null)}
         onAsk={(orderNumber) => queueChatMessage(t('orders.askMessage', { orderNumber }))}
         onShowDelivery={showDelivery}
+        onEmailAboutOrder={queueContactOrder}
       />
     );
   }

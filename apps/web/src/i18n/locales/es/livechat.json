@@ -737,7 +737,9 @@
       "name": "Nombre",
       "email": "Correo",
       "message": "Mensaje",
-      "status": "Estado"
+      "status": "Estado",
+      "kind": "Tipo",
+      "order": "Pedido"
     },
     "status_open": "Abierta",
     "status_answered": "Respondida",
@@ -756,7 +758,11 @@
     "answeredToast": "Marcada como respondida.",
     "reopenedToast": "Abierta de nuevo.",
     "updateError": "No se pudo actualizar la consulta.",
-    "openConversation": "Abrir conversación #{{id}}"
+    "openConversation": "Abrir conversación #{{id}}",
+    "kind_all": "Todo",
+    "kind_inquiry": "Consultas",
+    "kind_feedback": "Comentarios",
+    "order": "Pedido {{number}}"
   },
   "unread": {
     "count": "{{count}} sin leer",

@@ -737,7 +737,9 @@
       "name": "お名前",
       "email": "メール",
       "message": "内容",
-      "status": "ステータス"
+      "status": "ステータス",
+      "kind": "種類",
+      "order": "注文"
     },
     "status_open": "未返信",
     "status_answered": "返信済み",
@@ -756,7 +758,11 @@
     "answeredToast": "返信済みにしました。",
     "reopenedToast": "未返信に戻しました。",
     "updateError": "お問い合わせを更新できませんでした。",
-    "openConversation": "会話 #{{id}} を開く"
+    "openConversation": "会話 #{{id}} を開く",
+    "kind_all": "すべて",
+    "kind_inquiry": "お問い合わせ",
+    "kind_feedback": "ご意見",
+    "order": "注文 {{number}}"
   },
   "unread": {
     "count": "未読 {{count}}件",

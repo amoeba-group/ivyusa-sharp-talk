@@ -31,5 +31,16 @@
   "couponCodeHelp": "字母、数字、- 和 _，最多 {{max}} 个字符",
   "promoLocked": "发送后无法更改",
   "errorPromoInvalid": "请检查类型和优惠码：只能使用字母、数字、- 和 _。",
-  "errorPromoLocked": "已发送活动的类型和优惠码无法更改。"
+  "errorPromoLocked": "已发送活动的类型和优惠码无法更改。",
+  "sendTo": "发送对象",
+  "audienceAll": "全部客户",
+  "audienceCustomers": "指定客户",
+  "targetEmailsPlaceholder": "每行一个邮箱",
+  "targetEmailsHelp": "只有使用这些邮箱的本店客户会收到。",
+  "optOutNote": "已关闭营销消息或选择“不出售或共享”的客户会被跳过。",
+  "audienceCount_one": "{{count}} 位客户",
+  "audienceCount_other": "{{count}} 位客户",
+  "targetNotFound_one": "{{count}} 个邮箱不是本店客户：{{list}}",
+  "targetNotFound_other": "{{count}} 个邮箱不是本店客户：{{list}}",
+  "errorNoRecipients": "这些邮箱都不是本店客户，没有可发送的对象。"
 }

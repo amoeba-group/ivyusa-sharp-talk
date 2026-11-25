@@ -171,12 +171,13 @@ export function reviewItems() {
 
 /** Chat home quick replies — Figma 1008:2291 (KO) with the English copy proposed in SPEC Q-07. */
 export const IVY_QUICK_REPLIES = [
-  { id: 'payment_check', emoji: '💰', label: 'Payment check', ko: '결제 확인', action: 'message' },
+  // IVY PRD v1 C-01 (PLN-261125 §2.5): a payment card and a feedback form, not a question to the AI.
+  { id: 'payment_check', emoji: '💰', label: 'Payment check', ko: '결제 확인', action: 'payment_status' },
   { id: 'delivery_inquiry', emoji: '🚚', label: 'Delivery inquiry', ko: '배송 문의', action: 'delivery_status' },
   { id: 'stock_inquiry', emoji: '📦', label: 'Stock inquiry', ko: '재고 문의', action: 'message' },
   { id: 'exchange_refund', emoji: '😊', label: 'Exchange & Refund', ko: '교환 및 환불', action: 'cancel_refund' },
   { id: 'product_inquiry', emoji: '✨', label: 'Product inquiry', ko: '제품문의', action: 'product_help' },
-  { id: 'feedback', emoji: '💬', label: 'Feedback', ko: '피드백', action: 'message' },
+  { id: 'feedback', emoji: '💬', label: 'Feedback', ko: '피드백', action: 'feedback' },
   { id: 'contact_support', emoji: '🤝', label: 'Contact Support', ko: 'Contact Support', action: 'contact_support' },
   // T12 §8-3a: the owner added Affiliate after the seven design buttons (the design has no way into SCR-IVY-14).
   { id: 'affiliate', emoji: '💼', label: 'Affiliate', ko: '제휴', action: 'affiliate' },

@@ -85,9 +85,8 @@ test.describe('T15 · Responsive & a11y', () => {
     await expect(composer).toBeVisible();
     expect(parseFloat(await composer.evaluate((el) => getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
 
-    // The contact form: name, email, message.
+    // The contact form: name, email, message — opened directly, email being IVY's only channel (PRD v1 C-01).
     await widget.scenarioButton(/Contact Support/).click();
-    await widget.panel.getByRole('button', { name: /Email inquiry/i }).last().click();
     await expect(widget.panel.getByTestId('contact-form')).toBeVisible();
     const fields = widget.panel.locator('input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]), textarea, select');
     await expect.poll(() => fields.count()).toBeGreaterThan(1);

@@ -57,7 +57,7 @@ describe('CampaignService — deep-link validation + dispatch (PLN-260807 F4, A-
     } as unknown as EventBusService;
 
     notifyMock = jest.fn(async () => [{}]);
-    const notifications = { notify: notifyMock } as unknown as NotificationService;
+    const notifications = { notify: notifyMock, marketingRefusers: jest.fn(async () => new Set<number>()) } as unknown as NotificationService;
     const moderation = {
       // Pass-through moderation: DELIVERED verdict, text unchanged.
       moderate: jest.fn(async ({ text }: { text: string }) => ({ decision: 'delivered', text })),

@@ -368,3 +368,9 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Chủ dự án duyệt:** `1. ok 2. a 3. ok` — bật cho khách **sau khi duyệt kho kiến thức**; Sonnet 5.5 trả lời khách, Haiku 5.5 kiểm duyệt / phân loại.
 - Adapter `bedrock` (Converse API, ARN inference profile, IAM role `talk-ivyusa-bedrock` — không khoá), engine Bedrock trong console (chọn Sonnet / Haiku), `guardrailConfig` khi IVY gửi mã guardrail. Không SQL.
 - Còn lại: chủ dự án thêm 3 dòng `.env` trên server → push → tạo 2 engine + Test connection → đo `effort` / `maxTokens` → duyệt kho kiến thức → gán chức năng → báo IVY bật Guardrails.
+
+### Bổ sung 2026-11-25 · PRD v1.0 của IVY — giai đoạn 1 — ✅ code trên máy (chưa push) · ⏳ chủ dự án duyệt PLN + chạy SQL · [REQ](../docs/analysis/REQ-261125-IVY-PRD-v1-Gap.md) · [PLN](../docs/plan/PLN-261125-IVY-PRD-v1-Alignment.md) · [TCR](../docs/test/TCR-261125-IVY-PRD-v1-Phase1.md) · [RPT](../docs/implementation/RPT-261125-IVY-PRD-v1-Phase1.md)
+- Thông báo New / Recent, giờ "N hours ago / N days ago", thẻ cũ cùng đơn tự đã đọc, badge tối đa 1 mỗi đơn, Recent 30 ngày; nhấn giữ / chuột phải → Delete; nút xe tải ở Order Detail → Delivery; báo huỷ / hoàn tiền.
+- Chat: Payment check → thẻ thanh toán; Delivery inquiry → thẻ tracker; Feedback → form lưu ở console; Contact Support mở thẳng form; form gửi kèm mã đơn và 20 tin gần nhất trong email.
+- Campaign: chọn người nhận theo email; khách đã từ chối marketing / CCPA không nhận Promo.
+- SQL: `sql/261125-prd-v1-phase1.sql` (2 cột) — chạy **trước** khi push. Sau deploy: AI Settings → nút "Payment check" chọn hành động **Payment status card**, nút "Feedback" chọn **Feedback form**.

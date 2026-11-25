@@ -266,9 +266,9 @@ Chuông trên header ivyusa.com (chấm đỏ = số chưa đọc) ─► Panel 
 |---|---|---|
 | BR-01 | 4 nhóm thông báo: **Order** (thanh toán/xác nhận đơn) · **Delivery** (tiến trình giao theo từng bước) · **Promo** (coupon/sự kiện) · **Review** (yêu cầu đánh giá đơn đã giao). Biến thể cũ (전체/결제/구독/이벤트/리뷰/배송) **không dùng** — Master Shots chốt 4 nhóm. | Master `992:189`; ghi chú `0:1` `3:3` |
 | BR-02 | Badge tab = số chưa đọc; 0 → ẩn. | `0:1` `3:2` "새로 도착한 알림 개수를 아이콘에 표시합니다." |
-| BR-03 | Chưa đọc = nền tô + chấm đỏ; chạm mở → đã đọc. | `1006:7825` |
-| BR-04 | Nhóm theo ngày: Today's / Yesterday's / cũ hơn, theo **múi giờ máy của khách** (chủ dự án chốt 2026-11-11). | Master |
-| BR-05 | Thời gian: trong 1 giờ → "Just now" / "{n}mins ago"; hôm nay → "{n}h ago"; hôm qua → "Yesterday"; 2–6 ngày → "{n} days ago"; cũ hơn → ngày tháng "Nov 3" (Q-02, chốt 2026-11-11). Ngày tính theo lịch của **máy khách**, không cố định America/New_York (ghi chú hỏi EST/EDT; chủ dự án chọn giờ máy khách ngày 2026-11-11). | `0:1` `21:26` |
+| BR-03 | Chưa đọc = nền tô + chấm đỏ; chạm mở → đã đọc. **Mọi** thẻ chưa đọc đều tô (PRD v1 slide 8; trước đây chỉ thẻ mới nhất). Nhấn giữ (điện thoại) / chuột phải (máy tính) → menu **Delete** (PRD v1 slide 8). | `1006:7825`; PRD v1 |
+| BR-04 | **Đổi theo PRD v1.0 (2026-11-25, PLN-261125):** nhóm **New** (chưa đọc) / **Recent** (đã đọc), mới nhất ở trên, ẩn nhóm rỗng. Đánh dấu đã đọc khi chạm, không phải khi mở widget; thẻ vừa đọc vẫn ở New tới **lần mở widget sau**. Trạng thái mới của cùng đơn → thẻ cũ tự đã đọc. Badge = số thẻ trong New, tối đa 1 mỗi đơn. Recent hiện 30 ngày. *Trước đây:* Today's / Yesterday's theo múi giờ máy khách (chốt 2026-11-11). | PRD v1 slide 9–10 |
+| BR-05 | **Đổi theo PRD v1.0 (PLN-261125):** thời gian đã trôi qua, làm tròn xuống, giống nhau ở mọi múi giờ — < 1 phút "Just now" · 1–59 phút "N min ago" · 1–23 giờ "N hours ago" · ≥ 24 giờ "N days ago" (47 giờ = 1 day ago). Không còn "Yesterday" hay ngày tháng. *Trước đây:* "Yesterday" / "Nov 3" (Q-02, chốt 2026-11-11). | PRD v1 slide 9 |
 | BR-06 | Mapping trạng thái giao hàng: 발송 준비 = **Preparing** · 배송 시작 = **Processing** (ghi chú gọi "Shipped") · 배송중 = **In Transit** · 배송완료 = **Delivered**. Pill: Confirmed xanh lá, In Transit cam, Delivered xám, Review tím. | `0:1` `7:14`; Master |
 | BR-07 | Chạm thông báo giao hàng → đi tới vị trí trạng thái giao của đơn đó. | `0:1` `3:37` "클릭 시, 배송현황 위치로 가도록" |
 | BR-08 | Tóm tắt đơn: "{sản phẩm đầu} + {n} items" (EN) / "{sản phẩm đầu} 외 {n}개" (KO). Thiết kế còn lẫn "+ 2 Others", "and 2 more items" → chuẩn hoá theo Master ("+ 2 items"). | Master; `0:1` `7:140..143` |
@@ -319,6 +319,11 @@ Cột "Trạng thái": ✅ = đã có trong DOM hiện tại · ➕ = **phải t
 | Nhóm ngày | `[data-testid="notif-group"]` | ✅ (T02) |
 | Dòng thông báo | `[data-testid="notif-item"]` + `data-id` + `data-unread="true\|false"` + `data-category` | ✅ (T02) |
 | Thời gian dòng | `[data-testid="notif-time"]` (text theo BR-05) | ✅ (T02) |
+| Nhóm New / Recent | `[data-testid="notif-group"][data-group="new\|recent"]` | ✅ (PLN-261125) |
+| Menu của dòng | `[data-testid="notif-row-menu"]` (role `menu`, mục "Delete") | ✅ (PLN-261125) |
+| Nút xe tải ở Order Detail | `[data-testid="order-delivery-link"]`, chấm cam `[data-testid="order-delivery-dot"]` | ✅ (PLN-261125) |
+| Thẻ Payment check / Delivery inquiry / Feedback | `payment-answer` (`payment-card[data-state]`) · `delivery-answer` · `feedback-answer` (`feedback-form`, `feedback-sent`) | ✅ (PLN-261125) |
+| Mã đơn trên form liên hệ | `[data-testid="contact-form-order"]` | ✅ (PLN-261125) |
 | Pill trạng thái | `[data-testid="status-pill"]` + `data-status="confirmed\|in_transit\|delivered\|review"` (ngoài ra `pending_payment`, `cancel_requested`; chữ lạ → `other`) | ✅ (T02) — mới có trong feed thông báo; thẻ Delivery ✅ (T03, mã lấy từ bước tracking); Review ở T06 |
 | Thẻ giao hàng | `[data-testid="delivery-card"]` (+`data-id`); bước `[data-testid="delivery-step"]` + `data-state="done\|current\|todo"` (đã giao: cả 4 `done`) | ✅ (T03) |
 | Order Detail | `getByRole('heading', { name: 'Order Detail' })`; khối khách `[data-testid="order-customer"]` | ✅ (T04) |

@@ -375,6 +375,10 @@ export const ERROR_CODE = {
     message: 'The customer no longer sees this conversation; reply in their newest one',
   },
 
+  // E5166 — campaign recipients (IVY PRD v1 N-04, PLN-261125 §2.7).
+  /** "Specific customers" was chosen and none of the addresses is a customer of this shop. */
+  CAMPAIGN_NO_RECIPIENTS: { code: 'E5166', message: 'This campaign has no recipients' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

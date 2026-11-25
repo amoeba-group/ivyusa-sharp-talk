@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | ⏳ **Chờ duyệt.** Chủ dự án yêu cầu "lên plan và làm càng sớm càng tốt" (2026-11-25), nên **giai đoạn 1 làm ngay**, commit trên máy, **chưa push** (push = deploy production). Đợi chủ dự án xem rồi mới push |
+| Trạng thái | ⏳ **Chờ duyệt.** Chủ dự án yêu cầu "lên plan và làm càng sớm càng tốt" (2026-11-25), nên **giai đoạn 1 đã làm xong trên máy** ([RPT](../implementation/RPT-261125-IVY-PRD-v1-Phase1.md), [TCR](../test/TCR-261125-IVY-PRD-v1-Phase1.md)), **chưa push** (push = deploy production). Đợi chủ dự án duyệt và chạy SQL rồi mới push |
 | Nguồn | [REQ-261125-IVY-PRD-v1-Gap](../analysis/REQ-261125-IVY-PRD-v1-Gap.md) — PRD v1.0 của IVY (24 slide, 2026-11) |
 | Phạm vi | widget, API, console. Mỗi giai đoạn deploy riêng |
 | Migration | Giai đoạn 1: `sql/261125-prd-v1-phase1.sql` (2 cột). Giai đoạn 2: bảng gợi ý sản phẩm + cột tồn kho. Chạy SQL **trước** khi push |

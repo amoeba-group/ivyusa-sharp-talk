@@ -8,6 +8,8 @@ export const INQUIRY_PREVIEW_CHARS = 120;
 
 export interface InquiryView {
   id: string;
+  /** 'inquiry' | 'feedback' (IVY PRD v1 C-01). */
+  kind: string;
   orderId: string | null;
   status: string;
   createdAt: Date;
@@ -19,6 +21,8 @@ export interface InquiryView {
  * same split as callback contacts (PLN-261026 D6).
  */
 export interface AdminInquiryView extends InquiryView {
+  /** The attached order's number, when the form named one of the shopper's orders (E-01). */
+  orderNumber: string | null;
   conversationId: string | null;
   customerId: string | null;
   contactName: string | null;
@@ -37,6 +41,7 @@ export class InquiryMapper {
   static toView(inquiry: Inquiry): InquiryView {
     return {
       id: String(inquiry.id),
+      kind: inquiry.kind ?? 'inquiry',
       orderId: id(inquiry.orderId),
       status: inquiry.status,
       createdAt: inquiry.createdAt,
@@ -47,10 +52,11 @@ export class InquiryMapper {
     return inquiries.map((i) => this.toView(i));
   }
 
-  static toAdminView(inquiry: Inquiry): AdminInquiryView {
+  static toAdminView(inquiry: Inquiry, orderNumber: string | null = null): AdminInquiryView {
     const message = inquiry.message ?? null;
     return {
       ...this.toView(inquiry),
+      orderNumber,
       conversationId: id(inquiry.conversationId),
       customerId: id(inquiry.customerId),
       contactName: inquiry.contactName ?? null,
@@ -65,13 +71,13 @@ export class InquiryMapper {
     };
   }
 
-  static toAdminViewList(inquiries: Inquiry[]): AdminInquiryView[] {
-    return inquiries.map((i) => this.toAdminView(i));
+  static toAdminViewList(inquiries: Inquiry[], orderNumbers: Map<string, string> = new Map()): AdminInquiryView[] {
+    return inquiries.map((i) => this.toAdminView(i, i.orderId != null ? orderNumbers.get(String(i.orderId)) ?? null : null));
   }
 
-  static toAdminDetail(inquiry: Inquiry): AdminInquiryDetail {
+  static toAdminDetail(inquiry: Inquiry, orderNumber: string | null = null): AdminInquiryDetail {
     return {
-      ...this.toAdminView(inquiry),
+      ...this.toAdminView(inquiry, orderNumber),
       contactEmail: inquiry.contactEmail ?? null,
       message: inquiry.message ?? null,
     };

@@ -46,6 +46,28 @@ export function inquiryProblems(input: Partial<InquiryInput>): Partial<Record<In
   return out;
 }
 
+/**
+ * What a form files (IVY PRD v1 C-01, E-01): a question the team answers by
+ * email, or feedback kept for the admin (the Feedback quick menu).
+ */
+export const INQUIRY_KIND = { INQUIRY: 'inquiry', FEEDBACK: 'feedback' } as const;
+export type InquiryKind = (typeof INQUIRY_KIND)[keyof typeof INQUIRY_KIND];
+export const INQUIRY_KINDS: readonly InquiryKind[] = [INQUIRY_KIND.INQUIRY, INQUIRY_KIND.FEEDBACK];
+
+/**
+ * Feedback asks for the message only ("Enter feedback → saved in admin"). A
+ * name or address the widget already knows rides along; one that is there must
+ * still be valid.
+ */
+export function feedbackProblems(input: Partial<InquiryInput>): Partial<Record<InquiryField, InquiryProblem>> {
+  const all = inquiryProblems(input);
+  const out: Partial<Record<InquiryField, InquiryProblem>> = {};
+  if (all.message) out.message = all.message;
+  if (all.name === 'tooLong') out.name = all.name;
+  if (all.email === 'invalid') out.email = all.email;
+  return out;
+}
+
 /** Trimmed, with the address lower-cased — what gets stored. */
 export function normalizeInquiry(input: InquiryInput): InquiryInput {
   return {

@@ -93,7 +93,8 @@ test.describe('T14 · i18n', () => {
     for (const chip of ['주문', '배송', '프로모', '리뷰']) {
       await expect(widget.chip(chip)).toBeVisible();
     }
-    await expect(widget.panel.getByText('오늘 받은 알림')).toBeVisible();
+    // IVY PRD v1 slide 9: New / Recent bands replaced Today's / Yesterday's.
+    await expect(widget.panel.getByText('새 알림', { exact: true })).toBeVisible();
     await widget.panel.getByRole('button', { name: '선택', exact: true }).click();
     await expect(widget.panel.getByRole('button', { name: '선택 알림 삭제' })).toBeVisible();
     await expect(widget.panel.getByRole('button', { name: '전체 알림 삭제' })).toBeVisible();
@@ -149,7 +150,7 @@ test.describe('T14 · i18n', () => {
     await expect(write.first()).toBeVisible();
   });
 
-  test('TC-14-06 [en][vi] item summaries say "+ 2 items"; the yesterday band reads like the today band @T14 @i18n @design', async ({ page, widget }) => {
+  test('TC-14-06 [en][vi] item summaries say "+ 2 items"; the bands are New / Recent in Vietnamese @T14 @i18n @design', async ({ page, widget }) => {
     await widget.goto({ lang: 'en' });
     await widget.open();
     await widget.openNotifications();
@@ -162,7 +163,10 @@ test.describe('T14 · i18n', () => {
     await widget.open();
     await widget.panel.getByRole('tab', { name: /^Thông báo/ }).click();
     await widget.chip('Đơn hàng').click();
-    await expect(widget.panel.getByText('Thông báo hôm qua', { exact: true })).toBeVisible();
+    await expect(widget.panel.getByText('Mới', { exact: true })).toBeVisible();
+    await expect(widget.panel.getByText('Gần đây', { exact: true })).toBeVisible();
+    // Elapsed time only (PRD v1 slide 9): no "Hôm qua", no dates.
+    await expect(widget.panel.getByText('Hôm qua', { exact: true })).toHaveCount(0);
   });
 
   for (const lang of Object.keys(CHIP_BAR) as Lang[]) {

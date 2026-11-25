@@ -46,7 +46,7 @@ describe('CampaignService — promo kind + coupon code (ivy-docs T05)', () => {
       customerRepo,
       productRepo,
       bus,
-      { notify: notifyMock } as unknown as NotificationService,
+      { notify: notifyMock, marketingRefusers: jest.fn(async () => new Set<number>()) } as unknown as NotificationService,
       { moderate } as unknown as ModerationService,
       { write: auditWrite } as unknown as AuditService,
     );

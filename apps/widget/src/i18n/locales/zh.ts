@@ -91,6 +91,46 @@ export const zh: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: '重新开始',
     startOverLead: '还有什么可以帮您？',
+    /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
+    payment: {
+      lead: '这是您最近一笔订单的付款状态。',
+      none: '在您的账户中没有找到最近的订单。',
+      state: {
+        paid: '已付款',
+        pending: '待付款',
+        cancelled: '已取消',
+        refunded: '已退款',
+      },
+      guide: {
+        paid: '{{orderNumber}} 已付款成功。发货后我们会通知您。',
+        pending: '{{orderNumber}} 的付款尚未完成。如果已被扣款，请联系我们，我们会为您核实。',
+        cancelled: '{{orderNumber}} 已取消。如果已被扣款，款项将退回您原来的付款方式。',
+        refunded: '{{orderNumber}} 已退款至您原来的付款方式。银行可能需要几天才会显示。',
+      },
+      total: '合计 {{amount}}',
+    },
+    delivery: {
+      lead: '这是您最近一笔订单的配送状态。',
+      none: '在您的账户中没有找到最近的订单。',
+      guide: {
+        preparing: '{{orderNumber}} 尚未发货。发货后我们会第一时间通知您。',
+        inTransit: '{{orderNumber}} 正在配送中。',
+        delivered: '{{orderNumber}} 已送达。如有任何问题，请告诉我们。',
+      },
+      policy: '配送政策',
+    },
+    contactSupport: '联系客服',
+    feedback: {
+      lead: '欢迎告诉我们您的想法。您的意见会直接送达我们的团队。',
+      placeholder: '请输入您的意见',
+      send: '提交意见',
+      sending: '发送中…',
+      thanks: '谢谢！您的意见已送达我们的团队。',
+      mine: '您的意见',
+      failed: '意见未能发送，请重试。',
+      required: '请先写点内容。',
+      tooLong: '最多 {{max}} 个字符。',
+    },
     /** After the My Orders answer (SCR-IVY-11). */
     orderAnswer: {
       followUp: '还需要其他帮助吗？',
@@ -290,6 +330,8 @@ export const zh: Translation = {
     phoneHint: '点击拨打',
     chatHint: '直接在此聊天中与我们的团队交流',
     form: {
+      /** The order a form is sent about (IVY PRD v1 E-01). */
+      order: '订单 {{orderNumber}}',
       lead: '请填写您的联系方式，并告诉我们需要什么帮助。',
       name: '姓名',
       namePlaceholder: '请输入您的姓名',
@@ -389,6 +431,7 @@ export const zh: Translation = {
     back: '返回',
     qty: '数量 {{count}}',
     askRow: '联系我们',
+    emailRow: '就此订单发邮件咨询',
     subtotal: '小计',
     discount: '折扣',
     shipping: '运费',

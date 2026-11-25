@@ -94,11 +94,15 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
 | TC-02-01 | Thanh chip | Order · Delivery · Promo · Review theo thứ tự trái→phải; không có All/Payment/Event; Order `aria-pressed=true` | G-04, BR-01 |
-| TC-02-02 | Nhóm ngày | `notif-group` đầu chứa "Today"; có 1 nhóm "Yesterday" | BR-04 |
+| TC-02-02 | Nhóm New / Recent (PRD v1) | nhóm "New" rồi "Recent"; dòng trong New đều `data-unread=true`, trong Recent đều `false` | BR-04 |
 | TC-02-03 | Cấu trúc dòng | dòng IVY-39891: pill "Confirmed" `data-status=confirmed`, "Hydrating Face Mask (10pcs) + 2 items", `notif-time` = "Just now" | G-05, BR-08 |
-| TC-02-04 | Định dạng thời gian | mọi `notif-time` khớp `Just now \| {n}mins ago \| {n}h ago \| Yesterday \| {n} days ago \| MMM d` | BR-05 |
+| TC-02-04 | Định dạng thời gian (PRD v1) | mọi `notif-time` khớp `Just now \| {n} min ago \| 1 hour ago \| {n} hours ago \| 1 day ago \| {n} days ago` | BR-05 |
 | TC-02-05 | Đã đọc + mở chi tiết | dòng `data-unread=true` → bấm → `POST /notifications/:id/read` → heading "Order Detail" | G-06, BR-03, BR-07 |
 | TC-02-06 | Màu pill | confirmed: xanh lá trội · in_transit: đỏ > lục (cam) · delivered: xám (chênh kênh < 24) · review: tím | §4, BR-06 |
+| TC-02-07 | Thẻ đã chạm vẫn ở New tới lần mở sau (PRD v1) | chạm IVY-39891 → Back: `data-unread=false` nhưng vẫn dưới "New"; đóng / mở widget → chỉ còn "Recent" | BR-04 |
+| TC-02-08 | Chuột phải → Delete (PRD v1) | menu `notif-row-menu` mở, mục Delete có focus → `DELETE /notifications {ids:[502]}` → toast "1 notification deleted", dòng biến mất | BR-03 |
+| TC-02-09 | Esc đóng menu | menu đóng, widget vẫn mở | BR-03 |
+| TC-02-10 | Nhấn giữ trên điện thoại (`@mobile-only`) | touchstart giữ 0,5 s → menu mở; cú chạm nhấc tay không mở Order Detail | BR-03 |
 
 **Kết quả (2026-11-11):** 6/6. Chạy lặp `@T02` + cổng CI cũ ×2: 68/68.
 
@@ -145,6 +149,8 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-04-05 | Back | quay lại danh sách | SCR-IVY-06 |
 | TC-04-06 | Không đọc được địa chỉ | `GET /orders/:id/addresses` → `available: false`: không có "Billing address" / "Shipping address" / dòng địa chỉ; tiêu đề, tên, Total vẫn hiện | PLN-261112 D1 |
 | TC-04-07 | Không có billing | khối Billing address = "-"; widget có gọi `/orders/:id/addresses` | Figma `1008:3254` |
+| TC-04-08 | Nút xe tải → Delivery (PRD v1 slide 7 ②) | đơn Confirmed: không chấm cam; bấm → chip Delivery, thẻ IVY-39891 đứng đầu `data-focused=true`; đổi chip rồi quay lại → hết focus | PLN-261125 §2.3 |
+| TC-04-09 | Chấm cam khi đang giao | Order Detail của IVY-39641 có `order-delivery-dot` | PLN-261125 §2.3 |
 
 **Kết quả (2026-11-12):** 7/7, lặp ×3 (2 worker): 21/21. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T07|@T13`) ×2: 106/106. Toàn bộ desktop: 65 pass / 26 fail, mọi ca đỏ thuộc T05, T06, T08–T12 chưa làm.
 
@@ -316,15 +322,19 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 
 | TC | Mô tả | Kỳ vọng | Nguồn |
 |---|---|---|---|
-| TC-11-01 | Kênh email | "Please choose how you'd like to reach us.", hello@ivyusa.com (§8-2a), "24 hours", "1 business day"; **không** có 1588-0000 / help@ivy.com; không có thẻ live chat; chip Start over | G-17, BUG-010, Q-08, Q-15 |
-| TC-11-02 | Form | "Email inquiry" → câu dẫn + `contact-form` có Name, Email (= hykim4@ivyent.com), Message (placeholder theo thiết kế) | G-18, BR-14 |
+| TC-11-01 | Email là kênh duy nhất → mở thẳng form (PRD v1 C-01) | `contact-form` hiện ngay, không có thẻ `contact-support`; **không** có 1588-0000 / help@ivy.com | G-17, BUG-010, PLN-261125 §2.5 |
+| TC-11-02 | Form | câu dẫn + `contact-form` có Name, Email (= hykim4@ivyent.com), Message (placeholder theo thiết kế) | G-18, BR-14 |
 | TC-11-03 | Validate | tên trống, email sai, nội dung trống → báo lỗi dưới từng ô; không gửi `POST /inquiries` | BR-14 |
 | TC-11-04 | Gửi | `POST /inquiries {name, email, message}` → thẻ "YOUR INQUIRY" có đủ 3 giá trị, "Your message has been sent successfully.", "Please check your inbox…"; form biến mất | G-18 |
 | TC-11-05 | Tenant bật live chat | Có cả thẻ Email inquiry và "Chat with an agent" | G-17, Q-15 |
 | TC-11-06 | Gửi lỗi | `POST /inquiries` 500 → toast lỗi "Your message couldn't be sent…"; form giữ nội dung; không có thẻ đã gửi | CLAUDE.md §2 UX feedback |
-| TC-11-07 | Thẻ Contact Support sau khi tải lại trang (PLN-261119) | Thẻ và email hỗ trợ vẫn nằm trong đoạn chat, đúng một thẻ |
+| TC-11-07 | Form Contact Support sau khi tải lại trang (PLN-261119) | Form vẫn nằm trong đoạn chat, đúng một form |
 | TC-11-07 | Tenant không cấu hình | Chỉ thẻ live chat; không có 1588-0000 / help@ivy.com / hello@ivyusa.com | BUG-010 |
 | TC-11-08 | API thật (khách chưa đăng nhập) | Đồng ý consent → form không điền sẵn → gửi → API trả 201 → bong bóng thành công | G-18, BR-14 |
+| TC-11-09 | Payment check (PRD v1 C-01) | thẻ `payment-card` của đơn mới nhất IVY-39891, `data-state=paid`, "Paid", câu hướng dẫn; chip Contact Support → form có "Order IVY-39891" → `POST /inquiries` có `order_id` | PLN-261125 §2.5–2.6 |
+| TC-11-10 | Delivery inquiry (PRD v1 C-01) | thẻ tracker của đơn đang giao IVY-39641, "IVY-39641 is on its way.", chip Shipping policy · Contact Support · Start over | PLN-261125 §2.5 |
+| TC-11-11 | Feedback (PRD v1 C-01) | gửi trống → "Write a few words first.", không gọi API; gửi nội dung → `POST /inquiries {kind: 'feedback'}` → thẻ `feedback-sent` + câu cảm ơn | PLN-261125 §2.5 |
+| TC-11-12 | "Email us about this order" ở Order Detail (PRD v1 E-01) | sang tab Chat, form có "Order IVY-39891" | PLN-261125 §2.6 |
 
 | Loại | File | Ca |
 |---|---|---|

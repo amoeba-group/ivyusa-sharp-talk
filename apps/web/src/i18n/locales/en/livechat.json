@@ -737,7 +737,9 @@
       "name": "Name",
       "email": "Email",
       "message": "Message",
-      "status": "Status"
+      "status": "Status",
+      "kind": "Type",
+      "order": "Order"
     },
     "status_open": "Open",
     "status_answered": "Answered",
@@ -756,7 +758,11 @@
     "answeredToast": "Marked answered.",
     "reopenedToast": "Opened again.",
     "updateError": "Couldn't update the inquiry.",
-    "openConversation": "Open conversation #{{id}}"
+    "openConversation": "Open conversation #{{id}}",
+    "kind_all": "All",
+    "kind_inquiry": "Inquiries",
+    "kind_feedback": "Feedback",
+    "order": "Order {{number}}"
   },
   "unread": {
     "count": "{{count}} unread",

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   INQUIRY_MESSAGE_MAX,
   INQUIRY_NAME_MAX,
+  feedbackProblems,
   inquiryProblems,
   normalizeInquiry,
   type InquiryField,
@@ -12,6 +13,7 @@ import {
 } from '../../../../../packages/types/src/common/inquiry';
 import { sendInquiry } from '../../services/inquiryService';
 import { showToast } from '../../lib/toast';
+import { displayOrderNumber } from '../../lib/address';
 import { MessageBubble } from './MessageBubble';
 import { ChatChip } from './ChatChip';
 import { START_OVER_ID } from './reply-chips';
@@ -52,15 +54,32 @@ const fieldClass = (bad: boolean) =>
     bad ? 'border-error' : 'border-gray-200 focus:border-primary-400'
   }`;
 
+/** The order a form is about (IVY PRD v1 E-01): shown on the form, sent as `order_id`. */
+export interface FormOrder {
+  id: string;
+  number: string;
+}
+
+function OrderLine({ order }: { order: FormOrder }) {
+  const { t } = useTranslation();
+  return (
+    <p data-testid="contact-form-order" className="rounded-st-md bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
+      {t('contact.form.order', { orderNumber: displayOrderNumber(order.number) })}
+    </p>
+  );
+}
+
 function ContactForm({
   sessionToken,
   conversationId,
   defaults,
+  order,
   onSent,
 }: {
   sessionToken: string | null;
   conversationId: string | null;
   defaults: { name: string; email: string; message?: string };
+  order?: FormOrder | null;
   onSent: (form: InquiryInput) => void;
 }) {
   const { t } = useTranslation();
@@ -89,7 +108,7 @@ function ContactForm({
     const clean = normalizeInquiry(form);
     setSending(true);
     try {
-      await sendInquiry(sessionToken, clean, conversationId);
+      await sendInquiry(sessionToken, clean, conversationId, { orderId: order?.id ?? null });
       onSent(clean);
     } catch (err) {
       const code = (err as { code?: string })?.code;
@@ -128,6 +147,7 @@ function ContactForm({
       data-testid="contact-form"
       className="space-y-3.5 rounded-st-lg border border-gray-200 bg-white p-4 shadow-sm"
     >
+      {order && <OrderLine order={order} />}
       {field('name', t('contact.form.name'), (p) => (
         <input
           {...p}
@@ -178,7 +198,7 @@ function ContactForm({
 }
 
 /** The shopper's side of a sent form (Figma 1006:6597). */
-function SentCard({ form }: { form: InquiryInput }) {
+function SentCard({ form, order }: { form: InquiryInput; order?: FormOrder | null }) {
   const { t } = useTranslation();
   const row = (label: string, value: string, multiline = false) => (
     <p className="text-sm">
@@ -190,6 +210,7 @@ function SentCard({ form }: { form: InquiryInput }) {
     <div className="flex justify-end">
       <div className="st-inquiry-card max-w-[85%] space-y-1.5 rounded-st-lg bg-gray-900 px-4 py-3.5" data-testid="inquiry-sent">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">{t('contact.sent.title')}</p>
+        {order && <p className="text-sm text-white">{t('contact.form.order', { orderNumber: displayOrderNumber(order.number) })}</p>}
         {row(t('contact.sent.name'), form.name)}
         {row(t('contact.sent.email'), form.email)}
         {row(t('contact.sent.message'), form.message, true)}
@@ -218,6 +239,7 @@ export function ContactFormAnswer({
   sessionToken,
   conversationId,
   defaults,
+  order,
   sent,
   picked,
   disabled,
@@ -233,6 +255,8 @@ export function ContactFormAnswer({
   conversationId: string | null;
   /** `message` pre-fills the form (the affiliate application, T12 §8-2a). */
   defaults: { name: string; email: string; message?: string };
+  /** The shopper's order the form is about (IVY PRD v1 E-01). */
+  order?: FormOrder | null;
   /** What was sent from this form; absent = the form is still open. */
   sent?: InquiryInput;
   picked?: string;
@@ -251,7 +275,7 @@ export function ContactFormAnswer({
       />
       {sent ? (
         <>
-          <SentCard form={sent} />
+          <SentCard form={sent} order={order} />
           <SentConfirmation />
           <div className="flex flex-wrap gap-1.5 pl-1">
             <ChatChip
@@ -263,7 +287,137 @@ export function ContactFormAnswer({
           </div>
         </>
       ) : (
-        <ContactForm sessionToken={sessionToken} conversationId={conversationId} defaults={defaults} onSent={onSent} />
+        <ContactForm
+          sessionToken={sessionToken}
+          conversationId={conversationId}
+          defaults={defaults}
+          order={order}
+          onSent={onSent}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * The Feedback quick menu (IVY PRD v1 C-01: "Enter feedback → saved in
+ * admin"): one box and Send. Name and address ride along when the widget knows
+ * them, and are never asked for. It lands in the console's Inquiries, filed as
+ * feedback, and is not mailed to the support address.
+ */
+export function FeedbackAnswer({
+  insertKey,
+  asked,
+  sessionToken,
+  conversationId,
+  defaults,
+  sent,
+  picked,
+  disabled,
+  onSent,
+  onStartOver,
+}: {
+  insertKey: string;
+  asked?: string | null;
+  sessionToken: string | null;
+  conversationId: string | null;
+  defaults: { name: string; email: string };
+  /** What was sent; absent = the box is still open. */
+  sent?: string;
+  picked?: string;
+  disabled?: boolean;
+  onSent: (message: string) => void;
+  onStartOver: () => void;
+}) {
+  const { t } = useTranslation();
+  const id = useId();
+  const [message, setMessage] = useState('');
+  const [checked, setChecked] = useState(false);
+  const [sending, setSending] = useState(false);
+  const input = { name: defaults.name, email: defaults.email, message };
+  const problem = checked ? feedbackProblems(input).message : undefined;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (sending) return;
+    setChecked(true);
+    if (Object.keys(feedbackProblems(input)).length) return;
+    if (!sessionToken) {
+      showToast({ tone: 'error', message: t('chat.feedback.failed') });
+      return;
+    }
+    const clean = normalizeInquiry(input);
+    setSending(true);
+    try {
+      await sendInquiry(sessionToken, clean, conversationId, { kind: 'feedback' });
+      onSent(clean.message);
+    } catch (err) {
+      const code = (err as { code?: string })?.code;
+      showToast({ tone: 'error', message: t(SEND_ERRORS[code ?? ''] ?? 'chat.feedback.failed') });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2" data-testid="feedback-answer">
+      {asked && (
+        <MessageBubble message={{ id: `${insertKey}-asked`, senderType: 'user', body: asked, createdAt: now() }} />
+      )}
+      <MessageBubble message={{ id: `${insertKey}-lead`, senderType: 'ai', body: t('chat.feedback.lead'), createdAt: now() }} />
+      {sent ? (
+        <>
+          <div className="flex justify-end">
+            <div className="st-inquiry-card max-w-[85%] space-y-1.5 rounded-st-lg bg-gray-900 px-4 py-3.5" data-testid="feedback-sent">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-300">{t('chat.feedback.mine')}</p>
+              <p className="whitespace-pre-wrap break-words text-sm text-white">{sent}</p>
+            </div>
+          </div>
+          <MessageBubble message={{ id: `${insertKey}-thanks`, senderType: 'ai', body: t('chat.feedback.thanks'), createdAt: now() }} />
+          <div className="flex flex-wrap gap-1.5 pl-1">
+            <ChatChip
+              label={t('chat.startOver')}
+              disabled={disabled}
+              selected={picked ? picked === START_OVER_ID : undefined}
+              onClick={onStartOver}
+            />
+          </div>
+        </>
+      ) : (
+        <form
+          noValidate
+          onSubmit={submit}
+          data-testid="feedback-form"
+          className="space-y-3 rounded-st-lg border border-gray-200 bg-white p-4 shadow-sm"
+        >
+          <label htmlFor={`${id}-feedback`} className="sr-only">
+            {t('chat.feedback.placeholder')}
+          </label>
+          <textarea
+            id={`${id}-feedback`}
+            rows={4}
+            maxLength={INQUIRY_MESSAGE_MAX}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={sending}
+            placeholder={t('chat.feedback.placeholder')}
+            aria-invalid={problem ? true : undefined}
+            aria-describedby={problem ? `${id}-feedback-error` : undefined}
+            className={`${fieldClass(!!problem)} resize-none`}
+          />
+          {problem && (
+            <p id={`${id}-feedback-error`} className="text-xs text-error">
+              {problem === 'tooLong' ? t('chat.feedback.tooLong', { max: INQUIRY_MESSAGE_MAX }) : t('chat.feedback.required')}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={sending}
+            className="w-full rounded-st-md bg-gray-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:opacity-60"
+          >
+            {sending ? t('chat.feedback.sending') : t('chat.feedback.send')}
+          </button>
+        </form>
       )}
     </div>
   );

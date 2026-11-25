@@ -53,6 +53,10 @@ export class Inquiry {
   @Column({ type: 'varchar', length: 16, default: 'open' })
   status: string; // open/answered
 
+  /** 'inquiry' (answered by email) | 'feedback' (kept for the admin) — IVY PRD v1 C-01. */
+  @Column({ type: 'varchar', length: 16, default: 'inquiry' })
+  kind: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

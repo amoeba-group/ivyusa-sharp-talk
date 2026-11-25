@@ -50,11 +50,14 @@ const FUNCTION_KEYS = new Set(['chat', 'rag', 'summary', 'assist', 'moderation',
 
 const SCENARIO_ACTIONS = [
   'delivery_status',
+  // IVY PRD v1 C-01 (PLN-261125 §2.5): the latest order's payment card, and the feedback form.
+  'payment_status',
   'cancel_refund',
   'product_help',
   'contact_support',
   'affiliate',
   'my_orders',
+  'feedback',
   'message',
 ] as const;
 

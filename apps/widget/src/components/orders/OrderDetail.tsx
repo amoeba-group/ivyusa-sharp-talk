@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Package, Star, Truck } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, ExternalLink, Mail, MessageSquare, Package, Star, Truck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore } from '../../store/widgetStore';
 import { isAuthError } from '../../lib/errors';
@@ -160,6 +160,7 @@ export function OrderDetailView({
   onBack,
   onAsk,
   onShowDelivery,
+  onEmailAboutOrder,
 }: {
   orderId: string;
   sessionToken: string | null;
@@ -170,6 +171,11 @@ export function OrderDetailView({
    * Delivery chip, this order first. Absent where no tab shows deliveries.
    */
   onShowDelivery?: (orderId: string) => void;
+  /**
+   * The contact form with this order on it (IVY PRD v1 E-01: "Contact in order
+   * detail" → inquiry form, order number attached). Absent = no such row.
+   */
+  onEmailAboutOrder?: (order: { id: string; number: string }) => void;
 }) {
   const { t, i18n } = useTranslation();
   const analytics = useAnalytics();
@@ -442,6 +448,15 @@ export function OrderDetailView({
               onClick={() => onAsk(order.orderNumber)}
             />
           </div>
+          {onEmailAboutOrder && (
+            <div className="border-t border-gray-100">
+              <ActionRow
+                icon={<Mail className="h-4 w-4" />}
+                label={t('orders.emailRow')}
+                onClick={() => onEmailAboutOrder({ id: String(orderId), number: order.orderNumber })}
+              />
+            </div>
+          )}
         </div>
       </div>
       <ToastHost />

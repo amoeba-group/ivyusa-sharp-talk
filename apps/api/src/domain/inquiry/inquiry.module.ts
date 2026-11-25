@@ -4,6 +4,8 @@ import { Inquiry } from './entity/inquiry.entity';
 import { Session } from '../session/entity/session.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
+import { OrderCache } from '../order/entity/order-cache.entity';
+import { Message } from '../chat/entity/message.entity';
 import { SessionModule } from '../session/session.module';
 import { CustomerModule } from '../customer/customer.module';
 import { ErasureSuppressionModule } from '../privacy/erasure-suppression.module';
@@ -17,7 +19,7 @@ import { AdminInquiryController, InquiryController } from './inquiry.controller'
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Inquiry, Session, Conversation, Tenant]),
+    TypeOrmModule.forFeature([Inquiry, Session, Conversation, Tenant, OrderCache, Message]),
     SessionModule,
     CustomerModule,
     ErasureSuppressionModule,

@@ -458,6 +458,37 @@ export class NotificationService implements OnModuleInit {
     return optOut;
   }
 
+  /**
+   * Customers who said no to marketing — the widget's opt-out, or CCPA "do
+   * not sell / share", both of which write disabled marketing rows — and have
+   * not said yes since. They get no Promo or Review notice at all, the widget's
+   * own feed included (IVY PRD v1 slide 12). Someone who never touched a
+   * setting is NOT here: default-deny already keeps marketing off their email
+   * and SMS, and the in-app feed stays theirs.
+   */
+  async marketingRefusers(customerIds: number[]): Promise<Set<number>> {
+    const ids = [...new Set(customerIds.map(Number).filter((n) => Number.isFinite(n)))];
+    const refused = new Set<number>();
+    if (!ids.length) return refused;
+    const marketing = NOTIFICATION_CATEGORY_LIST.filter(isMarketingCategory);
+    const CHUNK = 1000;
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const rows = await this.prefRepo.find({
+        where: {
+          customerId: In(ids.slice(i, i + CHUNK)),
+          category: In(marketing),
+          channel: In([...EXTERNAL_CHANNELS]),
+        },
+        select: { customerId: true, enabled: true },
+      });
+      const yes = new Set<number>();
+      const no = new Set<number>();
+      for (const r of rows) (r.enabled === 1 ? yes : no).add(Number(r.customerId));
+      for (const id of no) if (!yes.has(id)) refused.add(id);
+    }
+    return refused;
+  }
+
   /** Insert-or-update one preference row (channel × category). */
   private async upsertPrefRow(
     customerId: number,

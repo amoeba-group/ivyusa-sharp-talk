@@ -193,6 +193,13 @@ interface WidgetState {
   requestReidentify: () => void;
   queueChatMessage: (m: string) => void;
   consumeChatMessage: () => string | null;
+  /**
+   * "Email us about this order" in Order Detail (IVY PRD v1 E-01): the Chat
+   * tab opens the contact form with this order on it.
+   */
+  pendingContactOrder: { id: string; number: string } | null;
+  queueContactOrder: (order: { id: string; number: string }) => void;
+  consumeContactOrder: () => { id: string; number: string } | null;
 }
 
 export const useWidgetStore = create<WidgetState>()((set, get) => ({
@@ -228,6 +235,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   teaserVisible: false,
   consent: null,
   pendingChatMessage: null,
+  pendingContactOrder: null,
   notificationFilter: 'all',
   visibleTabs: [...WIDGET_TABS_DEFAULT],
   tabPosition: 'top',
@@ -311,6 +319,12 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
       },
     })),
   queueChatMessage: (m) => set({ pendingChatMessage: m, activeTab: 'chat' }),
+  queueContactOrder: (order) => set({ pendingContactOrder: order, activeTab: 'chat' }),
+  consumeContactOrder: () => {
+    const o = get().pendingContactOrder;
+    if (o) set({ pendingContactOrder: null });
+    return o;
+  },
   consumeChatMessage: () => {
     const m = get().pendingChatMessage;
     if (m) set({ pendingChatMessage: null });

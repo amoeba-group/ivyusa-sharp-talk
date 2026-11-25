@@ -31,5 +31,16 @@
   "couponCodeHelp": "영문·숫자·-·_ 최대 {{max}}자",
   "promoLocked": "발송 후에는 변경할 수 없습니다",
   "errorPromoInvalid": "유형과 쿠폰 코드를 확인하세요. 영문·숫자·-·_만 사용할 수 있습니다.",
-  "errorPromoLocked": "발송된 캠페인의 유형과 쿠폰 코드는 변경할 수 없습니다."
+  "errorPromoLocked": "발송된 캠페인의 유형과 쿠폰 코드는 변경할 수 없습니다.",
+  "sendTo": "받는 사람",
+  "audienceAll": "전체 고객",
+  "audienceCustomers": "특정 고객",
+  "targetEmailsPlaceholder": "한 줄에 이메일 하나",
+  "targetEmailsHelp": "이 이메일을 가진 이 쇼핑몰 고객에게만 보냅니다.",
+  "optOutNote": "마케팅 수신을 끈 고객과 ‘판매·공유 거부’를 선택한 고객은 제외됩니다.",
+  "audienceCount_one": "{{count}}명",
+  "audienceCount_other": "{{count}}명",
+  "targetNotFound_one": "이 쇼핑몰 고객이 아닌 이메일 {{count}}개: {{list}}",
+  "targetNotFound_other": "이 쇼핑몰 고객이 아닌 이메일 {{count}}개: {{list}}",
+  "errorNoRecipients": "이 쇼핑몰 고객인 이메일이 없어 보낼 대상이 없습니다."
 }

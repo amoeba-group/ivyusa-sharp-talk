@@ -46,7 +46,7 @@ const OUTLINE_BUTTON =
  * and status pill, item summary, the 4-step stepper, the status message and
  * Track Order.
  */
-function ShipmentCard({
+export function ShipmentCard({
   order,
   tracking,
   loading,

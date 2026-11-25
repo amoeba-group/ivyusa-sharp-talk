@@ -31,5 +31,16 @@
   "couponCodeHelp": "Letters, numbers, - and _ · up to {{max}} characters",
   "promoLocked": "Can't be changed after sending",
   "errorPromoInvalid": "Check the type and the coupon code: letters, numbers, - and _ only.",
-  "errorPromoLocked": "A sent campaign's type and coupon code can't be changed."
+  "errorPromoLocked": "A sent campaign's type and coupon code can't be changed.",
+  "sendTo": "Send to",
+  "audienceAll": "All customers",
+  "audienceCustomers": "Specific customers",
+  "targetEmailsPlaceholder": "One email per line",
+  "targetEmailsHelp": "Only customers of this shop with these emails receive it.",
+  "optOutNote": "Customers who turned off marketing or chose “Do not sell or share” are skipped.",
+  "audienceCount_one": "{{count}} customer",
+  "audienceCount_other": "{{count}} customers",
+  "targetNotFound_one": "{{count}} email isn't a customer of this shop: {{list}}",
+  "targetNotFound_other": "{{count}} emails aren't customers of this shop: {{list}}",
+  "errorNoRecipients": "None of these emails is a customer of this shop, so there's no one to send to."
 }

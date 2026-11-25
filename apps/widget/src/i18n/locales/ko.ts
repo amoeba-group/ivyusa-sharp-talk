@@ -91,6 +91,46 @@ export const ko: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: '처음으로',
     startOverLead: '무엇을 더 도와드릴까요?',
+    /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
+    payment: {
+      lead: '최근 주문의 결제 상태입니다.',
+      none: '계정에서 최근 주문을 찾지 못했어요.',
+      state: {
+        paid: '결제완료',
+        pending: '결제대기',
+        cancelled: '주문취소',
+        refunded: '환불완료',
+      },
+      guide: {
+        paid: '{{orderNumber}} 결제가 완료되었습니다. 발송되면 알려드릴게요.',
+        pending: '{{orderNumber}} 결제가 아직 완료되지 않았어요. 결제가 되었다면 문의해 주세요. 확인해 드릴게요.',
+        cancelled: '{{orderNumber}} 주문이 취소되었습니다. 결제된 금액은 원래 결제 수단으로 돌아갑니다.',
+        refunded: '{{orderNumber}} 주문이 원래 결제 수단으로 환불되었습니다. 은행에 반영되기까지 며칠 걸릴 수 있어요.',
+      },
+      total: '합계 {{amount}}',
+    },
+    delivery: {
+      lead: '최근 주문의 배송 현황입니다.',
+      none: '계정에서 최근 주문을 찾지 못했어요.',
+      guide: {
+        preparing: '{{orderNumber}} 주문은 아직 발송 전이에요. 발송되면 바로 알려드릴게요.',
+        inTransit: '{{orderNumber}} 주문이 배송 중이에요.',
+        delivered: '{{orderNumber}} 주문이 배송 완료되었어요. 문제가 있으면 알려주세요.',
+      },
+      policy: '배송 정책',
+    },
+    contactSupport: 'Contact Support',
+    feedback: {
+      lead: '의견을 들려주세요. 보내주신 내용은 저희 팀에 바로 전달됩니다.',
+      placeholder: '의견을 입력해 주세요',
+      send: '의견 보내기',
+      sending: '보내는 중…',
+      thanks: '감사합니다. 의견이 저희 팀에 전달되었습니다.',
+      mine: '보낸 의견',
+      failed: '의견을 보내지 못했어요. 다시 시도해 주세요.',
+      required: '내용을 입력해 주세요.',
+      tooLong: '최대 {{max}}자까지 입력할 수 있어요.',
+    },
     /** After the My Orders answer (SCR-IVY-11). */
     orderAnswer: {
       followUp: '더 도움이 필요하신가요?',
@@ -289,6 +329,8 @@ export const ko: Translation = {
     phoneHint: '눌러서 전화하기',
     chatHint: '이 채팅에서 바로 상담원과 이야기하세요',
     form: {
+      /** The order a form is sent about (IVY PRD v1 E-01). */
+      order: '주문 {{orderNumber}}',
       lead: '연락처를 입력하고 문의 내용을 알려주세요.',
       name: '이름',
       namePlaceholder: '이름을 입력하세요',
@@ -388,6 +430,7 @@ export const ko: Translation = {
     back: '뒤로',
     qty: '수량 {{count}}',
     askRow: '문의하기',
+    emailRow: '이 주문에 대해 이메일 문의',
     subtotal: '소계',
     discount: '할인',
     shipping: '배송비',

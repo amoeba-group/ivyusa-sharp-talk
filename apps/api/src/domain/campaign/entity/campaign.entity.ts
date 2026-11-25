@@ -17,6 +17,13 @@ export class Campaign {
   @Column({ name: 'segment_ref', type: 'varchar', length: 128, nullable: true })
   segmentRef: string | null;
 
+  /**
+   * Who the campaign goes to: this tenant's customer ids, or NULL for all of
+   * them (IVY PRD v1 N-04 — specific-customer targeting used to be ignored).
+   */
+  @Column({ name: 'target_customer_ids', type: 'json', nullable: true })
+  targetCustomerIds: number[] | null;
+
   @Column({ type: 'json', nullable: true })
   content: Record<string, unknown> | null;
 

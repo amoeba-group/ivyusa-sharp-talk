@@ -31,5 +31,16 @@
   "couponCodeHelp": "Letras, números, - y _ · hasta {{max}} caracteres",
   "promoLocked": "No se puede cambiar después del envío",
   "errorPromoInvalid": "Revisa el tipo y el código: solo letras, números, - y _.",
-  "errorPromoLocked": "El tipo y el código de una campaña enviada no se pueden cambiar."
+  "errorPromoLocked": "El tipo y el código de una campaña enviada no se pueden cambiar.",
+  "sendTo": "Enviar a",
+  "audienceAll": "Todos los clientes",
+  "audienceCustomers": "Clientes concretos",
+  "targetEmailsPlaceholder": "Un correo por línea",
+  "targetEmailsHelp": "Solo lo reciben los clientes de esta tienda con estos correos.",
+  "optOutNote": "Se omite a los clientes que desactivaron el marketing o eligieron «No vender ni compartir».",
+  "audienceCount_one": "{{count}} cliente",
+  "audienceCount_other": "{{count}} clientes",
+  "targetNotFound_one": "{{count}} correo no es de un cliente de esta tienda: {{list}}",
+  "targetNotFound_other": "{{count}} correos no son de clientes de esta tienda: {{list}}",
+  "errorNoRecipients": "Ninguno de estos correos es de un cliente de esta tienda: no hay a quién enviar."
 }

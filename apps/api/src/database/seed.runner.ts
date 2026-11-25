@@ -124,7 +124,8 @@ const IVY_SCENARIO_OVERRIDES: Record<string, ScenarioOverride> = {
  * design keeps "Contact Support" in English.
  */
 const IVY_SCENARIO_BUTTONS: ScenarioButton[] = [
-  { id: 'payment_check', action: 'message', enabled: true, emoji: '💰',
+  // IVY PRD v1 C-01 (PLN-261125 §2.5): the latest order's payment card, and a feedback form kept for the admin.
+  { id: 'payment_check', action: 'payment_status', enabled: true, emoji: '💰',
     label: { EN: 'Payment check', ES: 'Verificar pago', KO: '결제 확인', VI: 'Kiểm tra thanh toán', JA: 'お支払い確認', ZH: '付款确认' } },
   { id: 'delivery_inquiry', action: 'delivery_status', enabled: true, emoji: '🚚',
     label: { EN: 'Delivery inquiry', ES: 'Consulta de envío', KO: '배송 문의', VI: 'Hỏi về giao hàng', JA: '配送のお問い合わせ', ZH: '配送咨询' } },
@@ -135,7 +136,7 @@ const IVY_SCENARIO_BUTTONS: ScenarioButton[] = [
   { id: 'product_inquiry', action: 'product_help', enabled: true, emoji: '✨',
     label: { EN: 'Product inquiry', ES: 'Consulta de producto', KO: '제품문의', VI: 'Hỏi về sản phẩm', JA: '商品のお問い合わせ', ZH: '商品咨询' },
     categories: IVY_PRODUCT_CATEGORIES },
-  { id: 'feedback', action: 'message', enabled: true, emoji: '💬',
+  { id: 'feedback', action: 'feedback', enabled: true, emoji: '💬',
     label: { EN: 'Feedback', ES: 'Comentarios', KO: '피드백', VI: 'Góp ý', JA: 'ご意見', ZH: '意见反馈' } },
   { id: 'contact_support', action: 'contact_support', enabled: true, emoji: '🤝',
     label: { EN: 'Contact Support', ES: 'Contactar con soporte', KO: 'Contact Support', VI: 'Liên hệ hỗ trợ', JA: 'サポートに問い合わせ', ZH: '联系客服' } },

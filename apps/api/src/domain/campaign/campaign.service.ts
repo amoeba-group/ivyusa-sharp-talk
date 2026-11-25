@@ -1,10 +1,12 @@
 import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Campaign } from './entity/campaign.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { ProductCache } from '../product/entity/product-cache.entity';
 import { CreateCampaignRequest, UpdateCampaignRequest } from './dto/request/campaign.request';
+import type { CampaignWithTargets } from './campaign.mapper';
+import { blindIndex } from '../../global/util/crypto.util';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 import { NotificationService } from '../notification/notification.service';
 import { ModerationService } from '../moderation/moderation.service';
@@ -56,31 +58,51 @@ export class CampaignService implements OnModuleInit {
     });
   }
 
-  async listAll(tenantId: number, page: number, size: number): Promise<[Campaign[], number]> {
-    return this.campaignRepo.findAndCount({
+  async listAll(tenantId: number, page: number, size: number): Promise<[CampaignWithTargets[], number]> {
+    const [items, total] = await this.campaignRepo.findAndCount({
       where: { tenantId },
       order: { id: 'DESC' },
       skip: (page - 1) * size,
       take: size,
     });
+    // The edit form shows who a campaign goes to by address. One query for the page.
+    const ids = [...new Set(items.flatMap((c) => (Array.isArray(c.targetCustomerIds) ? c.targetCustomerIds : [])))];
+    if (!ids.length) return [items, total];
+    const customers = await this.customerRepo.find({ where: { tenantId, id: In(ids) }, select: { id: true, email: true } });
+    const emailOf = new Map(customers.map((c) => [Number(c.id), c.email ?? null]));
+    const withEmails = items.map((c) =>
+      Array.isArray(c.targetCustomerIds)
+        ? Object.assign(c, {
+            targetEmails: c.targetCustomerIds
+              .map((cid) => emailOf.get(Number(cid)))
+              .filter((e): e is string => !!e),
+          })
+        : c,
+    );
+    return [withEmails, total];
   }
 
-  async create(tenantId: number, input: CreateCampaignRequest): Promise<Campaign> {
-    return this.campaignRepo.save(
+  async create(tenantId: number, input: CreateCampaignRequest): Promise<CampaignWithTargets> {
+    const target = await this.resolveTargets(tenantId, input.target_emails);
+    const saved = await this.campaignRepo.save(
       this.campaignRepo.create({
         tenantId,
         name: input.name,
         segmentRef: input.segment_ref ?? null,
+        targetCustomerIds: target?.ids ?? null,
         content: this.normalizePromo(tenantId, input.content ?? null),
         status: 'draft',
       }),
     );
+    return target ? Object.assign(saved, { targetNotFound: target.notFound }) : saved;
   }
 
-  async update(tenantId: number, id: number, input: UpdateCampaignRequest): Promise<Campaign> {
+  async update(tenantId: number, id: number, input: UpdateCampaignRequest): Promise<CampaignWithTargets> {
     const campaign = await this.requireCampaign(tenantId, id);
     if (input.name !== undefined) campaign.name = input.name;
     if (input.segment_ref !== undefined) campaign.segmentRef = input.segment_ref;
+    const target = await this.resolveTargets(tenantId, input.target_emails);
+    if (target) campaign.targetCustomerIds = target.ids;
     if (input.content !== undefined) {
       const next = this.normalizePromo(tenantId, input.content);
       // Shoppers already hold a sent campaign's kind and code (their feed reads
@@ -98,11 +120,47 @@ export class CampaignService implements OnModuleInit {
       campaign.content = next;
     }
     if (input.status !== undefined) campaign.status = input.status;
-    return this.campaignRepo.save(campaign);
+    const saved = await this.campaignRepo.save(campaign);
+    return target ? Object.assign(saved, { targetNotFound: target.notFound }) : saved;
+  }
+
+  /**
+   * Addresses → this tenant's customers (IVY PRD v1 N-04). `undefined` = the
+   * request did not touch recipients; `null` = every customer. Matching goes
+   * through the address blind index — addresses are stored encrypted. An empty
+   * list is refused rather than read as "everyone": a shop that meant to send
+   * to three people must never reach them all.
+   */
+  private async resolveTargets(
+    tenantId: number,
+    emails: string[] | null | undefined,
+  ): Promise<{ ids: number[] | null; notFound: string[] } | undefined> {
+    if (emails === undefined) return undefined;
+    if (emails === null) return { ids: null, notFound: [] };
+    const wanted = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+    if (!wanted.length) {
+      this.logger.warn(`campaign recipients rejected: empty list (tenant ${tenantId})`);
+      throw new BusinessException(ERROR_CODE.CAMPAIGN_NO_RECIPIENTS, HttpStatus.BAD_REQUEST);
+    }
+    const hashOf = new Map(wanted.map((e) => [e, blindIndex(e)]));
+    const hashes = [...hashOf.values()].filter((h): h is string => !!h);
+    const rows = hashes.length
+      ? await this.customerRepo.find({ where: { tenantId, emailHash: In(hashes) }, select: { id: true, emailHash: true } })
+      : [];
+    const found = new Set(rows.map((r) => r.emailHash));
+    return {
+      ids: [...new Set(rows.map((r) => Number(r.id)))],
+      notFound: wanted.filter((e) => !found.has(hashOf.get(e) ?? '')),
+    };
   }
 
   async send(tenantId: number, id: number): Promise<Campaign> {
     const campaign = await this.requireCampaign(tenantId, id);
+    // "Specific customers" with nobody in it: refuse rather than send to no one silently.
+    if (Array.isArray(campaign.targetCustomerIds) && campaign.targetCustomerIds.length === 0) {
+      this.logger.warn(`campaign ${id} send refused: no recipients (tenant ${tenantId})`);
+      throw new BusinessException(ERROR_CODE.CAMPAIGN_NO_RECIPIENTS, HttpStatus.BAD_REQUEST);
+    }
     // Validate the deep-link here (admin-facing request) so a bad handle/url
     // surfaces as a 400 instead of failing silently inside the bus consumer.
     const link = this.campaignLink(campaign.content);
@@ -189,7 +247,18 @@ export class CampaignService implements OnModuleInit {
     // can route to its native product-detail screen instead of the web URL.
     const { linkUrl, productHandle } = await this.resolveLink(campaign.tenantId, campaign.content);
 
-    const customers = await this.customerRepo.find({ where: { tenantId: campaign.tenantId } });
+    // Its recipients (IVY PRD v1 N-04): the customers it names, or all of them.
+    const targets = campaign.targetCustomerIds;
+    const audience = Array.isArray(targets)
+      ? targets.length
+        ? await this.customerRepo.find({ where: { tenantId: campaign.tenantId, id: In(targets.map(Number)) } })
+        : []
+      : await this.customerRepo.find({ where: { tenantId: campaign.tenantId } });
+    // Whoever refused marketing — the widget's opt-out or CCPA "do not sell /
+    // share" — gets no Promo at all, the widget's own feed included (PRD v1
+    // slide 12). Order and delivery notices are untouched by this.
+    const refusers = await this.notifications.marketingRefusers(audience.map((c) => Number(c.id)));
+    const customers = audience.filter((c) => !refusers.has(Number(c.id)));
     let externalDelivered = 0;
     let inAppOnly = 0;
     // Chunked fan-out (PLN-MobileApp M4): bounded concurrency instead of one
@@ -230,7 +299,12 @@ export class CampaignService implements OnModuleInit {
       actorId: 0,
       action: 'campaign.dispatched',
       target: `campaign:${campaignId}`,
-      metadata: { externalDelivered, inAppOnly },
+      metadata: {
+        externalDelivered,
+        inAppOnly,
+        targeted: audience.length,
+        skippedOptOut: audience.length - customers.length,
+      },
     });
   }
 

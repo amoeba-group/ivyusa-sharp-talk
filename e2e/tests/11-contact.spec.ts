@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures/widget';
-import { CUSTOMER, SUPPORT_EMAIL } from '../fixtures/ivy-data';
+import { CUSTOMER } from '../fixtures/ivy-data';
 
 /**
  * T11 — Contact Support + contact form (SCR-IVY-13, G-17, G-18, BR-14, BR-15,
@@ -16,23 +16,17 @@ test.describe('T11 · Contact Support & contact form', () => {
     await widget.scenarioButton(/Contact Support/).click();
   });
 
-  test('TC-11-01 shows the email channel only, with intake hours and reply time @T11 @design', async ({ widget }) => {
+  test('TC-11-01 email is the only channel, so Contact Support opens the form directly (PRD v1 C-01) @T11 @design', async ({ widget }) => {
     const p = widget.panel;
-    const answer = p.getByTestId('contact-support').last();
-    await expect(answer.getByText("Please choose how you'd like to reach us.")).toBeVisible();
-    await expect(p.getByText(SUPPORT_EMAIL).last()).toBeVisible();
-    await expect(p.getByText(/24.?(h|hour)/i).last()).toBeVisible();
-    await expect(p.getByText(/1 business day/i).last()).toBeVisible();
+    await expect(p.getByTestId('contact-form')).toBeVisible();
+    // No card to pick the one channel from.
+    await expect(p.getByTestId('contact-support')).toHaveCount(0);
     // BUG-010: IVY's old values were hardcoded for every tenant.
     await expect(p.getByText('1588-0000')).toHaveCount(0);
     await expect(p.getByText('help@ivy.com')).toHaveCount(0);
-    // The design has one card (§8-3a): no phone, no live chat.
-    await expect(answer.getByRole('button', { name: /Chat with an agent/ })).toHaveCount(0);
-    await expect(answer.getByRole('button', { name: 'Start over', exact: true })).toBeVisible();
   });
 
   test('TC-11-02 contact form has Name, Email (prefilled) and Message @T11 @design', async ({ widget }) => {
-    await widget.panel.getByRole('button', { name: /Email inquiry/i }).last().click();
     await expect(widget.panel.getByText('Please enter your contact information and tell us how we can help.')).toBeVisible();
     const form = widget.panel.getByTestId('contact-form');
     await expect(form.getByLabel('Name')).toBeVisible();
@@ -42,7 +36,6 @@ test.describe('T11 · Contact Support & contact form', () => {
   });
 
   test('TC-11-03 invalid input blocks sending @T11 @design', async ({ widget, mocks }) => {
-    await widget.panel.getByRole('button', { name: /Email inquiry/i }).last().click();
     const form = widget.panel.getByTestId('contact-form');
     await form.getByLabel('Name').fill('');
     await form.getByLabel('Email').fill('not-an-email');
@@ -54,7 +47,6 @@ test.describe('T11 · Contact Support & contact form', () => {
   });
 
   test('TC-11-04 sending creates an inquiry and confirms it in the thread @T11 @design', async ({ widget, mocks }) => {
-    await widget.panel.getByRole('button', { name: /Email inquiry/i }).last().click();
     const form = widget.panel.getByTestId('contact-form');
     await form.getByLabel('Name').fill('test');
     await form.getByLabel('Message').fill('dfdfdf');
@@ -83,7 +75,6 @@ test.describe('T11 · send failure', () => {
     await widget.open();
     await widget.openChat();
     await widget.scenarioButton(/Contact Support/).click();
-    await widget.panel.getByRole('button', { name: /Email inquiry/i }).last().click();
     const form = widget.panel.getByTestId('contact-form');
     await form.getByLabel('Name').fill('test');
     await form.getByLabel('Message').fill('Where is my order?');
@@ -131,8 +122,6 @@ test.describe('T11 · contact form against the real API', () => {
     await widget.openChat();
     await widget.acceptConsent();
     await widget.scenarioButton(/Contact Support/).click();
-    await expect(widget.panel.getByText(SUPPORT_EMAIL).last()).toBeVisible();
-    await widget.panel.getByRole('button', { name: /Email inquiry/i }).last().click();
     const form = widget.panel.getByTestId('contact-form');
     // A guest: nothing to prefill.
     await expect(form.getByLabel('Email')).toHaveValue('');
@@ -157,15 +146,75 @@ test.describe('T11 · the card survives a page change', () => {
     await widget.open();
     await widget.openChat();
     await widget.scenarioButton(/Contact Support/).click();
-    await expect(widget.panel.getByTestId('contact-support').last()).toBeVisible();
-    await expect(widget.panel.getByText(SUPPORT_EMAIL).last()).toBeVisible();
+    await expect(widget.panel.getByTestId('contact-form').last()).toBeVisible();
 
     await page.reload();
     await widget.open();
     await widget.openChat();
-    await expect(widget.panel.getByTestId('contact-support').last()).toBeVisible();
-    await expect(widget.panel.getByText(SUPPORT_EMAIL).last()).toBeVisible();
+    await expect(widget.panel.getByTestId('contact-form').last()).toBeVisible();
     // Brought back once, not once per render.
-    await expect(widget.panel.getByTestId('contact-support')).toHaveCount(1);
+    await expect(widget.panel.getByTestId('contact-form')).toHaveCount(1);
+  });
+});
+
+/** IVY PRD v1 C-01 / E-01 (PLN-261125 §2.5–2.6): Payment check, Delivery inquiry, Feedback, the order on the form. */
+test.describe('T11 · PRD v1 quick menu cards', () => {
+  test.beforeEach(async ({ widget }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.openChat();
+  });
+
+  test('TC-11-09 Payment check shows the latest order with its payment status, then Contact Support carries the order @T11', async ({ widget, mocks }) => {
+    await widget.scenarioButton(/Payment check/).click();
+    const answer = widget.panel.getByTestId('payment-answer');
+    const card = answer.getByTestId('payment-card');
+    await expect(card).toContainText('IVY-39891');
+    await expect(card).toHaveAttribute('data-state', 'paid');
+    await expect(card).toContainText('Paid');
+    await expect(answer.getByText(/Your payment for IVY-39891 went through/)).toBeVisible();
+
+    await answer.getByRole('button', { name: 'Contact Support', exact: true }).click();
+    const form = widget.panel.getByTestId('contact-form').last();
+    await expect(form.getByTestId('contact-form-order')).toHaveText('Order IVY-39891');
+    await form.getByLabel('Name').fill('Kiho');
+    await form.getByLabel('Message').fill('I was charged twice.');
+    await form.getByRole('button', { name: 'Send Message' }).click();
+    await expect.poll(() => mocks!.callsTo('POST', '/inquiries').length).toBe(1);
+    expect(mocks!.callsTo('POST', '/inquiries')[0].body).toMatchObject({ order_id: '39891', message: 'I was charged twice.' });
+  });
+
+  test('TC-11-10 Delivery inquiry shows the tracker of the order on its way @T11', async ({ widget }) => {
+    await widget.scenarioButton(/Delivery inquiry/).click();
+    const answer = widget.panel.getByTestId('delivery-answer');
+    await expect(answer.getByTestId('delivery-card')).toContainText('IVY-39641');
+    await expect(answer.getByText('IVY-39641 is on its way.')).toBeVisible();
+    for (const chip of ['Shipping policy', 'Contact Support', 'Start over']) {
+      await expect(answer.getByRole('button', { name: chip, exact: true })).toBeVisible();
+    }
+  });
+
+  test('TC-11-11 Feedback takes a message only and files it as feedback @T11', async ({ widget, mocks }) => {
+    await widget.scenarioButton(/Feedback/).click();
+    const answer = widget.panel.getByTestId('feedback-answer');
+    await answer.getByRole('button', { name: 'Send feedback' }).click();
+    await expect(answer.getByText('Write a few words first.')).toBeVisible();
+    expect(mocks!.callsTo('POST', '/inquiries')).toHaveLength(0);
+    await answer.getByRole('textbox').fill('Love the new serum!');
+    await answer.getByRole('button', { name: 'Send feedback' }).click();
+    await expect.poll(() => mocks!.callsTo('POST', '/inquiries').length).toBe(1);
+    expect(mocks!.callsTo('POST', '/inquiries')[0].body).toMatchObject({ kind: 'feedback', message: 'Love the new serum!' });
+    await expect(answer.getByTestId('feedback-sent')).toContainText('Love the new serum!');
+    await expect(answer.getByText('Thank you — your feedback reached our team.')).toBeVisible();
+    await expect(answer.getByTestId('feedback-form')).toHaveCount(0);
+  });
+
+  test('TC-11-12 "Email us about this order" in Order Detail opens the form with that order @T11', async ({ widget }) => {
+    await widget.openNotifications();
+    await widget.notifItems.filter({ hasText: 'IVY-39891' }).first().click();
+    await widget.panel.getByRole('button', { name: 'Email us about this order' }).click();
+    await expect(widget.tab('Chat')).toHaveAttribute('aria-selected', 'true');
+    const form = widget.panel.getByRole('tabpanel').getByTestId('contact-form').last();
+    await expect(form.getByTestId('contact-form-order')).toHaveText('Order IVY-39891');
   });
 });

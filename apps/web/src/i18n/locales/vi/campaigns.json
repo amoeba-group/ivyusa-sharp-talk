@@ -31,5 +31,16 @@
   "couponCodeHelp": "Chữ, số, - và _ · tối đa {{max}} ký tự",
   "promoLocked": "Không đổi được sau khi đã gửi",
   "errorPromoInvalid": "Kiểm tra loại và mã coupon: chỉ chữ, số, - và _.",
-  "errorPromoLocked": "Không đổi được loại và mã coupon của campaign đã gửi."
+  "errorPromoLocked": "Không đổi được loại và mã coupon của campaign đã gửi.",
+  "sendTo": "Gửi tới",
+  "audienceAll": "Tất cả khách hàng",
+  "audienceCustomers": "Khách hàng cụ thể",
+  "targetEmailsPlaceholder": "Mỗi dòng một email",
+  "targetEmailsHelp": "Chỉ khách hàng của cửa hàng có các email này mới nhận được.",
+  "optOutNote": "Khách đã tắt nhận marketing hoặc chọn “Không bán / chia sẻ” sẽ được bỏ qua.",
+  "audienceCount_one": "{{count}} khách hàng",
+  "audienceCount_other": "{{count}} khách hàng",
+  "targetNotFound_one": "{{count}} email không phải khách của cửa hàng: {{list}}",
+  "targetNotFound_other": "{{count}} email không phải khách của cửa hàng: {{list}}",
+  "errorNoRecipients": "Không email nào là khách của cửa hàng nên không có ai để gửi."
 }

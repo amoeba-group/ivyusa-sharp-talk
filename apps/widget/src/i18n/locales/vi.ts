@@ -91,6 +91,46 @@ export const vi: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: 'Bắt đầu lại',
     startOverLead: 'Tôi có thể giúp gì thêm cho bạn?',
+    /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
+    payment: {
+      lead: 'Đây là tình trạng thanh toán của đơn gần nhất của bạn.',
+      none: 'Tôi không tìm thấy đơn hàng gần đây nào trong tài khoản của bạn.',
+      state: {
+        paid: 'Đã thanh toán',
+        pending: 'Chờ thanh toán',
+        cancelled: 'Đã hủy',
+        refunded: 'Đã hoàn tiền',
+      },
+      guide: {
+        paid: 'Thanh toán cho {{orderNumber}} đã hoàn tất. Chúng tôi sẽ báo khi đơn được gửi đi.',
+        pending: 'Thanh toán cho {{orderNumber}} chưa hoàn tất. Nếu bạn đã bị trừ tiền, hãy liên hệ để chúng tôi kiểm tra.',
+        cancelled: '{{orderNumber}} đã bị hủy. Nếu bạn đã bị trừ tiền, số tiền sẽ về lại phương thức thanh toán ban đầu.',
+        refunded: '{{orderNumber}} đã được hoàn tiền về phương thức thanh toán ban đầu. Ngân hàng có thể mất vài ngày để hiển thị.',
+      },
+      total: 'Tổng {{amount}}',
+    },
+    delivery: {
+      lead: 'Đây là tình trạng giao hàng của đơn gần nhất của bạn.',
+      none: 'Tôi không tìm thấy đơn hàng gần đây nào trong tài khoản của bạn.',
+      guide: {
+        preparing: '{{orderNumber}} chưa được gửi đi. Bạn sẽ nhận thông báo ngay khi đơn được gửi.',
+        inTransit: '{{orderNumber}} đang trên đường giao.',
+        delivered: '{{orderNumber}} đã giao xong. Nếu có vấn đề gì, hãy cho chúng tôi biết.',
+      },
+      policy: 'Chính sách giao hàng',
+    },
+    contactSupport: 'Liên hệ hỗ trợ',
+    feedback: {
+      lead: 'Chúng tôi rất muốn nghe ý kiến của bạn. Góp ý sẽ được gửi thẳng tới đội ngũ của chúng tôi.',
+      placeholder: 'Hãy cho chúng tôi biết suy nghĩ của bạn',
+      send: 'Gửi góp ý',
+      sending: 'Đang gửi…',
+      thanks: 'Cảm ơn bạn — góp ý đã được gửi tới đội ngũ của chúng tôi.',
+      mine: 'Góp ý của bạn',
+      failed: 'Chưa gửi được góp ý. Vui lòng thử lại.',
+      required: 'Hãy viết vài chữ trước đã.',
+      tooLong: 'Tối đa {{max}} ký tự.',
+    },
     /** After the My Orders answer (SCR-IVY-11). */
     orderAnswer: {
       followUp: 'Bạn cần hỗ trợ thêm gì không?',
@@ -293,6 +333,8 @@ export const vi: Translation = {
     phoneHint: 'Chạm để gọi',
     chatHint: 'Trò chuyện với đội ngũ ngay trong khung chat này',
     form: {
+      /** The order a form is sent about (IVY PRD v1 E-01). */
+      order: 'Đơn {{orderNumber}}',
       lead: 'Vui lòng nhập thông tin liên hệ và cho chúng tôi biết bạn cần hỗ trợ gì.',
       name: 'Tên',
       namePlaceholder: 'Nhập tên của bạn',
@@ -392,6 +434,7 @@ export const vi: Translation = {
     back: 'Quay lại',
     qty: 'SL {{count}}',
     askRow: 'Liên hệ',
+    emailRow: 'Gửi email về đơn này',
     subtotal: 'Tạm tính',
     discount: 'Giảm giá',
     shipping: 'Phí vận chuyển',

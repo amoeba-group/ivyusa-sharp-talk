@@ -17,6 +17,8 @@ import type { Inquiry, InquiryDetail, InquiryListParams } from './inquiries.serv
 const PAGE_SIZE = 20;
 // "All" first and by default: answered forms stay in view, the Status column tells them apart.
 const STATUSES = ['all', 'open', 'answered'] as const;
+// Feedback from the widget's Feedback button lands here too (IVY PRD v1 C-01).
+const KINDS = ['all', 'inquiry', 'feedback'] as const;
 
 const when = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -107,6 +109,8 @@ function InquiryDialog({ item, onClose }: { item: Inquiry; onClose: () => void }
             <span className="font-semibold text-gray-900">{detail.contactName ?? '—'}</span>
             <span className="text-gray-600">{detail.contactEmail ?? '—'}</span>
             {detail.language && <Badge tone="gray">{detail.language}</Badge>}
+            {detail.kind === 'feedback' && <Badge tone="gray">{t('inquiry.kind_feedback')}</Badge>}
+            {detail.orderNumber && <Badge tone="gray">{t('inquiry.order', { number: detail.orderNumber })}</Badge>}
             <Badge tone={status === 'open' ? 'warning' : 'success'}>{t(`inquiry.status_${status}`, { defaultValue: status })}</Badge>
           </div>
           <p className="whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-3 text-sm text-gray-800">{detail.message ?? ''}</p>
@@ -129,18 +133,33 @@ function InquiryDialog({ item, onClose }: { item: Inquiry; onClose: () => void }
 export function InquiriesTab() {
   const { t } = useTranslation('livechat');
   const [status, setStatus] = useState<NonNullable<InquiryListParams['status']>>('all');
+  const [kind, setKind] = useState<NonNullable<InquiryListParams['kind']>>('all');
   const [page, setPage] = useState(1);
   const [opened, setOpened] = useState<Inquiry | null>(null);
-  const { data, isLoading, error } = useInquiries({ status, page, size: PAGE_SIZE });
+  const { data, isLoading, error } = useInquiries({ status, kind, page, size: PAGE_SIZE });
 
   const columns: Column<Inquiry>[] = [
     { key: 'at', header: t('inquiry.col.received'), render: (i) => <span className="whitespace-nowrap text-xs text-gray-600">{when(i.createdAt)}</span> },
+    {
+      key: 'kind',
+      header: t('inquiry.col.kind'),
+      render: (i) => (
+        <span className="whitespace-nowrap text-xs text-gray-700">
+          {t(i.kind === 'feedback' ? 'inquiry.kind_feedback' : 'inquiry.kind_inquiry')}
+        </span>
+      ),
+    },
     { key: 'name', header: t('inquiry.col.name'), render: (i) => <span className="text-sm text-gray-900">{i.contactName ?? '—'}</span> },
     { key: 'email', header: t('inquiry.col.email'), render: (i) => <span className="font-mono text-xs text-gray-700">{i.contactEmailMasked ?? '—'}</span> },
     {
       key: 'message',
       header: t('inquiry.col.message'),
       render: (i) => <span className="line-clamp-2 max-w-md text-xs text-gray-600">{i.messagePreview ?? '—'}</span>,
+    },
+    {
+      key: 'order',
+      header: t('inquiry.col.order'),
+      render: (i) => <span className="whitespace-nowrap font-mono text-xs text-gray-700">{i.orderNumber ?? '—'}</span>,
     },
     {
       key: 'status',
@@ -163,6 +182,22 @@ export function InquiriesTab() {
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-xs text-gray-500">{t('inquiry.hint')}</p>
         <div className="ml-auto w-40">
+          <Select
+            aria-label={t('inquiry.col.kind')}
+            value={kind}
+            onChange={(e) => {
+              setKind(e.target.value as typeof kind);
+              setPage(1);
+            }}
+          >
+            {KINDS.map((k) => (
+              <option key={k} value={k}>
+                {t(`inquiry.kind_${k}`)}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="w-40">
           <Select
             aria-label={t('inquiry.col.status')}
             value={status}

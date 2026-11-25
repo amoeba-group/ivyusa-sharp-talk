@@ -1,5 +1,5 @@
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
-import { INQUIRY_EMAIL_MAX, INQUIRY_MESSAGE_MAX, INQUIRY_NAME_MAX } from '@sharptalk/types';
+import { INQUIRY_EMAIL_MAX, INQUIRY_KINDS, INQUIRY_MESSAGE_MAX, INQUIRY_NAME_MAX } from '@sharptalk/types';
 
 export const INQUIRY_STATUS = { OPEN: 'open', ANSWERED: 'answered' } as const;
 export type InquiryStatus = (typeof INQUIRY_STATUS)[keyof typeof INQUIRY_STATUS];
@@ -16,6 +16,8 @@ export class CreateInquiryRequest {
   @IsString() session_token: string;
   @IsOptional() @IsString() conversation_id?: string;
   @IsOptional() @IsString() order_id?: string;
+  /** 'feedback' needs only the message (IVY PRD v1 C-01). */
+  @IsOptional() @IsIn(INQUIRY_KINDS as unknown as string[]) kind?: string;
   @IsString() @MaxLength(INQUIRY_NAME_MAX + 100) name: string;
   @IsString() @MaxLength(INQUIRY_EMAIL_MAX + 100) email: string;
   @IsString() @MaxLength(INQUIRY_MESSAGE_MAX + 500) message: string;
@@ -35,6 +37,7 @@ export class InquiryListQuery {
 /** GET /admin/inquiries */
 export class AdminInquiryListQuery {
   @IsOptional() @IsIn([...INQUIRY_STATUS_VALUES, 'all']) status?: string;
+  @IsOptional() @IsIn([...INQUIRY_KINDS, 'all']) kind?: string;
   @IsOptional() @IsString() page?: string;
   @IsOptional() @IsString() size?: string;
 }

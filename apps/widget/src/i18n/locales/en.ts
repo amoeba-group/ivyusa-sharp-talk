@@ -93,6 +93,46 @@ export const en = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: 'Start over',
     startOverLead: 'What else can I help you with?',
+    /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
+    payment: {
+      lead: 'Here\'s the payment status of your latest order.',
+      none: 'I couldn\'t find a recent order on your account.',
+      state: {
+        paid: 'Paid',
+        pending: 'Payment pending',
+        cancelled: 'Cancelled',
+        refunded: 'Refunded',
+      },
+      guide: {
+        paid: 'Your payment for {{orderNumber}} went through. We\'ll let you know when it ships.',
+        pending: 'The payment for {{orderNumber}} hasn\'t completed yet. If you were charged, contact us and we\'ll check.',
+        cancelled: '{{orderNumber}} was cancelled. If you were charged, the money goes back to your original payment method.',
+        refunded: '{{orderNumber}} was refunded to your original payment method. Your bank may take a few days to show it.',
+      },
+      total: 'Total {{amount}}',
+    },
+    delivery: {
+      lead: 'Here\'s the delivery status of your latest order.',
+      none: 'I couldn\'t find a recent order on your account.',
+      guide: {
+        preparing: '{{orderNumber}} hasn\'t shipped yet. You\'ll get a notice as soon as it does.',
+        inTransit: '{{orderNumber}} is on its way.',
+        delivered: '{{orderNumber}} was delivered. If anything is wrong with it, let us know.',
+      },
+      policy: 'Shipping policy',
+    },
+    contactSupport: 'Contact Support',
+    feedback: {
+      lead: 'We\'d love to hear what you think. Your feedback goes straight to our team.',
+      placeholder: 'Tell us what you think',
+      send: 'Send feedback',
+      sending: 'Sending…',
+      thanks: 'Thank you — your feedback reached our team.',
+      mine: 'Your feedback',
+      failed: 'Your feedback didn\'t go through. Please try again.',
+      required: 'Write a few words first.',
+      tooLong: 'Up to {{max}} characters.',
+    },
     /** After the My Orders answer (SCR-IVY-11). */
     orderAnswer: {
       followUp: 'Do you need anything else?',
@@ -292,6 +332,8 @@ export const en = {
     phoneHint: 'Tap to call',
     chatHint: 'Talk to our team right here in the chat',
     form: {
+      /** The order a form is sent about (IVY PRD v1 E-01). */
+      order: 'Order {{orderNumber}}',
       lead: 'Please enter your contact information and tell us how we can help.',
       name: 'Name',
       namePlaceholder: 'Enter your name',
@@ -391,6 +433,7 @@ export const en = {
     back: 'Back',
     qty: 'Qty {{count}}',
     askRow: 'Contact',
+    emailRow: 'Email us about this order',
     subtotal: 'Subtotal',
     discount: 'Discount',
     shipping: 'Shipping',

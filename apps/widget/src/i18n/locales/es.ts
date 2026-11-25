@@ -91,6 +91,46 @@ export const es: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: 'Volver al inicio',
     startOverLead: '¿En qué más puedo ayudarte?',
+    /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
+    payment: {
+      lead: 'Este es el estado del pago de tu pedido más reciente.',
+      none: 'No encontré ningún pedido reciente en tu cuenta.',
+      state: {
+        paid: 'Pagado',
+        pending: 'Pago pendiente',
+        cancelled: 'Cancelado',
+        refunded: 'Reembolsado',
+      },
+      guide: {
+        paid: 'El pago de {{orderNumber}} se completó. Te avisaremos cuando se envíe.',
+        pending: 'El pago de {{orderNumber}} aún no se ha completado. Si se te cobró, contáctanos y lo revisamos.',
+        cancelled: '{{orderNumber}} se canceló. Si se te cobró, el dinero vuelve a tu método de pago original.',
+        refunded: '{{orderNumber}} se reembolsó a tu método de pago original. Tu banco puede tardar unos días en reflejarlo.',
+      },
+      total: 'Total {{amount}}',
+    },
+    delivery: {
+      lead: 'Este es el estado del envío de tu pedido más reciente.',
+      none: 'No encontré ningún pedido reciente en tu cuenta.',
+      guide: {
+        preparing: '{{orderNumber}} aún no se ha enviado. Te avisaremos en cuanto salga.',
+        inTransit: '{{orderNumber}} está en camino.',
+        delivered: '{{orderNumber}} se entregó. Si hay algún problema, avísanos.',
+      },
+      policy: 'Política de envío',
+    },
+    contactSupport: 'Contactar con soporte',
+    feedback: {
+      lead: 'Nos encantaría saber tu opinión. Tus comentarios llegan directamente a nuestro equipo.',
+      placeholder: 'Cuéntanos qué piensas',
+      send: 'Enviar comentarios',
+      sending: 'Enviando…',
+      thanks: 'Gracias: tus comentarios llegaron a nuestro equipo.',
+      mine: 'Tus comentarios',
+      failed: 'No se pudieron enviar tus comentarios. Inténtalo de nuevo.',
+      required: 'Escribe algo primero.',
+      tooLong: 'Hasta {{max}} caracteres.',
+    },
     /** After the My Orders answer (SCR-IVY-11). */
     orderAnswer: {
       followUp: '¿Necesitas algo más?',
@@ -289,6 +329,8 @@ export const es: Translation = {
     phoneHint: 'Toca para llamar',
     chatHint: 'Habla con nuestro equipo aquí mismo en el chat',
     form: {
+      /** The order a form is sent about (IVY PRD v1 E-01). */
+      order: 'Pedido {{orderNumber}}',
       lead: 'Introduce tus datos de contacto y cuéntanos cómo podemos ayudarte.',
       name: 'Nombre',
       namePlaceholder: 'Escribe tu nombre',
@@ -388,6 +430,7 @@ export const es: Translation = {
     back: 'Atrás',
     qty: 'Cant. {{count}}',
     askRow: 'Contáctanos',
+    emailRow: 'Escríbenos sobre este pedido',
     subtotal: 'Subtotal',
     discount: 'Descuento',
     shipping: 'Envío',

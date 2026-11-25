@@ -120,6 +120,9 @@ export type NotifPref = NotificationPrefResponse;
 /** Server-driven scenario action keys (admin-configured). */
 export type ScenarioActionKey =
   | 'delivery_status'
+  // IVY PRD v1 C-01 (PLN-261125 §2.5): the latest order's payment card; the feedback form.
+  | 'payment_status'
+  | 'feedback'
   | 'cancel_refund'
   | 'product_help'
   | 'contact_support'
