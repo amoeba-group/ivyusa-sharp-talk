@@ -132,6 +132,6 @@ Idempotent: chạy 2 lần trên MySQL 8 máy local không lỗi. `sql/artefacts
 | 1. Duyệt PLN (và 2 câu hỏi CSAT / E-02 cho các giai đoạn sau) | Chủ dự án | ✅ 2026-11-25 — CSAT **a** (giữ Figma), E-02 **b** (ngoài giờ → form email) |
 | 2. Chạy `sql/261125-prd-v1-phase1.sql` trên DB production | Chủ dự án | ✅ 2026-11-25 |
 | 3. Push `deploy/talk-ivyusa` → CI → tự deploy (gồm cả Bedrock `d2073407`, vô hại khi chưa có `.env`). Trước khi push: không có Re-sync đơn đang chạy (04:13 UTC) | Tôi | Lần 1 (`cfdd757b`): CI đỏ ở 1 test cũ của `packages/types` coi `refunded` là trạng thái lạ → **không deploy**. Đã sửa test, push lại cùng E-02 b |
-| 4. Console → AI Settings: "Payment check" → **Payment status card**; "Feedback" → **Feedback form** → Save | Chủ dự án (hoặc tôi, khi được cho phép) | ⏳ sau 3 |
+| 4. Console → AI Settings: "Payment check" → **Payment status card**; "Feedback" → **Feedback form** | Tôi, theo lệnh chủ dự án 2026-11-25 ("hãy làm nó luôn") | ✅ 05:31 UTC qua API của console (console đang chạy chưa có 2 lựa chọn này), có bản ghi lịch sử cấu hình. Bản đang chạy coi hành động lạ như `message`, nên khách chưa thấy khác cho tới khi bản mới lên |
 | 5. Thử trên talk.ivyusa.com: New / Recent, nhấn giữ xoá, xe tải, Payment check, Feedback, form có mã đơn | Chủ dự án | ⏳ |
-| 6. E-02 b: AI Settings → Handoff → bật giờ làm việc (giờ của IVY) + ô "Outside business hours, open the email form" → Save | Chủ dự án | ⏳ |
+| 6. E-02 b: AI Settings → Handoff → ô "Outside business hours, open the email form" + giờ làm việc | Tôi + chủ dự án | Ô form: ✅ 05:32 UTC (`handoff_config.inquiryForm.enabled = true`, qua API). Production **chưa có giờ làm việc** → chưa có tác dụng. ⏳ chờ giờ làm việc của IVY |
