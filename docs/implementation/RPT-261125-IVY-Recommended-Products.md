@@ -43,6 +43,6 @@ Preview và tìm sản phẩm với cửa hàng thật kiểm trên production, 
 | Bước | Ai | Trạng thái |
 |---|---|---|
 | 1. Chạy `sql/261125-prd-v1-phase2-recommended-products.sql` trên DB production | Chủ dự án | ⏳ |
-| 2. Push (sau khi bản giai đoạn 1 đã lên) | Tôi | ⏳ |
+| 2. Push (sau khi bản giai đoạn 1 đã lên, 06:25 UTC) | Tôi | ✅ push cùng Stock inquiry; máy chủ chờ SQL bước 1 rồi mới deploy |
 | 3. Kiểm chỉ đọc: preview vài danh mục, widget ≤ 3 thẻ | Tôi | ⏳ |
 | 4. Chọn sản phẩm cho danh mục muốn đẩy (khuyến mãi, hàng mới…) | Chủ dự án / IVY | ⏳ |

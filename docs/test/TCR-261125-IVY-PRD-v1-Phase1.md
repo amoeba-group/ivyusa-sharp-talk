@@ -64,6 +64,9 @@ Toàn bộ widget: **150 / 150**.
 | TC-11-10 | Delivery inquiry → tracker của đơn đang giao + 3 chip |
 | TC-11-11 | Feedback trống → báo lỗi, không gọi API; có nội dung → `kind: feedback` → thẻ đã gửi + cảm ơn |
 | TC-11-12 | Order Detail → "Email us about this order" → tab Chat, form có mã đơn |
+| TC-11-13 | Stock inquiry: gõ "gel" → `GET /products/stock?q=gel` → chọn "Gel Polish Starter Set" → thẻ `data-in-stock=true`, "In stock", câu hướng dẫn, chip Check another product |
+| TC-11-14 | Sản phẩm hết hàng → "Out of stock"; Check another product xoá ô tìm và thẻ |
+| TC-11-15 | Không khớp → "No product on sale matches "zzz". Try another name." |
 
 ## 4. Tích hợp và biên
 

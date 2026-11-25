@@ -104,6 +104,22 @@ Test:
   - không gọi ai, không chuyển sang "waiting";
   - nút "Chat with an agent" cũng vậy.
 
+### 1.9 Stock inquiry (C-01) — thêm chiều 2026-11-25
+
+- **Widget:** hành động mới `stock_inquiry`. Khách gõ tên sản phẩm, chọn 1 trong tối đa 5 sản phẩm đang bán, rồi thấy:
+  - thẻ sản phẩm có nhãn **In stock / Out of stock**;
+  - câu hướng dẫn;
+  - chip: Check another product · Contact Support · Start over.
+- **API:** `GET /products/stock?q=`:
+  - public, theo session, tối đa 30 lần / phút;
+  - tìm trực tiếp trên cửa hàng: chỉ sản phẩm đang bán online, tồn kho theo `variants.availableForSale`;
+  - cache 2 phút cho mỗi tenant × từ khoá.
+- **Console:** AI Settings có thêm hành động "Stock check (product search)". Seed IVY và fixture e2e dùng hành động này.
+- **Test:**
+  - unit `stockSearch`: cache, từ khoá quá ngắn, không có kết nối, cửa hàng lỗi;
+  - e2e TC-11-13…15.
+- **Commit:** `7c57b6a0`. Không có SQL.
+
 ### 1.7 SQL
 
 `sql/261125-prd-v1-phase1.sql`:
@@ -131,7 +147,8 @@ Idempotent: chạy 2 lần trên MySQL 8 máy local không lỗi. `sql/artefacts
 |---|---|---|
 | 1. Duyệt PLN (và 2 câu hỏi CSAT / E-02 cho các giai đoạn sau) | Chủ dự án | ✅ 2026-11-25 — CSAT **a** (giữ Figma), E-02 **b** (ngoài giờ → form email) |
 | 2. Chạy `sql/261125-prd-v1-phase1.sql` trên DB production | Chủ dự án | ✅ 2026-11-25 |
-| 3. Push `deploy/talk-ivyusa` → CI → tự deploy (gồm cả Bedrock `d2073407`, vô hại khi chưa có `.env`). Trước khi push: không có Re-sync đơn đang chạy (04:13 UTC) | Tôi | Lần 1 (`cfdd757b`): CI đỏ ở 1 test cũ của `packages/types` coi `refunded` là trạng thái lạ → **không deploy**. Đã sửa test, push lại cùng E-02 b |
+| 3. Push `deploy/talk-ivyusa` → CI → tự deploy (gồm cả Bedrock `d2073407`, vô hại khi chưa có `.env`). Trước khi push: không có Re-sync đơn đang chạy (04:13 UTC) | Tôi | ✅ **Live 06:25 UTC** (`01aaf899`, widget `index-TUqVnAcj.js`). Lần 1 (`cfdd757b`): CI đỏ ở 1 test cũ của `packages/types` coi `refunded` là trạng thái lạ, không deploy; đã sửa test. Lần 2: CI xanh 04:25, nhưng máy chủ từ chối mỗi 2 phút vì `--check` báo `NOT applied: sql/261125-prd-v1-phase1.sql` — lần chạy SQL trước không vào database của app. Chủ dự án chạy lại bằng `git show origin/deploy/talk-ivyusa:sql/… \| docker exec -i sharptalk_mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'` → 2 cột có → deploy ở lượt kế tiếp |
+| 3b. Kiểm production (chỉ đọc, tab mới) | Tôi | ✅ Bundle widget có đủ thành phần mới (menu dòng, thẻ Payment / Feedback, nút xe tải, chip Email us, mã đơn trên form). `GET /admin/inquiries` 200, có `kind` và `orderNumber`; console Inquiries có cột Type / Order; AI Settings có `payment_status`, `feedback`; Settings → Handoff: ô form email **đã bật**, kèm nhắc cần giờ làm việc |
 | 4. Console → AI Settings: "Payment check" → **Payment status card**; "Feedback" → **Feedback form** | Tôi, theo lệnh chủ dự án 2026-11-25 ("hãy làm nó luôn") | ✅ 05:31 UTC qua API của console (console đang chạy chưa có 2 lựa chọn này), có bản ghi lịch sử cấu hình. Bản đang chạy coi hành động lạ như `message`, nên khách chưa thấy khác cho tới khi bản mới lên |
 | 5. Thử trên talk.ivyusa.com: New / Recent, nhấn giữ xoá, xe tải, Payment check, Feedback, form có mã đơn | Chủ dự án | ⏳ |
 | 6. E-02 b: AI Settings → Handoff → ô "Outside business hours, open the email form" + giờ làm việc | Tôi + chủ dự án | Ô form: ✅ 05:32 UTC (`handoff_config.inquiryForm.enabled = true`, qua API). Production **chưa có giờ làm việc** → chưa có tác dụng. ⏳ chờ giờ làm việc của IVY |
