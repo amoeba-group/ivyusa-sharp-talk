@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Kế hoạch | [PLN-261125-IVY-PRD-v1-Alignment](../plan/PLN-261125-IVY-PRD-v1-Alignment.md) §2 — **chưa duyệt**. Làm trước theo yêu cầu "lên plan và làm càng sớm càng tốt" (2026-11-25) |
+| Kế hoạch | [PLN-261125-IVY-PRD-v1-Alignment](../plan/PLN-261125-IVY-PRD-v1-Alignment.md) §2 — ✅ duyệt 2026-11-25 (`ok duyệt, đã chạy SQL, CSAT a, E-02 b`) |
 | Phân tích | [REQ-261125-IVY-PRD-v1-Gap](../analysis/REQ-261125-IVY-PRD-v1-Gap.md) |
 | Kiểm thử | [TCR-261125-IVY-PRD-v1-Phase1](../test/TCR-261125-IVY-PRD-v1-Phase1.md) |
-| Commit | `dceaf3e5` (thông báo, Order Detail, huỷ / hoàn tiền) + commit đợt 2 (chat, form liên hệ, campaign, console). Trên máy, **chưa push** |
+| Commit | `dceaf3e5` (thông báo, Order Detail, huỷ / hoàn tiền) + `09b53165` (chat, form liên hệ, campaign, console) |
 
 ## 1. Thay đổi
 
@@ -98,8 +98,8 @@ Idempotent: chạy 2 lần trên MySQL 8 máy local không lỗi. `sql/artefacts
 
 | Bước | Ai | Trạng thái |
 |---|---|---|
-| 1. Duyệt PLN (và 2 câu hỏi CSAT / E-02 cho các giai đoạn sau) | Chủ dự án | ⏳ |
-| 2. Chạy `sql/261125-prd-v1-phase1.sql` trên DB production | Chủ dự án | ⏳ |
-| 3. Push `deploy/talk-ivyusa` → CI → tự deploy (gồm cả Bedrock `d2073407`, vô hại khi chưa có `.env`) | Tôi | ⏳ chờ 1–2 |
+| 1. Duyệt PLN (và 2 câu hỏi CSAT / E-02 cho các giai đoạn sau) | Chủ dự án | ✅ 2026-11-25 — CSAT **a** (giữ Figma), E-02 **b** (ngoài giờ → form email) |
+| 2. Chạy `sql/261125-prd-v1-phase1.sql` trên DB production | Chủ dự án | ✅ 2026-11-25 |
+| 3. Push `deploy/talk-ivyusa` → CI → tự deploy (gồm cả Bedrock `d2073407`, vô hại khi chưa có `.env`). Trước khi push: không có Re-sync đơn đang chạy (04:13 UTC) | Tôi | ⏳ đang push |
 | 4. Console → AI Settings: "Payment check" → **Payment status card**; "Feedback" → **Feedback form** → Save | Chủ dự án (hoặc tôi, khi được cho phép) | ⏳ sau 3 |
 | 5. Thử trên talk.ivyusa.com: New / Recent, nhấn giữ xoá, xe tải, Payment check, Feedback, form có mã đơn | Chủ dự án | ⏳ |

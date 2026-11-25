@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | ⏳ **Chờ duyệt.** Chủ dự án yêu cầu "lên plan và làm càng sớm càng tốt" (2026-11-25), nên **giai đoạn 1 đã làm xong trên máy** ([RPT](../implementation/RPT-261125-IVY-PRD-v1-Phase1.md), [TCR](../test/TCR-261125-IVY-PRD-v1-Phase1.md)), **chưa push** (push = deploy production). Đợi chủ dự án duyệt và chạy SQL rồi mới push |
+| Trạng thái | ✅ **Đã duyệt** 2026-11-25: `ok duyệt, đã chạy SQL, CSAT a, E-02 b`. Giai đoạn 1: [RPT](../implementation/RPT-261125-IVY-PRD-v1-Phase1.md), [TCR](../test/TCR-261125-IVY-PRD-v1-Phase1.md). SQL giai đoạn 1 đã chạy trên production (chủ dự án) |
 | Nguồn | [REQ-261125-IVY-PRD-v1-Gap](../analysis/REQ-261125-IVY-PRD-v1-Gap.md) — PRD v1.0 của IVY (24 slide, 2026-11) |
 | Phạm vi | widget, API, console. Mỗi giai đoạn deploy riêng |
 | Migration | Giai đoạn 1: `sql/261125-prd-v1-phase1.sql` (2 cột). Giai đoạn 2: bảng gợi ý sản phẩm + cột tồn kho. Chạy SQL **trước** khi push |
@@ -238,14 +238,9 @@ Chi tiết (SQL, API) viết thành PLN riêng khi bắt đầu giai đoạn 2.
 
 **Chủ dự án:**
 
-1. **Duyệt kế hoạch** — giai đoạn 1 đã làm trên máy, duyệt thì chạy SQL rồi push.
-2. **Nhãn CSAT:**
-   - **a.** Giữ theo Figma: Dissatisfied · Neutral · Satisfied · Very satisfied.
-   - **b.** Theo PRD: Unhappy · Neutral · Happy · Very happy.
-3. **Khi AI bí / khách xin gặp người (E-02):**
-   - **a.** Như PRD: mở form email; tắt chuyển nhân viên chat.
-   - **b.** Giữ nhân viên chat trong giờ làm, ngoài giờ mở form email.
-   - **c.** Giữ như hiện tại.
+1. **Duyệt kế hoạch** — ✅ duyệt 2026-11-25; SQL giai đoạn 1 đã chạy.
+2. **Nhãn CSAT** — ✅ **a**: giữ theo Figma (Dissatisfied · Neutral · Satisfied · Very satisfied). Không đổi code.
+3. **Khi AI bí / khách xin gặp người (E-02)** — ✅ **b**: trong giờ làm vẫn chuyển nhân viên chat; **ngoài giờ mở form email** (kèm mã đơn và đoạn chat như E-01).
 
    PRD ghi "v1 không live chat" là **Confirmed**, nhưng IVY cũng hỏi "có dùng live chat đã làm sẵn không".
 
