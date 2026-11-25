@@ -31,7 +31,7 @@
 
 | Bước | Ai | Trạng thái |
 |---|---|---|
-| 1. Push (không có SQL). Kiểm trước: không có re-sync đơn nào đang chạy | Tôi | ⏳ |
-| 2. Kiểm chỉ đọc: `POST /chat/card-note` trả `{text:null}` khi Stub; widget không đổi | Tôi | ⏳ |
+| 1. Push (không có SQL). Kiểm trước: không có re-sync đơn nào đang chạy | Tôi | ✅ `c9add925` (kịch bản + thẻ), `69661c44` (Popular), `2be82093` (câu hỏi gợi ý gõ tự do): CI xanh cả 3, máy chủ tự deploy |
+| 2. Kiểm chỉ đọc: `POST /chat/card-note` trả `{text:null}` khi Stub; widget không đổi | Tôi | ✅ 2026-11-25 08:18 UTC: bundle `index-C9w_IWeU.js` có `/chat/card-note` và `popular_category:`; `card-note` loại payment và popular đều trả 200 `{text: null}` |
 | 3. Gán engine: Haiku → chat, Sonnet → rag (sau khi PM duyệt kho kiến thức) | Chủ dự án bảo | ⏳ |
 | 4. Kiểm khi đã bật AI (TCR §3) | Tôi | ⏳ |

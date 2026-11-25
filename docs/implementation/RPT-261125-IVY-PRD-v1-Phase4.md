@@ -33,7 +33,7 @@ Tự kết thúc chat **không đổi code**: chính sách Chat close (Settings 
 
 Write Review → Yotpo: chưa làm, cần khoá Yotpo của IVY (thứ 6).
 
-**Sửa sau deploy (2026-11-25, [FIX-261125](../bug-fix/FIX-261125-IVY-Review-Request-Not-Shown.md), BUG-045):** thông báo `review` không có chỗ hiện trên widget một thanh và không được badge đếm (BUG-042), nên khách không thấy yêu cầu. Đã sửa:
+**Sửa sau deploy (2026-11-25, [FIX-261125](../bug-fix/FIX-261125-IVY-Review-Request-Not-Shown.md), BUG-045; `0ec663fa`, live 08:25 UTC):** thông báo `review` không có chỗ hiện trên widget một thanh và không được badge đếm (BUG-042), nên khách không thấy yêu cầu. Đã sửa:
 
 - dòng sản phẩm được nhắc tới đứng đầu chip Review, tô sáng + chấm đỏ;
 - badge đếm yêu cầu gắn sản phẩm;

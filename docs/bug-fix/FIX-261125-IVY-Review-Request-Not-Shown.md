@@ -5,6 +5,7 @@
 | Phát hiện | 2026-11-25, khi soạn hướng dẫn test cho IVY (mục 12), trước khi IVY test |
 | Ảnh hưởng | Production từ 07:35 UTC (bật Review requests 7 ngày): thông báo `review` được ghi nhưng không hiện ở đâu và không tăng badge. Không lộ dữ liệu, không lỗi trang |
 | Liên quan | [PLN-261125-IVY-PRD-v1-Phase4](../plan/PLN-261125-IVY-PRD-v1-Phase4.md) §2, BUG-042 |
+| Đã sửa | `0ec663fa`, CI xanh, live 2026-11-25 08:25 UTC (bundle `index-BPxSwMCE.js` có `review-row` / `requestId`) |
 
 ## 1. Nguyên nhân gốc
 
