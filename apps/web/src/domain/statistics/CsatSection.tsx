@@ -113,6 +113,30 @@ export function CsatSection({ from, to }: { from: string; to: string }) {
         </span>
       ),
     },
+    // IVY PRD v1 S-01 (PLN-261125-Phase4 §1.3): who answered, and whether the
+    // shopper went on to the email form.
+    {
+      key: 'mode',
+      header: t('csat.mode'),
+      render: (r) =>
+        r.mode ? (
+          <span className={r.mode === 'agent' ? 'text-gray-800' : 'text-gray-500'}>
+            {t(r.mode === 'agent' ? 'csat.modeAgent' : 'csat.modeAi')}
+          </span>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
+    },
+    {
+      key: 'emailForm',
+      header: t('csat.emailForm'),
+      render: (r) =>
+        r.emailForm ? (
+          <span className="text-gray-800">{t('csat.emailFormYes')}</span>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
+    },
     // Survey answers (PLN-261019); '—' on rating-mode rows.
     {
       key: 'resolved',

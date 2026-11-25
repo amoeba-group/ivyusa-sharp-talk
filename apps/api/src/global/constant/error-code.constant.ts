@@ -383,6 +383,10 @@ export const ERROR_CODE = {
   /** Unknown category or type, more than 10 products, a malformed handle, or a period that ends before it starts. */
   RECOMMENDATION_INVALID: { code: 'E5167', message: 'Invalid product recommendation settings' },
 
+  // E5168 — review requests after delivery (IVY PRD v1 N-05, PLN-261125-IVY-PRD-v1-Phase4 §2).
+  /** Days after delivery outside 1–60 (null switches the feature off). */
+  REVIEW_REQUEST_DAYS_INVALID: { code: 'E5168', message: 'Review request days must be between 1 and 60' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

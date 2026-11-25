@@ -289,6 +289,7 @@ export const vi: Translation = {
     threadLoadError: 'Không tải được các cuộc trò chuyện trước',
     threadNone: 'Chưa có cuộc trò chuyện trước',
     endedThanks: 'Cảm ơn bạn đã trò chuyện cùng chúng tôi!',
+    startNewChat: 'Bắt đầu cuộc trò chuyện mới',
     // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
       1: 'Không hài lòng',

@@ -1986,6 +1986,14 @@ export class AgentService {
       resolved: boolean | null;
       reason: string | null;
       comment: string | null;
+      /**
+       * Who answered (IVY PRD v1 S-01, PLN-261125-Phase4 §1.3): 'agent' when a
+       * staff member is attributed — the same attribution as the Agent column —
+       * otherwise 'ai'.
+       */
+      mode: 'ai' | 'agent';
+      /** The shopper sent the contact form from this chat (E-01 / E-02 b). */
+      emailForm: boolean;
     }>;
     total: number;
   }> {
@@ -2011,6 +2019,7 @@ export class AgentService {
 
     const states = await this.sessionStates(entities.map((c) => c.sessionId));
     const contacts = await this.contactsByConversation(entities);
+    const withForm = await this.conversationsWithInquiry(tenantId, entities.map((c) => Number(c.id)));
     const agentIds = raw
       .map((r) => r.attributedAgentId)
       .filter((v): v is string => v != null);
@@ -2039,8 +2048,32 @@ export class AgentService {
           resolved: c.csatResolved == null ? null : Number(c.csatResolved) === 1,
           reason: c.csatReason ?? null,
           comment: c.csatComment ?? null,
+          mode: attributed != null ? ('agent' as const) : ('ai' as const),
+          emailForm: withForm.has(String(c.id)),
         };
       }),
     };
+  }
+
+  /**
+   * Of these conversations, the ones whose shopper sent the contact form from
+   * the chat (IVY PRD v1 S-01 report): the inquiry keeps its conversation (E-01,
+   * and the off-hours form of E-02 b). One query per page; a failure leaves the
+   * column empty rather than the report.
+   */
+  private async conversationsWithInquiry(tenantId: number, ids: number[]): Promise<Set<string>> {
+    const out = new Set<string>();
+    const manager = this.convRepo.manager;
+    if (!ids.length || !manager) return out;
+    try {
+      const rows: Array<{ cid: string | number }> = await manager.query(
+        'SELECT DISTINCT conversation_id AS cid FROM inquiries WHERE tenant_id = ? AND conversation_id IN (?)',
+        [tenantId, ids],
+      );
+      for (const r of rows) out.add(String(r.cid));
+    } catch (e) {
+      this.logger.warn(`csat report: inquiry lookup failed (tenant ${tenantId}): ${(e as Error).message}`);
+    }
+    return out;
   }
 }

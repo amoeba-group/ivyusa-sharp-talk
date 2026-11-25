@@ -10,6 +10,11 @@ export interface ShipmentSummary {
   trackingUrl: string | null;
   /** When the store last changed any of these parcels; null when it did not say. */
   changedAt: Date | null;
+  /**
+   * When the order was delivered (IVY PRD v1 N-05): the last parcel's
+   * `delivered_at`, else the last change. Null unless every parcel is delivered.
+   */
+  deliveredAt: Date | null;
 }
 
 /** Shopify `shipment_status` → ours. Same table the fulfillment webhook uses. */
@@ -60,6 +65,15 @@ export function summarizeFulfillments(
   const newestFirst = [...parcels].sort((a, b) => time(b.updated_at) - time(a.updated_at));
   const tracked = newestFirst.find((f) => f.tracking_number) ?? newestFirst[0];
   const latest = Math.max(...parcels.map((f) => time(f.updated_at)));
+  const deliveredLast = Math.max(...parcels.map((f) => time(f.delivered_at)));
+  const deliveredAt =
+    status !== FULFILLMENT_STATUS.DELIVERED
+      ? null
+      : deliveredLast > 0
+        ? new Date(deliveredLast)
+        : latest > 0
+          ? new Date(latest)
+          : null;
 
   return {
     status,
@@ -67,5 +81,6 @@ export function summarizeFulfillments(
     carrier: tracked.tracking_company ? String(tracked.tracking_company).slice(0, 64) : null,
     trackingUrl: tracked.tracking_url ?? tracked.tracking_urls?.[0] ?? null,
     changedAt: latest > 0 ? new Date(latest) : null,
+    deliveredAt,
   };
 }

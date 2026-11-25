@@ -123,6 +123,8 @@ export interface WidgetSettings {
   csatMode: 'rating' | 'survey';
   /** Feedback prompt on the widget's × (PLN-261027). */
   closeFeedbackPrompt?: boolean;
+  /** Review request N days after delivery; null = off; absent on an older API (IVY PRD v1 N-05). */
+  reviewRequestDays?: number | null;
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;
@@ -479,6 +481,7 @@ export const settingsService = {
     widgetLanguages?: string[] | null,
     closeFeedbackPrompt?: boolean,
     contact?: ContactSupportDraft,
+    reviewRequestDays?: number | null,
   ) =>
     apiPatch<WidgetSettings>('/tenants/widget-settings', {
       login_mode: loginMode,
@@ -490,6 +493,7 @@ export const settingsService = {
           }
         : {}),
       ...(closeFeedbackPrompt !== undefined ? { close_feedback_prompt: closeFeedbackPrompt } : {}),
+      ...(reviewRequestDays !== undefined ? { review_request_days: reviewRequestDays } : {}),
       ...(widgetLanguages !== undefined ? { widget_languages: widgetLanguages } : {}),
       ...(commerceEnabled !== undefined ? { commerce_enabled: commerceEnabled } : {}),
       ...(csatMode !== undefined ? { csat_mode: csatMode } : {}),

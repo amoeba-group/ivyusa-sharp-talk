@@ -42,7 +42,7 @@ Preview và tìm sản phẩm với cửa hàng thật kiểm trên production, 
 
 | Bước | Ai | Trạng thái |
 |---|---|---|
-| 1. Chạy `sql/261125-prd-v1-phase2-recommended-products.sql` trên DB production | Chủ dự án | ⏳ |
-| 2. Push (sau khi bản giai đoạn 1 đã lên, 06:25 UTC) | Tôi | ✅ push cùng Stock inquiry; máy chủ chờ SQL bước 1 rồi mới deploy |
-| 3. Kiểm chỉ đọc: preview vài danh mục, widget ≤ 3 thẻ | Tôi | ⏳ |
+| 1. Chạy `sql/261125-prd-v1-phase2-recommended-products.sql` trên DB production | Chủ dự án | ✅ 2026-11-25, bảng `product_recommendations` có trên production |
+| 2. Push (sau khi bản giai đoạn 1 đã lên, 06:25 UTC) | Tôi | ✅ push cùng Stock inquiry; máy chủ chờ SQL bước 1 rồi deploy. **Live 06:35 UTC** (`09393722`) |
+| 3. Kiểm chỉ đọc: preview vài danh mục, widget ≤ 3 thẻ | Tôi | ✅ preview các danh mục: chế độ AI Auto, 3 sản phẩm, 1–2 giây; tìm sản phẩm trong admin; tìm tồn kho trong widget |
 | 4. Chọn sản phẩm cho danh mục muốn đẩy (khuyến mãi, hàng mới…) | Chủ dự án / IVY | ⏳ |

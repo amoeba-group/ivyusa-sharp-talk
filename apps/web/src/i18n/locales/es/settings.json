@@ -1057,5 +1057,14 @@
     "liveChat": "Mostrar la tarjeta «Chatear con un agente»",
     "liveChatHint": "Conecta al cliente con tu equipo en el chat, junto a las tarjetas de arriba.",
     "liveChatFallback": "Sin correo ni teléfono, el widget muestra esta tarjeta igualmente para que «Contactar con soporte» nunca quede vacío."
+  },
+  "reviewRequest": {
+    "title": "Solicitudes de reseña",
+    "desc": "Pide una reseña unos días después de que llegue el pedido. La solicitud aparece en las notificaciones del widget y «Escribir una reseña» abre el formulario.",
+    "enable": "Pedir una reseña tras la entrega",
+    "days": "Días después de la entrega",
+    "daysHint": "Entre {{min}} y {{max}} días.",
+    "daysInvalid": "Introduce un número entero de {{min}} a {{max}}.",
+    "rules": "Cada pedido se solicita una sola vez. Se omiten los clientes que rechazaron el marketing y los pedidos cancelados o reembolsados."
   }
 }

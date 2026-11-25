@@ -377,7 +377,16 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - **Chủ dự án quyết 2026-11-25:** CSAT **a** (giữ nhãn Figma), E-02 **b** (trong giờ chuyển nhân viên chat, ngoài giờ mở form email).
 - E-02 b đã làm (RPT §1.8): tuỳ chọn "Outside business hours, open the email form" trong AI Settings → Handoff; cần bật giờ làm việc.
 
-### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 2: gợi ý sản phẩm 2 chế độ (A-01…A-04) — ✅ code trên máy · ⏳ SQL + push · [PLN](../docs/plan/PLN-261125-IVY-Recommended-Products.md) · [TCR](../docs/test/TCR-261125-IVY-Recommended-Products.md) · [RPT](../docs/implementation/RPT-261125-IVY-Recommended-Products.md)
+### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 2: gợi ý sản phẩm 2 chế độ (A-01…A-04) — ✅ live 06:35 UTC (`09393722`, cùng Stock inquiry C-01) · [PLN](../docs/plan/PLN-261125-IVY-Recommended-Products.md) · [TCR](../docs/test/TCR-261125-IVY-Recommended-Products.md) · [RPT](../docs/implementation/RPT-261125-IVY-Recommended-Products.md)
 - AI Settings → Recommended products: theo danh mục × loại (Popular / Recommended / New), AI Auto (bán 30 ngày 0,7 + review 0,3, mặc định) hoặc Admin Selected (≤ 10 sản phẩm, thứ tự, thời hạn), xem trước, lịch sử.
 - Widget: Popular products tối đa 3 thẻ, không hàng hết / ẩn.
-- SQL: `sql/261125-prd-v1-phase2-recommended-products.sql` (bảng `product_recommendations`) — chạy **trước** khi push.
+- SQL: `sql/261125-prd-v1-phase2-recommended-products.sql` (bảng `product_recommendations`) — ✅ đã chạy trên production 2026-11-25.
+
+### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 4: S-01 · N-05 · C-03 — ✅ code trên máy · ⏳ SQL + push · [PLN](../docs/plan/PLN-261125-IVY-PRD-v1-Phase4.md) · [TCR](../docs/test/TCR-261125-IVY-PRD-v1-Phase4.md) · [RPT](../docs/implementation/RPT-261125-IVY-PRD-v1-Phase4.md)
+- S-01:
+  - nút **Start a new chat** dưới "The chat has ended": về lời chào + menu, đoạn cũ không quay lại;
+  - Statistics → Satisfaction thêm cột **Answered by** (AI / Agent) và **Email form**;
+  - tự kết thúc chat: đã có sẵn ở Settings → Widget → Chat close, chờ bật.
+- N-05: Settings → Marketing → **Review requests**. Sau N ngày (1–60) kể từ khi giao, widget báo xin review cho sản phẩm chưa review; mỗi đơn một lần; bỏ qua khách từ chối marketing và đơn huỷ / hoàn.
+- C-03: câu Cancel order của IVY dẫn khách tới account.ivyusa.com/orders để tự yêu cầu huỷ; không thấy lựa chọn thì email. Production đổi trong Script library khi chủ dự án bảo. IVY cần bật Shopify "Self-serve returns and cancellations" (có huỷ đơn).
+- SQL: `sql/261125-prd-v1-phase4-review-requests.sql` (3 cột + 1 index) — chạy **trước** khi push.

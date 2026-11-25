@@ -289,6 +289,7 @@ export const ja: Translation = {
     threadLoadError: '以前の会話を読み込めませんでした',
     threadNone: '以前の会話はありません',
     endedThanks: 'ご利用いただきありがとうございました！',
+    startNewChat: '新しい相談を始める',
     // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
       1: '不満',

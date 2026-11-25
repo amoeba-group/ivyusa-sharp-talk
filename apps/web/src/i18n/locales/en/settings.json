@@ -1057,5 +1057,14 @@
     "liveChat": "Show a \"Chat with an agent\" card",
     "liveChatHint": "Connects the shopper to your team in the chat, beside the cards above.",
     "liveChatFallback": "With no email or phone, the widget still shows this card so Contact Support is never empty."
+  },
+  "reviewRequest": {
+    "title": "Review requests",
+    "desc": "Ask shoppers for a review a few days after their order arrives. The request appears in the widget's notifications, and Write Review opens the review form.",
+    "enable": "Ask for a review after delivery",
+    "days": "Days after delivery",
+    "daysHint": "Between {{min}} and {{max}} days.",
+    "daysInvalid": "Enter a whole number from {{min}} to {{max}}.",
+    "rules": "Each order is asked once. Customers who opted out of marketing, and cancelled or refunded orders, are skipped."
   }
 }

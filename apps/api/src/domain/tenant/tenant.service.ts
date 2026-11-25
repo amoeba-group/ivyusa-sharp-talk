@@ -23,6 +23,7 @@ import {
   readChatClosePolicy,
   isEmailAddress,
   SUPPORT_PHONE_RE,
+  isReviewRequestDays,
 } from '@sharptalk/types';
 
 /** Real categories the policy may mention ('all' is a query filter, not a kind). */
@@ -498,6 +499,15 @@ export class TenantService {
     if (dto.commerce_enabled !== undefined) tenant.commerceEnabled = dto.commerce_enabled ? 1 : 0;
     if (dto.csat_mode !== undefined) tenant.csatMode = dto.csat_mode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING;
     if (dto.close_feedback_prompt !== undefined) tenant.closeFeedbackPrompt = dto.close_feedback_prompt ? 1 : 0;
+    // IVY PRD v1 N-05 (PLN-261125-Phase4 §2.3): null switches review requests off.
+    if (dto.review_request_days !== undefined) {
+      const days = dto.review_request_days;
+      if (days !== null && !isReviewRequestDays(days)) {
+        this.logger.warn(`review request days rejected: ${String(days)} (tenant ${tenantId})`);
+        throw new BusinessException(ERROR_CODE.REVIEW_REQUEST_DAYS_INVALID, HttpStatus.BAD_REQUEST);
+      }
+      tenant.reviewRequestDays = days;
+    }
     if (dto.timezone !== undefined) tenant.timezone = dto.timezone?.trim() || null;
     if (dto.default_language !== undefined) tenant.defaultLanguage = dto.default_language?.trim().toLowerCase() || null;
     if (dto.widget_languages !== undefined) {

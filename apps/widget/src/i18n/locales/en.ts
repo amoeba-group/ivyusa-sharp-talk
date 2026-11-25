@@ -289,6 +289,7 @@ export const en = {
     threadLoadError: 'Couldn\'t load earlier conversations',
     threadNone: 'No earlier conversations',
     endedThanks: 'Thank you for chatting with us!',
+    startNewChat: 'Start a new chat',
     // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
       1: 'Dissatisfied',

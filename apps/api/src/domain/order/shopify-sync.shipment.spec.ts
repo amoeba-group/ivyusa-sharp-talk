@@ -64,6 +64,22 @@ describe('summarizeFulfillments', () => {
     expect(s).toMatchObject({ trackingNumber: 'B2', carrier: 'USPS', trackingUrl: 'https://t/B2' });
     expect(s?.changedAt?.toISOString()).toBe(at(9));
   });
+
+  // IVY PRD v1 N-05: the time the review request counts from.
+  it('dates the delivery by the last parcel delivered, else by the last change', () => {
+    const dated = summarizeFulfillments([
+      { status: 'success', shipment_status: 'delivered', delivered_at: at(3), updated_at: at(4) },
+      { status: 'success', shipment_status: 'delivered', delivered_at: at(6), updated_at: at(8) },
+    ]);
+    expect(dated?.deliveredAt?.toISOString()).toBe(at(6));
+    const undated = summarizeFulfillments([{ status: 'success', shipment_status: 'delivered', updated_at: at(5) }]);
+    expect(undated?.deliveredAt?.toISOString()).toBe(at(5));
+    const partly = summarizeFulfillments([
+      { status: 'success', shipment_status: 'delivered', delivered_at: at(3) },
+      { status: 'success', shipment_status: 'in_transit', updated_at: at(4) },
+    ]);
+    expect(partly?.deliveredAt).toBeNull();
+  });
 });
 
 describe('ShopifySyncService.upsertOrder — shipment', () => {
@@ -189,7 +205,7 @@ describe('ShopifySyncService.upsertOrder — shipment', () => {
     });
 
     it('is not sent when the same status is read again', async () => {
-      const { svc, notices, fulfillRepo } = build(undefined, { status: 'delivered' });
+      const { svc, notices, fulfillRepo } = build(undefined, { status: 'delivered', deliveredAt: new Date(ago(2 * HOUR)) });
       await svc.upsertOrder(1, order(delivered(ago(HOUR))));
       expect(notices()).toHaveLength(0);
       expect(fulfillRepo.save).not.toHaveBeenCalled();
@@ -213,6 +229,36 @@ describe('ShopifySyncService.upsertOrder — shipment', () => {
       await svc.upsertOrder(1, order(delivered(ago(HOUR)), { email: null, customer: null }));
       expect(shipments).toHaveLength(1);
       expect(notices()).toHaveLength(0);
+    });
+
+    // IVY PRD v1 N-05 (PLN-261125-Phase4 §2.1).
+    it('records when a new parcel was delivered, from the store', async () => {
+      const { svc, shipments } = build();
+      const deliveredAt = ago(3 * HOUR);
+      await svc.upsertOrder(1, order([{ status: 'success', shipment_status: 'delivered', delivered_at: deliveredAt, updated_at: ago(HOUR) }]));
+      expect(shipments[0].deliveredAt?.toISOString()).toBe(deliveredAt);
+    });
+
+    it('fills the delivery time of a row delivered before it was kept, once and without a notice', async () => {
+      const { svc, notices, shipments } = build(undefined, { status: 'delivered', deliveredAt: null });
+      const deliveredAt = ago(5 * HOUR);
+      await svc.upsertOrder(1, order([{ status: 'success', shipment_status: 'delivered', delivered_at: deliveredAt, updated_at: ago(HOUR) }]));
+      expect(shipments).toHaveLength(1);
+      expect(shipments[0].deliveredAt?.toISOString()).toBe(deliveredAt);
+      expect(notices()).toHaveLength(0);
+    });
+
+    it('does not move a delivery time already kept', async () => {
+      const kept = new Date(ago(30 * HOUR));
+      const { svc, shipments } = build(undefined, { status: 'delivered', deliveredAt: kept, trackingNumber: 'OLD' });
+      await svc.upsertOrder(1, order([{ status: 'success', shipment_status: 'delivered', tracking_number: 'NEW', delivered_at: ago(HOUR), updated_at: ago(HOUR) }]));
+      expect(shipments[0].deliveredAt).toBe(kept);
+    });
+
+    it('leaves the delivery time empty while the parcel is on its way', async () => {
+      const { svc, shipments } = build();
+      await svc.upsertOrder(1, order([{ status: 'success', shipment_status: 'in_transit', updated_at: ago(HOUR) }]));
+      expect(shipments[0].deliveredAt).toBeNull();
     });
 
     it('updates tracking without a notice when only the number changed', async () => {

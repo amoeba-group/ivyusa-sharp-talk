@@ -18,6 +18,21 @@ export interface SendResult {
 const POLL_MS = 5000;
 
 /**
+ * The ended conversation the shopper left with "Start a new chat" (IVY PRD v1
+ * S-01, PLN-261125-Phase4 §1.2). The poll keeps reporting a session's newest
+ * conversation, ended or not, so without this the old thread would come back
+ * on the next poll and on every reload until the shopper wrote again.
+ */
+const CLEARED_KEY = 'ivy.chat.cleared';
+function readCleared(): string | null {
+  try {
+    return localStorage.getItem(CLEARED_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Chat thread state. Optimistic local appends while sending, plus a 5s
  * conversation poll so agent replies after a handoff reach the customer
  * (FR-S4). Server messages win on reconcile; local optimistic messages are
@@ -46,6 +61,8 @@ export function useChat(sessionToken: string | null) {
   // Which session and conversation the thread on screen belongs to (BUG-044).
   const threadToken = useRef<string | null>(null);
   const shownConversation = useRef<string | null>(null);
+  // An ended thread the shopper cleared with "Start a new chat" (S-01).
+  const cleared = useRef<string | null>(readCleared());
 
   useQuery({
     queryKey: ['conversation', sessionToken],
@@ -55,6 +72,18 @@ export function useChat(sessionToken: string | null) {
       const newSession = threadToken.current != null && threadToken.current !== sessionToken;
       let after = newSession ? null : lastServerId.current;
       let conv = await getConversation(sessionToken!, after);
+      // Still the ended thread the shopper cleared: the screen stays fresh until
+      // their next message opens a new conversation. Only an ENDED one is
+      // hidden — staff reopening it (BUG-044) brings it back as it should.
+      if (
+        conv.conversationId != null &&
+        cleared.current != null &&
+        String(conv.conversationId) === cleared.current &&
+        conv.status === 'ended'
+      ) {
+        conv = { ...conv, conversationId: null, status: 'none', messages: [], canRate: false, csatRating: null };
+        after = null;
+      }
       // The server now shows another conversation than the one on screen. A
       // delta against the old thread's cursor would graft its rows onto the
       // wrong history: read it whole instead.
@@ -280,6 +309,30 @@ export function useChat(sessionToken: string | null) {
     }
   }, [sessionToken, append, t]);
 
+  /**
+   * "Start a new chat" under an ended thread (IVY PRD v1 S-01): the screen goes
+   * back to the greeting and the menu. Nothing is sent — the next message or
+   * quick menu opens the new conversation, as it already did after an end.
+   */
+  const startNewChat = useCallback(() => {
+    const ended = shownConversation.current ?? conversationId;
+    if (ended) {
+      cleared.current = String(ended);
+      try {
+        localStorage.setItem(CLEARED_KEY, String(ended));
+      } catch {
+        /* blocked storage: this page still starts clean; a reload shows the old thread */
+      }
+    }
+    lastServerId.current = null;
+    shownConversation.current = null;
+    setMessages([]);
+    setConversationId(null);
+    setStatus('none');
+    setCanRate(false);
+    setCsatRating(null);
+  }, [conversationId]);
+
   const rate = async (rating: number, survey?: CsatSurveyAnswers) => {
     if (!sessionToken || !conversationId) return;
     await rateChat(sessionToken, conversationId, rating, survey);
@@ -296,6 +349,7 @@ export function useChat(sessionToken: string | null) {
     escalate,
     pickConsultCategory,
     endChat,
+    startNewChat,
     append,
     conversationId,
     canRate,

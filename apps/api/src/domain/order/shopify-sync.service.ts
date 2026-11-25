@@ -591,6 +591,9 @@ export class ShopifySyncService {
       const url = safeTrackingUrl(s.trackingUrl ?? undefined);
       let row = await this.fulfillRepo.findOne({ where: { orderId: order.id } });
       const statusMoved = row?.status !== s.status;
+      // IVY PRD v1 N-05: the delivery time the review request counts from. Kept
+      // once set — a later read of the same order must not move it.
+      const delivered = s.status === FULFILLMENT_STATUS.DELIVERED;
       if (!row) {
         row = this.fulfillRepo.create({
           tenantId: order.tenantId,
@@ -599,6 +602,7 @@ export class ShopifySyncService {
           trackingNumber: s.trackingNumber,
           carrier: s.carrier,
           trackingUrl: url,
+          deliveredAt: delivered ? (s.deliveredAt ?? new Date()) : null,
         });
       } else {
         const next = {
@@ -606,8 +610,11 @@ export class ShopifySyncService {
           carrier: s.carrier ?? row.carrier,
           trackingUrl: url ?? row.trackingUrl,
         };
+        // A row delivered before the column existed gets its time on the next read.
+        const needsDeliveredAt = delivered && row.deliveredAt == null;
         const same =
           !statusMoved &&
+          !needsDeliveredAt &&
           next.trackingNumber === row.trackingNumber &&
           next.carrier === row.carrier &&
           next.trackingUrl === row.trackingUrl &&
@@ -616,6 +623,7 @@ export class ShopifySyncService {
         row.status = s.status;
         Object.assign(row, next);
         row.tenantId = row.tenantId ?? order.tenantId;
+        if (needsDeliveredAt) row.deliveredAt = s.deliveredAt ?? new Date();
       }
       await this.fulfillRepo.save(row);
 

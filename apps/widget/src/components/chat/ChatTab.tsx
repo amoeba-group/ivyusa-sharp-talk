@@ -132,7 +132,7 @@ export function ChatTab() {
   const consumeContactOrder = useWidgetStore((s) => s.consumeContactOrder);
   const analytics = useAnalytics();
 
-  const { messages, send, scenario, sending, status, escalate, pickConsultCategory, endChat, canRate, csatRating, rate, conversationId } =
+  const { messages, send, scenario, sending, status, escalate, pickConsultCategory, endChat, startNewChat, canRate, csatRating, rate, conversationId } =
     useChat(sessionToken);
   // Consult categories (PLN-261024): offered before an agent request, or right
   // after the AI hands off; once per conversation.
@@ -692,6 +692,22 @@ export function ChatTab() {
     askedOrdersRef.current = null;
   }
 
+  /**
+   * "Start a new chat" under an ended thread (IVY PRD v1 S-01, PLN-261125-Phase4
+   * §1.2): the greeting and the menu, as on the first visit. The widget's own
+   * cards and lines go with the old thread.
+   */
+  function startNewChatHere() {
+    setInserts([]);
+    setInline(null);
+    setAfterAuth(null);
+    setShowEscalate(false);
+    setEndConfirm(false);
+    setLoginGreeting(null);
+    startNewChat();
+    scrollRef.current?.scrollTo({ top: 0 });
+  }
+
   /** "Start over" (BR-12): the opening menu again, at the end of the thread (T09 §7-3a). */
   function startOver() {
     setInline(null);
@@ -1199,6 +1215,15 @@ export function ChatTab() {
             </span>
             <span className="text-sm font-bold text-gray-900">{t('chat.endedTitle')}</span>
             <span className="text-xs text-gray-400">{t('chat.endedThanks')}</span>
+            {/* IVY PRD v1 S-01: a new chat starts from the beginning. */}
+            <button
+              type="button"
+              data-testid="start-new-chat"
+              onClick={startNewChatHere}
+              className="mt-1 rounded-full border border-primary-400 bg-white px-4 py-1.5 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            >
+              {t('chat.startNewChat')}
+            </button>
           </div>
         )}
 

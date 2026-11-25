@@ -83,14 +83,17 @@ const IVY_SCENARIO_OVERRIDES: Record<string, ScenarioOverride> = {
       { id: 'cancel_order', label: { EN: 'Cancel order', ES: 'Cancelar pedido', KO: '주문 취소', VI: 'Huỷ đơn hàng', JA: '注文キャンセル', ZH: '取消订单' } },
     ],
   },
+  // IVY PRD v1 C-03 (PLN-261125-Phase4 §3): the shopper cancels on Shopify's
+  // customer account (Self-serve returns and cancellations), email as the
+  // fallback. The link is markdown — the widget renders it (RichText).
   cancel_order: {
     reply: {
-      EN: "To cancel an order, email hello@ivyusa.com as soon as possible. Orders can't be changed once placed: if you need a change, the order is canceled (when still possible) and you place a new one.",
-      ES: 'Para cancelar un pedido, escribe a hello@ivyusa.com lo antes posible. Los pedidos no se pueden modificar una vez realizados: si necesitas un cambio, se cancela el pedido (si aún es posible) y haces uno nuevo.',
-      KO: '주문을 취소하시려면 가능한 한 빨리 hello@ivyusa.com으로 이메일을 보내 주세요. 주문 후에는 내용을 변경할 수 없어요. 변경이 필요하시면 기존 주문을 취소(가능한 경우)한 뒤 새로 주문해 주세요.',
-      VI: 'Để huỷ đơn, hãy gửi email tới hello@ivyusa.com càng sớm càng tốt. Đơn đã đặt thì không sửa được: nếu cần thay đổi, đơn cũ sẽ được huỷ (nếu còn kịp) và bạn đặt đơn mới.',
-      JA: 'ご注文をキャンセルされる場合は、できるだけ早く hello@ivyusa.com までメールでご連絡ください。ご注文後の内容変更はできません。変更が必要な場合は、ご注文をキャンセル（可能な場合）のうえ、新たにご注文ください。',
-      ZH: '如需取消订单，请尽快发送邮件至 hello@ivyusa.com。订单一经提交便无法修改；如需更改，请先取消原订单（如仍可取消），再重新下单。',
+      EN: "To cancel an order, sign in to [your IVY account](https://account.ivyusa.com/orders), open the order and request a cancellation. If you don't see that option, email hello@ivyusa.com as soon as possible. Orders can't be changed once placed: if you need a change, the order is canceled (when still possible) and you place a new one.",
+      ES: 'Para cancelar un pedido, inicia sesión en [tu cuenta de IVY](https://account.ivyusa.com/orders), abre el pedido y solicita la cancelación. Si no ves esa opción, escribe a hello@ivyusa.com lo antes posible. Los pedidos no se pueden modificar una vez realizados: si necesitas un cambio, se cancela el pedido (si aún es posible) y haces uno nuevo.',
+      KO: '주문을 취소하시려면 [IVY 계정](https://account.ivyusa.com/orders)에 로그인해 해당 주문을 열고 취소를 요청해 주세요. 취소 요청 항목이 보이지 않으면 가능한 한 빨리 hello@ivyusa.com으로 이메일을 보내 주세요. 주문 후에는 내용을 변경할 수 없어요. 변경이 필요하시면 기존 주문을 취소(가능한 경우)한 뒤 새로 주문해 주세요.',
+      VI: 'Để huỷ đơn, hãy đăng nhập [tài khoản IVY](https://account.ivyusa.com/orders), mở đơn hàng và yêu cầu huỷ. Nếu không thấy lựa chọn đó, hãy gửi email tới hello@ivyusa.com càng sớm càng tốt. Đơn đã đặt thì không sửa được: nếu cần thay đổi, đơn cũ sẽ được huỷ (nếu còn kịp) và bạn đặt đơn mới.',
+      JA: 'ご注文をキャンセルするには、[IVYアカウント](https://account.ivyusa.com/orders)にログインし、該当のご注文を開いてキャンセルをリクエストしてください。キャンセルの項目が表示されない場合は、できるだけ早く hello@ivyusa.com までメールでご連絡ください。ご注文後の内容変更はできません。変更が必要な場合は、ご注文をキャンセル（可能な場合）のうえ、新たにご注文ください。',
+      ZH: '如需取消订单，请登录[您的 IVY 账户](https://account.ivyusa.com/orders)，打开该订单并申请取消。如果看不到该选项，请尽快发送邮件至 hello@ivyusa.com。订单一经提交便无法修改；如需更改，请先取消原订单（如仍可取消），再重新下单。',
     },
   },
   // ivy-docs T12 §8-4a: the design's own copy (SCR-IVY-14, KO verbatim) — the

@@ -286,6 +286,7 @@ export const es: Translation = {
     threadLoadError: 'No se pudieron cargar las conversaciones anteriores',
     threadNone: 'No hay conversaciones anteriores',
     endedThanks: '¡Gracias por escribirnos!',
+    startNewChat: 'Iniciar un chat nuevo',
     // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
       1: 'Insatisfecho',

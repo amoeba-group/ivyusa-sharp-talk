@@ -107,6 +107,10 @@ export interface CsatConversationRow {
   resolved?: boolean | null;
   reason?: string | null;
   comment?: string | null;
+  /** IVY PRD v1 S-01: who answered; absent on an older API. */
+  mode?: 'ai' | 'agent';
+  /** The contact form was sent from this chat; absent on an older API. */
+  emailForm?: boolean;
 }
 
 export interface CsatListParams {

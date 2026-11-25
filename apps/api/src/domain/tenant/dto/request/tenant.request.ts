@@ -238,6 +238,12 @@ export class UpdateWidgetSettingsRequest {
   @IsBoolean()
   close_feedback_prompt?: boolean;
 
+  // Review request N days after delivery (IVY PRD v1 N-05); null = off. The
+  // range is checked in the service (REVIEW_REQUEST_DAYS_INVALID) so the
+  // console gets its own code rather than a generic validation error.
+  @IsOptional()
+  review_request_days?: number | null;
+
   // IANA timezone (e.g. 'Asia/Seoul'); drives the default widget language. Empty
   // string / null clears it. Optional so a login-mode-only update leaves it intact.
   @IsOptional()

@@ -144,6 +144,14 @@ export class Tenant {
   @Column({ name: 'chat_close_policy', type: 'json', nullable: true })
   chatClosePolicy: ChatClosePolicy | null;
 
+  /**
+   * Ask for a review this many days after delivery (IVY PRD v1 N-05,
+   * PLN-261125-Phase4 §2). NULL = off, the default: no tenant starts sending
+   * notifications because a column appeared.
+   */
+  @Column({ name: 'review_request_days', type: 'smallint', nullable: true })
+  reviewRequestDays: number | null;
+
   /** Terms-of-service link for the widget's bottom disclosure line; null → privacy_policy_url (PLN-261019). */
   @Column({ name: 'terms_url', type: 'varchar', length: 512, nullable: true })
   termsUrl: string | null;

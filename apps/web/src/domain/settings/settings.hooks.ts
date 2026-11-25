@@ -46,6 +46,8 @@ export function useSaveWidgetSettings() {
       widgetLanguages?: string[] | null;
       closeFeedbackPrompt?: boolean;
       contact?: ContactSupportDraft;
+      /** IVY PRD v1 N-05; null = off. */
+      reviewRequestDays?: number | null;
     }) =>
       settingsService.saveWidgetSettings(
         v.loginMode,
@@ -59,6 +61,7 @@ export function useSaveWidgetSettings() {
         v.widgetLanguages,
         v.closeFeedbackPrompt,
         v.contact,
+        v.reviewRequestDays,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['widget-settings', tenantKey] });

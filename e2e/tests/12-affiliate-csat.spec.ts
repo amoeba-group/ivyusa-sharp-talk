@@ -121,4 +121,49 @@ test.describe('T12 · Affiliate & CSAT', () => {
     await expect(ended).toBeVisible();
     expect((await ended.boundingBox())!.y).toBeGreaterThan((await card.boundingBox())!.y);
   });
+
+  // IVY PRD v1 S-01 (PLN-261125-Phase4 §1.2): after the end, a new chat starts
+  // from the beginning instead of under the old thread.
+  test('TC-12-08 Start a new chat leaves only the greeting and the menu, also after a reload @T12', async ({ widget, page }) => {
+    const p = widget.panel;
+    await p.getByRole('button', { name: /^End$/ }).last().click();
+    // The button waits for the rating to be answered (BR-13).
+    await expect(p.getByTestId('start-new-chat')).toHaveCount(0);
+    await p.getByTestId('csat-card').getByRole('button', { name: 'Skip', exact: true }).click();
+    await expect(p.getByTestId('chat-ended')).toBeVisible();
+    await p.getByTestId('start-new-chat').click();
+
+    const fresh = async () => {
+      await expect(p.getByTestId('script-steps')).toHaveCount(0);
+      await expect(p.getByTestId('chat-ended')).toHaveCount(0);
+      await expect(p.getByTestId('csat-card')).toHaveCount(0);
+      await expect(widget.scenarioButton(/Affiliate/)).toBeVisible();
+    };
+    await fresh();
+    // One poll later the ended thread is still not drawn back.
+    await page.waitForTimeout(6000);
+    await fresh();
+
+    await page.reload();
+    await expect(widget.launcher).toBeVisible();
+    await widget.open();
+    await widget.openChat();
+    await fresh();
+  });
+
+  test('TC-12-09 the first quick menu after Start a new chat opens a new conversation @T12', async ({ widget, page }) => {
+    const p = widget.panel;
+    await p.getByRole('button', { name: /^End$/ }).last().click();
+    await p.getByTestId('csat-card').getByRole('button', { name: 'Skip', exact: true }).click();
+    await p.getByTestId('start-new-chat').click();
+    await expect(p.getByTestId('script-steps')).toHaveCount(0);
+
+    await widget.scenarioButton(/Affiliate/).click();
+    await expect(p.getByTestId('script-steps')).toHaveCount(1);
+    // A live thread again: its chips are back and nothing says it ended.
+    await expect(p.getByRole('button', { name: /^End$/ }).last()).toBeVisible();
+    await page.waitForTimeout(6000);
+    await expect(p.getByTestId('script-steps')).toHaveCount(1);
+    await expect(p.getByTestId('chat-ended')).toHaveCount(0);
+  });
 });

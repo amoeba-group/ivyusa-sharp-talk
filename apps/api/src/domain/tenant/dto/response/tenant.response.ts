@@ -116,6 +116,8 @@ export interface WidgetSettingsResponse {
   csatMode: string;
   /** Feedback prompt on the widget's × (PLN-261027). */
   closeFeedbackPrompt: boolean;
+  /** Review request N days after delivery; null = off (IVY PRD v1 N-05). */
+  reviewRequestDays: number | null;
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;

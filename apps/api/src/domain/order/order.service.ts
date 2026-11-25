@@ -520,6 +520,11 @@ export class OrderService {
         trackingUrl: url,
       });
     }
+    // IVY PRD v1 N-05: a webhook carries no delivery time — the moment it says
+    // so stands in. Set once; a repeat of the same webhook does not move it.
+    if (status === FULFILLMENT_STATUS.DELIVERED && fulfillment.deliveredAt == null) {
+      fulfillment.deliveredAt = new Date();
+    }
     await this.fulfillRepo.save(fulfillment);
 
     const internal = this.mapFulfillmentToInternal(status);

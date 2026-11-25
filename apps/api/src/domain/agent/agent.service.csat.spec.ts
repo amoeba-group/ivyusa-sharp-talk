@@ -173,6 +173,49 @@ describe('AgentService — CSAT statistics', () => {
       agentName: 'kim@x', // name null → email fallback
       channel: 'widget', // null channel → widget
       rating: 5,
+      mode: 'agent',
+      emailForm: false, // no manager in this double → the column stays empty
     });
+  });
+
+  // IVY PRD v1 S-01 (PLN-261125-Phase4 §1.3): answer mode + contact form per chat.
+  it('conversation rows say AI vs agent and whether the contact form was sent from the chat', async () => {
+    const at = new Date('2026-11-25T10:00:00Z');
+    const convs = [
+      { id: '41', sessionId: '1', channel: 'widget', csatRating: 4, csatRatedAt: at, endedAt: at, tenantId: 7 },
+      { id: '42', sessionId: '2', channel: 'widget', csatRating: 2, csatRatedAt: at, endedAt: at, tenantId: 7 },
+    ];
+    const h = build({
+      rawAndEntities: { entities: convs, raw: [{ attributedAgentId: null }, { attributedAgentId: '22' }] },
+      users: [{ id: '22', name: 'Mina', email: 'mina@x' }],
+    });
+    const query = jest.fn(async () => [{ cid: '42' }]);
+    (h.convRepo as Record<string, unknown>).manager = { query };
+
+    const res = await h.svc.csatConversations(7, { page: 1, size: 20 });
+
+    expect(res.items.map((r) => [r.id, r.mode, r.emailForm])).toEqual([
+      [41, 'ai', false],
+      [42, 'agent', true],
+    ]);
+    // Tenant-scoped, one query for the page.
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0][1]).toEqual([7, [41, 42]]);
+    expect(String(query.mock.calls[0][0])).toContain('tenant_id = ?');
+  });
+
+  it('a failed contact-form lookup leaves the column empty, not the report', async () => {
+    const at = new Date('2026-11-25T10:00:00Z');
+    const h = build({
+      rawAndEntities: {
+        entities: [{ id: '51', sessionId: '1', channel: 'widget', csatRating: 3, csatRatedAt: at, endedAt: at, tenantId: 7 }],
+        raw: [{ attributedAgentId: null }],
+      },
+    });
+    (h.convRepo as Record<string, unknown>).manager = { query: jest.fn(async () => { throw new Error('boom'); }) };
+
+    const res = await h.svc.csatConversations(7, { page: 1, size: 20 });
+
+    expect(res.items[0]).toMatchObject({ id: 51, mode: 'ai', emailForm: false });
   });
 });

@@ -287,6 +287,7 @@ export const zh: Translation = {
     threadLoadError: '无法加载之前的对话',
     threadNone: '没有之前的对话',
     endedThanks: '感谢您的咨询！',
+    startNewChat: '开始新的咨询',
     // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
       1: '不满意',

@@ -77,6 +77,21 @@ describe('TenantService.updatePrivacyNotice', () => {
     expect(saved.consentNoticeVersion).toBeNull(); // cleared → fallback applies
   });
 
+  /** IVY PRD v1 N-05 (PLN-261125-Phase4 §2.3): review request days, null = off. */
+  describe('updateWidgetSettings review request days', () => {
+    it('stores 1–60, clears with null, keeps the value when the field is absent', async () => {
+      expect((await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', review_request_days: 7 })).reviewRequestDays).toBe(7);
+      expect((await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect' })).reviewRequestDays).toBe(7);
+      expect((await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', review_request_days: null })).reviewRequestDays).toBeNull();
+    });
+
+    it.each([0, 61, 2.5, '7'])('refuses %p with E5168', async (days) => {
+      await expect(
+        svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', review_request_days: days as never }),
+      ).rejects.toMatchObject({ errorCode: 'E5168' });
+    });
+  });
+
   /** Widget copy merge (PLN-260808-Widget-Greetings): flat fields → JSON blob. */
   describe('updateWidgetSettings widget copy', () => {
     it('folds per-language fields into widget_copy, trimming and dropping empties', async () => {

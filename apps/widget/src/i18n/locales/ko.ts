@@ -286,6 +286,7 @@ export const ko: Translation = {
     threadLoadError: '이전 대화를 불러오지 못했습니다',
     threadNone: '이전 대화가 없습니다',
     endedThanks: '이용해 주셔서 감사합니다!',
+    startNewChat: '새 상담 시작하기',
     // The design's four faces store 1·3·4·5 (Q-12); 2 is the survey's fifth face.
     csatLevel: {
       1: '불만족',

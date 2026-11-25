@@ -5,6 +5,7 @@ import { GenericConnectedCard } from './ConnectedPlatformCard';
 import { PlatformSections } from './PlatformSections';
 import { usePlatformConnections } from './platform-connections.hooks';
 import { MARKETING_CHOICES, type GenericIntegrationProvider } from './integration-providers';
+import { ReviewRequestCard } from './ReviewRequestCard';
 
 /**
  * Tenant settings — marketing · helpdesk (PLN-261019 S4). Same two-section
@@ -20,6 +21,9 @@ export function SettingsMarketingPage() {
     <div className="space-y-8">
       {/* The tab already names the section; this says what it is for. */}
       <p className="text-sm text-gray-500">{t('groups.marketing.subtitle')}</p>
+
+      {/* IVY PRD v1 N-05: review requests after delivery, above the review platforms. */}
+      <ReviewRequestCard />
 
       <PlatformSections
         connections={connections}
