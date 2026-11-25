@@ -123,6 +123,8 @@ export type ScenarioActionKey =
   // IVY PRD v1 C-01 (PLN-261125 §2.5): the latest order's payment card; the feedback form.
   | 'payment_status'
   | 'feedback'
+  // IVY PRD v1 C-01: pick a product, see whether it is in stock.
+  | 'stock_inquiry'
   | 'cancel_refund'
   | 'product_help'
   | 'contact_support'

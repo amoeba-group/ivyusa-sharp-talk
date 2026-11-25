@@ -52,6 +52,7 @@
   "action_my_orders": "My orders",
   "action_message": "Send a message",
   "action_feedback": "Feedback form",
+  "action_stock_inquiry": "Stock check (product search)",
   "ruleType": "Type",
   "type_word": "Word",
   "type_phrase": "Phrase",

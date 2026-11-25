@@ -52,6 +52,7 @@
   "action_my_orders": "Mis pedidos",
   "action_message": "Enviar un mensaje",
   "action_feedback": "Formulario de comentarios",
+  "action_stock_inquiry": "Consulta de stock (buscar producto)",
   "ruleType": "Tipo",
   "type_word": "Palabra",
   "type_phrase": "Frase",

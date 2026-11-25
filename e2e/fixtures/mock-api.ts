@@ -233,6 +233,16 @@ export async function installIvyMocks(page: Page, opts: MockOptions = {}): Promi
     if (method === 'GET' && path === '/products/categories') {
       return route.fulfill({ json: ok(PRODUCT_CATEGORIES) });
     }
+    // Stock inquiry (IVY PRD v1 C-01): two store products, one of them out of stock.
+    if (method === 'GET' && path === '/products/stock') {
+      record(req, path, url);
+      const term = (url.searchParams.get('q') ?? '').toLowerCase();
+      const all = [
+        { handle: 'gel-polish-set', title: 'Gel Polish Starter Set', vendor: 'KISS', price: 24.99, currency: 'USD', imageUrl: null, productUrl: 'https://ivyusa.com/products/gel-polish-set', inStock: true },
+        { handle: 'impress-press-on', title: 'imPRESS Press-on Manicure', vendor: 'KISS', price: 9.99, currency: 'USD', imageUrl: null, productUrl: 'https://ivyusa.com/products/impress-press-on', inStock: false },
+      ];
+      return route.fulfill({ json: ok({ available: true, products: all.filter((p) => p.title.toLowerCase().includes(term)) }) });
+    }
     if (method === 'GET' && path === '/products/popular') {
       record(req, path, url);
       const category = url.searchParams.get('category') ?? '';

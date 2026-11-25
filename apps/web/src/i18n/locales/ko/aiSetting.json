@@ -52,6 +52,7 @@
   "action_my_orders": "내 주문",
   "action_message": "메시지 보내기",
   "action_feedback": "피드백 양식",
+  "action_stock_inquiry": "재고 확인(상품 검색)",
   "ruleType": "유형",
   "type_word": "단어",
   "type_phrase": "문구",

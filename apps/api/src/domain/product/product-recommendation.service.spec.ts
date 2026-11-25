@@ -198,3 +198,53 @@ describe('ProductRecommendationService', () => {
     expect(params).toEqual([4, ['id-a', 'id-b']]);
   });
 });
+
+describe('ProductRecommendationService.stockSearch (IVY PRD v1 C-01)', () => {
+  function build(opts: { cached?: string | null; conn?: boolean; throws?: boolean } = {}) {
+    const store: Record<string, string> = {};
+    const client = {
+      searchProducts: jest.fn(async () => {
+        if (opts.throws) throw new Error('Admin API returned 502');
+        return [card('gel', { available: true }), card('press', { available: false })];
+      }),
+    };
+    const redis = {
+      get: jest.fn(async () => opts.cached ?? null),
+      set: jest.fn(async (k: string, v: string) => void (store[k] = v)),
+      del: jest.fn(),
+    };
+    const svc = new ProductRecommendationService(
+      {} as never,
+      {} as never,
+      { getShopifyConnection: jest.fn(async () => (opts.conn === false ? null : { shopDomain: 's', token: 't' })) } as never,
+      client as never,
+      {} as never,
+      redis as never,
+    );
+    return { svc, client, redis, store };
+  }
+
+  it('asks the store once, keeps the answer two minutes per query', async () => {
+    const h = build();
+    const r = await h.svc.stockSearch(4, '  Gel ');
+    expect(r.available).toBe(true);
+    expect(r.products.map((p) => [p.handle, p.available])).toEqual([['gel', true], ['press', false]]);
+    expect(h.client.searchProducts).toHaveBeenCalledWith('s', 't', 'Gel', 5);
+    expect(Object.keys(h.store)).toEqual(['stock:v1:4:gel']);
+    expect(h.redis.set.mock.calls[0][2]).toBe(120);
+  });
+
+  it('a cached answer is served without the store', async () => {
+    const h = build({ cached: JSON.stringify({ available: true, products: [] }) });
+    await expect(h.svc.stockSearch(4, 'gel')).resolves.toEqual({ available: true, products: [] });
+    expect(h.client.searchProducts).not.toHaveBeenCalled();
+  });
+
+  it('too short a query asks nobody; no connection or a store error is "unavailable"', async () => {
+    const h = build();
+    await expect(h.svc.stockSearch(4, 'g')).resolves.toEqual({ available: true, products: [] });
+    expect(h.client.searchProducts).not.toHaveBeenCalled();
+    await expect(build({ conn: false }).svc.stockSearch(4, 'gel')).resolves.toEqual({ available: false, products: [] });
+    await expect(build({ throws: true }).svc.stockSearch(4, 'gel')).resolves.toEqual({ available: false, products: [] });
+  });
+});

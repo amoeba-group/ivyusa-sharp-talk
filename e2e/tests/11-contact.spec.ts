@@ -218,3 +218,47 @@ test.describe('T11 · PRD v1 quick menu cards', () => {
     await expect(form.getByTestId('contact-form-order')).toHaveText('Order IVY-39891');
   });
 });
+
+/** IVY PRD v1 C-01: Stock inquiry — pick a product, see whether it is in stock. */
+test.describe('T11 · PRD v1 stock inquiry', () => {
+  test.beforeEach(async ({ widget }) => {
+    await widget.goto();
+    await widget.open();
+    await widget.openChat();
+    await widget.scenarioButton(/Stock inquiry/).click();
+  });
+
+  test('TC-11-13 search, pick a product, see In stock with the guide line @T11', async ({ widget, mocks }) => {
+    const answer = widget.panel.getByTestId('stock-answer');
+    await expect(answer.getByText('Which product would you like to check? Type its name.')).toBeVisible();
+    await answer.getByRole('textbox', { name: 'Product name' }).fill('gel');
+    await answer.getByRole('button', { name: 'Search' }).click();
+    await expect.poll(() => mocks!.callsTo('GET', '/products/stock').length).toBeGreaterThan(0);
+    expect(mocks!.callsTo('GET', '/products/stock')[0].query.get('q')).toBe('gel');
+    await answer.getByTestId('stock-result').filter({ hasText: 'Gel Polish Starter Set' }).click();
+    const card = answer.getByTestId('stock-card');
+    await expect(card).toHaveAttribute('data-in-stock', 'true');
+    await expect(card).toContainText('In stock');
+    await expect(answer.getByText('Gel Polish Starter Set is in stock. You can order it on the product page.')).toBeVisible();
+    await expect(answer.getByRole('button', { name: 'Check another product' })).toBeVisible();
+  });
+
+  test('TC-11-14 an out-of-stock product says so; Check another product starts over @T11', async ({ widget }) => {
+    const answer = widget.panel.getByTestId('stock-answer');
+    await answer.getByRole('textbox', { name: 'Product name' }).fill('press');
+    await answer.getByRole('button', { name: 'Search' }).click();
+    await answer.getByTestId('stock-result').first().click();
+    await expect(answer.getByTestId('stock-card')).toHaveAttribute('data-in-stock', 'false');
+    await expect(answer.getByTestId('stock-card')).toContainText('Out of stock');
+    await answer.getByRole('button', { name: 'Check another product' }).click();
+    await expect(answer.getByRole('textbox', { name: 'Product name' })).toHaveValue('');
+    await expect(answer.getByTestId('stock-card')).toHaveCount(0);
+  });
+
+  test('TC-11-15 nothing matching is said plainly @T11', async ({ widget }) => {
+    const answer = widget.panel.getByTestId('stock-answer');
+    await answer.getByRole('textbox', { name: 'Product name' }).fill('zzz');
+    await answer.getByRole('button', { name: 'Search' }).click();
+    await expect(answer.getByText('No product on sale matches "zzz". Try another name.')).toBeVisible();
+  });
+});

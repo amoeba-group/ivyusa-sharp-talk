@@ -52,6 +52,7 @@
   "action_my_orders": "注文履歴",
   "action_message": "メッセージを送る",
   "action_feedback": "ご意見フォーム",
+  "action_stock_inquiry": "在庫確認（商品検索）",
   "ruleType": "種類",
   "type_word": "単語",
   "type_phrase": "フレーズ",

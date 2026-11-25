@@ -5,6 +5,8 @@ import { buildPagination, normalizePage } from '@sharptalk/common';
 import { ProductService } from './product.service';
 import { ProductSyncService } from './product-sync.service';
 import { ProductPopularService } from './product-popular.service';
+import { ProductRecommendationService } from './product-recommendation.service';
+import { Throttle } from '@nestjs/throttler';
 import { UpdateRoomCountRequest } from './dto/request/product.request';
 import {
   toAdminProductDetailResponse,
@@ -40,6 +42,7 @@ export class ProductController {
     private readonly sessionService: SessionService,
     private readonly bus: EventBusService,
     private readonly popularService: ProductPopularService,
+    private readonly recService: ProductRecommendationService,
   ) {}
 
   @Get('categories')
@@ -83,6 +86,31 @@ export class ProductController {
       s,
     );
     return rows.map(toProductCardResponse);
+  }
+
+  // Static route — above GET /products/:handle (IVY PRD v1 C-01 Stock inquiry).
+  @Get('stock')
+  @Public()
+  // Every search is a live store call: a typing shopper is fine, a script is not.
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Stock inquiry: products on sale matching the words, with whether each is in stock' })
+  async stock(@SessionToken() token: string, @Query('q') q?: string) {
+    const session = await this.sessionService.findByToken(token);
+    if (session.tenantId == null) return { available: false, products: [] };
+    const res = await this.recService.stockSearch(session.tenantId, String(q ?? ''));
+    return {
+      available: res.available,
+      products: res.products.map((p) => ({
+        handle: p.handle,
+        title: p.title,
+        vendor: p.vendor,
+        price: p.price,
+        currency: p.currency,
+        imageUrl: p.imageUrl,
+        productUrl: p.productUrl,
+        inStock: p.available !== false,
+      })),
+    };
   }
 
   // Static route — above GET /products/:handle (ivy-docs T10 D3).

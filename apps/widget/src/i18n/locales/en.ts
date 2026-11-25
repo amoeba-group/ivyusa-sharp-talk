@@ -93,6 +93,22 @@ export const en = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: 'Start over',
     startOverLead: 'What else can I help you with?',
+    /** IVY PRD v1 C-01: Stock inquiry — pick a product, see whether it is in stock. */
+    stock: {
+      lead: 'Which product would you like to check? Type its name.',
+      placeholder: 'Product name',
+      search: 'Search',
+      searching: 'Searching…',
+      pick: 'Products found',
+      none: 'No product on sale matches "{{q}}". Try another name.',
+      unavailable: 'I can\'t check stock right now. Please try again in a moment.',
+      inStock: 'In stock',
+      outOfStock: 'Out of stock',
+      view: 'View product',
+      guideIn: '{{title}} is in stock. You can order it on the product page.',
+      guideOut: '{{title}} is out of stock right now. Please check back later, or contact us if you need it.',
+      again: 'Check another product',
+    },
     /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
     payment: {
       lead: 'Here\'s the payment status of your latest order.',

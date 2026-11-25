@@ -59,6 +59,7 @@ const SCENARIO_ACTIONS = [
   'affiliate',
   'my_orders',
   'feedback',
+  'stock_inquiry',
   'message',
 ] as const;
 

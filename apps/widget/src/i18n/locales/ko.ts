@@ -91,6 +91,22 @@ export const ko: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: '처음으로',
     startOverLead: '무엇을 더 도와드릴까요?',
+    /** IVY PRD v1 C-01: Stock inquiry — pick a product, see whether it is in stock. */
+    stock: {
+      lead: '어떤 상품을 확인할까요? 상품명을 입력해 주세요.',
+      placeholder: '상품명',
+      search: '검색',
+      searching: '검색 중…',
+      pick: '검색된 상품',
+      none: '"{{q}}"와(과) 일치하는 판매 중인 상품이 없어요. 다른 이름으로 검색해 주세요.',
+      unavailable: '지금은 재고를 확인할 수 없어요. 잠시 후 다시 시도해 주세요.',
+      inStock: '재고 있음',
+      outOfStock: '품절',
+      view: '상품 보기',
+      guideIn: '{{title}}은(는) 재고가 있어요. 상품 페이지에서 주문하실 수 있어요.',
+      guideOut: '{{title}}은(는) 지금 품절이에요. 나중에 다시 확인하시거나, 꼭 필요하시면 문의해 주세요.',
+      again: '다른 상품 확인',
+    },
     /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
     payment: {
       lead: '최근 주문의 결제 상태입니다.',

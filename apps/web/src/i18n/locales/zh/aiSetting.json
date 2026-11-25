@@ -52,6 +52,7 @@
   "action_my_orders": "我的订单",
   "action_message": "发送消息",
   "action_feedback": "意见反馈表",
+  "action_stock_inquiry": "库存查询（搜索商品）",
   "ruleType": "类型",
   "type_word": "单词",
   "type_phrase": "短语",

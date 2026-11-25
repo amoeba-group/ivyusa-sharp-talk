@@ -91,6 +91,22 @@ export const vi: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: 'Bắt đầu lại',
     startOverLead: 'Tôi có thể giúp gì thêm cho bạn?',
+    /** IVY PRD v1 C-01: Stock inquiry — pick a product, see whether it is in stock. */
+    stock: {
+      lead: 'Bạn muốn kiểm tra sản phẩm nào? Hãy nhập tên sản phẩm.',
+      placeholder: 'Tên sản phẩm',
+      search: 'Tìm',
+      searching: 'Đang tìm…',
+      pick: 'Sản phẩm tìm được',
+      none: 'Không có sản phẩm đang bán nào khớp với "{{q}}". Hãy thử tên khác.',
+      unavailable: 'Hiện tôi chưa kiểm tra được tồn kho. Vui lòng thử lại sau ít phút.',
+      inStock: 'Còn hàng',
+      outOfStock: 'Hết hàng',
+      view: 'Xem sản phẩm',
+      guideIn: '{{title}} còn hàng. Bạn có thể đặt mua ở trang sản phẩm.',
+      guideOut: '{{title}} hiện đang hết hàng. Bạn hãy quay lại kiểm tra sau, hoặc liên hệ chúng tôi nếu cần gấp.',
+      again: 'Kiểm tra sản phẩm khác',
+    },
     /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
     payment: {
       lead: 'Đây là tình trạng thanh toán của đơn gần nhất của bạn.',

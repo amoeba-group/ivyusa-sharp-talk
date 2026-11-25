@@ -91,6 +91,22 @@ export const es: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: 'Volver al inicio',
     startOverLead: '¿En qué más puedo ayudarte?',
+    /** IVY PRD v1 C-01: Stock inquiry — pick a product, see whether it is in stock. */
+    stock: {
+      lead: '¿Qué producto quieres consultar? Escribe su nombre.',
+      placeholder: 'Nombre del producto',
+      search: 'Buscar',
+      searching: 'Buscando…',
+      pick: 'Productos encontrados',
+      none: 'Ningún producto a la venta coincide con «{{q}}». Prueba con otro nombre.',
+      unavailable: 'Ahora mismo no puedo consultar el stock. Inténtalo de nuevo en un momento.',
+      inStock: 'En stock',
+      outOfStock: 'Agotado',
+      view: 'Ver producto',
+      guideIn: '{{title}} está en stock. Puedes pedirlo en la página del producto.',
+      guideOut: '{{title}} está agotado por ahora. Vuelve a consultarlo más tarde o contáctanos si lo necesitas.',
+      again: 'Consultar otro producto',
+    },
     /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
     payment: {
       lead: 'Este es el estado del pago de tu pedido más reciente.',

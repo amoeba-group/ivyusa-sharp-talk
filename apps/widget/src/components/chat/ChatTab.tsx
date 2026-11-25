@@ -30,6 +30,7 @@ import { AuthGate } from './AuthGate';
 import { ContactAnswer } from './ContactCard';
 import { ContactFormAnswer, FeedbackAnswer, type FormOrder } from './ContactForm';
 import { DeliveryStatusAnswer, PaymentStatusAnswer } from './OrderStatusAnswers';
+import { StockInquiryAnswer } from './StockInquiry';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import {
   AFFILIATE_APPLY_ID,
@@ -81,7 +82,8 @@ type ThreadInsert = {
     // IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check, Delivery inquiry, Feedback.
     | 'payment'
     | 'delivery'
-    | 'feedback';
+    | 'feedback'
+    | 'stock';
   at: number;
   asked?: string | null;
   /** product / categories / popular: the tenant's Product Help categories. */
@@ -491,6 +493,10 @@ export function ChatTab() {
       case 'feedback':
         // IVY PRD v1 C-01: "Enter feedback → saved in admin".
         addInsert('feedback', button.label);
+        return;
+      case 'stock_inquiry':
+        // IVY PRD v1 C-01: "pick product → answer from stock data".
+        addInsert('stock', button.label);
         return;
       case 'my_orders':
         // Answer in the thread (frame 57) rather than throwing the shopper into
@@ -910,6 +916,20 @@ export function ChatTab() {
             onOpenOrder={setOpenOrder}
             onPolicy={(label) => void scenario('shipping_policy', label).then(runPostAction)}
             onContact={(order) => contactAbout(order, t('chat.contactSupport'))}
+            onStartOver={startOver}
+            onSettled={scrollToEnd}
+          />
+        ) : x.kind === 'stock' ? (
+          <StockInquiryAnswer
+            key={x.key}
+            insertKey={x.key}
+            sessionToken={sessionToken}
+            asked={x.asked}
+            active={x === lastInsert && x.at === messages.length && !sending}
+            picked={x.picked}
+            disabled={sending}
+            onPick={(id) => markPicked(x.key, id)}
+            onContact={() => contactAbout(null, t('chat.contactSupport'))}
             onStartOver={startOver}
             onSettled={scrollToEnd}
           />

@@ -91,6 +91,22 @@ export const zh: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: '重新开始',
     startOverLead: '还有什么可以帮您？',
+    /** IVY PRD v1 C-01: Stock inquiry — pick a product, see whether it is in stock. */
+    stock: {
+      lead: '您想查询哪件商品？请输入商品名称。',
+      placeholder: '商品名称',
+      search: '搜索',
+      searching: '搜索中…',
+      pick: '找到的商品',
+      none: '没有与“{{q}}”匹配的在售商品，请换个名称试试。',
+      unavailable: '暂时无法查询库存，请稍后再试。',
+      inStock: '有货',
+      outOfStock: '缺货',
+      view: '查看商品',
+      guideIn: '{{title}} 有货，您可以在商品页面下单。',
+      guideOut: '{{title}} 目前缺货。请稍后再查看，如急需请联系我们。',
+      again: '查询其他商品',
+    },
     /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
     payment: {
       lead: '这是您最近一笔订单的付款状态。',

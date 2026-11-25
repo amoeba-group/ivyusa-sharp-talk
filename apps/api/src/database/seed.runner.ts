@@ -129,7 +129,7 @@ const IVY_SCENARIO_BUTTONS: ScenarioButton[] = [
     label: { EN: 'Payment check', ES: 'Verificar pago', KO: '결제 확인', VI: 'Kiểm tra thanh toán', JA: 'お支払い確認', ZH: '付款确认' } },
   { id: 'delivery_inquiry', action: 'delivery_status', enabled: true, emoji: '🚚',
     label: { EN: 'Delivery inquiry', ES: 'Consulta de envío', KO: '배송 문의', VI: 'Hỏi về giao hàng', JA: '配送のお問い合わせ', ZH: '配送咨询' } },
-  { id: 'stock_inquiry', action: 'message', enabled: true, emoji: '📦',
+  { id: 'stock_inquiry', action: 'stock_inquiry', enabled: true, emoji: '📦',
     label: { EN: 'Stock inquiry', ES: 'Consulta de stock', KO: '재고 문의', VI: 'Hỏi về tồn kho', JA: '在庫のお問い合わせ', ZH: '库存咨询' } },
   { id: 'exchange_refund', action: 'cancel_refund', enabled: true, emoji: '😊',
     label: { EN: 'Exchange & Refund', ES: 'Cambios y reembolsos', KO: '교환 및 환불', VI: 'Đổi trả & hoàn tiền', JA: '交換・返金', ZH: '换货与退款' } },

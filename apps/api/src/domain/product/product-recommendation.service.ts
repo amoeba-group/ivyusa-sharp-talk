@@ -42,6 +42,9 @@ export const REC_SALES_DAYS = 30;
 export const REC_WEIGHTS = { sales: 0.7, reviews: 0.3 } as const;
 /** How deep into the collection AI Auto looks. */
 const AUTO_CANDIDATES = 50;
+/** Stock inquiry: how many products a search offers, and how long a search is remembered. */
+const STOCK_RESULTS = 5;
+const STOCK_CACHE_SEC = 120;
 /** Audit action for every saved change (PRD slide 18 "change history"). */
 export const REC_AUDIT_ACTION = 'product_recommendation.updated';
 
@@ -332,6 +335,41 @@ export class ProductRecommendationService {
     const conn = await this.tenantService.getShopifyConnection(tenantId);
     if (!conn || !q.trim()) return [];
     return this.client.searchProducts(conn.shopDomain, conn.token, q);
+  }
+
+  /**
+   * Stock inquiry from the widget (IVY PRD v1 C-01 "pick product → answer from
+   * stock data"): up to 5 products on sale online that match the shopper's
+   * words, each with whether it can be bought now. Read live from the store,
+   * cached 2 minutes per tenant and query so repeated typing is one store call.
+   * `available: false` = the store could not be read.
+   */
+  async stockSearch(tenantId: number, q: string): Promise<{ available: boolean; products: ShopifyBestSeller[] }> {
+    const text = q.trim().slice(0, 80);
+    if (text.length < 2) return { available: true, products: [] };
+    const key = `stock:v1:${tenantId}:${text.toLowerCase()}`;
+    const hit = await this.redis.get(key);
+    if (hit) {
+      try {
+        return JSON.parse(hit) as { available: boolean; products: ShopifyBestSeller[] };
+      } catch {
+        // A bad cache entry is just a miss.
+      }
+    }
+    const conn = await this.tenantService.getShopifyConnection(tenantId);
+    if (!conn) {
+      this.logger.warn(`tenant ${tenantId}: no Shopify connection — stock inquiry unavailable`);
+      return { available: false, products: [] };
+    }
+    try {
+      const products = await this.client.searchProducts(conn.shopDomain, conn.token, text, STOCK_RESULTS);
+      const out = { available: true, products };
+      await this.redis.set(key, JSON.stringify(out), STOCK_CACHE_SEC);
+      return out;
+    } catch (e) {
+      this.logger.warn(`tenant ${tenantId}: stock search failed (${(e as Error).message})`);
+      return { available: false, products: [] };
+    }
   }
 
   /** What a shopper would see right now for this category × type. */

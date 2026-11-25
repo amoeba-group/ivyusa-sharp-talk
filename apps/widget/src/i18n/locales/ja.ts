@@ -91,6 +91,22 @@ export const ja: Translation = {
     /** Shared "Start over" chip (SPEC BR-12, ivy-docs T09) and the line above the menu it brings back. */
     startOver: '最初に戻る',
     startOverLead: 'ほかに何をお手伝いしましょうか？',
+    /** IVY PRD v1 C-01: Stock inquiry — pick a product, see whether it is in stock. */
+    stock: {
+      lead: 'どの商品の在庫を確認しますか？商品名を入力してください。',
+      placeholder: '商品名',
+      search: '検索',
+      searching: '検索中…',
+      pick: '見つかった商品',
+      none: '「{{q}}」に一致する販売中の商品はありません。別の名前でお試しください。',
+      unavailable: '現在、在庫を確認できません。しばらくしてからもう一度お試しください。',
+      inStock: '在庫あり',
+      outOfStock: '在庫切れ',
+      view: '商品を見る',
+      guideIn: '{{title}}は在庫があります。商品ページからご注文いただけます。',
+      guideOut: '{{title}}は現在在庫切れです。後ほどご確認いただくか、お急ぎの場合はお問い合わせください。',
+      again: '別の商品を確認',
+    },
     /** IVY PRD v1 C-01 (PLN-261125 §2.5): Payment check / Delivery inquiry cards, Feedback form. */
     payment: {
       lead: '最新のご注文のお支払い状況です。',
