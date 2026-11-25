@@ -1,4 +1,4 @@
-import { CALLBACK_CHIP_ID, CONVERSATION_STATUS } from '@sharptalk/types';
+import { CALLBACK_CHIP_ID, CONVERSATION_STATUS, INQUIRY_FORM_CHIP_ID } from '@sharptalk/types';
 import { ChatService } from './chat.service';
 
 /**
@@ -7,7 +7,7 @@ import { ChatService } from './chat.service';
  * callback chip rides on the notice.
  */
 describe('ChatService — off-hours callback', () => {
-  function build(notice: string | null) {
+  function build(notice: string | null, formNotice: string | null = null) {
     const saved: any[] = [];
     const convUpdates: any[] = [];
     const bus = { publish: jest.fn(async () => undefined) };
@@ -20,6 +20,7 @@ describe('ChatService — off-hours callback', () => {
       msgRepo: { create: (m: any) => m, save: jest.fn(async (m: any) => (saved.push(m), m)), findOne: jest.fn(async () => null) },
       handoffRouter: {
         offHoursCallbackNotice: jest.fn(async () => notice),
+        offHoursFormNotice: jest.fn(async () => formNotice),
         route: jest.fn(async () => ({ mode: 'agent', targetUserIds: [] })),
       },
       bus,
@@ -56,5 +57,22 @@ describe('ChatService — off-hours callback', () => {
     await h.svc.escalate(session, 42);
     expect(h.bus.publish).toHaveBeenCalled();
     expect(h.convUpdates.some((u) => u.p.status === CONVERSATION_STATUS.WAITING)).toBe(true);
+  });
+
+  // IVY PRD v1 E-02, owner's choice b.
+  it('off hours with the email form on: the "Email us" chip instead of the callback, nobody paged', async () => {
+    const h = build('callback notice', 'Send your question with the form below.');
+    const out = await h.svc.handoff(42, session, 4, 'low_confidence', 'help');
+    expect(out).toEqual({ body: 'Send your question with the form below.', needsContactEmail: false, escalated: false });
+    expect(h.saved[0].retrievalTrace.followUps).toEqual([{ id: INQUIRY_FORM_CHIP_ID, label: expect.any(String) }]);
+    expect(h.bus.publish).not.toHaveBeenCalled();
+    expect(h.convUpdates.some((u) => u.p.status === CONVERSATION_STATUS.WAITING)).toBe(false);
+  });
+
+  it('the widget "talk to an agent" button off hours gets the form chip too', async () => {
+    const h = build(null, 'Send your question with the form below.');
+    await h.svc.escalate(session, 42);
+    expect(h.saved[0].retrievalTrace.followUps[0].id).toBe(INQUIRY_FORM_CHIP_ID);
+    expect(h.bus.publish).not.toHaveBeenCalled();
   });
 });

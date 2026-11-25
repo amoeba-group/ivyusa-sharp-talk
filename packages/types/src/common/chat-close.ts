@@ -53,6 +53,14 @@ export const QUEUE_TIMEOUT_DEFAULT = 3;
  */
 export const CALLBACK_CHIP_ID = 'callback_request';
 
+/**
+ * Quick-reply id of the "Email us" chip (IVY PRD v1 E-02, owner's choice b):
+ * outside business hours the widget opens its contact form — the recent chat
+ * and the order ride along (E-01) — instead of queueing for an agent nobody is
+ * there to be.
+ */
+export const INQUIRY_FORM_CHIP_ID = 'inquiry_form';
+
 export const CALLBACK_CHANNEL = { EMAIL: 'email', PHONE: 'phone' } as const;
 export type CallbackChannel = (typeof CALLBACK_CHANNEL)[keyof typeof CALLBACK_CHANNEL];
 export const CALLBACK_CHANNEL_VALUES = Object.values(CALLBACK_CHANNEL) as CallbackChannel[];
@@ -98,6 +106,24 @@ export const CHAT_CLOSE_DEFAULT_COPY = {
     VI: 'Hiện có nhiều người đang chờ nên việc kết nối nhân viên đang bị chậm. Vui lòng chờ trong giây lát, hoặc hỏi lại tôi để tôi tiếp tục hỗ trợ bạn.',
     JA: 'ただいま混み合っており、担当者へのおつなぎが遅れております。少々お待ちいただくか、もう一度私にお尋ねいただければ引き続き対応いたします。',
     ZH: '当前排队人数较多，转接客服有所延迟。请稍候，或再次向我提问，我会继续为您服务。',
+  },
+  /** The off-hours form chip (E-02 b). */
+  inquiryFormChip: {
+    EN: 'Email us',
+    ES: 'Escríbenos',
+    KO: '이메일 문의',
+    VI: 'Gửi email cho chúng tôi',
+    JA: 'メールで問い合わせ',
+    ZH: '发邮件咨询',
+  },
+  /** Said off hours when the form is offered instead of a queue (E-02 b). */
+  offHoursFormNotice: {
+    EN: "We're outside our support hours right now. Send your question with the form below and our team will reply by email as soon as they're back.",
+    ES: 'Ahora mismo estamos fuera del horario de atención. Envíanos tu consulta con el formulario y el equipo te responderá por correo en cuanto vuelva.',
+    KO: '지금은 상담 가능 시간이 아니에요. 아래 양식으로 문의를 남겨주시면 업무 시간에 이메일로 회신드릴게요.',
+    VI: 'Hiện tại đang ngoài giờ hỗ trợ. Hãy gửi câu hỏi qua form bên dưới, đội ngũ của chúng tôi sẽ trả lời qua email ngay khi làm việc trở lại.',
+    JA: 'ただいまサポート時間外です。下のフォームからお問い合わせいただければ、営業時間になり次第メールでご返信いたします。',
+    ZH: '现在是客服工作时间之外。请通过下方表单留下您的问题，我们的团队上班后会尽快通过电子邮件回复您。',
   },
   callbackChip: {
     EN: 'Request a callback',

@@ -528,3 +528,33 @@ describe('HandoffRouterService.simulate (PLN-261024 D6)', () => {
     expect(r.result).toEqual({ ruleIndex: null, ruleName: null, targetUserIds: [99] });
   });
 });
+
+/** IVY PRD v1 E-02, the owner chose b: off hours, the email form instead of a queue. */
+describe('HandoffRouterService.offHoursFormNotice (IVY PRD v1 E-02 b)', () => {
+  it('off hours with the form on: the form notice in the shopper language', async () => {
+    // Wed 2026-08-05 03:00 UTC = 23:00 the previous evening in New York.
+    const notice = await at('2026-08-05T03:00:00Z', () =>
+      routerFor({ businessHours: HOURS, inquiryForm: { enabled: true } }).offHoursFormNotice(1, 'EN'),
+    );
+    expect(notice).toMatch(/form below/);
+    const ko = await at('2026-08-05T03:00:00Z', () =>
+      routerFor({ businessHours: HOURS, inquiryForm: { enabled: true } }).offHoursFormNotice(1, 'KO'),
+    );
+    expect(ko).toMatch(/양식/);
+  });
+
+  it('on shift, form off, or no business hours: null — the usual routing stands', async () => {
+    const onShift = await at('2026-08-05T14:00:00Z', () =>
+      routerFor({ businessHours: HOURS, inquiryForm: { enabled: true } }).offHoursFormNotice(1, 'EN'),
+    );
+    expect(onShift).toBeNull();
+    const off = await at('2026-08-05T03:00:00Z', () =>
+      routerFor({ businessHours: HOURS, inquiryForm: { enabled: false } }).offHoursFormNotice(1, 'EN'),
+    );
+    expect(off).toBeNull();
+    const noHours = await at('2026-08-05T03:00:00Z', () =>
+      routerFor({ inquiryForm: { enabled: true } }).offHoursFormNotice(1, 'EN'),
+    );
+    expect(noHours).toBeNull();
+  });
+});

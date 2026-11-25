@@ -332,6 +332,11 @@
       "offHoursLink": "off-hours notice ›",
       "offHoursSuffix": "immediately."
     },
+    "inquiryForm": {
+      "title": "Outside business hours, open the email form",
+      "hint": "Instead of waiting for an agent, the customer gets an \"Email us\" button that opens the contact form. The recent chat and the order go with it to the support mailbox. During business hours customers still reach an agent.",
+      "needsHours": "Turn on business hours above, or this never applies."
+    },
     "callback": {
       "title": "Agent callback request",
       "hint": "After the delay or off-hours notice, the customer can leave a contact and an agent gets back to them later.",

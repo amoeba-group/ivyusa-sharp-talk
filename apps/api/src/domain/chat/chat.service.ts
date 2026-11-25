@@ -10,6 +10,7 @@ import {
   MODERATION_DECISION,
   SENDER_TYPE,
   CALLBACK_CHIP_ID,
+  INQUIRY_FORM_CHIP_ID,
   CHAT_CLOSE_DEFAULT_COPY,
   chatCopy,
   localized,
@@ -1623,9 +1624,12 @@ export class ChatService {
 
   /** The caller's own conversation (SEC-L3) — 404 otherwise. */
   /**
-   * Off hours with callback requests on (PLN-261026 D4): persist the off-hours
-   * notice with the callback chip and leave the thread with the AI. Returns the
-   * notice, or null when the normal handoff applies.
+   * Off hours, a way to be answered later instead of a queue nobody watches:
+   * - the email form, when the tenant turned it on (IVY PRD v1 E-02 b) — the
+   *   "Email us" chip opens it, and it carries the recent chat and the order;
+   * - otherwise callback requests (PLN-261026 D4) — the callback chip.
+   * Persists the notice with its chip and leaves the thread with the AI.
+   * Returns the notice, or null when the normal handoff applies.
    */
   private async offHoursCallback(
     tenantId: number,
@@ -1634,8 +1638,15 @@ export class ChatService {
     reason: EscalationReason,
   ): Promise<string | null> {
     let notice: string | null = null;
+    let chip = { id: CALLBACK_CHIP_ID, label: chatCopy(null, CHAT_CLOSE_DEFAULT_COPY.callbackChip, language) };
     try {
-      notice = await this.handoffRouter.offHoursCallbackNotice(tenantId, language);
+      const form = (await this.handoffRouter.offHoursFormNotice?.(tenantId, language)) ?? null;
+      if (form) {
+        notice = form;
+        chip = { id: INQUIRY_FORM_CHIP_ID, label: chatCopy(null, CHAT_CLOSE_DEFAULT_COPY.inquiryFormChip, language) };
+      } else {
+        notice = await this.handoffRouter.offHoursCallbackNotice(tenantId, language);
+      }
     } catch (e) {
       // Unreadable config: page the agents as before rather than drop the request.
       this.logger.warn(`off-hours callback check failed: ${(e as Error).message}`);
@@ -1644,9 +1655,11 @@ export class ChatService {
     await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, notice, language, {
       reason,
       offHours: true,
-      followUps: [{ id: CALLBACK_CHIP_ID, label: chatCopy(null, CHAT_CLOSE_DEFAULT_COPY.callbackChip, language) }],
+      followUps: [chip],
     });
-    this.logger.log(`off-hours callback offered (conversation ${conversationId}, ${reason})`);
+    this.logger.log(
+      `off-hours ${chip.id === INQUIRY_FORM_CHIP_ID ? 'email form' : 'callback'} offered (conversation ${conversationId}, ${reason})`,
+    );
     return notice;
   }
 

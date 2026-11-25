@@ -48,7 +48,7 @@ import { OrderDetailView } from '../orders/OrderDetail';
 import { chipBelongsTo } from '../notifications/tab-chips';
 import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
 // Deep import: a value import from `@sharptalk/types` breaks the browser build (CJS `export *`).
-import { CALLBACK_CHIP_ID } from '../../../../../packages/types/src/common/chat-close';
+import { CALLBACK_CHIP_ID, INQUIRY_FORM_CHIP_ID } from '../../../../../packages/types/src/common/chat-close';
 import { contactChannels, type InquiryInput } from '../../../../../packages/types/src/common/inquiry';
 
 type Inline = 'auth' | 'contactEmail' | 'callback' | 'orders' | 'consultCategory' | null;
@@ -731,6 +731,12 @@ export function ChatTab() {
         // Queue-delay / off-hours notice (PLN-261026 B4): a form, not a script.
         setShowEscalate(false);
         setInline('callback');
+        return;
+      case INQUIRY_FORM_CHIP_ID:
+        // Off hours with the email form on (IVY PRD v1 E-02 b): the contact
+        // form in the thread; the API mails the recent chat with it (E-01).
+        setShowEscalate(false);
+        addInsert('contactForm', label);
         return;
       case 'agent_connect':
         setShowEscalate(false);

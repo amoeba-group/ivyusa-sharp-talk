@@ -144,6 +144,13 @@ export interface HandoffConfig {
    */
   callback?: { enabled?: boolean; channels?: string[] };
   /**
+   * Outside business hours, offer the email form instead of a queue (IVY PRD
+   * v1 E-02, owner's choice b): the shopper hears so at once with an "Email
+   * us" chip, nobody is paged, the AI keeps the thread. Wins over `callback`
+   * when both are on. On shift, nothing changes. Needs `businessHours`.
+   */
+  inquiryForm?: { enabled?: boolean };
+  /**
    * Province → region code (PLN-261022 stage 1), e.g. { "Hồ Chí Minh": "south" }.
    * When a signed identify carries a province but no region, the region is filled
    * from here before the session is saved. Keys compare NFC + case-insensitively.

@@ -332,6 +332,11 @@
       "offHoursLink": "thông báo ngoài giờ ›",
       "offHoursSuffix": "."
     },
+    "inquiryForm": {
+      "title": "Ngoài giờ làm việc, mở form email",
+      "hint": "Thay vì chờ nhân viên, khách thấy nút \"Gửi email cho chúng tôi\" để mở form liên hệ. Đoạn chat gần nhất và đơn hàng được gửi kèm tới hộp thư hỗ trợ. Trong giờ làm việc khách vẫn được chuyển tới nhân viên.",
+      "needsHours": "Hãy bật giờ làm việc ở trên, nếu không tuỳ chọn này không bao giờ áp dụng."
+    },
     "callback": {
       "title": "Yêu cầu nhân viên gọi lại",
       "hint": "Sau thông báo chậm trễ hoặc ngoài giờ, khách có thể để lại thông tin liên hệ và nhân viên sẽ liên hệ sau.",

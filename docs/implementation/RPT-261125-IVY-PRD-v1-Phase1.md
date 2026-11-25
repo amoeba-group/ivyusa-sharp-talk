@@ -73,6 +73,37 @@ File: `inquiry.service.ts`, `inquiry.entity.ts`, `inquiry.request.ts`, `inquiry.
 
 File: `campaign.service.ts`, `campaign.entity.ts`, `campaign.request.ts`, `campaign.mapper.ts`, `notification.service.ts` (`marketingRefusers`), `error-code.constant.ts` (E5166), `CampaignsPage.tsx`, `campaigns.hooks.ts`, `campaigns.service.ts`.
 
+### 1.8 Khi AI bí / khách xin gặp người (E-02) — chủ dự án chọn **b** (2026-11-25)
+
+PLN §4 xếp E-02 vào giai đoạn 3. Chủ dự án đã chọn **b** và việc này không cần Bedrock, nên làm luôn.
+
+- **Trong giờ làm:** như cũ, chuyển nhân viên chat.
+- **Ngoài giờ:**
+  - nếu tenant bật tuỳ chọn mới thì AI báo "ngoài giờ hỗ trợ, gửi câu hỏi qua form bên dưới" kèm chip **Email us**;
+  - chạm chip mở form liên hệ ngay trong đoạn chat; form kèm mã đơn và 20 tin gần nhất (E-01);
+  - không gọi nhân viên, cuộc chat vẫn ở với AI.
+- Áp dụng cho cả hai đường: AI tự chuyển (độ tin thấp, từ khoá xin gặp người) và nút "Chat with an agent".
+- **Thứ tự ưu tiên ngoài giờ:** form email → yêu cầu gọi lại (đã có, PLN-261026) → email trả lời sau (đã có).
+- **Console:** AI Settings → Handoff → ô **"Outside business hours, open the email form"**. Ô này cần bật giờ làm việc; chưa bật thì console nhắc. 6 ngôn ngữ.
+- **Không SQL:** cấu hình nằm trong JSON `handoff_config` có sẵn.
+
+File:
+
+| Nơi | File |
+|---|---|
+| Kiểu dữ liệu chung | `packages/types/src/common/chat-close.ts` (`INQUIRY_FORM_CHIP_ID`, câu báo và nhãn chip 6 ngôn ngữ) |
+| API | `tenant-ai-config.entity.ts` (`inquiryForm`), `ai-config.service.ts`, `handoff-router.service.ts` (`offHoursFormNotice`), `chat.service.ts` (`offHoursCallback`), `scenario-scripts.ts` |
+| Widget | `ChatTab.tsx` |
+| Console | `HandoffSection.tsx`, `ai-settings.service.ts`, `aiSetting.json` ×6 |
+
+Test:
+
+- `handoff-router.service.spec.ts`: ngoài giờ + bật → câu báo theo ngôn ngữ; trong giờ / tắt / không có giờ làm → null.
+- `chat.service.off-hours-callback.spec.ts`:
+  - chip Email us thay cho chip gọi lại;
+  - không gọi ai, không chuyển sang "waiting";
+  - nút "Chat with an agent" cũng vậy.
+
 ### 1.7 SQL
 
 `sql/261125-prd-v1-phase1.sql`:
@@ -100,6 +131,7 @@ Idempotent: chạy 2 lần trên MySQL 8 máy local không lỗi. `sql/artefacts
 |---|---|---|
 | 1. Duyệt PLN (và 2 câu hỏi CSAT / E-02 cho các giai đoạn sau) | Chủ dự án | ✅ 2026-11-25 — CSAT **a** (giữ Figma), E-02 **b** (ngoài giờ → form email) |
 | 2. Chạy `sql/261125-prd-v1-phase1.sql` trên DB production | Chủ dự án | ✅ 2026-11-25 |
-| 3. Push `deploy/talk-ivyusa` → CI → tự deploy (gồm cả Bedrock `d2073407`, vô hại khi chưa có `.env`). Trước khi push: không có Re-sync đơn đang chạy (04:13 UTC) | Tôi | ⏳ đang push |
+| 3. Push `deploy/talk-ivyusa` → CI → tự deploy (gồm cả Bedrock `d2073407`, vô hại khi chưa có `.env`). Trước khi push: không có Re-sync đơn đang chạy (04:13 UTC) | Tôi | Lần 1 (`cfdd757b`): CI đỏ ở 1 test cũ của `packages/types` coi `refunded` là trạng thái lạ → **không deploy**. Đã sửa test, push lại cùng E-02 b |
 | 4. Console → AI Settings: "Payment check" → **Payment status card**; "Feedback" → **Feedback form** → Save | Chủ dự án (hoặc tôi, khi được cho phép) | ⏳ sau 3 |
 | 5. Thử trên talk.ivyusa.com: New / Recent, nhấn giữ xoá, xe tải, Payment check, Feedback, form có mã đơn | Chủ dự án | ⏳ |
+| 6. E-02 b: AI Settings → Handoff → bật giờ làm việc (giờ của IVY) + ô "Outside business hours, open the email form" → Save | Chủ dự án | ⏳ |

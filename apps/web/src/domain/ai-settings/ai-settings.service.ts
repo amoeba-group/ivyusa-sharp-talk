@@ -149,6 +149,8 @@ export interface HandoffConfig {
   queueTimeout?: { afterMinutes: number; notice?: Partial<Record<ScenarioLang, string>> };
   /** Callback request (PLN-261026 B2): which contact kinds the shopper may leave. */
   callback?: { enabled: boolean; channels: Array<'email' | 'phone'> };
+  /** Off hours: the "Email us" chip opens the contact form instead of a queue (IVY PRD v1 E-02 b). */
+  inquiryForm?: { enabled: boolean };
   /** Province → region code, fills a signed identity's missing region (PLN-261022). */
   provinceRegions?: Record<string, string>;
   /** Kept as-is: edited elsewhere, so the console must not drop it on save. */

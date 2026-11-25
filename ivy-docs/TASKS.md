@@ -375,3 +375,4 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - Campaign: chọn người nhận theo email; khách đã từ chối marketing / CCPA không nhận Promo.
 - SQL: `sql/261125-prd-v1-phase1.sql` (2 cột) — ✅ đã chạy trên production 2026-11-25. Sau deploy: AI Settings → nút "Payment check" chọn hành động **Payment status card**, nút "Feedback" chọn **Feedback form**.
 - **Chủ dự án quyết 2026-11-25:** CSAT **a** (giữ nhãn Figma), E-02 **b** (trong giờ chuyển nhân viên chat, ngoài giờ mở form email).
+- E-02 b đã làm (RPT §1.8): tuỳ chọn "Outside business hours, open the email form" trong AI Settings → Handoff; cần bật giờ làm việc.

@@ -104,6 +104,8 @@ export function HandoffSection() {
   // Callback request (PLN-261026 B2).
   const [callbackOn, setCallbackOn] = useState(false);
   const [callbackChannels, setCallbackChannels] = useState<CallbackChannel[]>([...CALLBACK_CHANNEL_VALUES]);
+  // Off hours: the email form instead of a queue (IVY PRD v1 E-02 b).
+  const [formOn, setFormOn] = useState(false);
 
   useEffect(() => {
     const h = config?.handoffConfig;
@@ -142,6 +144,7 @@ export function HandoffSection() {
     setQueueMin(String(h.queueTimeout?.afterMinutes ?? QUEUE_TIMEOUT_DEFAULT));
     setQueueNotice(h.queueTimeout?.notice ?? {});
     setCallbackOn(h.callback?.enabled === true);
+    setFormOn(h.inquiryForm?.enabled === true);
     setCallbackChannels(
       h.callback?.channels?.length
         ? h.callback.channels.filter((c): c is CallbackChannel => (CALLBACK_CHANNEL_VALUES as string[]).includes(c))
@@ -258,6 +261,7 @@ export function HandoffSection() {
         callbackOn || config?.handoffConfig?.callback
           ? { enabled: callbackOn, channels: callbackChannels }
           : undefined,
+      inquiryForm: formOn || config?.handoffConfig?.inquiryForm ? { enabled: formOn } : undefined,
     };
     if (queueOn) {
       const queueCopy = Object.fromEntries(
@@ -442,6 +446,23 @@ export function HandoffSection() {
                   {t('handoff.queueTimeout.offHoursSuffix')}
                 </p>
               </div>
+            )}
+          </div>
+
+          {/* Off hours: the email form instead of a queue (IVY PRD v1 E-02 b). */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={formOn}
+                onChange={(e) => setFormOn(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              <span className="font-medium">{t('handoff.inquiryForm.title')}</span>
+            </label>
+            <p className="mt-0.5 pl-6 text-[11px] text-gray-400">{t('handoff.inquiryForm.hint')}</p>
+            {formOn && !hoursOn && (
+              <p className="mt-1 pl-6 text-[11px] text-warning-ink">{t('handoff.inquiryForm.needsHours')}</p>
             )}
           </div>
 

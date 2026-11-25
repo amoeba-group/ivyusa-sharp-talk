@@ -1,5 +1,11 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
-import { canonicalRegion, hasAssigneeGroup, localized, routingConditionDef } from '@sharptalk/types';
+import {
+  CHAT_CLOSE_DEFAULT_COPY,
+  canonicalRegion,
+  hasAssigneeGroup,
+  localized,
+  routingConditionDef,
+} from '@sharptalk/types';
 import { RoutingAssigneeService } from './routing-assignee.service';
 import type { ResolvedAssignees } from './routing-assignee.service';
 import type { LocalizedText, RoutingCondition, RoutingConditionField } from '@sharptalk/types';
@@ -342,6 +348,18 @@ export class HandoffRouterService {
     if (!config?.callback?.enabled || !config.businessHours) return null;
     if (this.withinBusinessHours(config.businessHours)) return null;
     return this.notice(config, language);
+  }
+
+  /**
+   * Off hours with the email form on (IVY PRD v1 E-02 b): the notice that
+   * offers the form, or null to route as usual (on shift, no hours set, form
+   * off). The callback and email-reply routes are untouched by this.
+   */
+  async offHoursFormNotice(tenantId: number | null, language: string): Promise<string | null> {
+    const config = await this.aiConfig.getHandoffConfig(tenantId);
+    if (!config?.inquiryForm?.enabled || !config.businessHours) return null;
+    if (this.withinBusinessHours(config.businessHours)) return null;
+    return localized(CHAT_CLOSE_DEFAULT_COPY.offHoursFormNotice, language);
   }
 
   private notice(config: HandoffConfig, language: string): string {

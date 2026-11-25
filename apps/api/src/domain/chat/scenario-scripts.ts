@@ -435,6 +435,8 @@ export function resolveScriptAction(action: string): string {
 // `affiliate_apply` (ivy-docs T12): the contact form, filled in for an
 // affiliate application — it lands in Inquiries like any contact form.
 export const CONTROL_FOLLOW_UP_IDS = new Set([
+  // IVY PRD v1 E-02 b: "Email us" opens the contact form (INQUIRY_FORM_CHIP_ID).
+  'inquiry_form',
   'agent_connect',
   'my_orders',
   'end_chat',

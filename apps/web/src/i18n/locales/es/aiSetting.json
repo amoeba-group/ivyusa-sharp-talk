@@ -332,6 +332,11 @@
       "offHoursLink": "aviso fuera de horario ›",
       "offHoursSuffix": "."
     },
+    "inquiryForm": {
+      "title": "Fuera del horario, abrir el formulario de correo",
+      "hint": "En lugar de esperar a un agente, el cliente ve un botón «Escríbenos» que abre el formulario de contacto. El chat reciente y el pedido se envían con él al buzón de soporte. En horario de atención los clientes siguen hablando con un agente.",
+      "needsHours": "Activa el horario de atención arriba; si no, esto no se aplica nunca."
+    },
     "callback": {
       "title": "Solicitud de devolución de contacto",
       "hint": "Tras el aviso de demora o fuera de horario, el cliente puede dejar un contacto y un agente le contactará más tarde.",

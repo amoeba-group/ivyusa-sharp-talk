@@ -706,5 +706,6 @@ export function normalizeQueueAndCallback(config: HandoffConfig | null): Handoff
       channels: [...new Set(channels)],
     };
   }
+  if (config.inquiryForm != null) out.inquiryForm = { enabled: config.inquiryForm.enabled === true };
   return out;
 }
