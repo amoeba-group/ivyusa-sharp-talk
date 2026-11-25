@@ -392,7 +392,7 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - SQL: `sql/261125-prd-v1-phase4-review-requests.sql` (3 cột + 1 index) — ✅ đã chạy trên production 2026-11-25.
 - Production (chủ dự án đồng ý): Chat close bật (5 / 3 phút); Review requests 7 ngày; câu Cancel order mới; 2 engine Bedrock (Sonnet, Haiku) Test OK — chưa gán chức năng, chờ PM duyệt kho kiến thức.
 
-### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 5: lời nhắn do AI viết (C-02) + câu hỏi gợi ý gõ tự do — ✅ live 08:18 UTC (`2be82093`), chờ gán engine thật cho chat · [PLN](../docs/plan/PLN-261125-IVY-PRD-v1-Phase5.md) · [TCR](../docs/test/TCR-261125-IVY-PRD-v1-Phase5.md) · [RPT](../docs/implementation/RPT-261125-IVY-PRD-v1-Phase5.md)
+### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 5: lời nhắn do AI viết (C-02) + câu hỏi gợi ý gõ tự do — ✅ live 08:18 UTC (`2be82093`); AI bật 2026-11-25 (chat → Haiku, rag → Sonnet) · [PLN](../docs/plan/PLN-261125-IVY-PRD-v1-Phase5.md) · [TCR](../docs/test/TCR-261125-IVY-PRD-v1-Phase5.md) · [RPT](../docs/implementation/RPT-261125-IVY-PRD-v1-Phase5.md)
 - Câu trả lời của kịch bản (Exchange & refund, Cancel order, Affiliate, …) do AI viết lại theo ngôn ngữ của khách. Bộ kiểm giữ nguyên số, link, email và các dòng bước; sai một điều là dùng câu gốc.
 - Câu dưới thẻ Payment check / Delivery inquiry / Stock inquiry do AI viết từ dữ liệu của thẻ (`POST /chat/card-note`); cần khách đã đồng ý Chat & AI.
 - Chỉ có tác dụng khi chức năng **chat** có engine thật (đề xuất Haiku). Production còn Stub nên chưa đổi gì.

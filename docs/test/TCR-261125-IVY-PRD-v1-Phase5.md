@@ -72,7 +72,18 @@ Với Stub, API trả `text: null`, nên widget giữ câu cũ và mọi asserti
 
 Sau khi thêm câu hỏi gợi ý gõ tự do: `08-chat-home`, `08-chat-follows-reply`, `10`, `12` = **26 / 26**. Với Stub, bộ phân loại trả fallback nên nhánh mới không chạy trong e2e; nhánh được kiểm ở unit.
 
-## 3. Còn phải kiểm khi bật AI
+## 3. Kiểm khi bật AI
+
+**Kết quả 2026-11-25, production, ngay sau khi gán engine.** Một cuộc chat khách thử, đã kết thúc sau khi thử.
+
+| Thử | Kết quả |
+|---|---|
+| Kịch bản `cancel_refund` · `cancel_order` · `affiliate` | 1,1–1,2 giây. Cancel order được viết lại tự nhiên; link `account.ivyusa.com/orders` và email giữ nguyên. Affiliate: 3 dòng bước, chữ đậm, "1–3" và "10%" giữ nguyên; widget vẫn tách được thẻ bước (dấu `:` sau chữ đậm). `cancel_refund`: gần như giữ nguyên câu |
+| "Recommend your most popular product" | 1,7 giây: câu + chip 11 danh mục, không qua RAG |
+| "How long does a refund take?" | 3,1 giây: câu trả lời của Sonnet từ kho kiến thức (thẻ, mail-in, PayPal, gift card), không chuyển người |
+| Card note popular `nails` · stock "gel" | 1,8 / 1,3 giây: câu đúng dữ liệu (cách chọn, còn hàng, giá 9.99 USD) |
+
+**Danh sách kiểm ban đầu:**
 
 Kiểm khi chức năng chat của production có Bedrock (Haiku):
 

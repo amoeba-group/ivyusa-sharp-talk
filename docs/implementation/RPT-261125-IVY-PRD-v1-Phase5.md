@@ -33,5 +33,5 @@
 |---|---|---|
 | 1. Push (không có SQL). Kiểm trước: không có re-sync đơn nào đang chạy | Tôi | ✅ `c9add925` (kịch bản + thẻ), `69661c44` (Popular), `2be82093` (câu hỏi gợi ý gõ tự do): CI xanh cả 3, máy chủ tự deploy |
 | 2. Kiểm chỉ đọc: `POST /chat/card-note` trả `{text:null}` khi Stub; widget không đổi | Tôi | ✅ 2026-11-25 08:18 UTC: bundle `index-C9w_IWeU.js` có `/chat/card-note` và `popular_category:`; `card-note` loại payment và popular đều trả 200 `{text: null}` |
-| 3. Gán engine: Haiku → chat, Sonnet → rag (sau khi PM duyệt kho kiến thức) | Chủ dự án bảo | ⏳ |
-| 4. Kiểm khi đã bật AI (TCR §3) | Tôi | ⏳ |
+| 3. Gán engine: Haiku → chat, Sonnet → rag | Tôi, theo lệnh chủ dự án 2026-11-25 ("ok, gán Haiku cho chat và Sonnet cho rag luôn") | ✅ `PUT /ai-settings/chat` → Claude Haiku 5.5 · Bedrock, `/rag` → Claude Sonnet 5.5 · Bedrock. Tham số cũ giữ nguyên (chat max_tokens 512, rag 1024, temperature 0.3). coach kế thừa Sonnet; summary / assist / moderation vẫn Stub |
+| 4. Kiểm khi đã bật AI (TCR §3) | Tôi | ✅ 1 cuộc chat khách thử, rồi kết thúc. Kết quả ở TCR §3 |
