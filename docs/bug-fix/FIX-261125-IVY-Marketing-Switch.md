@@ -5,6 +5,7 @@
 | Phát hiện | 2026-11-25, khi soạn hướng dẫn test cho IVY (mục 35). Chủ dự án: "sửa công tắc mục 35 cho đúng luôn" |
 | Ảnh hưởng | Widget → ⚙ Settings. Khách chưa từng chọn thấy công tắc **bật** (như đã từ chối), nhưng vẫn nhận khuyến mãi và yêu cầu review trong widget |
 | Liên quan | PRD v1 S-02 · N-04 · N-05; [FIX-261125-IVY-Review-Request-Not-Shown](FIX-261125-IVY-Review-Request-Not-Shown.md) |
+| Đã sửa | `f4faad2f`, CI xanh, live 2026-11-25 08:59 UTC (bundle `index-D0MyTYaF.js` đọc `optOut ?? false`) |
 
 ## 1. Nguyên nhân gốc
 
