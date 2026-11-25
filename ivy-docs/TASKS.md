@@ -399,3 +399,4 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - Câu hỏi gõ tự do kiểu "Recommend your most popular product" đi qua bộ chọn sản phẩm (PRD slide 16–17): AI trả lời kèm chip danh mục, bấm chip mở Popular products.
 - Bản sửa BUG-045 (yêu cầu review N-05 hiện ở chip Review + badge): `0ec663fa`.
 - Hướng dẫn test cho IVY (EN + KO, 44 mục): [GUIDE-261125-IVY-Test-Guide](../docs/guide/GUIDE-261125-IVY-Test-Guide.md).
+- Moderation → Haiku: kiểm theo tiêu chí an toàn chung. Nội dung luật context #2 của IVY chưa đưa vào lời dặn cho model; giữ như vậy tới khi có Guardrail của IVY (chủ dự án quyết 2026-11-25).

@@ -36,3 +36,8 @@
 | 3. Gán engine: Haiku → chat, Sonnet → rag | Tôi, theo lệnh chủ dự án 2026-11-25 ("ok, gán Haiku cho chat và Sonnet cho rag luôn") | ✅ `PUT /ai-settings/chat` → Claude Haiku 5.5 · Bedrock, `/rag` → Claude Sonnet 5.5 · Bedrock. Tham số cũ giữ nguyên (chat max_tokens 512, rag 1024, temperature 0.3). coach kế thừa Sonnet; summary / assist / moderation vẫn Stub |
 | 4. Kiểm khi đã bật AI (TCR §3) | Tôi | ✅ 1 cuộc chat khách thử, rồi kết thúc. Kết quả ở TCR §3 |
 | 5. Gán moderation → Claude Haiku 5.5 · Bedrock | Tôi, theo lệnh chủ dự án 2026-11-25 ("ok, gán Haiku cho moderation luôn") | ✅ Tham số giữ nguyên (max_tokens 1024, temperature 0.3). Tenant có luật `context` #2 (chặn, scope both) nên bộ phân loại AI chạy cho mọi câu AI **và câu của nhân viên**. Thử lại: không chặn nhầm câu nào; chậm thêm khoảng 1 giây (RAG 4,5 giây, câu dưới thẻ 2,3–2,9 giây). Lưu ý: khi Bedrock lỗi, câu bị chặn (fail-safe FR-069) |
+
+**Quyết định 2026-11-25 (chủ dự án: "giữ như hiện tại, chờ Guardrail của IVY"):** bộ phân loại AI chỉ dùng tiêu chí an toàn chung (`contextFlagged`). Nội dung của luật context #2 ("Flag medical/legal advice or unverifiable refund promises") **chưa** được đưa vào lời dặn cho model.
+
+- Giữ nguyên tới khi có Guardrail của IVY.
+- Lý do: đưa nội dung luật vào có thể chặn cả câu trả lời đúng chính sách, ví dụ "hoàn tiền thường 5–10 ngày làm việc" lấy từ kho kiến thức.
