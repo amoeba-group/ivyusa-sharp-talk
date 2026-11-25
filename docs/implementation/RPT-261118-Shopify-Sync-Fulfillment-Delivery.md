@@ -44,8 +44,8 @@ Kênh thông báo: hiện chỉ thông báo trong widget là thật; email / SMS
 | SQL | Không có |
 | Commit / CI | `f92e0659` · IVY CI/CD run `44236718563` xanh (2026-11-18 04:25 UTC) |
 | Server `talkaibotprd01` | ✅ Có trong mọi bản deploy sau 2026-11-18 (API đang chạy bản `f4faad2f`, 2026-11-25) |
-| Re-sync trên production | 🟡 Không có ghi nhận ngày. Production có 47.961 dòng `fulfillments`, mà chỉ code này ghi bảng đó (webhook không tới) → đã có ít nhất một lượt đọc lại toàn bộ sau 2026-11-18. Ngày: truy vấn C ở §5 |
-| Kết quả đo PLN §2.5 | 🟡 Lần 1 (2026-11-25): Shopify cho đọc kiện; chưa kết luận được về `updated_at` (§5) |
+| Re-sync trên production | ✅ 2026-11-18. Lúc đó không ghi lại; ngày suy ra từ §5 lần 2, bảng C (41.568 dòng ghi lần cuối ngày đó) |
+| Kết quả đo PLN §2.5 | ✅ 2026-11-25 (§5): đơn UPS / USPS giao xong về qua lượt 30 phút → **không cần** bước "soát lại đơn đang giao". Phát hiện mới: kiện Amazon Logistics và kiện không có hãng không bao giờ có trạng thái (ivy-docs BUG-047) |
 
 ## 5. Kết quả đo trên production
 
@@ -81,9 +81,9 @@ Ngày giao đã ghi: 2026-11-25 ×1, 2026-11-23 ×2.
    - dữ liệu cũ: kiện đi tiếp sau lần đọc cuối mà đơn không đổi `updated_at`, nên không được đọc lại.
 4. **N-05.** Mới 3 đơn có ngày giao, chưa đơn nào tới hạn. Yêu cầu review tự động đầu tiên vào khoảng 2026-11-30. Đợt IVY test từ 2026-11-27 sẽ không thấy yêu cầu tự động nào; mục 42 của hướng dẫn test chỉ kiểm cài đặt nên không lệch.
 
-### Lần 2 — cần làm
+### Lần 2 — 2026-11-25 (chủ dự án chạy truy vấn A–C, chỉ đọc)
 
-**A–C. Truy vấn chỉ đọc** (`docker exec -i sharptalk_mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'`, câu lệnh qua stdin):
+Truy vấn (`docker exec -i sharptalk_mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'`, câu lệnh qua stdin):
 
 ```sql
 -- A. Theo hãng vận chuyển
@@ -104,9 +104,48 @@ SELECT DATE(updated_at) AS written_on,
   FROM fulfillments GROUP BY written_on ORDER BY written_on DESC LIMIT 12;
 ```
 
-Cách đọc:
+**A. Theo hãng vận chuyển**
 
-- `in_transit` / `shipped` còn nhiều ở đơn đặt từ 3 tuần trước trở về trước, cùng hãng với các đơn đã Delivered → dữ liệu cũ → cần bước "soát lại đơn đang giao" (PLN §2.5, đã duyệt 3a).
-- `shipped` dồn vào những hãng không có đơn Delivered nào → hãng không gửi trạng thái về Shopify. Đồng bộ không sửa được; báo IVY.
+| Hãng | shipped | in_transit | delivered |
+|---|---|---|---|
+| Amazon Logistics US | 25.184 | 0 | 0 |
+| UPS | 222 | 1.079 | 11.008 |
+| (không có hãng) | 10.047 | 1 | 179 |
+| USPS | 12 | 46 | 183 |
 
-**D. Log ban ngày ở Mỹ:** chạy lại lệnh log ở §3 bước 1 (bỏ `--since 40m`, thêm `| tail -n 60`) vào sáng 2026-11-26 giờ Việt Nam, khi chưa có deploy nào dựng lại API. Nếu giao hàng làm đổi `updated_at`, các lượt từ khoảng 14:00 UTC phải đọc được nhiều kiện đã giao mỗi lượt. Nếu vẫn chỉ 0–2 kiện thì giao hàng không làm đổi đơn.
+**B. Theo tuần đặt hàng** (ngày thứ Hai của tuần)
+
+| Tuần | shipped | in_transit | delivered |
+|---|---|---|---|
+| 2026-11-23 | 861 | 334 | 5 |
+| 2026-11-16 | 3.857 | 729 | 920 |
+| 2026-11-09 | 3.965 | 41 | 1.793 |
+| 2026-11-02 | 3.291 | 2 | 1.276 |
+| 2026-10-26 | 2.799 | 2 | 1.244 |
+| 2026-10-19 | 2.658 | 2 | 1.574 |
+| 2026-10-12 | 2.659 | 4 | 1.246 |
+| 2026-10-05 | 2.932 | 2 | 1.076 |
+| 2026-09-28 | 2.468 | 1 | 580 |
+| 2026-09-21 | 2.412 | 2 | 768 |
+| 2026-09-14 | 1.550 | 2 | 761 |
+| 2026-09-07 | 923 | 2 | 32 |
+
+**C. Theo ngày dòng được ghi lần cuối**
+
+| Ngày | shipped | in_transit | delivered |
+|---|---|---|---|
+| 2026-11-25 | 97 | 320 | 35 |
+| 2026-11-24 | 678 | 540 | 195 |
+| 2026-11-23 | 1.084 | 121 | 128 |
+| 2026-11-22 | 5 | 6 | 19 |
+| 2026-11-21 | 444 | 8 | 343 |
+| 2026-11-20 | 601 | 26 | 632 |
+| 2026-11-19 | 612 | 49 | 450 |
+| 2026-11-18 | 31.944 | 56 | 9.568 |
+
+**Kết luận:**
+
+1. **Re-sync chạy ngày 2026-11-18:** 41.568 dòng được ghi lần cuối ngày đó (bảng C).
+2. **PLN §2.5: không cần bước "soát lại đơn đang giao".** Sau 2026-11-18, ngày nào cũng có đơn chuyển sang Delivered qua lượt 30 phút: 19–632 đơn mỗi ngày, thấp nhất vào Chủ nhật (bảng C). In Transit dồn vào 2 tuần gần nhất; các tuần cũ hơn chỉ còn 1–4 kiện (bảng B). Có 56 kiện In Transit không đổi từ 2026-11-18, có thể là kiện chậm hoặc bị hoàn; nếu cần thì kiểm vài đơn bằng Look up on Shopify.
+3. **Kiện `shipped` không phải dữ liệu cũ.** Đó là kiện mà Shopify không có trạng thái: Amazon Logistics US có 25.184 kiện, không kiện nào In Transit hay Delivered; kiện không có hãng có 10.047. Cộng lại là 73 % số kiện. Với các đơn này, widget hiện In Transit mãi, không có thông báo Delivered, và N-05 không gửi yêu cầu review. Đồng bộ không sửa được vì Shopify không có dữ liệu. Theo dõi ở ivy-docs BUG-047.
+4. Lần đo D (log ban ngày ở Mỹ) không cần nữa: bảng C đã trả lời câu hỏi.
