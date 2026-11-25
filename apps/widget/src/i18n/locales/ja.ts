@@ -25,8 +25,8 @@ export const ja: Translation = {
       inquiries: 'お問い合わせ',
     },
     groups: {
-      today: '今日のお知らせ',
-      yesterday: '昨日のお知らせ',
+      new: '新着',
+      recent: '最近',
     },
     time: {
       justNow: 'たった今',
@@ -34,7 +34,6 @@ export const ja: Translation = {
       minutes_other: '{{count}}分前',
       hours_one: '{{count}}時間前',
       hours_other: '{{count}}時間前',
-      yesterday: '昨日',
       days_one: '{{count}}日前',
       days_other: '{{count}}日前',
     },
@@ -45,11 +44,15 @@ export const ja: Translation = {
       review: 'レビュー',
       pending_payment: '入金待ち',
       cancel_requested: 'キャンセル申請',
+      cancelled: 'キャンセル済み',
+      refunded: '返金済み',
     },
     itemsMore_one: '{{title}} 他{{count}}点',
     itemsMore_other: '{{title}} 他{{count}}点',
     unread: '未読',
     markRead: '既読にする',
+    rowMenu: 'お知らせの操作',
+    deleteOne: '削除',
     select: '選択',
     cancelSelect: 'キャンセル',
     /** Row checkbox name, per row (T07 D4). */
@@ -327,6 +330,7 @@ export const ja: Translation = {
   },
 
   orders: {
+    showDelivery: '配送状況を見る',
     issues: {
       status: {
       pendingPayment: '入金待ち',

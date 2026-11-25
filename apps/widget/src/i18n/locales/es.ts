@@ -25,16 +25,15 @@ export const es: Translation = {
       inquiries: 'Consultas',
     },
     groups: {
-      today: 'Notificaciones de hoy',
-      yesterday: 'Notificaciones de ayer',
+      new: 'Nuevas',
+      recent: 'Recientes',
     },
     time: {
       justNow: 'Ahora mismo',
       minutes_one: 'Hace {{count}} min',
       minutes_other: 'Hace {{count}} min',
-      hours_one: 'Hace {{count}} h',
-      hours_other: 'Hace {{count}} h',
-      yesterday: 'Ayer',
+      hours_one: 'Hace {{count}} hora',
+      hours_other: 'Hace {{count}} horas',
       days_one: 'Hace {{count}} día',
       days_other: 'Hace {{count}} días',
     },
@@ -45,11 +44,15 @@ export const es: Translation = {
       review: 'Reseña',
       pending_payment: 'Pago pendiente',
       cancel_requested: 'Cancelación solicitada',
+      cancelled: 'Cancelado',
+      refunded: 'Reembolsado',
     },
     itemsMore_one: '{{title}} + {{count}} artículo',
     itemsMore_other: '{{title}} + {{count}} artículos',
     unread: 'Sin leer',
     markRead: 'Marcar como leído',
+    rowMenu: 'Acciones de la notificación',
+    deleteOne: 'Eliminar',
     select: 'Seleccionar',
     cancelSelect: 'Cancelar',
     /** Row checkbox name, per row (T07 D4). */
@@ -323,6 +326,7 @@ export const es: Translation = {
   },
 
   orders: {
+    showDelivery: 'Ver el estado del envío',
     issues: {
       status: {
       pendingPayment: 'Pago pendiente',

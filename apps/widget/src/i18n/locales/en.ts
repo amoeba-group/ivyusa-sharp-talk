@@ -22,18 +22,18 @@ export const en = {
       review: 'Review',
       inquiries: 'Inquiries',
     },
+    /** New = unread, Recent = read (IVY PRD v1 slide 9). */
     groups: {
-      today: "Today's",
-      yesterday: "Yesterday's",
+      new: 'New',
+      recent: 'Recent',
     },
-    /** Row times (ivy-docs SPEC BR-05): "Just now", "10mins ago", "3h ago"… */
+    /** Elapsed time, rounded down (IVY PRD v1 slide 9): "Just now", "5 min ago", "2 hours ago", "3 days ago". */
     time: {
       justNow: 'Just now',
-      minutes_one: '{{count}}min ago',
-      minutes_other: '{{count}}mins ago',
-      hours_one: '{{count}}h ago',
-      hours_other: '{{count}}h ago',
-      yesterday: 'Yesterday',
+      minutes_one: '{{count}} min ago',
+      minutes_other: '{{count}} min ago',
+      hours_one: '{{count}} hour ago',
+      hours_other: '{{count}} hours ago',
       days_one: '{{count}} day ago',
       days_other: '{{count}} days ago',
     },
@@ -45,12 +45,16 @@ export const en = {
       review: 'Review',
       pending_payment: 'Pending payment',
       cancel_requested: 'Cancel requested',
+      cancelled: 'Cancelled',
+      refunded: 'Refunded',
     },
     /** Order row summary (SPEC BR-08). */
     itemsMore_one: '{{title}} + {{count}} item',
     itemsMore_other: '{{title}} + {{count}} items',
     unread: 'Unread',
     markRead: 'Mark as read',
+    rowMenu: 'Notification actions',
+    deleteOne: 'Delete',
     select: 'Select',
     cancelSelect: 'Cancel',
     /** Row checkbox name, per row (T07 D4). */
@@ -325,6 +329,7 @@ export const en = {
   },
 
   orders: {
+    showDelivery: 'Show delivery status',
     issues: {
       status: {
       pendingPayment: 'Payment pending',

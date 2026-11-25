@@ -12,7 +12,7 @@ import { formatMoney } from '../../lib/format';
 import { addressLines, displayOrderNumber } from '../../lib/address';
 import type { OrderAddress } from '../../lib/types';
 import { TrackingStepper } from './TrackingStepper';
-import { isDelivered as isOrderDeliveredStatus } from './order-status';
+import { isDelivered as isOrderDeliveredStatus, isInTransit as isOrderInTransitStatus } from './order-status';
 import { ReviewForm } from './ReviewForm';
 
 /**
@@ -159,11 +159,17 @@ export function OrderDetailView({
   sessionToken,
   onBack,
   onAsk,
+  onShowDelivery,
 }: {
   orderId: string;
   sessionToken: string | null;
   onBack: () => void;
   onAsk: (orderNumber: string) => void;
+  /**
+   * The truck button beside the order number (IVY PRD v1 slide 7 ②): the
+   * Delivery chip, this order first. Absent where no tab shows deliveries.
+   */
+  onShowDelivery?: (orderId: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   const analytics = useAnalytics();
@@ -232,8 +238,31 @@ export function OrderDetailView({
             badge stays: the list row that led here shows one, and dropping it
             here makes the same order look like two (PLN §2-1). */}
         <div className="mb-3 flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold text-gray-900">
-            {displayOrderNumber(order.orderNumber)}
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="text-sm font-semibold text-gray-900">
+              {displayOrderNumber(order.orderNumber)}
+            </span>
+            {/* PRD v1 slide 7 ②: the delivery icon next to the order number,
+                with an orange dot while the parcel is on its way. */}
+            {onShowDelivery && (
+              <button
+                type="button"
+                data-testid="order-delivery-link"
+                onClick={() => onShowDelivery(orderId)}
+                aria-label={t('orders.showDelivery')}
+                title={t('orders.showDelivery')}
+                className="relative rounded-full p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <Truck className="h-4 w-4" aria-hidden />
+                {isOrderInTransitStatus(order) && (
+                  <span
+                    data-testid="order-delivery-dot"
+                    aria-hidden
+                    className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-warning ring-2 ring-white"
+                  />
+                )}
+              </button>
+            )}
           </span>
           {/* The same pill as the notification row that led here, by status
               code ("Confirmed", not the raw "Paid") — BUG-011 on this screen. */}

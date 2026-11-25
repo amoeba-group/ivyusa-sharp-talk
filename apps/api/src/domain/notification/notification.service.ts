@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Notification } from './entity/notification.entity';
 import { NotificationPref } from './entity/notification-pref.entity';
 import { Session } from '../session/entity/session.entity';
@@ -55,6 +55,52 @@ const ORDER_NOTICE_UNREAD_MS = 24 * 60 * 60 * 1000;
 
 function orderNoticeLockKey(customerId: number): string {
   return `notif:order-notices:${customerId}`;
+}
+
+/**
+ * The notices that track one order's status (IVY PRD v1 slide 9): `payment`
+ * (Confirmed, Cancelled, Refunded) and `shipping` (each delivery stage). A
+ * review request is about an item, not the order's status, and is not one.
+ */
+const ORDER_STATUS_NOTICE_CATEGORIES: readonly string[] = ['payment', 'shipping'];
+
+/** Read notices stay listed this long — "Recent keeps last 30 days" (PRD v1 slide 9). */
+const RECENT_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Enough unread rows to count any real badge; past this the number means nothing. */
+const UNREAD_SCAN_MAX = 500;
+
+/**
+ * The badge: how many cards sit in New, at most one per order (PRD v1 slide 9
+ * rule 5). Two unread status notices of the same order are one card's worth of
+ * news — the newer one; the older is history.
+ */
+export function countNewCards(
+  rows: ReadonlyArray<Pick<Notification, 'id' | 'category' | 'refType' | 'refId'>>,
+): number {
+  const keys = new Set(
+    rows.map((r) =>
+      r.refType === NOTIFICATION_REF.ORDER &&
+      r.refId != null &&
+      ORDER_STATUS_NOTICE_CATEGORIES.includes(r.category)
+        ? `order:${r.refId}`
+        : `row:${r.id}`,
+    ),
+  );
+  return keys.size;
+}
+
+/**
+ * A feed request's WHERE with the Recent window (PRD v1 slide 9 rule 6):
+ * unread rows always, read rows from the last 30 days. Nothing is deleted —
+ * retention still decides that — the older history just stops being listed.
+ */
+function withRecentWindow(base: Record<string, unknown>, now = Date.now()): Record<string, unknown>[] {
+  return [
+    { ...base, readAt: IsNull() },
+    { ...base, readAt: Not(IsNull()), createdAt: MoreThanOrEqual(new Date(now - RECENT_DAYS * DAY_MS)) },
+  ];
 }
 
 /**
@@ -232,6 +278,7 @@ export class NotificationService implements OnModuleInit {
         readAt: null,
       }),
     );
+    if (channel === FEED_CHANNEL && customerId != null) await this.readOlderStatusNotices(customerId, row);
     // Invalidate AFTER the row exists. Clearing first left a window where an
     // unreadCount() in flight could re-cache a total that excluded this row and
     // then hold it for the whole TTL — the badge would sit one behind.
@@ -239,6 +286,79 @@ export class NotificationService implements OnModuleInit {
       await Promise.all(unreadCacheKeys(customerId).map((k) => this.redis.del(k)));
     }
     return row;
+  }
+
+  /**
+   * A new status for an order reads that order's older status notices (IVY
+   * PRD v1 slide 9 rule 4): the new card leads New and the old ones become
+   * history in Recent, even when the shopper never tapped them. Every other
+   * unread status notice of the order is older by definition — this one was
+   * just written. Never fatal: losing this only leaves an old card unread.
+   */
+  private async readOlderStatusNotices(customerId: number, row: Notification): Promise<void> {
+    if (
+      row.refType !== NOTIFICATION_REF.ORDER ||
+      row.refId == null ||
+      !ORDER_STATUS_NOTICE_CATEGORIES.includes(row.category)
+    ) {
+      return;
+    }
+    try {
+      await this.notifRepo.update(
+        {
+          customerId,
+          channel: FEED_CHANNEL,
+          refType: NOTIFICATION_REF.ORDER,
+          refId: row.refId,
+          category: In([...ORDER_STATUS_NOTICE_CATEGORIES]),
+          readAt: IsNull(),
+          id: Not(row.id),
+        },
+        { readAt: new Date() },
+      );
+    } catch (err) {
+      this.logger.warn(
+        `older notices of order ${row.refId} left unread: ${(err as Error)?.message ?? String(err)}`,
+      );
+    }
+  }
+
+  /**
+   * The same rule over rows written before it existed, run when the shopper
+   * opens the list: any unread status notice with a newer one for the same
+   * order is read. One indexed statement per open; never fatal.
+   */
+  private async readSupersededStatusNotices(customerId: number): Promise<void> {
+    try {
+      await this.notifRepo.query(
+        `UPDATE notifications n
+           JOIN notifications m
+             ON m.customer_id = n.customer_id
+            AND m.channel = n.channel
+            AND m.ref_type = n.ref_type
+            AND m.ref_id = n.ref_id
+            AND m.category IN (?, ?)
+            AND (m.created_at > n.created_at OR (m.created_at = n.created_at AND m.id > n.id))
+            SET n.read_at = ?
+          WHERE n.customer_id = ?
+            AND n.channel = ?
+            AND n.ref_type = ?
+            AND n.category IN (?, ?)
+            AND n.read_at IS NULL`,
+        [
+          ...ORDER_STATUS_NOTICE_CATEGORIES,
+          new Date(),
+          customerId,
+          FEED_CHANNEL,
+          NOTIFICATION_REF.ORDER,
+          ...ORDER_STATUS_NOTICE_CATEGORIES,
+        ],
+      );
+    } catch (err) {
+      this.logger.warn(
+        `superseded notices of customer ${customerId} left unread: ${(err as Error)?.message ?? String(err)}`,
+      );
+    }
   }
 
   /**
@@ -368,8 +488,9 @@ export class NotificationService implements OnModuleInit {
   ): Promise<[Notification[], number]> {
     const customerId = await this.requireCustomerId(token);
     await this.ensureOrderNoticesOnce(token, customerId);
+    await this.readSupersededStatusNotices(customerId);
     return this.notifRepo.findAndCount({
-      where: scopedWhere(customerId, category, scope),
+      where: withRecentWindow(scopedWhere(customerId, category, scope)),
       // Event time first: an order notice is written when it is first noticed
       // but dated when the order was placed, so its id is newer than its time.
       order: { createdAt: 'DESC', id: 'DESC' },
@@ -448,8 +569,13 @@ export class NotificationService implements OnModuleInit {
       .take(ORDER_NOTICE_MAX)
       .getMany();
     // Not confirmed yet: its notice comes on a later check, once it is paid.
+    // Cancelled or refunded: "Confirmed" would be false — the sync announces
+    // those itself while they are recent (IVY PRD v1 N-02).
+    const ended: readonly string[] = [ORDER_STATUS_INTERNAL.CANCELLED, ORDER_STATUS_INTERNAL.REFUNDED];
     const confirmed = orders.filter(
-      (o) => o.statusInternal !== ORDER_STATUS_INTERNAL.PENDING_PAYMENT,
+      (o) =>
+        o.statusInternal !== ORDER_STATUS_INTERNAL.PENDING_PAYMENT &&
+        !ended.includes(o.statusInternal ?? ''),
     );
     if (confirmed.length === 0) return 0;
 
@@ -602,7 +728,12 @@ export class NotificationService implements OnModuleInit {
         );
       }
     }
-    const count = await this.notifRepo.count({ where: { ...where, readAt: IsNull() } });
+    const unread = await this.notifRepo.find({
+      where: { ...where, readAt: IsNull() },
+      select: { id: true, category: true, refType: true, refId: true },
+      take: UNREAD_SCAN_MAX,
+    });
+    const count = countNewCards(unread);
     await this.redis.set(key, String(count), UNREAD_CACHE_TTL_SEC);
     return count;
   }

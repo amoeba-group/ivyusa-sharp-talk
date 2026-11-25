@@ -37,6 +37,17 @@ interface WidgetState {
   sessionToken: string | null;
   activeTab: TabKey;
   panelOpen: boolean;
+  /**
+   * Counts the times the panel opened. A notification read while the panel is
+   * open keeps its place in New until the next opening (IVY PRD v1 slide 9
+   * rule 3); this is what "the next opening" is measured by.
+   */
+  panelOpenSeq: number;
+  /**
+   * The order the Delivery chip leads with — set by the truck button in Order
+   * Detail (PRD v1 slide 7 ②), cleared when the shopper picks another chip.
+   */
+  deliveryFocus: string | null;
   /** Whether the settings/preferences panel overlays the tabs. */
   settingsOpen: boolean;
   authenticated: boolean;
@@ -176,6 +187,7 @@ interface WidgetState {
     noticeVersion?: string,
   ) => void;
   setNotificationFilter: (f: string) => void;
+  setDeliveryFocus: (orderId: string | null) => void;
   setTabLayout: (tabs: TabKey[], position: WidgetTabPosition) => void;
   bumpChatUnread: (n: number) => void;
   requestReidentify: () => void;
@@ -193,6 +205,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   activeTab: 'chat',
   // App mode has no launcher, so a closed panel would render an empty WebView.
   panelOpen: isAppMode(),
+  panelOpenSeq: 0,
+  deliveryFocus: null,
   settingsOpen: false,
   authenticated: false,
   authPending: false,
@@ -229,8 +243,16 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
     set({ sessionToken: t });
   },
   setActiveTab: (t) => set({ activeTab: t, chatUnread: t === 'chat' ? 0 : get().chatUnread }),
-  setPanelOpen: (open) => set({ panelOpen: open }),
-  togglePanel: () => set((s) => ({ panelOpen: !s.panelOpen })),
+  setPanelOpen: (open) =>
+    set((s) => ({
+      panelOpen: open,
+      panelOpenSeq: open && !s.panelOpen ? s.panelOpenSeq + 1 : s.panelOpenSeq,
+    })),
+  togglePanel: () =>
+    set((s) => ({
+      panelOpen: !s.panelOpen,
+      panelOpenSeq: s.panelOpen ? s.panelOpenSeq : s.panelOpenSeq + 1,
+    })),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   setAuthenticated: (v) => set({ authenticated: v }),
   setAuthPending: (v) => set({ authPending: v }),
@@ -261,6 +283,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setTeaserVisible: (v) => set({ teaserVisible: v }),
   setConsentInfo: (c) => set({ consent: c }),
   setNotificationFilter: (f) => set({ notificationFilter: f }),
+  setDeliveryFocus: (orderId) => set({ deliveryFocus: orderId }),
   /**
    * Apply the tenant's tab layout. If the tab the shopper is currently on is not
    * in the new set — a setting changed under them, or the default no longer

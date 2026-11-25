@@ -111,6 +111,8 @@ export const NOTICE_STATUS = {
   REVIEW: 'review',
   PENDING_PAYMENT: 'pending_payment',
   CANCEL_REQUESTED: 'cancel_requested',
+  CANCELLED: 'cancelled',
+  REFUNDED: 'refunded',
 } as const;
 export type NoticeStatus = (typeof NOTICE_STATUS)[keyof typeof NOTICE_STATUS];
 
@@ -128,6 +130,8 @@ const BADGE_TO_NOTICE_STATUS: Record<string, NoticeStatus> = {
   review: NOTICE_STATUS.REVIEW,
   'pending payment': NOTICE_STATUS.PENDING_PAYMENT,
   'cancel requested': NOTICE_STATUS.CANCEL_REQUESTED,
+  cancelled: NOTICE_STATUS.CANCELLED,
+  refunded: NOTICE_STATUS.REFUNDED,
 };
 
 /** The pill status for a stored badge, or null when it is wording we do not own. */

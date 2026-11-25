@@ -18,6 +18,9 @@ const TONE: Record<NoticeStatus, string> = {
   [NOTICE_STATUS.REVIEW]: 'review',
   [NOTICE_STATUS.PENDING_PAYMENT]: 'default',
   [NOTICE_STATUS.CANCEL_REQUESTED]: 'error',
+  // Ended orders read like Delivered: grey, nothing left to happen (PRD v1 N-02).
+  [NOTICE_STATUS.CANCELLED]: 'neutral',
+  [NOTICE_STATUS.REFUNDED]: 'neutral',
 };
 
 /**

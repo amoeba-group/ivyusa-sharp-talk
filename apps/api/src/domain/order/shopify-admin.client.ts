@@ -21,6 +21,8 @@ export interface ShopifyOrderDto {
   created_at?: string | null;
   /** Last change in Shopify — the sync resumes from the last one it read. */
   updated_at?: string | null;
+  /** Set when the order was cancelled (webhooks carry it natively; GraphQL `cancelledAt`). */
+  cancelled_at?: string | null;
   total_price?: string | null;
   /**
    * Money breakdown (PLN-260920 P2). Webhooks carry `subtotal_price` and
@@ -122,6 +124,7 @@ interface OrderNode {
   email?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
+  cancelledAt?: string | null;
   displayFinancialStatus?: string | null;
   displayFulfillmentStatus?: string | null;
   totalPriceSet?: { shopMoney?: { amount?: string; currencyCode?: string } };
@@ -254,6 +257,7 @@ query Orders($first: Int!, $after: String, $query: String, $reverse: Boolean) {
       email
       createdAt
       updatedAt
+      cancelledAt
       displayFinancialStatus
       displayFulfillmentStatus
       totalPriceSet { shopMoney { amount currencyCode } }
@@ -707,6 +711,7 @@ export class ShopifyAdminClient {
       email: n.email ?? null,
       created_at: n.createdAt ?? null,
       updated_at: n.updatedAt ?? null,
+      cancelled_at: n.cancelledAt ?? null,
       financial_status: n.displayFinancialStatus?.toLowerCase() ?? null,
       fulfillment_status: this.mapFulfillmentStatus(n.displayFulfillmentStatus),
       total_price: n.totalPriceSet?.shopMoney?.amount ?? null,

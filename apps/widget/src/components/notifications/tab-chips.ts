@@ -91,6 +91,20 @@ export function defaultChip(tab: TabKey, visibleTabs: TabKey[], opts: ChipOption
   return chipsFor(tab, visibleTabs, opts)[0]?.key ?? 'all';
 }
 
+/**
+ * The list tab that carries the Delivery chip — where the truck button in Order
+ * Detail leads (IVY PRD v1 slide 7 ②). The single list tab when there is one;
+ * Orders when both list tabs split the chips. `null`: no tab shows deliveries.
+ */
+export function deliveryTab(visibleTabs: TabKey[], opts: ChipOptions = {}): TabKey | null {
+  const lists: TabKey[] = ['notifications', 'orders'];
+  return (
+    lists.find(
+      (tab) => visibleTabs.includes(tab) && chipsFor(tab, visibleTabs, opts).some((c) => c.key === 'shipping'),
+    ) ?? null
+  );
+}
+
 /** The rows the Order chip shows, from a feed that may hold other categories too. */
 export function orderFeedRows<T extends { category: string }>(rows: readonly T[]): T[] {
   return rows.filter((n) => ORDER_FEED_CATEGORIES.includes(n.category));

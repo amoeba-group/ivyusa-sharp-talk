@@ -25,8 +25,8 @@ export const zh: Translation = {
       inquiries: '咨询',
     },
     groups: {
-      today: '今日通知',
-      yesterday: '昨日通知',
+      new: '新通知',
+      recent: '最近',
     },
     time: {
       justNow: '刚刚',
@@ -34,7 +34,6 @@ export const zh: Translation = {
       minutes_other: '{{count}}分钟前',
       hours_one: '{{count}}小时前',
       hours_other: '{{count}}小时前',
-      yesterday: '昨天',
       days_one: '{{count}}天前',
       days_other: '{{count}}天前',
     },
@@ -45,11 +44,15 @@ export const zh: Translation = {
       review: '评价',
       pending_payment: '待付款',
       cancel_requested: '已申请取消',
+      cancelled: '已取消',
+      refunded: '已退款',
     },
     itemsMore_one: '{{title}} 等 {{count}} 件',
     itemsMore_other: '{{title}} 等 {{count}} 件',
     unread: '未读',
     markRead: '标记为已读',
+    rowMenu: '通知操作',
+    deleteOne: '删除',
     select: '选择',
     cancelSelect: '取消',
     /** Row checkbox name, per row (T07 D4). */
@@ -324,6 +327,7 @@ export const zh: Translation = {
   },
 
   orders: {
+    showDelivery: '查看配送状态',
     issues: {
       status: {
       pendingPayment: '待付款',

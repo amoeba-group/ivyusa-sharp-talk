@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { BellOff, Check, ExternalLink, Lock, Star } from 'lucide-react';
+import { BellOff, Check, ExternalLink, Lock, Star, Trash2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -21,10 +21,11 @@ import { ToastHost } from '../ui/ToastHost';
 import { showToast } from '../../lib/toast';
 import { copyText, promoKind, safeLink } from '../../lib/promo';
 import { Spinner } from '../ui/Spinner';
-import { formatDate, groupByDate } from '../../lib/format';
+import { formatDate, groupByRead } from '../../lib/format';
 import { noticeTimeText } from '../../lib/notice-time-text';
+import { useNewSnapshot } from '../../hooks/useNewSnapshot';
 import { NotificationIcon } from './NotificationIcon';
-import { DateGroupHeader } from './DateGroupHeader';
+import { GroupHeader } from './GroupHeader';
 import { ShipmentList } from './ShipmentList';
 import { OrderList } from '../orders/OrderList';
 import { OrderDetailView } from '../orders/OrderDetail';
@@ -36,12 +37,80 @@ import {
   chipsFor,
   defaultChip,
   deleteAllFilter,
+  deliveryTab,
   orderFeedRows,
 } from './tab-chips';
 import { NOTIFICATION_SCOPE } from '../../lib/widget-tabs';
 // Source path, not '@sharptalk/types': see lib/widget-tabs.ts.
 import { NOTIFICATION_REF } from '../../../../../packages/types/src/common/enum.types';
 import type { NotificationItem, OrderSummary } from '../../lib/types';
+
+/** How long a press must last to open the row menu on a touch screen. */
+const LONG_PRESS_MS = 500;
+
+/** Where a row menu opens, in the panel's own coordinates. */
+interface MenuAt {
+  id: string;
+  x: number;
+  y: number;
+}
+
+/**
+ * The row's action menu (IVY PRD v1 slide 8): press and hold on a phone,
+ * right-click on a computer — or the keyboard's menu key / Shift+F10 — then
+ * Delete. One item today; a menu rather than a bare button so the gesture
+ * reads the way it does everywhere else.
+ */
+function RowMenu({ at, onDelete, onClose }: { at: MenuAt; onDelete: () => void; onClose: () => void }) {
+  const { t } = useTranslation();
+  const ref = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    itemRef.current?.focus();
+  }, []);
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) onClose();
+    };
+    // Captured ahead of WidgetPanel's own Esc, which would close the widget.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' && e.key !== 'Tab') return;
+      e.stopPropagation();
+      if (e.key === 'Escape') e.preventDefault();
+      onClose();
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey, true);
+    };
+  }, [onClose]);
+  // Kept inside the panel: a menu opened near the right or bottom edge flips in.
+  const left = Math.max(8, Math.min(at.x, window.innerWidth - 168));
+  const top = Math.max(8, Math.min(at.y, window.innerHeight - 56));
+  return (
+    <div
+      ref={ref}
+      role="menu"
+      aria-label={t('notifications.rowMenu')}
+      data-testid="notif-row-menu"
+      className="fixed z-40 w-40 rounded-st-md border border-gray-200 bg-white py-1 shadow-lg"
+      style={{ left, top }}
+    >
+      <button
+        ref={itemRef}
+        type="button"
+        role="menuitem"
+        onClick={onDelete}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-error hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+      >
+        <Trash2 className="h-4 w-4" aria-hidden />
+        {t('notifications.deleteOne')}
+      </button>
+    </div>
+  );
+}
 
 /** "Hydrating Face Mask (10pcs) + 2 items" (SPEC BR-08), in the UI language. */
 function orderSummary(t: TFunction, o: OrderSummary): string | null {
@@ -61,6 +130,7 @@ function Row({
   selecting = false,
   selected = false,
   onToggle,
+  onMenu,
 }: {
   n: NotificationItem;
   /**
@@ -78,9 +148,50 @@ function Row({
   selecting?: boolean;
   selected?: boolean;
   onToggle?: (id: string) => void;
+  /** Opens the row menu (long-press / right-click, PRD v1 slide 8). */
+  onMenu?: (at: MenuAt) => void;
 }) {
   const { t, i18n } = useTranslation();
   const unread = !n.readAt;
+  // A long press opens the menu; the tap the finger then lifts must not also
+  // open the order. Reset by the next touch, so a later tap still works.
+  const pressTimer = useRef<number | null>(null);
+  const longPressed = useRef(false);
+  const cancelPress = () => {
+    if (pressTimer.current != null) window.clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+  };
+  useEffect(() => cancelPress, []);
+  const menuEnabled = !!onMenu && !selecting;
+  const startPress = (e: React.TouchEvent) => {
+    longPressed.current = false;
+    if (!menuEnabled) return;
+    const touch = e.touches[0];
+    const at = { id: n.id, x: touch.clientX, y: touch.clientY };
+    cancelPress();
+    pressTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      onMenu?.(at);
+    }, LONG_PRESS_MS);
+  };
+  const openMenuFromContext = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!menuEnabled) return;
+    e.preventDefault();
+    cancelPress();
+    // The keyboard's menu key fires this with no pointer position: open at the row.
+    if (e.clientX === 0 && e.clientY === 0) {
+      const r = e.currentTarget.getBoundingClientRect();
+      onMenu?.({ id: n.id, x: r.left + 48, y: r.top + r.height / 2 });
+      return;
+    }
+    onMenu?.({ id: n.id, x: e.clientX, y: e.clientY });
+  };
+  const swallowAfterLongPress = (e: React.MouseEvent) => {
+    if (!longPressed.current) return false;
+    longPressed.current = false;
+    e.preventDefault();
+    return true;
+  };
   // A review request can only open the form when the notification carries the
   // item it refers to. Rows written before `refType`/`refId` existed have none,
   // so they render as plain rows rather than a button that cannot work.
@@ -107,7 +218,8 @@ function Row({
     );
   };
 
-  const activate = () => {
+  const activate = (e: React.MouseEvent) => {
+    if (swallowAfterLongPress(e)) return;
     if (selecting) {
       onToggle?.(n.id);
       return;
@@ -122,7 +234,14 @@ function Row({
       data-id={n.id}
       data-category={n.category}
       data-unread={unread ? 'true' : 'false'}
-      className={`flex w-full items-start gap-3 border-b border-gray-100 px-4 py-3.5 text-left ${
+      onContextMenu={openMenuFromContext}
+      onTouchStart={startPress}
+      onTouchMove={cancelPress}
+      onTouchEnd={cancelPress}
+      onTouchCancel={cancelPress}
+      // iOS would otherwise answer a long press with its own link / text callout.
+      style={{ WebkitTouchCallout: 'none' }}
+      className={`flex w-full select-none items-start gap-3 border-b border-gray-100 px-4 py-3.5 text-left ${
         highlighted ? 'bg-highlight' : 'bg-white'
       }`}
     >
@@ -166,7 +285,8 @@ function Row({
               href={link}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => {
+              onClick={(e) => {
+                if (swallowAfterLongPress(e)) return;
                 if (unread) onRead(n.id);
               }}
               className="block w-full text-left"
@@ -310,7 +430,7 @@ function IssueFeed({
  * component is the point: a fix to a shipment card is a fix in both places.
  */
 export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {}) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const sessionToken = useWidgetStore((s) => s.sessionToken);
   const authenticated = useWidgetStore((s) => s.authenticated);
   const setAuthenticated = useWidgetStore((s) => s.setAuthenticated);
@@ -336,6 +456,21 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
   const [openOrder, setOpenOrder] = useState<string | null>(null);
   const [reviewItem, setReviewItem] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [menu, setMenu] = useState<MenuAt | null>(null);
+  const deliveryFocus = useWidgetStore((s) => s.deliveryFocus);
+  const setDeliveryFocus = useWidgetStore((s) => s.setDeliveryFocus);
+  const setActiveTab = useWidgetStore((s) => s.setActiveTab);
+  // The truck button in Order Detail (PRD v1 slide 7 ②): the Delivery chip,
+  // with this order's card first. Delivery may live on the other list tab.
+  const targetTab = deliveryTab(visibleTabs, chipOpts);
+  const showDelivery = targetTab
+    ? (orderId: string) => {
+        setOpenOrder(null);
+        setDeliveryFocus(orderId);
+        setNotifFilter('shipping');
+        if (targetTab !== tab) setActiveTab(targetTab);
+      }
+    : undefined;
 
   const isShipping = notifFilter === 'shipping';
   const isInquiries = notifFilter === 'inquiries';
@@ -368,6 +503,8 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
     () => (isOrderFeed ? orderFeedRows(data ?? []) : (data ?? [])),
     [data, isOrderFeed],
   );
+  // New = unread when this opening of the widget began (PRD v1 slide 9 rule 3).
+  const isNew = useNewSnapshot(rows);
   // The orders the Order chip's notices name, to draw each row from its order.
   // Same window and cache entry as the order list (20 / 90 days).
   const { data: recentOrders } = useOrders(sessionToken, authenticated && isOrderFeed, {
@@ -424,12 +561,17 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
       { onSuccess: onDeleted, onError: onDeleteFailed },
     );
   };
+  const deleteOne = (id: string) => {
+    setMenu(null);
+    removeNotifications.mutate({ ids: [id] }, { onSuccess: onDeleted, onError: onDeleteFailed });
+  };
   // A selection belongs to the chip it was made on: switching chips must not
   // leave hidden rows ticked for the next "Delete Selected".
   useEffect(() => {
     setSelecting(false);
     setSelectedIds([]);
     setConfirmingAll(false);
+    setMenu(null);
   }, [notifFilter]);
   // The confirm opens on its safe answer, Cancel.
   useEffect(() => {
@@ -490,6 +632,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
         sessionToken={sessionToken}
         onBack={() => setOpenOrder(null)}
         onAsk={(orderNumber) => queueChatMessage(t('orders.askMessage', { orderNumber }))}
+        onShowDelivery={showDelivery}
       />
     );
   }
@@ -514,11 +657,9 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
     );
   }
 
-  const groups = groupByDate(rows, i18n.language);
-  // Exactly one row wears the highlight wash: the newest unread (PLN §7 D-5).
-  // The design shows a single emphasised row and no rule for it; making every
-  // unread row cream would turn a 20-row list into a cream block.
-  const newestUnreadId = rows.find((n) => !n.readAt)?.id ?? null;
+  // New (unread) / Recent (read), IVY PRD v1 slide 9 — it replaced the
+  // Today's / Yesterday's bands (SPEC BR-04), which shift with the time zone.
+  const groups = groupByRead(rows, (n) => isNew(n.id));
   const myPageUrl = myPageOrdersUrl();
 
   return (
@@ -536,7 +677,10 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
               key={f.key}
               type="button"
               aria-pressed={notifFilter === f.key}
-              onClick={() => setNotifFilter(f.key)}
+              onClick={() => {
+                setNotifFilter(f.key);
+                if (f.key !== 'shipping') setDeliveryFocus(null);
+              }}
               className={`flex-shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 notifFilter === f.key
                   ? 'bg-gray-900 text-white'
@@ -566,7 +710,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
         {isOrderList ? (
           <OrderList sessionToken={sessionToken} onOpenOrder={setOpenOrder} />
         ) : isShipping ? (
-          <ShipmentList sessionToken={sessionToken} onOpenOrder={setOpenOrder} />
+          <ShipmentList sessionToken={sessionToken} onOpenOrder={setOpenOrder} focusOrderId={deliveryFocus} />
         ) : isReviewList ? (
           <ReviewItemList sessionToken={sessionToken} onWrite={setReviewItem} />
         ) : isInquiries ? (
@@ -588,8 +732,8 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
               </div>
             )}
             {groups.map((g) => (
-              <div key={g.label}>
-                <DateGroupHeader group={g} />
+              <div key={g.key}>
+                <GroupHeader group={g.key} />
                 {g.items.map((n) => (
                   <Row
                     key={n.id}
@@ -599,13 +743,16 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
                         ? ordersById.get(String(n.refId))
                         : undefined
                     }
-                    highlighted={n.id === newestUnreadId}
+                    // Every unread row is washed (PRD v1 slide 8 "highlighted
+                    // card"); reading one turns it off where it stands.
+                    highlighted={!n.readAt}
                     onRead={(id) => markRead.mutate(id)}
                     onOpenOrder={setOpenOrder}
                     onReview={setReviewItem}
                     selecting={selecting}
                     selected={selectedIds.includes(n.id)}
                     onToggle={toggleSelected}
+                    onMenu={setMenu}
                   />
                 ))}
               </div>
@@ -613,6 +760,9 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
           </>
         )}
         </div>
+        {menu && (
+          <RowMenu at={menu} onDelete={() => deleteOne(menu.id)} onClose={() => setMenu(null)} />
+        )}
         <ToastHost />
       </div>
 

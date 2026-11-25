@@ -6,6 +6,7 @@ import {
   FULFILLMENT_STATUS,
   NOTIFICATION_REF,
   ORDER_STATUS_INTERNAL,
+  ORDER_STATUS_UI,
   internalToUiStatus,
 } from '@sharptalk/types';
 import { OrderCache } from './entity/order-cache.entity';
@@ -434,7 +435,7 @@ export class ShopifySyncService {
       } else identityErased = true;
     }
 
-    const rollup = this.mapStatus(o.financial_status, o.fulfillment_status);
+    const rollup = this.mapStatus(o.financial_status, o.fulfillment_status, o.cancelled_at);
     // Where the parcels are (PLN-261118). Null = this payload does not say.
     const shipment = summarizeFulfillments(o.fulfillments);
     const shopifyOrderId = String(o.id);
@@ -485,6 +486,7 @@ export class ShopifySyncService {
     // refused the field) must not pull a delivered order back to In Transit —
     // it used to, on the very next sync.
     const wasDelivered = row.statusInternal === ORDER_STATUS_INTERNAL.DELIVERED;
+    const previousStatus = row.statusInternal ?? null;
     const internal =
       rollup !== ORDER_STATUS_INTERNAL.SHIPPING
         ? rollup
@@ -512,6 +514,7 @@ export class ShopifySyncService {
     const saved = await this.orderRepo.save(row);
     await this.syncLineItems(tenantId, saved.id, o);
     if (shipment) await this.syncShipment(saved, shipment);
+    await this.noticeOrderEnded(saved, previousStatus, o);
 
     // Journey breadcrumb (PLN-260807 F3, A-7): only a genuinely NEW cached order
     // with a known customer — orders/updated webhooks and re-sync passes hit the
@@ -643,12 +646,50 @@ export class ShopifySyncService {
   }
 
   /**
+   * "Your order was cancelled / refunded" (IVY PRD v1 N-02): once, when the
+   * status first becomes one of the two, for an order that is the shopper's,
+   * and only when it happened recently — a re-sync reads months of old orders
+   * and must not announce a cancellation from last spring. Same window as the
+   * shipment notices. Never fatal: the order is already saved.
+   */
+  private async noticeOrderEnded(order: OrderCache, previousStatus: string | null, o: ShopifyOrderDto): Promise<void> {
+    const status = order.statusInternal;
+    if (status !== ORDER_STATUS_INTERNAL.CANCELLED && status !== ORDER_STATUS_INTERNAL.REFUNDED) return;
+    if (previousStatus === status || order.customerId == null) return;
+    const at = Date.parse(
+      (status === ORDER_STATUS_INTERNAL.CANCELLED ? o.cancelled_at : o.updated_at) ?? o.updated_at ?? '',
+    );
+    if (Number.isNaN(at) || Date.now() - at > SHIPMENT_NOTICE_MAX_AGE_MS) return;
+    const cancelled = status === ORDER_STATUS_INTERNAL.CANCELLED;
+    try {
+      await this.bus.publish(EVENTS.NOTIFICATION, {
+        tenantId: order.tenantId,
+        customerId: order.customerId,
+        category: 'payment',
+        title: cancelled ? 'Order cancelled' : 'Order refunded',
+        body: cancelled
+          ? `Your order ${order.orderNumber} was cancelled.`
+          : `Your order ${order.orderNumber} was refunded.`,
+        statusBadge: cancelled ? ORDER_STATUS_UI.CANCELLED : ORDER_STATUS_UI.REFUNDED,
+        refType: NOTIFICATION_REF.ORDER,
+        refId: order.id,
+      });
+    } catch (e) {
+      this.logger.warn(`Order ${order.id} ${status} notice not sent: ${(e as Error).message}`);
+    }
+  }
+
+  /**
    * Shopify order rollup → internal status (POL-014 progression).
+   * cancelled → cancelled; fully refunded → refunded (IVY PRD v1 N-02 — a
+   * partial refund leaves the order where it was);
    * fulfilled → shipping (In Transit); partially fulfilled → preparing;
    * otherwise (paid/unfulfilled or pending) → paid (Confirmed). Delivered is only
    * reached via fulfillment webhooks (shipment_status=delivered).
    */
-  private mapStatus(_financial?: string | null, fulfillment?: string | null): string {
+  private mapStatus(financial?: string | null, fulfillment?: string | null, cancelledAt?: string | null): string {
+    if (cancelledAt) return ORDER_STATUS_INTERNAL.CANCELLED;
+    if ((financial ?? '').toLowerCase() === 'refunded') return ORDER_STATUS_INTERNAL.REFUNDED;
     if (fulfillment === 'fulfilled') return ORDER_STATUS_INTERNAL.SHIPPING;
     if (fulfillment === 'partial') return ORDER_STATUS_INTERNAL.PREPARING;
     return ORDER_STATUS_INTERNAL.PAID;

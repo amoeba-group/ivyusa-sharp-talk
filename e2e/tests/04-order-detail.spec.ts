@@ -55,6 +55,22 @@ test.describe('T04 · Order Detail', () => {
     await expect(chat.getByText(new RegExp(ORDERS.confirmed.orderNumber.replace('IVY-', ''))).first()).toBeVisible();
   });
 
+  test('TC-04-08 the truck beside the order number opens Delivery with this order first @T04', async ({ widget }) => {
+    // PRD v1 slide 7 ②. The confirmed order has not shipped: no orange dot, and its card sits on Preparing.
+    const truck = widget.panel.getByTestId('order-delivery-link');
+    await expect(truck).toBeVisible();
+    await expect(truck.getByTestId('order-delivery-dot')).toHaveCount(0);
+    await truck.click();
+    await expect(widget.chip('Delivery')).toHaveAttribute('aria-pressed', 'true');
+    const first = widget.deliveryCards.first();
+    await expect(first).toContainText(ORDERS.confirmed.orderNumber);
+    await expect(first).toHaveAttribute('data-focused', 'true');
+    // Picking another chip drops the focus.
+    await widget.chip('Order').click();
+    await widget.chip('Delivery').click();
+    await expect(widget.deliveryCards.filter({ hasText: ORDERS.confirmed.orderNumber })).toHaveCount(0);
+  });
+
   test('TC-04-05 Back returns to the notification list @T04 @design', async ({ widget }) => {
     await widget.panel.getByRole('button', { name: 'Back' }).click();
     await expect(widget.notifItems.first()).toBeVisible();
@@ -84,4 +100,13 @@ test.describe('T04 · Order Detail — store refuses the addresses', () => {
     await expect(p.getByText('Shipping address')).toHaveCount(0);
     await expect(p.getByText('25 HARBOR PARK DR')).toHaveCount(0);
   });
+});
+
+test('TC-04-09 an order on its way has the orange dot on the truck @T04', async ({ widget }) => {
+  await widget.goto();
+  await widget.open();
+  await widget.openNotifications();
+  await widget.notifItems.filter({ hasText: ORDERS.inTransit.orderNumber }).first().click();
+  await expect(widget.panel.getByRole('heading', { name: 'Order Detail' })).toBeVisible();
+  await expect(widget.panel.getByTestId('order-delivery-dot')).toBeVisible();
 });

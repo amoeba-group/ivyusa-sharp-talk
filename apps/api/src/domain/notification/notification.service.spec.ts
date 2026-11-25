@@ -27,6 +27,7 @@ describe('NotificationService.isSuppressed / notify (Stage 6 — D-4 fail-closed
     const notifRepo = {
       create: jest.fn((e: Partial<Notification>) => e as Notification),
       save: jest.fn(async (e: Notification) => e),
+      update: jest.fn(async () => ({ affected: 0 })),
     } as unknown as Repository<Notification>;
     const prefRepo = {
       findOne: jest.fn(async ({ where }: { where: { customerId: number; channel: string; category: string } }) => {
@@ -190,6 +191,7 @@ describe('NotificationService.notify — record reference (PLN-260817 S5)', () =
         saved.push(e);
         return e;
       }),
+      update: jest.fn(async () => ({ affected: 0 })),
     } as unknown as Repository<Notification>;
     const prefRepo = {
       findOne: jest.fn(async () => null),
@@ -252,14 +254,17 @@ describe('NotificationService scoping — order vs notice half', () => {
     lastWhere = undefined;
     countWhere = undefined;
     const notifRepo = {
-      findAndCount: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
-        lastWhere = where;
+      findAndCount: jest.fn(async ({ where }: { where: Record<string, unknown>[] }) => {
+        // Unread rows | read rows in the Recent window — the same base each time.
+        const { readAt: _readAt, ...base } = where[0];
+        lastWhere = base;
         return [[], 0] as [Notification[], number];
       }),
-      count: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
+      find: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
         countWhere = where;
-        return 7;
+        return [];
       }),
+      query: jest.fn(async () => undefined),
     } as unknown as Repository<Notification>;
     const sessionService = {
       requireCustomerId: jest.fn(async () => 42),
@@ -387,6 +392,7 @@ describe('NotificationService — tenant ceiling and marketing opt-out', () => {
     const notifRepo = {
       create: jest.fn((e: Partial<Notification>) => e as Notification),
       save: jest.fn(async (e: Notification) => e),
+      update: jest.fn(async () => ({ affected: 0 })),
     } as unknown as Repository<Notification>;
     const prefRepo = {
       findOne: jest.fn(async ({ where }: { where: { channel: string; category: string } }) => {
@@ -605,6 +611,7 @@ describe('NotificationService.ensureOrderNotices', () => {
       }),
       findAndCount: jest.fn(async () => [[], 0]),
       count: jest.fn(async () => 0),
+      query: jest.fn(async () => undefined),
     } as unknown as Repository<Notification>;
 
     const orderQb = {
@@ -835,9 +842,9 @@ describe('NotificationService.unreadCount — a single list tab counts only what
   function build(widgetTabs: string[] | null) {
     let countWhere: Record<string, unknown> | undefined;
     const notifRepo = {
-      count: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
+      find: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
         countWhere = where;
-        return 0;
+        return [];
       }),
     } as unknown as Repository<Notification>;
     const svc = new NotificationService(

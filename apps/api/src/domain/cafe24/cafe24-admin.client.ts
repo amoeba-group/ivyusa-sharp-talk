@@ -38,6 +38,9 @@ const CAFE24_STATUS_TO_INTERNAL: Record<string, OrderStatusInternal> = {
 // Progress rank so a mixed-item order reports its LEAST-advanced stage rather than
 // over-claiming "delivered". Cancel sits outside the linear flow.
 const STATUS_RANK: Record<OrderStatusInternal, number> = {
+  // Shopify-only end states (IVY PRD v1 N-02); no Cafe24 item code maps to them.
+  [ORDER_STATUS_INTERNAL.CANCELLED]: 0,
+  [ORDER_STATUS_INTERNAL.REFUNDED]: 0,
   [ORDER_STATUS_INTERNAL.CANCEL_REQUESTED]: 0,
   [ORDER_STATUS_INTERNAL.PENDING_PAYMENT]: 1,
   [ORDER_STATUS_INTERNAL.PAID]: 2,

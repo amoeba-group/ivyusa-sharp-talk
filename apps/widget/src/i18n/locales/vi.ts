@@ -25,8 +25,8 @@ export const vi: Translation = {
       inquiries: 'Yêu cầu',
     },
     groups: {
-      today: 'Thông báo hôm nay',
-      yesterday: 'Thông báo hôm qua',
+      new: 'Mới',
+      recent: 'Gần đây',
     },
     time: {
       justNow: 'Vừa xong',
@@ -34,7 +34,6 @@ export const vi: Translation = {
       minutes_other: '{{count}} phút trước',
       hours_one: '{{count}} giờ trước',
       hours_other: '{{count}} giờ trước',
-      yesterday: 'Hôm qua',
       days_one: '{{count}} ngày trước',
       days_other: '{{count}} ngày trước',
     },
@@ -45,11 +44,15 @@ export const vi: Translation = {
       review: 'Đánh giá',
       pending_payment: 'Chờ thanh toán',
       cancel_requested: 'Yêu cầu hủy',
+      cancelled: 'Đã hủy',
+      refunded: 'Đã hoàn tiền',
     },
     itemsMore_one: '{{title}} + {{count}} sản phẩm',
     itemsMore_other: '{{title}} + {{count}} sản phẩm',
     unread: 'Chưa đọc',
     markRead: 'Đánh dấu đã đọc',
+    rowMenu: 'Thao tác với thông báo',
+    deleteOne: 'Xoá',
     select: 'Chọn',
     cancelSelect: 'Hủy',
     /** Row checkbox name, per row (T07 D4). */
@@ -327,6 +330,7 @@ export const vi: Translation = {
   },
 
   orders: {
+    showDelivery: 'Xem tình trạng giao hàng',
     issues: {
       status: {
       pendingPayment: 'Chờ thanh toán',

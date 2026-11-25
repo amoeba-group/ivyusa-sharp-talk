@@ -22,7 +22,7 @@ const { outputFiles } = buildSync({
   platform: 'neutral',
 });
 const mod = await import(`data:text/javascript,${encodeURIComponent(outputFiles[0].text)}`);
-const { chipsFor, defaultChip, chipBelongsTo, orderFeedRows, deleteAllFilter } = mod;
+const { chipsFor, defaultChip, chipBelongsTo, orderFeedRows, deleteAllFilter, deliveryTab } = mod;
 
 const keys = (chips) => chips.map((c) => c.key);
 const labels = (chips) => chips.map((c) => c.labelKey);
@@ -85,4 +85,14 @@ test('Delete All on "All" deletes what the list asked for', () => {
   assert.deepEqual(deleteAllFilter('all', 'notice'), { scope: 'notice' });
   // One list tab: the whole feed, as before.
   assert.deepEqual(deleteAllFilter('all'), {});
+});
+
+// IVY PRD v1 slide 7 ②: the truck button in Order Detail leads to the Delivery chip.
+test("deliveryTab: the list tab that carries the Delivery chip", () => {
+  assert.equal(deliveryTab(["chat", "notifications"]), "notifications");
+  assert.equal(deliveryTab(["notifications", "chat"], { inquiries: true }), "notifications");
+  // Both list tabs split the chips: Delivery is on Orders.
+  assert.equal(deliveryTab(["notifications", "orders", "chat"]), "orders");
+  assert.equal(deliveryTab(["orders", "chat"]), "orders");
+  assert.equal(deliveryTab(["chat"]), null);
 });

@@ -25,8 +25,8 @@ export const ko: Translation = {
       inquiries: '문의',
     },
     groups: {
-      today: '오늘 받은 알림',
-      yesterday: '어제 알림',
+      new: '새 알림',
+      recent: '최근 알림',
     },
     time: {
       justNow: '방금 전',
@@ -34,7 +34,6 @@ export const ko: Translation = {
       minutes_other: '{{count}}분 전',
       hours_one: '{{count}}시간 전',
       hours_other: '{{count}}시간 전',
-      yesterday: '어제',
       days_one: '{{count}}일 전',
       days_other: '{{count}}일 전',
     },
@@ -45,11 +44,15 @@ export const ko: Translation = {
       review: '리뷰',
       pending_payment: '입금대기',
       cancel_requested: '취소요청',
+      cancelled: '주문취소',
+      refunded: '환불완료',
     },
     itemsMore_one: '{{title}} 외 {{count}}개',
     itemsMore_other: '{{title}} 외 {{count}}개',
     unread: '읽지 않음',
     markRead: '읽음으로 표시',
+    rowMenu: '알림 메뉴',
+    deleteOne: '삭제',
     select: '선택',
     cancelSelect: '취소',
     /** Row checkbox name, per row (T07 D4). */
@@ -323,6 +326,7 @@ export const ko: Translation = {
   },
 
   orders: {
+    showDelivery: '배송 현황 보기',
     issues: {
       status: {
       pendingPayment: '입금대기',

@@ -76,88 +76,46 @@ export function relativeTime(iso: string, lng = 'en'): string {
   return rtf.format(-Math.floor(diff / (365 * DAY)), 'year');
 }
 
-/** Calendar-day distance from today, ignoring clock time. */
-function daysAgo(iso: string, now: Date = new Date()): number | null {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  // Rounded, not floored: a day across a DST change is 23 or 25 hours long.
-  return Math.round((startOf(now) - startOf(d)) / DAY);
-}
-
 /**
- * A notification row's time, as the design writes it (ivy-docs SPEC BR-05, Q-02):
- * "Just now" · "10mins ago" · "3h ago" · "Yesterday" · "4 days ago" · "Nov 3".
+ * A notification row's time (IVY PRD v1 slide 9, replacing SPEC BR-05): the
+ * time elapsed since the notice was created, rounded down —
+ * "Just now" (under a minute) · "N min ago" (1–59 minutes) ·
+ * "N hours ago" (1–23 hours) · "N days ago" (24 hours on; 47 hours is 1 day).
  *
- * Days are calendar days in the shopper's own time zone (the browser's), the
- * same days the list is grouped by — so a row under "Yesterday's" says
- * "Yesterday" even when it is only 9 hours old. Within the last hour minutes
- * win over the calendar: an order placed 5 minutes before midnight is "5mins
- * ago", not "Yesterday".
+ * Elapsed time, never calendar days or dates: it reads the same in every time
+ * zone, which is why the PRD dropped "Yesterday" and "Nov 3".
  *
  * Returns the parts, not text: the caller words them through i18n, and the
  * rules stay testable without it.
  */
-export type NoticeTime =
-  | { unit: 'justNow' }
-  | { unit: 'minutes' | 'hours' | 'days'; count: number }
-  | { unit: 'yesterday' }
-  | { unit: 'date'; sameYear: boolean };
+export type NoticeTime = { unit: 'justNow' } | { unit: 'minutes' | 'hours' | 'days'; count: number };
 
 export function noticeTime(iso: string, now: Date = new Date()): NoticeTime | null {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   const diff = now.getTime() - d.getTime();
-  // A clock a little ahead of ours must not print "-1mins ago".
+  // A clock a little ahead of ours must not print "-1 min ago".
   if (diff < MINUTE) return { unit: 'justNow' };
   if (diff < HOUR) return { unit: 'minutes', count: Math.floor(diff / MINUTE) };
-  const days = daysAgo(iso, now) ?? 0;
-  if (days <= 0) return { unit: 'hours', count: Math.max(1, Math.floor(diff / HOUR)) };
-  if (days === 1) return { unit: 'yesterday' };
-  if (days <= 6) return { unit: 'days', count: days };
-  return { unit: 'date', sameYear: d.getFullYear() === now.getFullYear() };
+  if (diff < DAY) return { unit: 'hours', count: Math.floor(diff / HOUR) };
+  return { unit: 'days', count: Math.floor(diff / DAY) };
 }
 
-/** "Nov 3" this year, "Nov 3, 2025" before it — in the UI language. */
-export function shortDate(iso: string, lng = 'en', withYear = false): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString(lng, {
-    month: 'short',
-    day: 'numeric',
-    ...(withYear ? { year: 'numeric' } : {}),
-  });
-}
-
-export interface DateGroup<T> {
-  /** 'today' | 'yesterday' | null — null means `label` is already an absolute date. */
-  relative: 'today' | 'yesterday' | null;
-  label: string;
+export interface ReadGroup<T> {
+  key: 'new' | 'recent';
   items: T[];
 }
 
 /**
- * Groups by calendar day in the shopper's time zone, tagging the two most
- * recent days so the caller can render them as "Today's" / "Yesterday's"
- * (ivy-docs SPEC BR-04). Older days keep an absolute date, which is what a
- * shopper scrolling back needs. Groups follow the order of `items`.
+ * New (unread) and Recent (read), in that order (IVY PRD v1 slide 9). Rows keep
+ * the order they came in — newest first — inside each group, and an empty group
+ * is left out. `isNew` is the caller's: a row read while the widget is open
+ * stays in New until the next open (rule 3), so "unread" alone cannot decide.
  */
-export function groupByDate<T extends { createdAt: string }>(
-  items: T[],
-  lng = 'en',
-  now: Date = new Date(),
-): DateGroup<T>[] {
-  const map = new Map<string, DateGroup<T>>();
-  for (const it of items) {
-    const ago = daysAgo(it.createdAt, now);
-    const relative = ago === 0 ? 'today' : ago === 1 ? 'yesterday' : null;
-    const key = relative ?? formatDate(it.createdAt, lng);
-    let group = map.get(key);
-    if (!group) {
-      group = { relative, label: key, items: [] };
-      map.set(key, group);
-    }
-    group.items.push(it);
-  }
-  return Array.from(map.values());
+export function groupByRead<T>(items: readonly T[], isNew: (item: T) => boolean): ReadGroup<T>[] {
+  const groups: ReadGroup<T>[] = [
+    { key: 'new', items: items.filter(isNew) },
+    { key: 'recent', items: items.filter((it) => !isNew(it)) },
+  ];
+  return groups.filter((g) => g.items.length > 0);
 }

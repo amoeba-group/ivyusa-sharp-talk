@@ -190,6 +190,7 @@ export function ChatTab() {
   const issueFeedForChips = useWidgetStore((s) => s.issueFeed);
   const setActiveTabFromChat = useWidgetStore((s) => s.setActiveTab);
   const setNotificationFilterFromChat = useWidgetStore((s) => s.setNotificationFilter);
+  const setDeliveryFocusFromChat = useWidgetStore((s) => s.setDeliveryFocus);
   // Attachments the shopper picked but has not sent yet (PLN-260814 S3).
   const uploads = useAttachmentUpload(sessionToken);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
@@ -630,17 +631,31 @@ export function ChatTab() {
    * A tenant with no such tab gets the shipping script instead.
    */
   function trackDelivery(label: string) {
+    if (openDelivery(null)) return;
+    void scenario('shipping_policy', label).then(runPostAction);
+  }
+
+  /**
+   * The Delivery chip of whichever list tab carries it, led by `orderId`'s card
+   * when one is given (the truck button in Order Detail, PRD v1 slide 7 ②).
+   * False when no tab shows deliveries.
+   */
+  function openDelivery(orderId: string | null): boolean {
     const opts = { inquiries: issueFeedForChips };
     const tab = (['notifications', 'orders'] as const).find(
       (k) => visibleTabsForChips.includes(k) && chipBelongsTo('shipping', k, visibleTabsForChips, opts),
     );
-    if (tab) {
-      setNotificationFilterFromChat('shipping');
-      setActiveTabFromChat(tab);
-      return;
-    }
-    void scenario('shipping_policy', label).then(runPostAction);
+    if (!tab) return false;
+    setDeliveryFocusFromChat(orderId);
+    setNotificationFilterFromChat('shipping');
+    setActiveTabFromChat(tab);
+    return true;
   }
+  const deliveryShown = (['notifications', 'orders'] as const).some(
+    (k) =>
+      visibleTabsForChips.includes(k) &&
+      chipBelongsTo('shipping', k, visibleTabsForChips, { inquiries: issueFeedForChips }),
+  );
 
   /** Scenario follow-up chip clicks: control actions or another script. */
   function handleQuickReply(id: string, label: string) {
@@ -857,6 +872,14 @@ export function ChatTab() {
           setOpenOrder(null);
           void doSend(t('orders.askMessage', { orderNumber }));
         }}
+        onShowDelivery={
+          deliveryShown
+            ? (orderId) => {
+                setOpenOrder(null);
+                openDelivery(orderId);
+              }
+            : undefined
+        }
       />
     );
   }

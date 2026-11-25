@@ -243,6 +243,10 @@ export const ORDER_STATUS_INTERNAL = {
   DELIVERED: 'delivered',
   // Cafe24 C00(취소신청) — a cancel was requested; off the main fulfilment flow.
   CANCEL_REQUESTED: 'cancel_requested',
+  // Shopify: the order was cancelled (`cancelledAt`) / its full amount refunded
+  // (`displayFinancialStatus` REFUNDED). Both end the order (IVY PRD v1 N-02).
+  CANCELLED: 'cancelled',
+  REFUNDED: 'refunded',
 } as const;
 export type OrderStatusInternal = (typeof ORDER_STATUS_INTERNAL)[keyof typeof ORDER_STATUS_INTERNAL];
 
@@ -253,6 +257,8 @@ export const ORDER_STATUS_UI = {
   DELIVERED: 'Delivered',
   REVIEW: 'Review',
   CANCEL_REQUESTED: 'Cancel requested',
+  CANCELLED: 'Cancelled',
+  REFUNDED: 'Refunded',
 } as const;
 export type OrderStatusUi = (typeof ORDER_STATUS_UI)[keyof typeof ORDER_STATUS_UI];
 
