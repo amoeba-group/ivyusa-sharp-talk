@@ -8,7 +8,9 @@ import { formatMoney } from '../../lib/format';
 import { safeLink } from '../../lib/promo';
 import { searchStock, type StockProduct } from '../../services/productService';
 import { MessageBubble } from './MessageBubble';
+import { TypingBubble } from './TypingBubble';
 import { ChatChip } from './ChatChip';
+import { useCardNote } from '../../hooks/useCardNote';
 import { START_OVER_ID } from './reply-chips';
 
 /**
@@ -88,6 +90,8 @@ export function StockInquiryAnswer({
 
   const products = results.data?.available ? results.data.products : [];
   const href = chosen ? safeLink(chosen.productUrl) : null;
+  // The AI's line about the picked product (IVY PRD v1 C-02); null → the widget's own.
+  const note = useCardNote(sessionToken, chosen ? { kind: 'stock', handle: chosen.handle, q: term } : null);
 
   return (
     <div className="space-y-2" data-testid="stock-answer">
@@ -178,14 +182,20 @@ export function StockInquiryAnswer({
               </a>
             )}
           </div>
-          <MessageBubble
-            message={{
-              id: `${insertKey}-guide`,
-              senderType: 'ai',
-              body: chosen.inStock ? t('chat.stock.guideIn', { title: chosen.title }) : t('chat.stock.guideOut', { title: chosen.title }),
-              createdAt: now(),
-            }}
-          />
+          {note.loading ? (
+            <TypingBubble mode="ai" />
+          ) : (
+            <MessageBubble
+              message={{
+                id: `${insertKey}-guide`,
+                senderType: 'ai',
+                body:
+                  note.text ??
+                  (chosen.inStock ? t('chat.stock.guideIn', { title: chosen.title }) : t('chat.stock.guideOut', { title: chosen.title })),
+                createdAt: now(),
+              }}
+            />
+          )}
         </>
       )}
 

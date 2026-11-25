@@ -48,6 +48,7 @@ import { AuditModule } from '../audit/audit.module';
   controllers: [ProductController, ProductAdminController, ProductRecommendationAdminController],
   // ShopifyAdminClient is stateless; OrderModule keeps its own instance.
   providers: [ProductService, ProductSyncService, ProductPopularService, ProductRecommendationService, ShopifyAdminClient],
-  exports: [ProductService, ProductSyncService],
+  // ProductRecommendationService: the stock search behind the C-02 card note (IVY PRD v1).
+  exports: [ProductService, ProductSyncService, ProductRecommendationService],
 })
 export class ProductModule {}

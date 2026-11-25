@@ -30,6 +30,7 @@ import { ProductModule } from './domain/product/product.module';
 import { NotificationModule } from './domain/notification/notification.module';
 import { PushModule } from './domain/push/push.module';
 import { ReviewModule } from './domain/review/review.module';
+import { CardNoteModule } from './domain/card-note/card-note.module';
 import { SaveModule } from './domain/save/save.module';
 import { NudgeModule } from './domain/nudge/nudge.module';
 import { DiaryModule } from './domain/diary/diary.module';
@@ -107,6 +108,8 @@ import { CallbackModule } from './domain/callback/callback.module';
     NotificationModule,
     PushModule,
     ReviewModule,
+    // IVY PRD v1 C-02: AI lines next to the chat's data cards.
+    CardNoteModule,
     SaveModule,
     NudgeModule,
     DiaryModule,

@@ -158,3 +158,22 @@ export function requestCallback(
     ...input,
   });
 }
+
+/** The card an AI line sits next to (IVY PRD v1 C-02). */
+export type CardNoteRequest =
+  | { kind: 'payment' | 'delivery'; orderId: string }
+  | { kind: 'stock'; handle: string; q: string };
+
+/**
+ * The AI's line for a payment / delivery / stock card (PLN-261125-Phase5 §1.2).
+ * `null` — no consent, no AI engine, or nothing safe to say — means the widget
+ * keeps its own sentence.
+ */
+export async function cardNote(sessionToken: string, req: CardNoteRequest): Promise<string | null> {
+  const body =
+    req.kind === 'stock'
+      ? { session_token: sessionToken, kind: req.kind, product_handle: req.handle, q: req.q }
+      : { session_token: sessionToken, kind: req.kind, order_id: req.orderId };
+  const res = await apiClient.post<{ text: string | null }>('/chat/card-note', body);
+  return res?.text?.trim() || null;
+}

@@ -15,7 +15,9 @@ import {
 import type { OrderSummary } from '../../lib/types';
 import { ShipmentCard } from '../notifications/ShipmentList';
 import { MessageBubble } from './MessageBubble';
+import { TypingBubble } from './TypingBubble';
 import { ChatChip } from './ChatChip';
+import { useCardNote } from '../../hooks/useCardNote';
 import { START_OVER_ID } from './reply-chips';
 
 /**
@@ -25,8 +27,9 @@ import { START_OVER_ID } from './reply-chips';
  * stay where they were asked, and their chips only show while nothing came
  * after them.
  *
- * The guidance is the widget's own copy in the shopper's language; phase 3 of
- * the plan hands it to the AI with the card's data (C-02).
+ * The guidance under the card is the AI's, written from the card's data
+ * (C-02, PLN-261125-Phase5 §1.2); while it has nothing to say — no consent, no
+ * AI engine, an error — the widget's own copy in the shopper's language stands.
  */
 
 const now = () => new Date().toISOString();
@@ -112,6 +115,7 @@ export function PaymentStatusAnswer({
   const order = latestOrder(data ?? []);
   const state = order ? paymentState(order) : null;
   const number = order ? displayOrderNumber(order.orderNumber) : '';
+  const note = useCardNote(sessionToken, order && state ? { kind: 'payment', orderId: String(order.id) } : null);
 
   const chips: Chip[] = [
     ...(order && onTrack
@@ -156,16 +160,19 @@ export function PaymentStatusAnswer({
               </button>
             </div>
           )}
-          {order && state && (
-            <MessageBubble
-              message={{
-                id: `${insertKey}-guide`,
-                senderType: 'ai',
-                body: t(`chat.payment.guide.${state}`, { orderNumber: number }),
-                createdAt: now(),
-              }}
-            />
-          )}
+          {order && state &&
+            (note.loading ? (
+              <TypingBubble mode="ai" />
+            ) : (
+              <MessageBubble
+                message={{
+                  id: `${insertKey}-guide`,
+                  senderType: 'ai',
+                  body: note.text ?? t(`chat.payment.guide.${state}`, { orderNumber: number }),
+                  createdAt: now(),
+                }}
+              />
+            ))}
           {active && <Chips chips={chips} picked={picked} disabled={disabled} />}
         </>
       )}
@@ -196,6 +203,7 @@ export function DeliveryStatusAnswer({
   const { data, isLoading, isError } = useOrders(sessionToken);
   const order = deliveryOrder(data ?? []);
   const tracking = useTracking(order ? String(order.id) : null, sessionToken);
+  const note = useCardNote(sessionToken, order ? { kind: 'delivery', orderId: String(order.id) } : null);
   useEffect(() => {
     if (!isLoading && !tracking.isLoading) onSettled?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -231,16 +239,19 @@ export function DeliveryStatusAnswer({
               />
             </div>
           )}
-          {order && (
-            <MessageBubble
-              message={{
-                id: `${insertKey}-guide`,
-                senderType: 'ai',
-                body: t(`chat.delivery.guide.${deliveryStage(order)}`, { orderNumber: number }),
-                createdAt: now(),
-              }}
-            />
-          )}
+          {order &&
+            (note.loading ? (
+              <TypingBubble mode="ai" />
+            ) : (
+              <MessageBubble
+                message={{
+                  id: `${insertKey}-guide`,
+                  senderType: 'ai',
+                  body: note.text ?? t(`chat.delivery.guide.${deliveryStage(order)}`, { orderNumber: number }),
+                  createdAt: now(),
+                }}
+              />
+            ))}
           {active && <Chips chips={chips} picked={picked} disabled={disabled} />}
         </>
       )}

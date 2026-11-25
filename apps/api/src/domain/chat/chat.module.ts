@@ -13,6 +13,7 @@ import { ChatService } from './chat.service';
 import { IdleConversationService } from './idle-conversation.service';
 import { RagService } from './rag.service';
 import { ScenarioService } from './scenario.service';
+import { ScriptWordingService } from './script-wording.service';
 import { ChatController } from './chat.controller';
 import { SessionModule } from '../session/session.module';
 import { AttachmentModule } from '../attachment/attachment.module';
@@ -70,7 +71,7 @@ import { Company } from '../company/entity/company.entity';
     RoutingCategoryModule, // consult categories the shopper picks (PLN-261024)
   ],
   controllers: [ChatController],
-  providers: [ChatService, RagService, ScenarioService, IdleConversationService, ThreadService],
+  providers: [ChatService, RagService, ScenarioService, IdleConversationService, ThreadService, ScriptWordingService],
   exports: [ChatService, RagService, ScenarioService, IdleConversationService, ThreadService],
 })
 export class ChatModule {}

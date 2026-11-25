@@ -21,6 +21,7 @@ import type {
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { SCENARIOS, resolveScriptAction, isValidFollowUpId } from './scenario-scripts';
+import { ScriptWordingService } from './script-wording.service';
 
 /** The console's "Send a message" action — a button with no script, by design. */
 const MESSAGE_ACTION = 'message';
@@ -53,6 +54,8 @@ export class ScenarioService {
     // Optional so the existing positional-constructor specs keep compiling;
     // Nest always supplies it.
     @Optional() private readonly bus?: EventBusService,
+    // AI wording of the script (IVY PRD v1 C-02) — optional for the same reason.
+    @Optional() private readonly wording?: ScriptWordingService,
   ) {}
 
   isScenarioAction(action: string): boolean {
@@ -186,12 +189,15 @@ export class ScenarioService {
     // static script copy (no user free text reaches the AI on this path), and
     // moderated.text is delivered to the customer, so scrubbing pre-moderation
     // would corrupt delivery.
+    // IVY PRD v1 C-02 (PLN-261125-Phase5 §1.1): the AI words the script, the
+    // facts stay the script's; without a real engine this is the script itself.
+    const reply = this.wording ? await this.wording.word(session.tenantId ?? null, l, action, script.reply) : script.reply;
     const moderated = await this.moderation.moderate({
       tenantId: session.tenantId ?? 0,
       scope: 'ai',
       authorType: 'ai',
       conversationId: conversation.id,
-      text: script.reply,
+      text: reply,
     });
     if (moderated.decision === MODERATION_DECISION.BLOCKED) {
       const notice = await this.chatService.handoff(

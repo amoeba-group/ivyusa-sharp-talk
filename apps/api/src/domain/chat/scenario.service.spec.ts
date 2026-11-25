@@ -86,6 +86,44 @@ describe('ScenarioService consent gate', () => {
     expect(result.followUps.length).toBeGreaterThan(0);
   });
 
+  // IVY PRD v1 C-02 (PLN-261125-Phase5 §1.1): the AI's wording of the script is
+  // what passes moderation and what is stored — after the consent gate, never before.
+  it('moderates and stores the AI wording of the script', async () => {
+    effectiveConsentFor.mockResolvedValue(CONSENT_STATE.GRANTED);
+    const word = jest.fn(async () => 'AI words');
+    const worded = new ScenarioService(
+      { save: msgSave, create: (m: Partial<Message>) => m } as unknown as Repository<Message>,
+      { getOrCreateConversation, handoff: jest.fn() } as unknown as ChatService,
+      { moderate } as unknown as ModerationService,
+      { effectiveConsentFor } as unknown as SessionService,
+      { getScenarioOverride: jest.fn().mockResolvedValue(null) } as unknown as AiConfigService,
+      { publish } as unknown as EventBusService,
+      { word } as never,
+    );
+    moderate.mockImplementation(async (i: { text: string }) => ({ decision: MODERATION_DECISION.DELIVERED, text: i.text }));
+    const result = await worded.handle(session, 'cancel_order');
+    expect(word).toHaveBeenCalledWith(1, 'EN', 'cancel_order', expect.stringContaining('cancel'));
+    expect(moderate.mock.calls[0][0]).toMatchObject({ text: 'AI words', scope: 'ai' });
+    expect(result.reply.body).toBe('AI words');
+    expect(msgSave.mock.calls[1][0]).toMatchObject({ senderType: 'ai', body: 'AI words' });
+  });
+
+  it('never asks for wording without consent', async () => {
+    effectiveConsentFor.mockResolvedValue(CONSENT_STATE.PENDING);
+    const word = jest.fn(async () => 'AI words');
+    const worded = new ScenarioService(
+      { save: msgSave, create: (m: Partial<Message>) => m } as unknown as Repository<Message>,
+      { getOrCreateConversation, handoff: jest.fn() } as unknown as ChatService,
+      { moderate } as unknown as ModerationService,
+      { effectiveConsentFor } as unknown as SessionService,
+      { getScenarioOverride: jest.fn().mockResolvedValue(null) } as unknown as AiConfigService,
+      { publish } as unknown as EventBusService,
+      { word } as never,
+    );
+    await worded.handle(session, 'cancel_order');
+    expect(word).not.toHaveBeenCalled();
+  });
+
   // BUG-038: the widget draws the pressed button's label at once. Storing the
   // script's own sentence instead made the bubble change when the thread was re-read.
   it("keeps the pressed button's label as the shopper's line", async () => {
