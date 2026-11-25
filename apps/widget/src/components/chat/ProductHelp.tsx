@@ -196,7 +196,9 @@ export function PopularProductsAnswer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading]);
 
-  const products = data?.available ? data.products : [];
+  // At most three cards, each product once (IVY PRD v1 A-04) — the API already
+  // sends no more; this keeps an older API from flooding the thread.
+  const products = (data?.available ? data.products : []).slice(0, 3);
   const link = safeLink(data?.collectionUrl);
   const name = category.label;
   const lead = isError || !data?.available

@@ -379,6 +379,10 @@ export const ERROR_CODE = {
   /** "Specific customers" was chosen and none of the addresses is a customer of this shop. */
   CAMPAIGN_NO_RECIPIENTS: { code: 'E5166', message: 'This campaign has no recipients' },
 
+  // E5167 — product recommendations (IVY PRD v1 A-01…A-04, PLN-261125-IVY-Recommended-Products).
+  /** Unknown category or type, more than 10 products, a malformed handle, or a period that ends before it starts. */
+  RECOMMENDATION_INVALID: { code: 'E5167', message: 'Invalid product recommendation settings' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

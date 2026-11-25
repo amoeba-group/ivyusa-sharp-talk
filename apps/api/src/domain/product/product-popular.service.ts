@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { PopularProductsResponse } from '@sharptalk/types';
@@ -17,6 +17,22 @@ export const POPULAR_SIZE = 5;
 /** How long Product Help waits on Shopify before offering the store link instead. */
 export const POPULAR_TIMEOUT_MS = 4_000;
 /** Best sellers move slowly: 15 minutes per collection keeps Shopify calls to a few an hour. */
+import { ProductRecommendationService } from './product-recommendation.service';
+import type { ShopifyBestSeller } from '../order/shopify-admin.client';
+
+/** The widget's card: what the store returned, without the ranking-only fields. */
+function toCard(p: ShopifyBestSeller) {
+  return {
+    handle: p.handle,
+    title: p.title,
+    vendor: p.vendor,
+    price: p.price,
+    currency: p.currency,
+    imageUrl: p.imageUrl,
+    productUrl: p.productUrl,
+  };
+}
+
 const CACHE_TTL_SEC = 15 * 60;
 /** A failed read is remembered briefly, so a store outage is not asked again on every tap. */
 const FAILURE_TTL_SEC = 60;
@@ -46,6 +62,9 @@ export class ProductPopularService {
     private readonly tenantService: TenantService,
     private readonly client: ShopifyAdminClient,
     private readonly redis: RedisService,
+    // Last + optional: specs build this positionally. Present in the app, it
+    // decides which products answer (IVY PRD v1 A-01…A-04).
+    @Optional() private readonly recommendations?: ProductRecommendationService,
   ) {}
 
   async popularForSession(token: string, category: string | undefined): Promise<PopularProductsResponse> {
@@ -91,6 +110,11 @@ export class ProductPopularService {
     handle: string,
   ): Promise<Omit<PopularProductsResponse, 'collectionUrl'>> {
     try {
+      if (this.recommendations && shopDomain) {
+        // Admin Selected or AI Auto, at most three, never out of stock (PRD v1 A-01…A-04).
+        const rec = await this.withTimeout(this.recommendations.recommend(tenantId, handle, 'popular'));
+        return { available: rec.available, products: rec.products.map(toCard), mode: rec.mode };
+      }
       const conn = shopDomain ? await this.tenantService.getShopifyConnection(tenantId) : null;
       if (!conn) {
         this.logger.warn(`tenant ${tenantId}: no Shopify connection — popular products unavailable`);

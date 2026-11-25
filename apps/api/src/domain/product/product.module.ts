@@ -14,6 +14,10 @@ import { TenantModule } from '../tenant/tenant.module';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { ShopifyAdminClient } from '../order/shopify-admin.client';
 import { ProductPopularService } from './product-popular.service';
+import { ProductRecommendation } from './entity/product-recommendation.entity';
+import { ProductRecommendationService } from './product-recommendation.service';
+import { ProductRecommendationAdminController } from './product-recommendation.controller';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   // Tenant is registered for the repository only (storefront origin lookup) —
@@ -24,14 +28,26 @@ import { ProductPopularService } from './product-popular.service';
   imports: [
     // TenantAiConfig: repository-only, the Product Help categories a public
     // popular-products read may ask about (ivy-docs T10 D3).
-    TypeOrmModule.forFeature([ProductCache, ProductSave, Tenant, IntegrationCredential, KbDocument, Company, TenantAiConfig]),
+    TypeOrmModule.forFeature([
+      ProductCache,
+      ProductSave,
+      Tenant,
+      IntegrationCredential,
+      KbDocument,
+      Company,
+      TenantAiConfig,
+      // IVY PRD v1 A-01…A-04: per-category recommendation settings.
+      ProductRecommendation,
+    ]),
     SessionModule,
     // The store connection (token refresh included) for the live best-seller read.
     TenantModule,
+    // Recommendation changes are audited (PRD slide 18 "change history").
+    AuditModule,
   ],
-  controllers: [ProductController, ProductAdminController],
+  controllers: [ProductController, ProductAdminController, ProductRecommendationAdminController],
   // ShopifyAdminClient is stateless; OrderModule keeps its own instance.
-  providers: [ProductService, ProductSyncService, ProductPopularService, ShopifyAdminClient],
+  providers: [ProductService, ProductSyncService, ProductPopularService, ProductRecommendationService, ShopifyAdminClient],
   exports: [ProductService, ProductSyncService],
 })
 export class ProductModule {}

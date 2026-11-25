@@ -35,6 +35,7 @@ import { AgentsSection } from './AgentsSection';
 import { AgentEffectiveSection } from './AgentEffectiveSection';
 import { ScriptLibrarySection } from './ScriptLibrarySection';
 import { AnswerFooterSection } from './AnswerFooterSection';
+import { RecommendedProductsSection } from './RecommendedProductsSection';
 import { useAiAgents } from './ai-agents.hooks';
 import type { AiAgentRow } from './ai-agents.service';
 import type {
@@ -92,6 +93,8 @@ export function AiSettingsPage() {
           <PersonaSection draft={restoreDraft?.persona} agent={selectedAgent} />
           <ResponseRulesSection draft={restoreDraft?.rules} agent={selectedAgent} />
           <ScenarioButtonsSection />
+          {/* IVY PRD v1 A-01…A-04: next to the Product help categories it answers for. */}
+          <RecommendedProductsSection />
           <ScriptLibrarySection />
           <AnswerFooterSection />
           <AiFunctionsSection />

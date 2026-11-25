@@ -584,6 +584,12 @@ export interface InquiryCreatedResponse {
 export interface PopularProductsResponse {
   available: boolean;
   products: PopularProductCard[];
+  /**
+   * Which rule chose them (IVY PRD v1 A-04): 'admin' (the admin's picks),
+   * 'admin_fallback' (picks out of stock, AI Auto filled in), 'auto' (sales +
+   * reviews), 'auto_bestseller' (no data — the store's best-selling order).
+   */
+  mode?: string | null;
   /** The collection on the storefront, best-selling first; null when the tenant has no storefront. */
   collectionUrl: string | null;
 }

@@ -147,6 +147,7 @@
 261119-conversation-reads.sql	table	conversation_reads	-
 261125-prd-v1-phase1.sql	column	inquiries	kind
 261125-prd-v1-phase1.sql	column	campaigns	target_customer_ids
+261125-prd-v1-phase2-recommended-products.sql	table	product_recommendations	-
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

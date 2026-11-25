@@ -376,3 +376,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - SQL: `sql/261125-prd-v1-phase1.sql` (2 cột) — ✅ đã chạy trên production 2026-11-25. Sau deploy: AI Settings → nút "Payment check" chọn hành động **Payment status card**, nút "Feedback" chọn **Feedback form**.
 - **Chủ dự án quyết 2026-11-25:** CSAT **a** (giữ nhãn Figma), E-02 **b** (trong giờ chuyển nhân viên chat, ngoài giờ mở form email).
 - E-02 b đã làm (RPT §1.8): tuỳ chọn "Outside business hours, open the email form" trong AI Settings → Handoff; cần bật giờ làm việc.
+
+### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 2: gợi ý sản phẩm 2 chế độ (A-01…A-04) — ✅ code trên máy · ⏳ SQL + push · [PLN](../docs/plan/PLN-261125-IVY-Recommended-Products.md) · [TCR](../docs/test/TCR-261125-IVY-Recommended-Products.md) · [RPT](../docs/implementation/RPT-261125-IVY-Recommended-Products.md)
+- AI Settings → Recommended products: theo danh mục × loại (Popular / Recommended / New), AI Auto (bán 30 ngày 0,7 + review 0,3, mặc định) hoặc Admin Selected (≤ 10 sản phẩm, thứ tự, thời hạn), xem trước, lịch sử.
+- Widget: Popular products tối đa 3 thẻ, không hàng hết / ẩn.
+- SQL: `sql/261125-prd-v1-phase2-recommended-products.sql` (bảng `product_recommendations`) — chạy **trước** khi push.

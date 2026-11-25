@@ -309,6 +309,23 @@ export interface ShopifyOrderAddresses {
 }
 
 /**
+ * What a product card needs, plus what recommending it needs (IVY PRD v1
+ * A-03/A-04): the numeric id that order lines carry, and whether any variant
+ * can be bought. All read_products; checked against the 2026-01 Admin GraphQL
+ * reference (`ProductVariant.availableForSale`, `Product.legacyResourceId`).
+ */
+const PRODUCT_CARD_FIELDS = `
+        handle
+        title
+        vendor
+        status
+        onlineStoreUrl
+        legacyResourceId
+        featuredMedia { preview { image { url } } }
+        priceRangeV2 { minVariantPrice { amount currencyCode } }
+        variants(first: 20) { nodes { availableForSale } }`;
+
+/**
  * A collection's best sellers (ivy-docs T10 D3). Needs read_products only.
  * `collectionByIdentifier` + `ProductCollectionSortKeys.BEST_SELLING`, checked
  * against the 2026-01 Admin GraphQL reference. More are asked than shown:
@@ -318,15 +335,17 @@ const COLLECTION_BEST_SELLERS_QUERY = `
 query CollectionBestSellers($handle: String!, $first: Int!) {
   collectionByIdentifier(identifier: { handle: $handle }) {
     products(first: $first, sortKey: BEST_SELLING) {
-      nodes {
-        handle
-        title
-        vendor
-        status
-        onlineStoreUrl
-        featuredMedia { preview { image { url } } }
-        priceRangeV2 { minVariantPrice { amount currencyCode } }
+      nodes {${PRODUCT_CARD_FIELDS}
       }
+    }
+  }
+}`;
+
+/** Products found by a search string (handles, or what an admin typed). */
+const PRODUCTS_SEARCH_QUERY = `
+query ProductsSearch($query: String!, $first: Int!) {
+  products(first: $first, query: $query, sortKey: RELEVANCE) {
+    nodes {${PRODUCT_CARD_FIELDS}
     }
   }
 }`;
@@ -340,6 +359,10 @@ export interface ShopifyBestSeller {
   currency: string | null;
   imageUrl: string | null;
   productUrl: string;
+  /** Shopify's numeric product id — what `order_items.product_id` holds (PRD v1 A-03). */
+  productId?: string | null;
+  /** Some variant can be bought right now (PRD v1 A-04: out of stock is never recommended). */
+  available?: boolean;
 }
 
 interface BestSellerNode {
@@ -348,8 +371,38 @@ interface BestSellerNode {
   vendor?: string | null;
   status?: string | null;
   onlineStoreUrl?: string | null;
+  legacyResourceId?: string | null;
   featuredMedia?: { preview?: { image?: { url?: string | null } | null } | null } | null;
   priceRangeV2?: { minVariantPrice?: { amount?: string | null; currencyCode?: string | null } | null } | null;
+  variants?: { nodes?: Array<{ availableForSale?: boolean | null }> | null } | null;
+}
+
+/** A product node → a card, or null when it is not on sale online (draft, archived, unpublished). */
+function toBestSeller(n: BestSellerNode): ShopifyBestSeller | null {
+  if (n.status !== 'ACTIVE' || !n.onlineStoreUrl || !n.handle || !n.title) return null;
+  const amount = Number(n.priceRangeV2?.minVariantPrice?.amount);
+  return {
+    handle: n.handle,
+    title: n.title,
+    vendor: n.vendor?.trim() || null,
+    price: Number.isFinite(amount) ? amount : null,
+    currency: n.priceRangeV2?.minVariantPrice?.currencyCode ?? null,
+    imageUrl: n.featuredMedia?.preview?.image?.url ?? null,
+    productUrl: n.onlineStoreUrl,
+    productId: n.legacyResourceId ?? null,
+    // No variant list at all reads as "on sale": a store that hid the field
+    // must not empty every recommendation.
+    available: Array.isArray(n.variants?.nodes) ? n.variants!.nodes!.some((v) => v?.availableForSale === true) : true,
+  };
+}
+
+/** Shopify search syntax for an exact handle list. Handles are [a-z0-9-]; anything else is dropped. */
+export function handlesQuery(handles: readonly string[]): string {
+  return handles
+    .map((h) => h.trim().toLowerCase())
+    .filter((h) => /^[a-z0-9][a-z0-9-]*$/.test(h))
+    .map((h) => `handle:${h}`)
+    .join(' OR ');
 }
 
 const CUSTOMER_QUERY = `
@@ -591,17 +644,53 @@ export class ShopifyAdminClient {
     const out: ShopifyBestSeller[] = [];
     for (const n of collection.products?.nodes ?? []) {
       if (out.length >= limit) break;
-      if (n.status !== 'ACTIVE' || !n.onlineStoreUrl || !n.handle || !n.title) continue;
-      const amount = Number(n.priceRangeV2?.minVariantPrice?.amount);
-      out.push({
-        handle: n.handle,
-        title: n.title,
-        vendor: n.vendor?.trim() || null,
-        price: Number.isFinite(amount) ? amount : null,
-        currency: n.priceRangeV2?.minVariantPrice?.currencyCode ?? null,
-        imageUrl: n.featuredMedia?.preview?.image?.url ?? null,
-        productUrl: n.onlineStoreUrl,
-      });
+      const card = toBestSeller(n);
+      if (card) out.push(card);
+    }
+    return out;
+  }
+
+  /**
+   * The products with these handles, on sale online, keyed by handle (IVY PRD
+   * v1 A-02: the admin's picks). A handle the store does not have — or a draft
+   * — is simply absent.
+   */
+  async fetchProductsByHandles(
+    shopDomain: string,
+    token: string,
+    handles: readonly string[],
+  ): Promise<Map<string, ShopifyBestSeller>> {
+    const query = handlesQuery(handles);
+    if (!query) return new Map();
+    const body = (await this.gql(shopDomain, token, PRODUCTS_SEARCH_QUERY, {
+      query,
+      first: Math.min(handles.length, 50),
+    })) as { data?: { products?: { nodes?: BestSellerNode[] } } };
+    const out = new Map<string, ShopifyBestSeller>();
+    for (const n of body.data?.products?.nodes ?? []) {
+      const card = toBestSeller(n);
+      if (card) out.set(card.handle, card);
+    }
+    return out;
+  }
+
+  /**
+   * Products matching what an admin typed, for picking recommendations (IVY
+   * PRD v1 A-02). Quotes, colons and parentheses are stripped so the text is a
+   * plain search, never search syntax. Only products on sale online.
+   */
+  async searchProducts(shopDomain: string, token: string, text: string, limit = 10): Promise<ShopifyBestSeller[]> {
+    const term = text.replace(/["'():\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+    if (!term) return [];
+    const body = (await this.gql(shopDomain, token, PRODUCTS_SEARCH_QUERY, {
+      query: `status:active ${term}`,
+      first: Math.min(limit * 2, 30),
+    })) as { data?: { products?: { nodes?: BestSellerNode[] } } };
+    const out: ShopifyBestSeller[] = [];
+    for (const n of body.data?.products?.nodes ?? []) {
+      if (out.length >= limit) break;
+      const card = toBestSeller(n);
+      if (card) out.push(card);
     }
     return out;
   }

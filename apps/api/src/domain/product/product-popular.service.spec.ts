@@ -130,8 +130,9 @@ describe('ShopifyAdminClient.fetchCollectionBestSellers', () => {
     });
     const rows = await client.fetchCollectionBestSellers('s.myshopify.com', 't', 'nails', 2);
     expect(rows).toEqual([
-      { handle: 'gel', title: 'Gel Polish Starter Set', vendor: 'KISS', price: 24.99, currency: 'USD', imageUrl: 'https://cdn.shopify.com/gel.jpg', productUrl: 'https://ivyusa.com/products/gel' },
-      { handle: 'b', title: 'B', vendor: null, price: null, currency: null, imageUrl: null, productUrl: 'https://ivyusa.com/products/gel' },
+      // productId / available: what recommending needs (IVY PRD v1 A-03/A-04). No variant list reads as on sale.
+      { handle: 'gel', title: 'Gel Polish Starter Set', vendor: 'KISS', price: 24.99, currency: 'USD', imageUrl: 'https://cdn.shopify.com/gel.jpg', productUrl: 'https://ivyusa.com/products/gel', productId: null, available: true },
+      { handle: 'b', title: 'B', vendor: null, price: null, currency: null, imageUrl: null, productUrl: 'https://ivyusa.com/products/gel', productId: null, available: true },
     ]);
     expect(gql.mock.calls[0]).toEqual(['s.myshopify.com', 't', expect.stringContaining('sortKey: BEST_SELLING'), { handle: 'nails', first: 6 }]);
   });
