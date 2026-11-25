@@ -34,6 +34,7 @@ Kênh thông báo: hiện chỉ thông báo trong widget là thật; email / SMS
 3. **Đo PLN §2.5** sau khi chạy lại xong: dòng `Delivery check tenant=…: N delivered parcel(s) read, M delivered after the order's last update`.
    - M bằng 0 hoặc rất nhỏ so với N → Shopify có đổi `updated_at` khi giao; không cần làm gì thêm.
    - M lớn → đơn giao xong không lọt vào lượt đồng bộ; cần viết bước "soát lại đơn đang giao" (PLN §2.5, đã duyệt 3a).
+   - ⚠️ (bổ sung 2026-11-25) Hai quy tắc trên chỉ đúng với lượt **đọc lại toàn bộ**. Lượt 30 phút chỉ đọc đơn có `updated_at` vừa đổi: nếu giao hàng không đổi `updated_at`, đơn đó không được đọc nên không có trong log, và M ở lượt 30 phút luôn gần 0. Ở lượt 30 phút, xem **N** trong giờ giao hàng ở Mỹ (§5).
 4. **Kiểm trên console:** lấy mẫu lại 5 trang Orders, phải thấy Delivered; đơn In Transit phải có mã vận đơn ở Order Detail của widget.
 
 ## 4. Trạng thái deploy
@@ -42,6 +43,70 @@ Kênh thông báo: hiện chỉ thông báo trong widget là thật; email / SMS
 |---|---|
 | SQL | Không có |
 | Commit / CI | `f92e0659` · IVY CI/CD run `44236718563` xanh (2026-11-18 04:25 UTC) |
-| Server `talkaibotprd01` | ⏳ (build lại `api`) |
-| Re-sync trên production | ⏳ |
-| Kết quả đo PLN §2.5 | ⏳ |
+| Server `talkaibotprd01` | ✅ Có trong mọi bản deploy sau 2026-11-18 (API đang chạy bản `f4faad2f`, 2026-11-25) |
+| Re-sync trên production | 🟡 Không có ghi nhận ngày. Production có 47.961 dòng `fulfillments`, mà chỉ code này ghi bảng đó (webhook không tới) → đã có ít nhất một lượt đọc lại toàn bộ sau 2026-11-18. Ngày: truy vấn C ở §5 |
+| Kết quả đo PLN §2.5 | 🟡 Lần 1 (2026-11-25): Shopify cho đọc kiện; chưa kết luận được về `updated_at` (§5) |
+
+## 5. Kết quả đo trên production
+
+### Lần 1 — 2026-11-25, khoảng 14:00 UTC (chủ dự án chạy lệnh chỉ đọc)
+
+Container API chạy từ deploy `f4faad2f` (khoảng 09:00 UTC), tức khoảng 10 lượt đồng bộ. Dòng `Delivery check` chỉ in khi lượt đó đọc được ít nhất một kiện đã giao:
+
+| Lượt (UTC) | N: kiện đã giao đọc được | M: giao sau lần đổi cuối của đơn |
+|---|---|---|
+| 10:29 | 1 | 0 |
+| 10:59 | 2 | 0 |
+| 11:29 | 1 | 0 |
+| 12:29 | 1 | 0 |
+
+Không có dòng `Shipment details unavailable`.
+
+Bảng `fulfillments` (tenant 1):
+
+| Trạng thái | Số dòng | Có `delivered_at` | `delivered_at` trong 24 giờ | Đã xử lý yêu cầu review |
+|---|---|---|---|---|
+| delivered | 11.370 | 3 | 1 | 0 |
+| in_transit | 1.126 | 0 | — | 0 |
+| shipped | 35.465 | 0 | — | 0 |
+
+Ngày giao đã ghi: 2026-11-25 ×1, 2026-11-23 ×2.
+
+Đọc kết quả:
+
+1. **Shopify cho đọc kiện hàng.** Không có dòng từ chối.
+2. **Chưa trả lời được PLN §2.5.** M = 0 ở lượt 30 phút không chứng minh gì (§3 bước 3). N nhỏ cũng chưa nói được gì: các lượt này rơi vào 05:00–10:00 sáng giờ miền Đông nước Mỹ, lúc hãng vận chuyển gần như chưa giao.
+3. **74 % kiện ở `shipped`.** Lúc đọc, Shopify chưa có trạng thái vận chuyển cho kiện (`displayStatus` không phải in transit / out for delivery / delivered). Widget hiện các đơn này là In Transit. Hai khả năng:
+   - hãng vận chuyển không gửi trạng thái về Shopify → kiện không bao giờ thành Delivered;
+   - dữ liệu cũ: kiện đi tiếp sau lần đọc cuối mà đơn không đổi `updated_at`, nên không được đọc lại.
+4. **N-05.** Mới 3 đơn có ngày giao, chưa đơn nào tới hạn. Yêu cầu review tự động đầu tiên vào khoảng 2026-11-30. Đợt IVY test từ 2026-11-27 sẽ không thấy yêu cầu tự động nào; mục 42 của hướng dẫn test chỉ kiểm cài đặt nên không lệch.
+
+### Lần 2 — cần làm
+
+**A–C. Truy vấn chỉ đọc** (`docker exec -i sharptalk_mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'`, câu lệnh qua stdin):
+
+```sql
+-- A. Theo hãng vận chuyển
+SELECT COALESCE(NULLIF(carrier, ''), '(none)') AS carrier_name,
+       SUM(status = 'shipped') AS shipped, SUM(status = 'in_transit') AS in_transit,
+       SUM(status = 'delivered') AS delivered
+  FROM fulfillments GROUP BY carrier_name ORDER BY COUNT(*) DESC LIMIT 12;
+-- B. Theo tuần đặt hàng (ngày thứ Hai của tuần)
+SELECT DATE_SUB(DATE(o.ordered_at), INTERVAL WEEKDAY(o.ordered_at) DAY) AS order_week,
+       SUM(f.status = 'shipped') AS shipped, SUM(f.status = 'in_transit') AS in_transit,
+       SUM(f.status = 'delivered') AS delivered
+  FROM fulfillments f JOIN orders_cache o ON o.id = f.order_id
+ GROUP BY order_week ORDER BY order_week DESC LIMIT 12;
+-- C. Theo ngày dòng được ghi lần cuối (một lượt đọc lại toàn bộ hiện thành một ngày rất lớn)
+SELECT DATE(updated_at) AS written_on,
+       SUM(status = 'shipped') AS shipped, SUM(status = 'in_transit') AS in_transit,
+       SUM(status = 'delivered') AS delivered
+  FROM fulfillments GROUP BY written_on ORDER BY written_on DESC LIMIT 12;
+```
+
+Cách đọc:
+
+- `in_transit` / `shipped` còn nhiều ở đơn đặt từ 3 tuần trước trở về trước, cùng hãng với các đơn đã Delivered → dữ liệu cũ → cần bước "soát lại đơn đang giao" (PLN §2.5, đã duyệt 3a).
+- `shipped` dồn vào những hãng không có đơn Delivered nào → hãng không gửi trạng thái về Shopify. Đồng bộ không sửa được; báo IVY.
+
+**D. Log ban ngày ở Mỹ:** chạy lại lệnh log ở §3 bước 1 (bỏ `--since 40m`, thêm `| tail -n 60`) vào sáng 2026-11-26 giờ Việt Nam, khi chưa có deploy nào dựng lại API. Nếu giao hàng làm đổi `updated_at`, các lượt từ khoảng 14:00 UTC phải đọc được nhiều kiện đã giao mỗi lượt. Nếu vẫn chỉ 0–2 kiện thì giao hàng không làm đổi đơn.
