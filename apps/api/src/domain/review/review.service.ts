@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CJM_STAGE, MODERATION_DECISION } from '@sharptalk/types';
@@ -9,6 +9,7 @@ import { OrderItem } from '../order/entity/order-item.entity';
 import { OrderCache } from '../order/entity/order-cache.entity';
 import { ModerationService } from '../moderation/moderation.service';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
+import { NotificationService } from '../notification/notification.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 
@@ -25,6 +26,8 @@ export class ReviewService {
     private readonly sessionService: SessionService,
     private readonly moderation: ModerationService,
     private readonly bus: EventBusService,
+    // Appended and optional: the positional specs keep building (IVY PRD v1 N-05).
+    @Optional() private readonly notifications?: NotificationService,
   ) {}
 
   async create(
@@ -92,6 +95,11 @@ export class ReviewService {
       stage: CJM_STAGE.POST,
       eventType: 'review_submitted',
       customerId,
+    });
+    // The review answers its request (IVY PRD v1 N-05): the line stops showing
+    // as new and the badge drops. Never fatal — the review itself is saved.
+    await this.notifications?.markReviewRequestsRead(customerId, orderItemId).catch((e: Error) => {
+      this.logger.warn(`review request not marked read (item ${orderItemId}): ${e.message}`);
     });
     return review;
   }

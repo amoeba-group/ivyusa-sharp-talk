@@ -83,8 +83,10 @@ export class OrderMapper {
     item: OrderItem,
     reviewed: boolean,
     imageUrl?: string | null,
+    requestId?: string | null,
   ): ReviewItemView {
     return {
+      ...(requestId ? { requestId } : {}),
       orderItemId: String(item.id),
       orderId: String(order.id),
       orderNumber: order.orderNumber,

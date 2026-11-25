@@ -93,6 +93,42 @@ describe('ReviewService', () => {
       );
     });
 
+    // IVY PRD v1 N-05: the review answers its request — the line stops showing as new.
+    it('reads the review request of the line it reviews', async () => {
+      const markReviewRequestsRead = jest.fn(async () => 1);
+      // The same doubles, with the notification service appended (positional, optional).
+      const ctorArgs = [
+        Reflect.get(svc, 'reviewRepo'),
+        Reflect.get(svc, 'sessionRepo'),
+        Reflect.get(svc, 'orderItemRepo'),
+        Reflect.get(svc, 'orderRepo'),
+        Reflect.get(svc, 'sessionService'),
+        Reflect.get(svc, 'moderation'),
+        Reflect.get(svc, 'bus'),
+      ];
+      const notified = new (ReviewService as unknown as new (...a: unknown[]) => ReviewService)(...ctorArgs, { markReviewRequestsRead });
+      await notified.create('tok', 100, 4, 'nice');
+      expect(markReviewRequestsRead).toHaveBeenCalledWith(42, 100);
+    });
+
+    it('a failure to read the request never fails the review', async () => {
+      const ctorArgs = [
+        Reflect.get(svc, 'reviewRepo'),
+        Reflect.get(svc, 'sessionRepo'),
+        Reflect.get(svc, 'orderItemRepo'),
+        Reflect.get(svc, 'orderRepo'),
+        Reflect.get(svc, 'sessionService'),
+        Reflect.get(svc, 'moderation'),
+        Reflect.get(svc, 'bus'),
+      ];
+      const failing = new (ReviewService as unknown as new (...a: unknown[]) => ReviewService)(...ctorArgs, {
+        markReviewRequestsRead: jest.fn(async () => {
+          throw new Error('db down');
+        }),
+      });
+      await expect(failing.create('tok', 100, 4)).resolves.toMatchObject({ id: 1 });
+    });
+
     it('rejects an unknown order item with 404', async () => {
       await expect(svc.create('tok', 999, 5)).rejects.toMatchObject({ errorCode: 'E5002' });
     });

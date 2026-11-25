@@ -391,6 +391,11 @@ export interface ReviewItemResponse {
   reviewed: boolean;
   /** When the order was placed (ISO), for the row's relative date. */
   orderedAt: string;
+  /**
+   * The unread review request naming this line (IVY PRD v1 N-05): the row is
+   * drawn as new and opening it reads this notification. Absent / null = none.
+   */
+  requestId?: string | null;
 }
 
 /** Flat: the order's own fields sit alongside `items` — never `{ order, items }`. */

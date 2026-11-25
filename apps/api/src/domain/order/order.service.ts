@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Like, Repository } from 'typeorm';
+import { In, IsNull, Like, Repository } from 'typeorm';
 import {
   CJM_STAGE,
   FULFILLMENT_STATUS,
@@ -17,6 +17,7 @@ import { OrderCache } from './entity/order-cache.entity';
 import { OrderItem } from './entity/order-item.entity';
 import { EMPTY_ITEM_SUMMARY, summarizeOrderItems, type OrderItemSummary } from './order-item-summary';
 import { Fulfillment } from './entity/fulfillment.entity';
+import { Notification } from '../notification/entity/notification.entity';
 import { Session } from '../session/entity/session.entity';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { Customer } from '../customer/entity/customer.entity';
@@ -96,6 +97,8 @@ export class OrderService {
     // cache does not hold it. Optional so the specs that build this service
     // without a store keep working, and behave as "the store has no such order".
     @Optional() private readonly shopifySync?: ShopifySyncService,
+    // Appended (IVY PRD v1 N-05): read-only, the unread review request on a line.
+    @Optional() @InjectRepository(Notification) private readonly notifRepo?: Repository<Notification>,
   ) {}
 
   private readonly logger = new Logger(OrderService.name);
@@ -266,9 +269,10 @@ export class OrderService {
       ).map((r) => String(r.orderItemId)),
     );
     const images = await this.itemImages(tenantId, items);
+    const requests = await this.unreadReviewRequests(customerId, items.map((i) => Number(i.id)));
     const orderById = new Map(orders.map((o) => [String(o.id), o]));
     // Newest order first, lines in their order within it.
-    return orders.flatMap((o) =>
+    const rows = orders.flatMap((o) =>
       items
         .filter((i) => String(i.orderId) === String(o.id))
         .map((i) =>
@@ -277,9 +281,33 @@ export class OrderService {
             i,
             reviewed.has(String(i.id)),
             images.get(String(i.id)) ?? null,
+            requests.get(String(i.id)) ?? null,
           ),
         ),
     );
+    // A line with an unread review request leads (IVY PRD v1 N-05): it is what
+    // the badge counted, so the shopper finds it on top. Stable otherwise.
+    return [...rows.filter((r) => r.requestId), ...rows.filter((r) => !r.requestId)];
+  }
+
+  /** order_item id → its unread review request id (IVY PRD v1 N-05). One query per list. */
+  private async unreadReviewRequests(customerId: number, itemIds: number[]): Promise<Map<string, string>> {
+    const out = new Map<string, string>();
+    if (!this.notifRepo || !itemIds.length) return out;
+    const rows = await this.notifRepo.find({
+      where: {
+        customerId,
+        category: 'review',
+        refType: NOTIFICATION_REF.ORDER_ITEM,
+        refId: In(itemIds),
+        readAt: IsNull(),
+        deletedAt: IsNull(),
+      },
+      select: { id: true, refId: true },
+      order: { id: 'DESC' },
+    });
+    for (const r of rows) if (r.refId != null && !out.has(String(r.refId))) out.set(String(r.refId), String(r.id));
+    return out;
   }
 
   /**

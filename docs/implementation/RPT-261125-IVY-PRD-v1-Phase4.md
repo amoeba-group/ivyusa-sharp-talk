@@ -33,6 +33,12 @@ Tự kết thúc chat **không đổi code**: chính sách Chat close (Settings 
 
 Write Review → Yotpo: chưa làm, cần khoá Yotpo của IVY (thứ 6).
 
+**Sửa sau deploy (2026-11-25, [FIX-261125](../bug-fix/FIX-261125-IVY-Review-Request-Not-Shown.md), BUG-045):** thông báo `review` không có chỗ hiện trên widget một thanh và không được badge đếm (BUG-042), nên khách không thấy yêu cầu. Đã sửa:
+
+- dòng sản phẩm được nhắc tới đứng đầu chip Review, tô sáng + chấm đỏ;
+- badge đếm yêu cầu gắn sản phẩm;
+- Write Review hoặc gửi review thì yêu cầu thành đã đọc.
+
 ### 1.3 C-03 — Cancel order
 
 - Câu `cancel_order` của IVY trong seed: đăng nhập [tài khoản IVY](https://account.ivyusa.com/orders) → mở đơn → yêu cầu huỷ. Không thấy lựa chọn đó thì email hello@ivyusa.com. 6 ngôn ngữ. Link là markdown, widget đã hiển thị được (`RichText`). File: `seed.runner.ts`.

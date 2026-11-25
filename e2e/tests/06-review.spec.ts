@@ -101,3 +101,33 @@ test.describe('T06 · Notifications — Review', () => {
     await expect(page.getByRole('alert')).toContainText('Remove contact details or offensive words');
   });
 });
+
+// IVY PRD v1 N-05 (PLN-261125-Phase4 §2, fix 2026-11-25): a review request N days
+// after delivery shows on the Review chip — the line it names leads, highlighted
+// with the unread dot — and opening Write Review reads it.
+test.describe('T06 · Review request (PRD v1 N-05)', () => {
+  test('TC-06-06 a requested line is highlighted and Write Review reads the request @T06', async ({ page, widget, mocks }) => {
+    const [first] = reviewItems();
+    await page.route('**/api/v1/orders/review-items', (route) =>
+      route.fulfill({
+        json: {
+          success: true,
+          data: [
+            { ...first, orderItemId: 'li-10', title: 'Gel Polish Starter Set', productUrl: null, requestId: '77' },
+            { ...first, productUrl: null },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+      }),
+    );
+    await openReview(widget);
+    const rows = widget.panel.getByTestId('review-row');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.first()).toHaveAttribute('data-new', 'true');
+    await expect(rows.first().getByLabel('Unread')).toBeVisible();
+    await expect(rows.nth(1)).toHaveAttribute('data-new', 'false');
+
+    await rows.first().getByRole('button', { name: 'Write Review' }).click();
+    await expect.poll(() => mocks!.callsTo('POST', '/notifications/77/read').length).toBe(1);
+  });
+});

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { CheckCircle2, Package, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore } from '../../store/widgetStore';
 import { useReviewItems } from '../../hooks/useOrders';
+import { useMarkRead } from '../../hooks/useNotifications';
 import { formatMoney } from '../../lib/format';
 import { noticeTimeText } from '../../lib/notice-time-text';
 import { reviewLinkFor } from '../../../../../packages/types/src/common/widget-theme';
@@ -17,11 +19,17 @@ function Row({
   item,
   href,
   onWrite,
+  isNew,
+  onOpen,
 }: {
   item: ReviewItem;
   /** The store's review page for this product; null → the in-widget form. */
   href: string | null;
   onWrite: (orderItemId: string) => void;
+  /** An unread review request names this line (IVY PRD v1 N-05). */
+  isNew: boolean;
+  /** Write Review was opened — reads the request. */
+  onOpen: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const meta = [item.title, item.price != null ? formatMoney(item.price, item.currency) : null]
@@ -29,7 +37,12 @@ function Row({
     .join(' · ');
 
   return (
-    <div className="flex items-start gap-3 border-b border-gray-100 px-4 py-3.5">
+    <div
+      data-testid="review-row"
+      data-new={isNew ? 'true' : 'false'}
+      // Same unread look as a notification row (PRD v1 slide 8: highlighted card or red dot).
+      className={`flex items-start gap-3 border-b border-gray-100 px-4 py-3.5 ${isNew ? 'bg-highlight' : ''}`}
+    >
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100">
         {item.imageUrl ? (
           // Decorative: the title beside it already names the product.
@@ -55,6 +68,7 @@ function Row({
               href={href}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={onOpen}
               className="inline-flex items-center gap-1 text-sm font-semibold text-warning-ink hover:underline"
             >
               <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden />
@@ -63,7 +77,10 @@ function Row({
           ) : (
             <button
               type="button"
-              onClick={() => onWrite(item.orderItemId)}
+              onClick={() => {
+                onOpen();
+                onWrite(item.orderItemId);
+              }}
               className="inline-flex items-center gap-1 text-sm font-semibold text-warning-ink hover:underline"
             >
               <Star className="h-3.5 w-3.5 fill-warning text-warning" aria-hidden />
@@ -75,6 +92,11 @@ function Row({
           </span>
         </div>
       </div>
+      {isNew && (
+        <span className="mt-1.5 flex-shrink-0" aria-label={t('notifications.unread')}>
+          <span className="block h-2 w-2 rounded-full bg-error" />
+        </span>
+      )}
     </div>
   );
 }
@@ -95,6 +117,15 @@ export function ReviewItemList({
   const { t } = useTranslation();
   const template = useWidgetStore((s) => s.widgetTheme?.design?.reviewLinkTemplate ?? null);
   const { data, isLoading, isError } = useReviewItems(sessionToken);
+  const markRead = useMarkRead(sessionToken);
+  // Requests opened on this visit: the highlight goes at once, the row stays
+  // where it is until the next open (PRD v1 slide 9 rule 3).
+  const [opened, setOpened] = useState<Set<string>>(() => new Set());
+  const open = (requestId: string | null | undefined) => {
+    if (!requestId || opened.has(requestId)) return;
+    setOpened((prev) => new Set(prev).add(requestId));
+    markRead.mutate(requestId);
+  };
 
   // Loading and error are said as such — an empty list while the request is in
   // flight would read as "nothing to review".
@@ -116,6 +147,8 @@ export function ReviewItemList({
           item={item}
           href={reviewLinkFor(template, item.productUrl)}
           onWrite={onWrite}
+          isNew={!!item.requestId && !opened.has(item.requestId)}
+          onOpen={() => open(item.requestId)}
         />
       ))}
     </div>

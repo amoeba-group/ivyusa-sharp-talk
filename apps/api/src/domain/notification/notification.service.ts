@@ -111,6 +111,8 @@ function withRecentWindow(base: Record<string, unknown>, now = Date.now()): Reco
  * row is written unconditionally, so filtering to it never hides an event.
  */
 const FEED_CHANNEL = 'in_app';
+/** Review requests (IVY PRD v1 N-05) — shown on the Review chip's line, not in a feed. */
+const REVIEW_CATEGORY = 'review';
 
 /** Per-scope, because the widget may show two badges that must not share a cache. */
 function unreadCacheKey(customerId: number, scope?: NotificationScope): string {
@@ -712,6 +714,27 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
+   * The shopper reviewed a line: its review request is answered (IVY PRD v1
+   * N-05). Read, not deleted — the history stays — and every badge refreshed.
+   */
+  async markReviewRequestsRead(customerId: number, orderItemId: number): Promise<number> {
+    const res = await this.notifRepo.update(
+      {
+        customerId,
+        category: REVIEW_CATEGORY,
+        refType: NOTIFICATION_REF.ORDER_ITEM,
+        refId: orderItemId,
+        readAt: IsNull(),
+        deletedAt: IsNull(),
+      },
+      { readAt: new Date() },
+    );
+    const affected = res.affected ?? 0;
+    if (affected) await Promise.all(unreadCacheKeys(customerId).map((k) => this.redis.del(k)));
+    return affected;
+  }
+
+  /**
    * The shopper opened the chat: every "an agent replied" notice of theirs is
    * read. There is no row to tap for these — the thread itself is the reading
    * of them — so without this the badge they raise could never clear (BUG-041).
@@ -749,21 +772,30 @@ export class NotificationService implements OnModuleInit {
     // exactly that — for the tab's badge (`feed`) and for the storefront bell
     // (no scope: the feed plus the agent replies the Chat tab shows). A notice
     // nothing can display would otherwise hold the badge up for good (BUG-042).
+    let oneListTab = false;
     if (scope === undefined || scope === NOTIFICATION_SCOPE.FEED) {
       const tenantId = (await this.sessionService.requireCustomer(token))?.tenantId ?? null;
-      if (tenantId != null && (await this.showsOneListTab(tenantId))) {
+      oneListTab = tenantId != null && (await this.showsOneListTab(tenantId));
+      if (oneListTab) {
+        // + review requests (IVY PRD v1 N-05): the Review chip shows the line a
+        // request names, highlighted, and tapping it reads the request.
         where.category = In(
           scope === undefined
-            ? [...SINGLE_BAR_FEED_CATEGORIES, CHAT_NOTIFICATION_CATEGORY]
-            : [...SINGLE_BAR_FEED_CATEGORIES],
+            ? [...SINGLE_BAR_FEED_CATEGORIES, REVIEW_CATEGORY, CHAT_NOTIFICATION_CATEGORY]
+            : [...SINGLE_BAR_FEED_CATEGORIES, REVIEW_CATEGORY],
         );
       }
     }
-    const unread = await this.notifRepo.find({
+    const rows = await this.notifRepo.find({
       where: { ...where, readAt: IsNull() },
       select: { id: true, category: true, refType: true, refId: true },
       take: UNREAD_SCAN_MAX,
     });
+    // Only a request that names a line can be shown, and so read, on the
+    // Review chip; any other review row would hold the badge up for good (BUG-042).
+    const unread = oneListTab
+      ? rows.filter((r) => r.category !== REVIEW_CATEGORY || r.refType === NOTIFICATION_REF.ORDER_ITEM)
+      : rows;
     const count = countNewCards(unread);
     await this.redis.set(key, String(count), UNREAD_CACHE_TTL_SEC);
     return count;

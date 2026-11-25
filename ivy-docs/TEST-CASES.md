@@ -197,6 +197,7 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-06-03 | Lỗi lưu | Dòng **không có link** (để luôn mở form); `POST /reviews` 500 → `role=alert` "Couldn't save… try again"; ô chữ vẫn "Love it", nút Submit bấm được | BUG-009 |
 | TC-06-04 | Gửi lại | Lần 1 → 500 (toast lỗi), lần 2 → 201 → "Thanks for your review!" | PLN-261112-T06 D3 |
 | TC-06-05 | Bị chặn | `POST /reviews` 422 `E4002` → toast "…Remove contact details or offensive words…" | PLN-261112-T06 D3 |
+| TC-06-06 | Yêu cầu review (PRD v1 N-05) | Dòng có `requestId` đứng đầu, `data-new="true"`, có chấm Unread; dòng khác `data-new="false"`. Write Review → `POST /notifications/77/read` | FIX-261125, BUG-045 |
 
 **Kết quả (2026-11-12):** 5/5, lặp ×3 (2 worker): 15/15. Cổng CI mới (`@smoke|@T00|@T01|@T02|@T03|@T04|@T05|@T06|@T07|@T13`) ×2: 130/130. Toàn bộ desktop: 77 pass / 19 fail, mọi ca đỏ thuộc T08–T12 chưa làm.
 

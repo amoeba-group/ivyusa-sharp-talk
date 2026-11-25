@@ -9,6 +9,7 @@ describe('OrderService.reviewItemsForSession', () => {
     orders?: Array<Record<string, unknown>>;
     items?: Array<Record<string, unknown>>;
     reviews?: Array<Record<string, unknown>>;
+    requests?: Array<Record<string, unknown>>;
   }) {
     const wheres: Array<{ clause: string; params: unknown }> = [];
     const qb: Record<string, unknown> = {
@@ -20,6 +21,7 @@ describe('OrderService.reviewItemsForSession', () => {
     };
     const itemRepo = { find: jest.fn().mockResolvedValue(opts.items ?? []) };
     const reviewRepo = { find: jest.fn().mockResolvedValue(opts.reviews ?? []) };
+    const notifRepo = { find: jest.fn().mockResolvedValue(opts.requests ?? []) };
     const productRepo = {
       createQueryBuilder: jest.fn(() => {
         const p: Record<string, unknown> = {
@@ -47,8 +49,10 @@ describe('OrderService.reviewItemsForSession', () => {
       } as never,
       productRepo as never,
       reviewRepo as never,
+      undefined, // shopifySync
+      notifRepo as never,
     );
-    return { svc, wheres, itemRepo, reviewRepo };
+    return { svc, wheres, itemRepo, reviewRepo, notifRepo };
   }
 
   // String ids, as TypeORM returns bigint columns.
@@ -110,5 +114,21 @@ describe('OrderService.reviewItemsForSession', () => {
     expect(out[1]).toMatchObject({ reviewed: true, productUrl: null });
     // Only this customer's reviews count.
     expect(reviewRepo.find.mock.calls[0][0].where.customerId).toBe('7');
+  });
+
+  // IVY PRD v1 N-05: a line named by an unread review request carries its id
+  // and leads the list — that is what the badge counted.
+  it('marks and leads the lines an unread review request names', async () => {
+    const { svc, notifRepo } = build({
+      orders: [order('2', '1002'), order('1', '1001')],
+      items: [item('11', '1'), item('21', '2'), item('22', '2')],
+      requests: [{ id: '900', refId: '11' }],
+    });
+    const out = await svc.reviewItemsForSession('tok');
+    expect(out.map((r) => r.orderItemId)).toEqual(['11', '21', '22']);
+    expect(out[0].requestId).toBe('900');
+    expect(out[1]).not.toHaveProperty('requestId');
+    const where = notifRepo.find.mock.calls[0][0].where;
+    expect(where).toMatchObject({ customerId: '7', category: 'review', refType: 'order_item' });
   });
 });

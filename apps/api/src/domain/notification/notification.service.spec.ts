@@ -837,14 +837,17 @@ describe('NotificationService.markChatRead', () => {
  * BUG-042: with one list tab (IVY), only Order (payment, shipping) and Promo
  * (event) rows can be shown. A notice of another category has no chip, so it
  * cannot be read — it must not be counted, or the badge never clears.
+ *
+ * IVY PRD v1 N-05: a review request that names a line is shown — and read — on
+ * the Review chip, so it counts; a review row without that reference still does not.
  */
 describe('NotificationService.unreadCount — a single list tab counts only what its chips list', () => {
-  function build(widgetTabs: string[] | null) {
+  function build(widgetTabs: string[] | null, rows: Array<Record<string, unknown>> = []) {
     let countWhere: Record<string, unknown> | undefined;
     const notifRepo = {
       find: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
         countWhere = where;
-        return [];
+        return rows;
       }),
     } as unknown as Repository<Notification>;
     const svc = new NotificationService(
@@ -860,16 +863,25 @@ describe('NotificationService.unreadCount — a single list tab counts only what
     return { svc, categoryOf };
   }
 
-  it('the tab badge (feed): payment, shipping, event — not issue, review or chat', async () => {
+  it('the tab badge (feed): payment, shipping, event and review requests — not issue or chat', async () => {
     const h = build(['notifications', 'chat']);
     await h.svc.unreadCount('tok', 'feed');
-    expect(h.categoryOf()).toMatchObject({ type: 'in', value: ['payment', 'shipping', 'event'] });
+    expect(h.categoryOf()).toMatchObject({ type: 'in', value: ['payment', 'shipping', 'event', 'review'] });
   });
 
   it('the storefront bell (no scope): the same, plus the agent replies the Chat tab shows', async () => {
     const h = build(['notifications', 'chat']);
     await h.svc.unreadCount('tok');
-    expect(h.categoryOf()).toMatchObject({ type: 'in', value: ['payment', 'shipping', 'event', 'chat'] });
+    expect(h.categoryOf()).toMatchObject({ type: 'in', value: ['payment', 'shipping', 'event', 'review', 'chat'] });
+  });
+
+  it('a review row counts only when it names a line the Review chip can show (N-05)', async () => {
+    const h = build(['notifications', 'chat'], [
+      { id: 1, category: 'review', refType: 'order_item', refId: 11 },
+      { id: 2, category: 'review', refType: null, refId: null },
+      { id: 3, category: 'event', refType: null, refId: null },
+    ]);
+    await expect(h.svc.unreadCount('tok', 'feed')).resolves.toBe(2);
   });
 
   it('the Chat badge is unaffected', async () => {

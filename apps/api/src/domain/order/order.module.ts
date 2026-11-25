@@ -22,11 +22,13 @@ import { CustomerModule } from '../customer/customer.module';
 import { IntegrationModule } from '../integration/integration.module';
 import { OrderAddressService } from './order-address.service';
 import { AuditModule } from '../audit/audit.module';
+import { Notification } from '../notification/entity/notification.entity';
 
 @Module({
   imports: [
     SessionModule,
-    TypeOrmModule.forFeature([OrderCache, OrderItem, Fulfillment, Session, Customer, ProductCache, Review]),
+    // Notification: read-only — the unread review request on a Review chip line (IVY PRD v1 N-05).
+    TypeOrmModule.forFeature([OrderCache, OrderItem, Fulfillment, Session, Customer, ProductCache, Review, Notification]),
     TenantModule,
     CustomerModule,
     IntegrationModule,
