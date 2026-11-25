@@ -56,10 +56,13 @@ Chi tiết ở TCR.
 
 | Bước | Ai | Trạng thái |
 |---|---|---|
-| 1. Chạy `sql/261125-prd-v1-phase4-review-requests.sql` trên DB production (lệnh `git show … \| docker exec -i sharptalk_mysql …`) | Chủ dự án | ⏳ |
-| 2. Push `deploy/talk-ivyusa`. Kiểm không có re-sync đơn đang chạy | Tôi | ⏳ sau bước 1 |
-| 3. Kiểm chỉ đọc: widget có nút Start a new chat; console có thẻ Review requests và 2 cột mới | Tôi | ⏳ |
-| 4. Production: bật Chat close (đề xuất hỏi đánh giá sau 5 phút, đóng sau 3 phút) | Chủ dự án bảo | ⏳ |
-| 5. Production: Review requests N ngày (đề xuất 7) | Chủ dự án bảo | ⏳ |
-| 6. Production: câu Cancel order mới trong Script library | Chủ dự án bảo | ⏳ |
-| 7. IVY: Shopify → Settings → Customer accounts → bật "Self-serve returns and cancellations" (có huỷ đơn) | IVY | ⏳ |
+| 1. Push `deploy/talk-ivyusa`. Kiểm trước: không có re-sync đơn nào đang chạy | Tôi | ✅ `fb1027d0`. CI đỏ ở bước "Env template completeness" (biến `REVIEW_REQUEST_SWEEP_MIN` chưa có trong file mẫu env), e2e xanh. Sửa ở `5bbd4e48`: CI xanh, có deploy-gate |
+| 2. Chạy `sql/261125-prd-v1-phase4-review-requests.sql` trên DB production (`git show … \| docker exec -i sharptalk_mysql …`). Máy chủ chờ bước này rồi mới deploy | Chủ dự án | ✅ 2026-11-25: 3 cột có trên production |
+| 3. Bedrock: thêm `AWS_REGION` + 2 ARN vào `.env.self-hosted` trước khi deploy | Chủ dự án | ✅ |
+| 4. Deploy | Máy chủ | ✅ **Live 07:35 UTC** (`5bbd4e48`), widget `index-DpYmcrMI.js` |
+| 5. Kiểm chỉ đọc | Tôi | ✅ Bundle widget có `start-new-chat`. Console: thẻ Review requests; báo cáo CSAT có `mode` / `emailForm` trên dữ liệu thật (cuộc chat có nhân viên và form email → Agent / Yes) |
+| 6. Production: Chat close bật — hỏi đánh giá sau 5 phút, đóng sau 3 phút. Câu chữ của tenant giữ nguyên | Tôi, chủ dự án đồng ý | ✅ |
+| 7. Production: Review requests 7 ngày | Tôi, chủ dự án đồng ý | ✅ |
+| 8. Production: câu Cancel order mới trong Script library (`affiliate`, `return_exchange` giữ nguyên) | Tôi, chủ dự án đồng ý | ✅ |
+| 9. Production: 2 engine Bedrock — Sonnet (#3) Test OK 796 ms, Haiku (#4) Test OK 858 ms. **Chưa đặt mặc định, chưa gán chức năng** (chờ PM duyệt kho kiến thức) | Tôi, chủ dự án đồng ý | ✅ |
+| 10. IVY: Shopify → Settings → Customer accounts → bật "Self-serve returns and cancellations" (có huỷ đơn) | IVY | ⏳ |

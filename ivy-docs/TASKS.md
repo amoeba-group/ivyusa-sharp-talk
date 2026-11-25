@@ -382,11 +382,12 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - Widget: Popular products tối đa 3 thẻ, không hàng hết / ẩn.
 - SQL: `sql/261125-prd-v1-phase2-recommended-products.sql` (bảng `product_recommendations`) — ✅ đã chạy trên production 2026-11-25.
 
-### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 4: S-01 · N-05 · C-03 — ✅ code trên máy · ⏳ SQL + push · [PLN](../docs/plan/PLN-261125-IVY-PRD-v1-Phase4.md) · [TCR](../docs/test/TCR-261125-IVY-PRD-v1-Phase4.md) · [RPT](../docs/implementation/RPT-261125-IVY-PRD-v1-Phase4.md)
+### Bổ sung 2026-11-25 · PRD v1.0 — giai đoạn 4: S-01 · N-05 · C-03 — ✅ live 07:35 UTC (`5bbd4e48`) · [PLN](../docs/plan/PLN-261125-IVY-PRD-v1-Phase4.md) · [TCR](../docs/test/TCR-261125-IVY-PRD-v1-Phase4.md) · [RPT](../docs/implementation/RPT-261125-IVY-PRD-v1-Phase4.md)
 - S-01:
   - nút **Start a new chat** dưới "The chat has ended": về lời chào + menu, đoạn cũ không quay lại;
   - Statistics → Satisfaction thêm cột **Answered by** (AI / Agent) và **Email form**;
   - tự kết thúc chat: đã có sẵn ở Settings → Widget → Chat close, chờ bật.
 - N-05: Settings → Marketing → **Review requests**. Sau N ngày (1–60) kể từ khi giao, widget báo xin review cho sản phẩm chưa review; mỗi đơn một lần; bỏ qua khách từ chối marketing và đơn huỷ / hoàn.
 - C-03: câu Cancel order của IVY dẫn khách tới account.ivyusa.com/orders để tự yêu cầu huỷ; không thấy lựa chọn thì email. Production đổi trong Script library khi chủ dự án bảo. IVY cần bật Shopify "Self-serve returns and cancellations" (có huỷ đơn).
-- SQL: `sql/261125-prd-v1-phase4-review-requests.sql` (3 cột + 1 index) — chạy **trước** khi push.
+- SQL: `sql/261125-prd-v1-phase4-review-requests.sql` (3 cột + 1 index) — ✅ đã chạy trên production 2026-11-25.
+- Production (chủ dự án đồng ý): Chat close bật (5 / 3 phút); Review requests 7 ngày; câu Cancel order mới; 2 engine Bedrock (Sonnet, Haiku) Test OK — chưa gán chức năng, chờ PM duyệt kho kiến thức.

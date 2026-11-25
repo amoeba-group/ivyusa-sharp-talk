@@ -6,7 +6,7 @@
 | Lệnh bắt đầu | Chủ dự án 2026-11-25: "ok, bắt đầu làm việc thứ 5 luôn" — danh sách việc thứ 5: bật Claude, N-05, S-01, C-03 |
 | Phạm vi | widget, API, console |
 | Migration | `sql/261125-prd-v1-phase4-review-requests.sql` (3 cột + 1 index). **Chạy trước khi push** |
-| Trạng thái | ✅ Đã làm 2026-11-25: [RPT](../implementation/RPT-261125-IVY-PRD-v1-Phase4.md), [TCR](../test/TCR-261125-IVY-PRD-v1-Phase4.md). Chờ SQL trên production rồi push |
+| Trạng thái | ✅ Đã làm 2026-11-25: [RPT](../implementation/RPT-261125-IVY-PRD-v1-Phase4.md), [TCR](../test/TCR-261125-IVY-PRD-v1-Phase4.md). Live 07:35 UTC (`5bbd4e48`) |
 
 Klaviyo, Yotpo và lời nhắn do AI viết (C-02) để thứ 6, PLN riêng.
 
