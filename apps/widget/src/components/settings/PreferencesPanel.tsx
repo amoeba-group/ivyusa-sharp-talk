@@ -313,17 +313,17 @@ export function PreferencesPanel({ onBack }: { onBack: () => void }) {
           (PLN-260817-Widget-Header-Prefs-Cleanup §6.1): which channels a shop
           uses is the shop's decision, but refusing marketing is the shopper's.
 
-          Note the default reading: with no preference rows at all, marketing is
-          already suppressed server-side, so an untouched account shows this as
-          opted OUT. Showing it as opted in would promise messages that never
-          arrive. */}
+          The default reading (FIX-261125-IVY-Marketing-Switch): an account that
+          never chose is NOT opted out — promos, coupons and review requests
+          still reach it in the widget (PRD v1 N-04/N-05), so the switch is off
+          until the shopper turns it on. Email and SMS stay off by default-deny. */}
       <div className="pt-7">
         <div className="mb-3 text-base font-semibold text-gray-900">{t('prefs.marketingTitle')}</div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm text-gray-800">{t('prefs.marketingOptOut')}</span>
           <Toggle
             label={t('prefs.marketingOptOut')}
-            on={marketingOptOut.data?.optOut ?? true}
+            on={marketingOptOut.data?.optOut ?? false}
             disabled={marketingOptOut.isLoading || setMarketing.isPending}
             onChange={(v) =>
               setMarketing.mutate(v, {

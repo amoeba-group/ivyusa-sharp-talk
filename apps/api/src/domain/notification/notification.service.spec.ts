@@ -459,10 +459,11 @@ describe('NotificationService — tenant ceiling and marketing opt-out', () => {
     await expect(svc.isSuppressed(42, 'push', 'shipping', 7)).resolves.toBe(false);
   });
 
-  it('reads as opted out when the customer has no preference rows at all', async () => {
-    // Marketing is already default-deny, so anything else would show a toggle
-    // as "on" while nothing is actually sent.
-    await expect(svc.marketingOptOut('tok')).resolves.toBe(true);
+  // FIX-261125-IVY-Marketing-Switch: an account that never chose still gets
+  // promos and review requests in the widget (PRD v1 N-04/N-05) — so it is not
+  // opted out, and the switch must not say it is.
+  it('reads as NOT opted out when the customer never chose — the widget still shows them promos', async () => {
+    await expect(svc.marketingOptOut('tok')).resolves.toBe(false);
   });
 
   it('opting in writes every marketing category × external channel', async () => {
@@ -486,9 +487,15 @@ describe('NotificationService — tenant ceiling and marketing opt-out', () => {
     await expect(svc.marketingOptOut('tok')).resolves.toBe(true);
   });
 
-  it('a transactional preference does not make the shopper look opted in', async () => {
-    prefRows.set(key('email', 'shipping'), 1);
+  it('a transactional preference is not a marketing choice either way', async () => {
+    prefRows.set(key('email', 'shipping'), 0);
+    await expect(svc.marketingOptOut('tok')).resolves.toBe(false);
+  });
+
+  it('reads as opted out exactly when the sends treat the customer as a refuser', async () => {
+    await svc.setMarketingOptOut('tok', true);
     await expect(svc.marketingOptOut('tok')).resolves.toBe(true);
+    // CCPA writes the same disabled rows: the switch then reads on too.
   });
 });
 

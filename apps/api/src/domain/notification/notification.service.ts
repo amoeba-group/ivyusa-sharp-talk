@@ -423,20 +423,23 @@ export class NotificationService implements OnModuleInit {
   }
 
   /**
-   * Is this customer refusing marketing on external channels?
+   * Is this customer refusing marketing? The same rule every send applies
+   * (`marketingRefusers`): a marketing row they turned off, and none turned on.
    *
-   * True when NO marketing category/channel pair is explicitly enabled — which
-   * is also the state of a customer who has never touched anything, because
-   * marketing is default-deny. Showing that as "opted out" is the honest
-   * reading: the alternative would display a toggle as ON while nothing was
-   * actually being sent.
+   * Someone who never chose is NOT refusing (FIX-261125-IVY-Marketing-Switch):
+   * promos, coupons and review requests reach them in the widget (IVY PRD v1
+   * N-04 / N-05), while email and SMS stay off by default-deny until they
+   * consent. The switch used to read such an account as opted out — "Do not
+   * send me marketing messages" shown ON while promos kept arriving in the
+   * widget. It now shows what is actually delivered.
    */
   async marketingOptOut(token: string): Promise<boolean> {
     const customerId = await this.requireCustomerId(token);
-    const rows = await this.prefRepo.find({ where: { customerId } });
-    return !rows.some(
-      (r) => isMarketingCategory(r.category) && EXTERNAL_CHANNELS.includes(r.channel) && r.enabled === 1,
+    const marketing = (await this.prefRepo.find({ where: { customerId } })).filter(
+      (r) => isMarketingCategory(r.category) && EXTERNAL_CHANNELS.includes(r.channel),
     );
+    if (marketing.some((r) => r.enabled === 1)) return false;
+    return marketing.some((r) => r.enabled !== 1);
   }
 
   /**
