@@ -405,6 +405,93 @@ export function handlesQuery(handles: readonly string[]): string {
     .join(' OR ');
 }
 
+/**
+ * Products as the store shows them right now, for a typed product question
+ * (IVY PRD v1 slide 14: "Product · stock → product catalog · stock data";
+ * PLN-261126). Unlike the card query every status comes back — the answer has
+ * to tell "sold out" from "not sold online" — and each variant carries its
+ * title, so "is the Lace design in stock?" can be answered. Checked against
+ * the 2026-01 Admin GraphQL reference (`ProductVariant.title`,
+ * `ProductVariant.availableForSale`, `ProductPriceRangeV2.maxVariantPrice`).
+ */
+const PRODUCTS_LIVE_QUERY = `
+query ProductsLive($query: String!, $first: Int!) {
+  products(first: $first, query: $query) {
+    nodes {
+      handle
+      title
+      status
+      onlineStoreUrl
+      featuredMedia { preview { image { url } } }
+      priceRangeV2 {
+        minVariantPrice { amount currencyCode }
+        maxVariantPrice { amount currencyCode }
+      }
+      variants(first: 20) { nodes { title availableForSale } }
+    }
+  }
+}`;
+
+/** A product read live for an answer (PLN-261126). */
+export interface ShopifyLiveProduct {
+  handle: string;
+  title: string;
+  /** ACTIVE and published to the online store: it can be bought there. */
+  onSale: boolean;
+  /** Some variant can be bought right now. */
+  inStock: boolean;
+  priceMin: number | null;
+  priceMax: number | null;
+  currency: string | null;
+  imageUrl: string | null;
+  /** The product page; null when the product is not on the online store. */
+  productUrl: string | null;
+  /** Named variants — none for a product whose only variant is "Default Title". */
+  variants: Array<{ title: string; available: boolean }>;
+}
+
+interface LiveProductNode {
+  handle?: string | null;
+  title?: string | null;
+  status?: string | null;
+  onlineStoreUrl?: string | null;
+  featuredMedia?: { preview?: { image?: { url?: string | null } | null } | null } | null;
+  priceRangeV2?: {
+    minVariantPrice?: { amount?: string | null; currencyCode?: string | null } | null;
+    maxVariantPrice?: { amount?: string | null; currencyCode?: string | null } | null;
+  } | null;
+  variants?: { nodes?: Array<{ title?: string | null; availableForSale?: boolean | null }> | null } | null;
+}
+
+/** Shopify's name for the one variant of a product that has no options. */
+const DEFAULT_VARIANT_TITLE = 'Default Title';
+
+/** A product node → what an answer may say about it; null without a handle or title. */
+export function toLiveProduct(n: LiveProductNode): ShopifyLiveProduct | null {
+  if (!n.handle || !n.title) return null;
+  const num = (v: string | null | undefined): number | null => {
+    const x = Number(v);
+    return v != null && Number.isFinite(x) ? x : null;
+  };
+  const nodes = Array.isArray(n.variants?.nodes) ? n.variants!.nodes! : null;
+  const named = (nodes ?? [])
+    .filter((v) => !!v?.title && v.title !== DEFAULT_VARIANT_TITLE)
+    .map((v) => ({ title: v.title as string, available: v.availableForSale === true }));
+  return {
+    handle: n.handle,
+    title: n.title,
+    onSale: n.status === 'ACTIVE' && !!n.onlineStoreUrl,
+    // Same reading as the card query: no variant list at all is "can be bought".
+    inStock: nodes ? nodes.some((v) => v?.availableForSale === true) : true,
+    priceMin: num(n.priceRangeV2?.minVariantPrice?.amount),
+    priceMax: num(n.priceRangeV2?.maxVariantPrice?.amount),
+    currency: n.priceRangeV2?.minVariantPrice?.currencyCode ?? null,
+    imageUrl: n.featuredMedia?.preview?.image?.url ?? null,
+    productUrl: n.onlineStoreUrl ?? null,
+    variants: named,
+  };
+}
+
 const CUSTOMER_QUERY = `
 query Customer($id: ID!) {
   customer(id: $id) {
@@ -670,6 +757,30 @@ export class ShopifyAdminClient {
     for (const n of body.data?.products?.nodes ?? []) {
       const card = toBestSeller(n);
       if (card) out.set(card.handle, card);
+    }
+    return out;
+  }
+
+  /**
+   * The products with these handles as the store shows them now, keyed by
+   * handle, whatever their status (PLN-261126: a typed product question). A
+   * handle the store does not have is simply absent.
+   */
+  async fetchLiveProducts(
+    shopDomain: string,
+    token: string,
+    handles: readonly string[],
+  ): Promise<Map<string, ShopifyLiveProduct>> {
+    const query = handlesQuery(handles);
+    if (!query) return new Map();
+    const body = (await this.gql(shopDomain, token, PRODUCTS_LIVE_QUERY, {
+      query,
+      first: Math.min(handles.length, 50),
+    })) as { data?: { products?: { nodes?: LiveProductNode[] } } };
+    const out = new Map<string, ShopifyLiveProduct>();
+    for (const n of body.data?.products?.nodes ?? []) {
+      const p = toLiveProduct(n);
+      if (p) out.set(p.handle, p);
     }
     return out;
   }

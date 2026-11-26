@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Yêu cầu | [REQ-261126-IVY-Chat-Typed-Product-Questions](../analysis/REQ-261126-IVY-Chat-Typed-Product-Questions.md) — PRD v1.0 slide 14, 17, A-04 |
-| Trạng thái | ⏳ **Chờ chủ dự án duyệt** — chưa code |
+| Trạng thái | ✅ **Chủ dự án duyệt 2026-11-26:** "ok duyệt, 2 có, 3 deploy ngay" — D1–D6 như đề xuất; D2 có (thẻ Out of stock); deploy ngay khi CI xanh. Kết quả: [RPT-261126](../implementation/RPT-261126-IVY-Chat-Typed-Product-Questions.md) |
 | Nhánh | `deploy/talk-ivyusa` (push = deploy production) |
 | Migration | Không có SQL. Thẻ lưu trong `messages.retrieval_trace` (JSON có sẵn) |
 | Ước lượng | ~1 ngày làm việc + smoke production |

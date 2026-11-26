@@ -177,6 +177,8 @@ export function useChat(sessionToken: string | null) {
             // Chips that come with the answer — the store's categories for a
             // recommendation question (IVY PRD v1 slide 16) — show at once.
             quickReplies: res.reply.quickReplies,
+            // The products the answer is about, read from the store (PLN-261126).
+            products: res.reply.products,
           });
         }
         return {
@@ -372,6 +374,7 @@ function reconcile(local: ChatMessage[], server: ChatMessage[]): ChatMessage[] {
   if (server.length < countServerKnown(local)) return local; // stale poll
   const lastWithChips = [...local].reverse().find((m) => m.quickReplies?.length);
   const lastWithCites = [...local].reverse().find((m) => m.citations?.length);
+  const lastWithProducts = [...local].reverse().find((m) => m.products?.length);
   const sameBubble = (a: ChatMessage, b: ChatMessage) =>
     a.body === b.body && a.senderType === b.senderType;
   return server.map((m) => {
@@ -383,6 +386,11 @@ function reconcile(local: ChatMessage[], server: ChatMessage[]): ChatMessage[] {
     // before they were served (otherwise the product link would vanish here).
     if (!merged.citations?.length && lastWithCites && sameBubble(merged, lastWithCites)) {
       merged.citations = lastWithCites.citations;
+    }
+    // Product cards ride on the server row too (PLN-261126); same fallback, so a
+    // poll racing the stored turn never blinks the cards away.
+    if (!merged.products?.length && lastWithProducts && sameBubble(merged, lastWithProducts)) {
+      merged.products = lastWithProducts.products;
     }
     return merged;
   });

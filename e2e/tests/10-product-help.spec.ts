@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures/widget';
 import { PRODUCT_CATEGORIES } from '../fixtures/ivy-data';
 
@@ -115,6 +116,106 @@ test.describe('T10 · Exchange / Return (real script)', () => {
     for (const name of ['Track delivery', 'Cancel order', 'Start over']) {
       await expect(widget.panel.getByRole('button', { name, exact: true }).last()).toBeVisible();
     }
+  });
+});
+
+/**
+ * PLN-261126 (IVY PRD v1 slide 14, 17, A-04) — a typed product question: the
+ * answer is written from the store's live stock and price, and the products it
+ * is about show once, as cards. `/chat/message` and `/chat/conversation` are
+ * mocked: under test is what the widget shows for a reply that carries
+ * products, not what the model writes.
+ */
+test.describe('T10 · Typed product question — product cards', () => {
+  const ok = (data: unknown) => ({ success: true, data, timestamp: new Date().toISOString() });
+  const QUESTION = 'Is KISS Gel Fantasy Nails in stock?';
+  const ANSWER = 'Yes, KISS Gel Fantasy Nails is in stock at $9.99. The imPRESS Press-on Manicure is sold out right now.';
+  const PRODUCTS = [
+    {
+      handle: 'kiss-gel-fantasy',
+      title: 'KISS Gel Fantasy Nails',
+      imageUrl: null,
+      price: 9.99,
+      currency: 'USD',
+      productUrl: 'https://ivyusa.com/products/kiss-gel-fantasy',
+      inStock: true,
+    },
+    {
+      handle: 'impress-press-on',
+      title: 'imPRESS Press-on Manicure',
+      imageUrl: null,
+      price: 9.99,
+      currency: 'USD',
+      productUrl: 'https://ivyusa.com/products/impress-press-on',
+      inStock: false,
+    },
+  ];
+
+  /** The send answers with the cards; the thread serves the stored turn with them. */
+  async function mockChat(page: Page, opts: { alreadyAnswered?: boolean } = {}) {
+    const state = { sent: !!opts.alreadyAnswered, pollsAfterSend: 0 };
+    await page.route('**/api/v1/chat/message', (route) => {
+      state.sent = true;
+      return route.fulfill({
+        json: ok({
+          conversationId: '8801',
+          reply: { senderType: 'ai', body: ANSWER, citations: [], products: PRODUCTS, messageId: '8803' },
+          escalate: false,
+          needsAuth: false,
+        }),
+      });
+    });
+    await page.route('**/api/v1/chat/conversation**', (route) => {
+      const after = new URL(route.request().url()).searchParams.get('after_id');
+      if (state.sent) state.pollsAfterSend++;
+      const at = new Date(Date.now() - 60_000).toISOString();
+      const rows = state.sent
+        ? [
+            { id: '8802', senderType: 'user', senderName: null, body: QUESTION, createdAt: at, attachments: [] },
+            { id: '8803', senderType: 'ai', senderName: null, body: ANSWER, createdAt: at, attachments: [], products: PRODUCTS },
+          ].filter((m) => after == null || Number(m.id) > Number(after))
+        : [];
+      return route.fulfill({
+        json: ok({ conversationId: state.sent ? '8801' : null, status: 'ai_active', csatRating: null, canRate: false, messages: rows }),
+      });
+    });
+    return state;
+  }
+
+  test('TC-10-08 the answer shows the products it is about as cards: stock, price, link @T10', async ({ widget, page }) => {
+    const state = await mockChat(page);
+    await widget.goto();
+    await widget.open();
+    await widget.openChat();
+    await widget.composer.fill(QUESTION);
+    await widget.sendButton.click();
+
+    await expect(widget.panel.getByText(ANSWER)).toBeVisible();
+    const cards = widget.panel.getByTestId('answer-product');
+    await expect(cards).toHaveCount(2);
+    await expect(cards.nth(0)).toHaveAttribute('href', 'https://ivyusa.com/products/kiss-gel-fantasy');
+    await expect(cards.nth(0)).toHaveAttribute('target', '_blank');
+    await expect(cards.nth(0)).toHaveAttribute('data-in-stock', 'true');
+    await expect(cards.nth(0)).toContainText('KISS Gel Fantasy Nails');
+    await expect(cards.nth(0)).toContainText('In stock');
+    await expect(cards.nth(0)).toContainText('$9.99');
+    // A sold-out product the shopper asked about keeps its card (PLN D2).
+    await expect(cards.nth(1)).toHaveAttribute('data-in-stock', 'false');
+    await expect(cards.nth(1)).toContainText('Out of stock');
+
+    // The next poll swaps the stored turn in for the local bubble: the cards stay.
+    await expect.poll(() => state.pollsAfterSend, { timeout: 15_000 }).toBeGreaterThan(0);
+    await expect(cards).toHaveCount(2);
+  });
+
+  test('TC-10-09 the cards come back with the thread after a reload @T10', async ({ widget, page }) => {
+    await mockChat(page, { alreadyAnswered: true });
+    await widget.goto();
+    await widget.open();
+    await widget.openChat();
+    await expect(widget.panel.getByText(ANSWER)).toBeVisible();
+    await expect(widget.panel.getByTestId('answer-product')).toHaveCount(2);
+    await expect(widget.panel.getByTestId('answer-product').first()).toHaveAttribute('data-in-stock', 'true');
   });
 });
 

@@ -18,6 +18,7 @@ import { ProductRecommendation } from './entity/product-recommendation.entity';
 import { ProductRecommendationService } from './product-recommendation.service';
 import { ProductRecommendationAdminController } from './product-recommendation.controller';
 import { AuditModule } from '../audit/audit.module';
+import { ProductLiveService } from './product-live.service';
 
 @Module({
   // Tenant is registered for the repository only (storefront origin lookup) —
@@ -47,8 +48,16 @@ import { AuditModule } from '../audit/audit.module';
   ],
   controllers: [ProductController, ProductAdminController, ProductRecommendationAdminController],
   // ShopifyAdminClient is stateless; OrderModule keeps its own instance.
-  providers: [ProductService, ProductSyncService, ProductPopularService, ProductRecommendationService, ShopifyAdminClient],
+  providers: [
+    ProductService,
+    ProductSyncService,
+    ProductPopularService,
+    ProductRecommendationService,
+    ProductLiveService,
+    ShopifyAdminClient,
+  ],
   // ProductRecommendationService: the stock search behind the C-02 card note (IVY PRD v1).
-  exports: [ProductService, ProductSyncService, ProductRecommendationService, ProductPopularService],
+  // ProductLiveService: store data for a typed product question (PLN-261126).
+  exports: [ProductService, ProductSyncService, ProductRecommendationService, ProductPopularService, ProductLiveService],
 })
 export class ProductModule {}

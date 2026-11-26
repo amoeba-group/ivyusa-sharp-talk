@@ -96,6 +96,54 @@ describe('ChatMapper.toMessageResponse — citations', () => {
   });
 });
 
+/** Product cards ride on the stored AI turn, so a poll or reload keeps them (PLN-261126). */
+describe('ChatMapper.toMessageResponse — product cards', () => {
+  function msg(trace: unknown): Message {
+    return {
+      id: 9,
+      senderType: 'ai',
+      body: 'Yes, it is in stock at $9.99.',
+      createdAt: new Date('2026-11-26T00:00:00Z'),
+      retrievalTrace: trace,
+    } as Message;
+  }
+  const CARD = {
+    handle: 'kiss-gel-fantasy',
+    title: 'KISS Gel Fantasy Nails',
+    imageUrl: 'https://cdn.shopify.com/k.jpg',
+    price: 9.99,
+    currency: 'USD',
+    productUrl: 'https://ivyusa.com/products/kiss-gel-fantasy',
+    inStock: false,
+  };
+
+  it('serves the cards persisted on the AI turn', () => {
+    expect(ChatMapper.toMessageResponse(msg({ products: [CARD], storeData: 1 })).products).toEqual([CARD]);
+  });
+
+  it('fills absent optional fields with null and drops rows that are not a whole card', () => {
+    const res = ChatMapper.toMessageResponse(
+      msg({
+        products: [
+          { handle: 'a', title: 'A', productUrl: 'https://ivyusa.com/products/a', inStock: true },
+          { handle: 'b', title: 'B', inStock: true },
+          null,
+          'x',
+        ],
+      }),
+    );
+    expect(res.products).toEqual([
+      { handle: 'a', title: 'A', imageUrl: null, price: null, currency: null, productUrl: 'https://ivyusa.com/products/a', inStock: true },
+    ]);
+  });
+
+  it('omits the cards when the turn has none', () => {
+    expect(ChatMapper.toMessageResponse(msg({ citations: [] })).products).toBeUndefined();
+    expect(ChatMapper.toMessageResponse(msg(null)).products).toBeUndefined();
+    expect(ChatMapper.toMessageResponse(msg({ products: 'bogus' })).products).toBeUndefined();
+  });
+});
+
 /** The replying staff member's profile icon rides with the name (PLN-261028). */
 describe('ChatMapper — sender avatar', () => {
   const conv = { id: 1, status: 'agent', csatRating: null, endedAt: null } as never;

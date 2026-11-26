@@ -49,6 +49,7 @@ import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infr
 import { AttachmentService } from '../attachment/attachment.service';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import { ScriptWordingService } from './script-wording.service';
+import { ProductLiveService } from '../product/product-live.service';
 import { categoryChips, isRecommendationAsk, matchCategory } from './recommend-ask';
 import { MessageAttachment } from '../attachment/entity/message-attachment.entity';
 import { scrubPii } from '../../global/util/pii-scrub.util';
@@ -297,6 +298,8 @@ export class ChatService {
     private readonly aiConfig?: AiConfigService,
     /** AI wording of the fixed lines this service sends (IVY PRD v1 C-02). */
     private readonly wording?: ScriptWordingService,
+    /** Live stock and price for a typed product question (PLN-261126). */
+    private readonly productLive?: ProductLiveService,
   ) {}
 
   /**
@@ -1016,8 +1019,18 @@ export class ChatService {
     // (PLN-260929 S5): "예약 진행" means something different in every thread
     // that says it, and a stored answer cannot know which.
     const contextual = hasAssistantTurn(history);
+    // Store data for a typed product question (PLN-261126 D5): only on a turn
+    // the classifier read as a product question — the same signal as the group
+    // preference above. The lookup answers null when no store is connected,
+    // and RAG then builds today's prompt unchanged.
+    const storeLookup =
+      preferGroup === DOC_GROUP.PRODUCT && this.productLive
+        ? (handles: string[]) => this.productLive!.lookup(tenantId, handles)
+        : undefined;
+    // D6: such a turn is never answered from the reuse store, nor stored in it —
+    // yesterday's "in stock" is not today's.
     const reused =
-      needsOrderData || !this.answerReuse || contextual
+      needsOrderData || !this.answerReuse || contextual || storeLookup
         ? null
         : await this.answerReuse.lookup(
             tenantId,
@@ -1025,7 +1038,7 @@ export class ChatService {
             egressText,
             effectiveAgentId,
           );
-    const answer = reused
+    const answer: Pick<RagAnswer, 'text' | 'confidence' | 'citations' | 'products' | 'storeData'> = reused
       ? {
           text: reused.text,
           confidence: reused.confidence,
@@ -1053,6 +1066,7 @@ export class ChatService {
           // the search for the new question (PR #597 lesson).
           conversation.prevConversationId != null ? await this.threads?.previousExcerpt(tenantId, conversation) : undefined,
           caller,
+          storeLookup,
         );
 
     // Mandatory moderation gate (FR-069).
@@ -1147,13 +1161,18 @@ export class ChatService {
     const aiTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.AI, deliveredText, session.language, {
       citations: answer.citations,
       confidence: answer.confidence,
+      // Product cards ride on the stored turn so a poll or reload keeps them;
+      // `storeData` records how many products the store returned (-1 = read
+      // failed) for the console and for measuring (PLN-261126).
+      ...(answer.products?.length ? { products: answer.products } : {}),
+      ...(answer.storeData != null ? { storeData: answer.storeData } : {}),
       // Console diagnostics: which answers came from the reuse store (D-C2:
       // the customer sees no marker; the trace always records it).
       ...(reused ? { answeredFrom: 'reuse', reuseId: reused.reuseId } : {}),
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
-    } else if (!contextual && !caller) {
+    } else if (!contextual && !caller && !storeLookup) {
       // A freshly generated, delivered answer becomes a reuse candidate (the
       // service applies the D-C1 filters: cited + confident, no order context).
       // Not one written for a known caller (P8): it may name their hotel, and
@@ -1188,6 +1207,8 @@ export class ChatService {
         confidence: answer.confidence,
         // Lets the /ai-setting preview hand this exact turn to the coaching tab.
         messageId: String(aiTurn.id),
+        // Shown at once under the answer (PLN-261126); the stored turn carries them too.
+        ...(answer.products?.length ? { products: answer.products } : {}),
       },
       escalate: !!denyHandoff?.escalated,
       needsAuth: false,

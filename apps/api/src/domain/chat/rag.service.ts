@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, In, Repository } from 'typeorm';
 import { AI_FUNCTION } from '@sharptalk/types';
-import { KbDocument } from '../knowledge/entity/kb-document.entity';
+import type { ChatProductCard } from '@sharptalk/types';
+import { DOC_GROUP, KbDocument } from '../knowledge/entity/kb-document.entity';
+import type { ShopifyLiveProduct } from '../order/shopify-admin.client';
+import type { LiveLookup } from '../product/product-live.service';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { normalizeStorefrontUrl, productLinkFor } from '../../global/util/storefront-url.util';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
@@ -34,6 +37,12 @@ export interface RetrievedChunk {
    */
   url: string | null;
   /**
+   * The store's handle of the product a product document describes, from its
+   * `/products/{handle}` link (PLN-261126) — what the live store read asks for.
+   * Null for anything that is not one product's page.
+   */
+  handle?: string | null;
+  /**
    * "Watch video" link for a document that explains a video
    * (PLN-261006-KB-Video-Links): a signed path on our API, resolved by the
    * client against its API origin. Added by code, never by the model.
@@ -60,9 +69,133 @@ export interface RagAnswer {
   citations: RetrievedChunk[];
   /** Every injected candidate with its rank/similarity — cited or not (B2). */
   candidateResults?: RetrievedChunk[];
+  /** Cards for the products the answer used, read from the store (PLN-261126). */
+  products?: ChatProductCard[];
+  /**
+   * Products the store returned for this answer; -1 when the store could not be
+   * read. Absent when no store data was asked for (PLN-261126, for the trace).
+   */
+  storeData?: number;
   tokensIn: number;
   tokensOut: number;
 }
+
+/** Product cards under one answer (PRD v1 slide 16: "up to 3 product cards"). */
+export const STORE_CARDS_MAX = 3;
+
+/**
+ * The handle of a product page link, `/products/{handle}` — catalogue and CSV
+ * documents both carry one. Null for anything else: a usage guide is filed in
+ * the product group too, but it describes no single product.
+ */
+export function productHandleFrom(group: string, sourceUrl: string | null | undefined): string | null {
+  if (group !== DOC_GROUP.PRODUCT || !sourceUrl) return null;
+  let path: string;
+  try {
+    path = new URL(sourceUrl).pathname;
+  } catch {
+    return null;
+  }
+  const m = /\/products\/([^/]+)\/?$/.exec(path);
+  if (!m) return null;
+  let handle: string;
+  try {
+    handle = decodeURIComponent(m[1]).toLowerCase();
+  } catch {
+    return null;
+  }
+  return /^[a-z0-9][a-z0-9-]*$/.test(handle) ? handle : null;
+}
+
+/** "price 9.99 USD" / "price 9.99–14.99 USD", or null without a price. */
+function priceText(p: ShopifyLiveProduct): string | null {
+  if (p.priceMin == null) return null;
+  const cur = p.currency ? ` ${p.currency}` : '';
+  const range =
+    p.priceMax != null && p.priceMax !== p.priceMin
+      ? `${p.priceMin.toFixed(2)}–${p.priceMax.toFixed(2)}`
+      : p.priceMin.toFixed(2);
+  return `price ${range}${cur}`;
+}
+
+/** One line of what the store shows for a product. Titles are flattened to one line. */
+function storeLine(p: ShopifyLiveProduct): string {
+  const title = p.title.replace(/\s+/g, ' ').trim();
+  if (!p.onSale) return `${title}: not on sale online`;
+  const parts = ['on sale online', p.inStock ? 'in stock' : 'sold out'];
+  const price = priceText(p);
+  if (price) parts.push(price);
+  if (p.variants.length) {
+    parts.push(
+      `variants: ${p.variants
+        .map((v) => `${v.title.replace(/\s+/g, ' ').trim()} (${v.available ? 'in stock' : 'sold out'})`)
+        .join(', ')}`,
+    );
+  }
+  return `${title}: ${parts.join('; ')}`;
+}
+
+/**
+ * The STORE_DATA block (PLN-261126): one line per numbered context item the
+ * store knows, so the model ties stock and price to the item it describes.
+ * When the store could not be read the block says so, and the rule then has
+ * the model say it cannot confirm stock rather than guess.
+ */
+export function storeDataBlock(items: Array<{ n: number; handle: string }>, lookup: LiveLookup): string {
+  if (!lookup.ok) return 'STORE_DATA_START\n(the store could not be read just now)\nSTORE_DATA_END';
+  const lines: string[] = [];
+  for (const { n, handle } of items) {
+    const p = lookup.products.get(handle);
+    if (p) lines.push(`[${n}] ${storeLine(p)}`);
+  }
+  return `STORE_DATA_START\n${lines.length ? lines.join('\n') : '(the store has no data for these items)'}\nSTORE_DATA_END`;
+}
+
+/**
+ * Cards for the products the answer actually used (PLN-261126): in the order
+ * the model cited them (D1), only what is sold online (D3) — a sold-out product
+ * the shopper asked about still gets its card (D2). No CITED line, no cards: a
+ * guess at relevance is how unrelated products appeared before (FIX-260806 §7-1).
+ */
+export function answerProductCards(
+  chunks: RetrievedChunk[],
+  cited: number[] | null,
+  lookup: LiveLookup | null,
+): ChatProductCard[] {
+  if (!lookup?.ok || !cited?.length) return [];
+  const out: ChatProductCard[] = [];
+  const seen = new Set<string>();
+  for (const n of cited) {
+    const handle = chunks[n - 1]?.handle;
+    if (!handle || seen.has(handle)) continue;
+    const p = lookup.products.get(handle);
+    if (!p?.onSale || !p.productUrl) continue;
+    seen.add(handle);
+    out.push({
+      handle,
+      title: p.title,
+      imageUrl: p.imageUrl,
+      price: p.priceMin,
+      currency: p.currency,
+      productUrl: p.productUrl,
+      inStock: p.inStock,
+    });
+    if (out.length >= STORE_CARDS_MAX) break;
+  }
+  return out;
+}
+
+/**
+ * How the model treats STORE_DATA (PLN-261126; PRD v1 slide 14 guardrail
+ * "never makes up anything not in the source data").
+ */
+const STORE_RULE =
+  'STORE_DATA is what the online store shows right now for the numbered context items it lists. ' +
+  'Stock, availability and prices come ONLY from STORE_DATA: never state them for an item STORE_DATA does not list, ' +
+  'and never infer them from the context text. If the customer asks about stock, a color, a size or a price that ' +
+  'STORE_DATA does not show, say you cannot confirm it here and suggest the Stock inquiry button in the chat menu. ' +
+  'An item marked "not on sale online" cannot be bought on the store right now. ' +
+  'Never mention STORE_DATA in the visible reply.\n';
 
 /**
  * What to do on a turn with nothing to retrieve (PLN-260813 P2). These steer
@@ -410,6 +543,7 @@ export class RagService {
       source: doc.source,
       group: doc.docGroup,
       url: productLinkFor(doc.docGroup, doc.sourceUrl, storefront),
+      handle: productHandleFrom(doc.docGroup, doc.sourceUrl),
       videoUrl: parseVideoRef(doc.videoRef)
         ? kbVideoPath(Number(doc.id), tenantId, signKbVideo(tenantId, Number(doc.id)))
         : null,
@@ -569,6 +703,12 @@ export class RagService {
     previousConversation?: string,
     /** Who is asking, from the host app's identify (PLN-261022 P8) — see caller-context.util. */
     caller?: string,
+    /**
+     * Reads the store for the product documents retrieved (PLN-261126): a
+     * typed product question is answered from live stock and price. Null from
+     * it = no store connected, and the prompt stays exactly as before.
+     */
+    storeLookup?: (handles: string[]) => Promise<LiveLookup | null>,
   ): Promise<RagAnswer> {
     // The caller decides the group preference; RAG only applies it. Keeping the
     // judgement out of here means the chat path can use its intent label and
@@ -625,6 +765,17 @@ export class RagService {
     const context = chunks
       .map((c, i) => `[${i + 1}] [${c.category ?? 'general'}] ${c.title}: ${c.snippet}`)
       .join('\n');
+    // Store data for the product documents in the context (PLN-261126): the
+    // knowledge base keeps price and stock out on purpose, so a typed "is it in
+    // stock?" is answered from what the store shows now. Numbered like the
+    // context, so the model ties each line to the item it describes.
+    const storeItems = storeLookup
+      ? chunks
+          .map((c, i) => ({ n: i + 1, handle: c.handle ?? null }))
+          .filter((x): x is { n: number; handle: string } => !!x.handle)
+      : [];
+    const store = storeItems.length ? await storeLookup!([...new Set(storeItems.map((x) => x.handle))]) : null;
+    const storeBlock = store ? `\n${storeDataBlock(storeItems, store)}` : '';
     const hasOrderContext = !!orderContext?.trim();
     // Retrieval quality drives confidence, but order facts are authoritative on
     // their own: an order question answered from the customer's real orders must
@@ -641,11 +792,15 @@ export class RagService {
     const orderBlock = hasOrderContext
       ? `\nCUSTOMER_ORDERS_START\n${orderContext!.trim()}\nCUSTOMER_ORDERS_END`
       : '';
+    const storeSource = storeBlock ? ', STORE_DATA' : '';
     const sourceRule = hasOrderContext
-      ? "Answer ONLY from the context and the customer's own order data below. " +
+      ? `Answer ONLY from the context${storeSource} and the customer's own order data below. ` +
         'The order data is authoritative for their order status, items and totals; ' +
         'never invent order numbers, dates or tracking details that are not listed.'
-      : 'Answer ONLY from the context.';
+      : storeBlock
+        ? 'Answer ONLY from the context and STORE_DATA.'
+        : 'Answer ONLY from the context.';
+    const storeRule = storeBlock ? STORE_RULE : '';
     const hasHistory = !!history?.length;
     // Continuity, not evidence: the earlier chat explains "last time" and an
     // ongoing issue; the answer's facts still come from CONTEXT (PLN-261022 D14).
@@ -674,6 +829,7 @@ export class RagService {
         `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}${footerOn ? FOOTER_RULE : ''}\n` +
         previousRule +
         callerRule +
+        storeRule +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
         `offer to connect a human agent. ${replyLanguageRule(language)}\n` +
         `The context items are numbered. After your reply, on its own final line, ` +
@@ -683,6 +839,7 @@ export class RagService {
         `or refer to the context items in the visible reply.\n` +
         `CONTEXT_START\n${context || '(no relevant documents found)'}\nCONTEXT_END` +
         orderBlock +
+        storeBlock +
         previousBlock +
         callerBlock,
       messages: withCurrentTurn(history, query),
@@ -723,12 +880,15 @@ export class RagService {
     // The marker is already split off, so a translation cannot disturb the
     // citations; the visible text alone is judged and, if need be, redone.
     const text = await this.enforceReplyLanguage(tenantId, visible, language);
+    const products = answerProductCards(chunks, cited, store);
     return {
       text,
       confidence,
       // No marker (older/odd model output) → keep every citation, i.e. exactly
       // the previous behavior, rather than silently dropping all the links.
       citations: cited ? chunks.filter((_, i) => cited.includes(i + 1)) : chunks,
+      ...(products.length ? { products } : {}),
+      ...(store ? { storeData: store.ok ? store.products.size : -1 } : {}),
       // The simulation needs the candidate's similarity even when the model
       // did NOT cite it — "ranked 0.31, unused" is the finding.
       ...(extraCandidates?.length ? { candidateResults: chunks.filter((c) => c.candidate) } : {}),

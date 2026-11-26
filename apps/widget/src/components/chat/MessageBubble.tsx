@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '../../lib/types';
 import { formatTime } from '../../lib/format';
 import { MessageAttachments } from './MessageAttachments';
+import { AnswerProductCards } from './AnswerProductCards';
 import { resolveFileUrl } from '../../lib/api-client';
 import { Bot, User } from 'lucide-react';
 import { useWidgetStore } from '../../store/widgetStore';
@@ -141,6 +142,12 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
           ))}
         {message.attachments && message.attachments.length > 0 && (
           <MessageAttachments attachments={message.attachments} mine={mine} />
+        )}
+        {/* The products the answer is about, read from the store (PLN-261126).
+            Not tied to the "Knowledge referenced" option: a tenant that hides
+            that list still shows its products once, as cards (PRD slide 17). */}
+        {isAi && message.products && message.products.length > 0 && (
+          <AnswerProductCards products={message.products} />
         )}
         {!citationsHidden && message.citations && message.citations.length > 0 && (
           <div className="mt-1.5 border-t border-gray-200 pt-1.5">

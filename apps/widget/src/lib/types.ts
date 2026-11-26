@@ -15,6 +15,7 @@ import type {
   ChatCitation,
   ChatAttachmentResponse,
   ChatMessageResponse,
+  ChatProductCard,
   ChatTurnResponse,
   ConversationResponse,
   ThreadConversationResponse,
@@ -55,6 +56,9 @@ export type {
 export type SenderType = 'user' | 'ai' | 'agent' | 'system';
 
 export type Citation = ChatCitation;
+
+/** A product an AI answer is about, read from the store when it answered (PLN-261126). */
+export type AnswerProduct = ChatProductCard;
 
 /**
  * Narrowed for the UI's consent switch. `SessionResponse` is NOT redeclared here —

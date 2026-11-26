@@ -299,6 +299,8 @@ Chạy ngày **2026-11-09** trên commit `583ce121` (chưa sửa code widget), s
 | TC-10-05 | Đang gõ (API thật) | trong lúc chờ trả lời thấy "Writing a reply…" | BR-16 |
 | TC-10-06 | Shopify không trả lời | mock `popular: 'unavailable'` → "I couldn't load the popular Lashes products right now.", không có thẻ, có link "See all Lashes on ivyusa.com" | PLN-261112-T10 D3 |
 | TC-10-07 | Chip đã chọn | Popular products `aria-pressed=true`, Ingredients `false`; Nails `true`; "Other categories" → picker thứ 2 ở dưới | PLN-261112-T10 D1 |
+| TC-10-08 | Câu hỏi sản phẩm gõ tự do → thẻ sản phẩm | mock `/chat/message` trả `products` (1 còn, 1 hết) → dưới câu AI có 2 `answer-product`: link trang sản phẩm, tab mới, `data-in-stock` true / false, "In stock" / "Out of stock", "$9.99"; sau lượt poll vẫn còn 2 thẻ | PLN-261126 D1, D2 |
+| TC-10-09 | Tải lại vẫn thấy thẻ | `/chat/conversation` trả lượt AI đã lưu có `products` → mở Chat thấy câu trả lời + 2 thẻ | PLN-261126 |
 
 **Kết quả (2026-11-12):** 7/7, lặp ×3 (2 worker): 21/21. Cổng CI mới (thêm `@T10`) ×2: 168/168. Toàn bộ desktop: 94 pass / 8 fail, mọi ca đỏ thuộc T11–T12 chưa làm.
 

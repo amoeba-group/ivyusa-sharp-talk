@@ -26,6 +26,7 @@ import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 import { IssueModule } from '../issue/issue.module';
 import { MergedRoomModule } from '../merged-room/merged-room.module';
 import { RoutingCategoryModule } from '../routing-category/routing-category.module';
+import { ProductModule } from '../product/product.module';
 import { Customer } from '../customer/entity/customer.entity';
 import { Company } from '../company/entity/company.entity';
 
@@ -69,6 +70,9 @@ import { Company } from '../company/entity/company.entity';
     // Same-customer merged rooms: auto-join (PLN-261023). Repositories + audit only.
     MergedRoomModule,
     RoutingCategoryModule, // consult categories the shopper picks (PLN-261024)
+    // Live stock and price for a typed product question (PLN-261126). Product
+    // does not depend on Chat, so this stays acyclic.
+    ProductModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, RagService, ScenarioService, IdleConversationService, ThreadService, ScriptWordingService],

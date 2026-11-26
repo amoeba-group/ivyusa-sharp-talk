@@ -1,6 +1,7 @@
 import type {
   ChatCitation,
   ChatMessageResponse,
+  ChatProductCard,
   ConversationResponse,
   ScenarioFollowUpResponse,
   ThreadResponse,
@@ -47,6 +48,38 @@ function citationsOf(m: Message): ChatCitation[] | undefined {
   return cites.length ? cites : undefined;
 }
 
+/**
+ * Product cards persisted on an AI turn's trace (PLN-261126), so a poll or a
+ * reload keeps them under the answer. Rows that are not a whole card are
+ * dropped: the widget turns `productUrl` into a link.
+ */
+function productsOf(m: Message): ChatProductCard[] | undefined {
+  const trace = m.retrievalTrace as { products?: unknown } | null;
+  const raw = Array.isArray(trace?.products) ? trace.products : null;
+  if (!raw?.length) return undefined;
+  const cards = raw.filter((p): p is ChatProductCard => {
+    const c = p as Partial<ChatProductCard> | null;
+    return (
+      !!c &&
+      typeof c.handle === 'string' &&
+      typeof c.title === 'string' &&
+      typeof c.productUrl === 'string' &&
+      typeof c.inStock === 'boolean'
+    );
+  });
+  return cards.length
+    ? cards.map((c) => ({
+        handle: c.handle,
+        title: c.title,
+        imageUrl: typeof c.imageUrl === 'string' ? c.imageUrl : null,
+        price: typeof c.price === 'number' ? c.price : null,
+        currency: typeof c.currency === 'string' ? c.currency : null,
+        productUrl: c.productUrl,
+        inStock: c.inStock,
+      }))
+    : undefined;
+}
+
 export class ChatMapper {
   static toMessageResponse(
     m: Message,
@@ -63,6 +96,7 @@ export class ChatMapper {
       createdAt: m.createdAt.toISOString(),
       quickReplies: followUpsOf(m),
       citations: citationsOf(m),
+      products: productsOf(m),
       // Links are minted per response and expire; see AttachmentMapper.
       attachments: AttachmentMapper.toResponseList(attachments),
     };

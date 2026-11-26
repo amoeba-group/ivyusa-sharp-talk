@@ -189,6 +189,24 @@ export interface ChatCitation {
   videoUrl?: string | null;
 }
 
+/**
+ * A product an AI answer is about, as the store showed it when the answer was
+ * written (IVY PRD v1 slide 14, 17, A-04; PLN-261126): shown once, as a card
+ * under the answer.
+ */
+export interface ChatProductCard {
+  handle: string;
+  title: string;
+  imageUrl: string | null;
+  /** Lowest variant price. */
+  price: number | null;
+  currency: string | null;
+  /** The product page on the online store. */
+  productUrl: string;
+  /** Some variant could be bought when the answer was written. */
+  inStock: boolean;
+}
+
 /** Scenario follow-up chip (FR-S1). */
 export interface ScenarioFollowUpResponse {
   id: string;
@@ -234,6 +252,8 @@ export interface ChatMessageResponse {
    * reload — the send response alone made them vanish within one poll.
    */
   citations?: ChatCitation[];
+  /** Products the AI answer is about, read from the store (PLN-261126). At most 3. */
+  products?: ChatProductCard[];
 }
 
 export interface ConversationResponse {
@@ -295,6 +315,8 @@ export interface ChatTurnResponse {
      * store's categories — `POPULAR_CATEGORY_CHIP_PREFIX` + collection handle).
      */
     quickReplies?: ScenarioFollowUpResponse[];
+    /** Products the answer is about, read from the store (PLN-261126). At most 3. */
+    products?: ChatProductCard[];
   } | null;
   /** True when this turn handed the conversation to a human (the widget then offers the consult-category picker). */
   escalate: boolean;
