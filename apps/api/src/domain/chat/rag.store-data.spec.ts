@@ -3,6 +3,7 @@ import {
   RetrievedChunk,
   STORE_CARDS_MAX,
   answerProductCards,
+  pickProductTitles,
   productHandleFrom,
   storeDataBlock,
 } from './rag.service';
@@ -146,6 +147,151 @@ describe('answerProductCards', () => {
   it('no cards when the store was not read', () => {
     expect(answerProductCards(chunks, [1], { ok: false })).toEqual([]);
     expect(answerProductCards(chunks, [1], null)).toEqual([]);
+  });
+});
+
+/**
+ * Found in the production smoke: a question naming one of 1,940 products got
+ * other products from the keyword leg. The title leg brings the named one.
+ */
+describe('pickProductTitles', () => {
+  const rows = [
+    { id: 1, title: 'Gold Finger Holiday Limited Edition Nails' },
+    { id: 2, title: 'Gold Finger Holiday Nails Kit' },
+    { id: 3, title: 'Kiss Gel Fantasy Glue On Nails - Long Lasting False Nails' },
+    { id: 4, title: 'Nails' },
+    { id: 5, title: 'Gold Finger Gel Glam Nails - Merry Berry' },
+    { id: 6, title: null },
+  ];
+
+  it('the product the question names comes first; a close sibling (4 of its 5 words) follows', () => {
+    expect(pickProductTitles(rows, 'Is Gold Finger Holiday Limited Edition Nails in stock? How much is it?')).toEqual([1, 2]);
+  });
+
+  it('the same in any language: titles are English, the question around them is not', () => {
+    expect(pickProductTitles(rows, 'Gold Finger Holiday Limited Edition Nails 재고 있나요?')[0]).toBe(1);
+    expect(pickProductTitles(rows, 'Tell me about Kiss Gel Fantasy Glue On Nails - Long Lasting False Nails')).toEqual([3]);
+  });
+
+  it('equal shares: the longer, more specific title first', () => {
+    expect(pickProductTitles(rows, 'gold finger holiday limited edition nails kit')).toEqual([1, 2]);
+  });
+
+  it('a title most of whose words are missing does not count; neither does a title under 4 words', () => {
+    expect(pickProductTitles(rows, 'Do you have Gold Finger nails?')).toEqual([]);
+    expect(pickProductTitles(rows, 'nails')).toEqual([]);
+  });
+
+  it('three at most', () => {
+    const many = Array.from({ length: 6 }, (_, i) => ({ id: 10 + i, title: `Glam Nail Polish Set ${'x'.repeat(i)}` }));
+    expect(pickProductTitles(many, 'glam nail polish set x xx xxx xxxx xxxxx')).toHaveLength(3);
+  });
+});
+
+describe('RagService.answer — title leg on a product question (PLN-261126)', () => {
+  const NAMED = {
+    id: 21,
+    title: 'Gold Finger Holiday Limited Edition Nails',
+    category: 'Gold Finger',
+    source: 'product_catalog',
+    docGroup: 'product',
+    sourceUrl: 'https://ivyusa.com/products/gold-finger-holiday-limited-edition-nails',
+    content: 'Festive press-on nails.',
+    videoRef: null,
+  };
+  const OTHER = {
+    id: 22,
+    title: 'Kiss New York Gel Pro Nail Polish Core Colors - Under the Pecan Tree',
+    category: 'Kiss New York',
+    source: 'product_catalog',
+    docGroup: 'product',
+    sourceUrl: 'https://ivyusa.com/products/gel-pro-nail-polish-core-colors-under-the-pecan-tree',
+    content: 'Gel polish in a warm brown.',
+    videoRef: null,
+  };
+
+  /** Each query builder records what it was asked: the title list, ids, or a keyword search. */
+  function build() {
+    const all = [NAMED, OTHER];
+    const titleLoads: number[] = [];
+    const kbRepo = {
+      createQueryBuilder: () => {
+        const state: { titles: boolean; ids: number[] | null } = { titles: false, ids: null };
+        const qb: Record<string, unknown> = new Proxy(
+          {},
+          {
+            get(_t, prop: string) {
+              if (prop === 'andWhere') {
+                return (cond: unknown) => {
+                  if (typeof cond === 'string' && cond.includes('kb.doc_group = :titleGroup')) state.titles = true;
+                  const idCond = (cond as { id?: { value?: number[] } } | null)?.id;
+                  if (idCond?.value) state.ids = idCond.value.map(Number);
+                  return qb;
+                };
+              }
+              if (prop === 'getMany') {
+                return async () => {
+                  if (state.titles) {
+                    titleLoads.push(1);
+                    return all.map((d) => ({ id: d.id, title: d.title }));
+                  }
+                  if (state.ids) return all.filter((d) => state.ids!.includes(d.id));
+                  return [OTHER]; // the keyword leg misses the named product
+                };
+              }
+              if (prop === 'getRawMany') return async () => [];
+              return () => qb;
+            },
+          },
+        );
+        return qb;
+      },
+    };
+    const ai = {
+      complete: jest.fn(async () => ({ text: 'Yes, it is in stock.\nCITED: 1', tokensIn: 1, tokensOut: 2 })),
+      embed: jest.fn(),
+    };
+    const aiConfig = {
+      getPersonaRules: jest.fn().mockResolvedValue({ persona: 'P', rules: [] }),
+      effectiveAgentId: jest.fn().mockResolvedValue(null),
+    };
+    const svc = new RagService(
+      kbRepo as never,
+      { findOne: jest.fn(async () => ({ id: 4, storefrontUrl: 'https://ivyusa.com' })) } as never,
+      ai as never,
+      { enabled: false, search: jest.fn() } as never,
+      aiConfig as never,
+    );
+    return { svc, ai, titleLoads };
+  }
+
+  const Q = 'Is Gold Finger Holiday Limited Edition Nails in stock?';
+
+  it('brings the named product into the context, first, and asks the store about it', async () => {
+    const { svc, ai } = build();
+    const lookup = jest.fn(async () =>
+      ok(live({ handle: 'gold-finger-holiday-limited-edition-nails', title: 'Gold Finger Holiday Limited Edition Nails' })),
+    );
+    const res = await svc.answer(4, Q, 'EN', undefined, 'product', undefined, null, undefined, undefined, undefined, undefined, lookup);
+    const system = ai.complete.mock.calls[0][0].system as string;
+    expect(system).toContain('[1] [Gold Finger] Gold Finger Holiday Limited Edition Nails:');
+    expect(lookup.mock.calls[0][0]).toContain('gold-finger-holiday-limited-edition-nails');
+    expect(res.products?.[0]).toEqual(expect.objectContaining({ handle: 'gold-finger-holiday-limited-edition-nails' }));
+  });
+
+  it('not on a question without the product preference — retrieval as before', async () => {
+    const { svc, ai, titleLoads } = build();
+    await svc.answer(4, Q, 'EN');
+    const system = ai.complete.mock.calls[0][0].system as string;
+    expect(system).not.toContain('Gold Finger Holiday Limited Edition Nails:');
+    expect(titleLoads).toHaveLength(0);
+  });
+
+  it('the title list is read once and reused', async () => {
+    const { svc, titleLoads } = build();
+    await svc.answer(4, Q, 'EN', undefined, 'product');
+    await svc.answer(4, Q, 'EN', undefined, 'product');
+    expect(titleLoads).toHaveLength(1);
   });
 });
 

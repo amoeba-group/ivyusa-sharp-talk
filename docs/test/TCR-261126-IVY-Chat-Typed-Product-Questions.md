@@ -28,6 +28,19 @@
 | `answer()` sản phẩm hết hàng | Thẻ `inStock: false` |
 | `answer()` AI chỉ trích tài liệu chính sách | Không thẻ dù đã đọc cửa hàng |
 
+### 1.1b Nhánh tên sản phẩm — `rag.store-data.spec.ts` (thêm 8 ca, [FIX-261126](../bug-fix/FIX-261126-Product-Name-Not-Retrieved.md))
+
+| Ca | Kỳ vọng |
+|---|---|
+| `pickProductTitles`: câu nêu đúng tên | Tài liệu đúng tên đứng đầu; sản phẩm gần giống (4/5 từ) theo sau |
+| Câu tiếng Hàn chứa tên tiếng Anh · tên có dấu gạch | Vẫn ra đúng sản phẩm |
+| Bằng điểm | Tên dài hơn (cụ thể hơn) trước |
+| Thiếu nhiều từ của tên · tên dưới 4 từ | Không lấy |
+| Nhiều tài liệu đạt | Tối đa 3 |
+| `answer()` có ưu tiên sản phẩm, nhánh từ khoá bỏ sót sản phẩm đúng tên | Sản phẩm đó thành mục [1], được hỏi cửa hàng, có thẻ |
+| `answer()` không có ưu tiên sản phẩm | Không đọc danh sách tên, kết quả như cũ |
+| Hai câu hỏi liên tiếp | Danh sách tên đọc 1 lần (giữ 5 phút) |
+
 ### 1.2 `product-live.service.spec.ts` (mới, 13 ca)
 
 | Ca | Kỳ vọng |

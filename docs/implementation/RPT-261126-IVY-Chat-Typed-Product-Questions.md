@@ -51,12 +51,25 @@ Khác PLN: không thêm khoá i18n `aria-label`. Tên của link là chữ trên
 
 | Bước | Trạng thái |
 |---|---|
-| Commit + push | ⏳ |
-| CI `IVY CI/CD` (verify, e2e gate, deploy-gate) | ⏳ |
-| Máy chủ tự deploy | ⏳ |
-| Smoke production | ⏳ |
+| Commit + push | ✅ `37e0d9f4`, 07:05 UTC |
+| CI `IVY CI/CD` (verify, e2e gate, deploy-gate) | ✅ run 45772816056, xanh 07:11:59 UTC |
+| Máy chủ tự deploy | ✅ widget production đổi bundle `index-D0MyTYaF.js` → `index-Cdw2ZguA.js` lúc 07:13:23 UTC; bundle mới có `answer-product` |
+| Smoke production (lần 1) | 🟡 thẻ + tồn kho chạy, nhưng sản phẩm hỏi đích danh không được tìm ra — §5 |
+| Sửa tìm theo tên (`FIX-261126`) — push, CI, deploy, smoke lại | ⏳ |
 
-## 5. Giới hạn còn lại
+## 5. Smoke production và bản sửa tìm theo tên
+
+Khách vãng lai trên talk.ivyusa.com/widget, sau deploy `37e0d9f4`:
+
+| Câu hỏi | Thời gian | Kết quả |
+|---|---|---|
+| "Is KISS Gel Fantasy Nails in stock?" (tên ví dụ trong PRD, không phải tên thật) | 5,1 s | AI nói không xác nhận được, chỉ nút Stock inquiry. Không thẻ. Đúng: không có sản phẩm tên đó |
+| "Is Gold Finger Holiday Limited Edition Nails in stock? How much is it?" (bán chạy #1 mục Nails) | 4,1 s | Không xác nhận được, không thẻ — **sai**: sản phẩm có trong kho kiến thức |
+| "Tell me about Kiss Gel Fantasy Glue On Nails - Long Lasting False Nails. Is it in stock?" (bán chạy #2) | 6,7 s | Không tìm ra sản phẩm này; nói về "Kiss New York Gel Pro Nail Polish Core Colors - Under the Pecan Tree": **in stock**, thẻ In stock · $11.99 · link ivyusa.com — phần cửa hàng + thẻ chạy đúng |
+
+Nguyên nhân và cách sửa: [FIX-261126](../bug-fix/FIX-261126-Product-Name-Not-Retrieved.md). Tóm tắt: tài liệu đúng tên không lọt vào 8 ứng viên của nhánh từ khoá giữa 1.940 tài liệu sản phẩm giống nhau. Thêm **nhánh tên sản phẩm** cho lượt hỏi sản phẩm: so tên trên toàn bộ tài liệu sản phẩm (`titleMatchScore` ≥ 0,75, tối đa 3), gộp như nhánh thứ ba. Thêm 8 ca unit (`pickProductTitles` + `answer()`); 42 bộ test chat 382 / 382.
+
+## 6. Giới hạn còn lại
 
 - **Màu / cỡ là sản phẩm riêng** (D4): nếu kho kiến thức không tìm ra đúng sản phẩm màu đó, AI không xác nhận và chỉ nút Stock inquiry. Bản sau: tìm thêm trên cửa hàng bằng chữ của khách.
 - Lượt hỏi sản phẩm không còn dùng lại câu trả lời đã lưu (D6), nên mỗi câu đều gọi AI.

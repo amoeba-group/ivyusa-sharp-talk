@@ -83,6 +83,34 @@ export interface RagAnswer {
 /** Product cards under one answer (PRD v1 slide 16: "up to 3 product cards"). */
 export const STORE_CARDS_MAX = 3;
 
+/** Share of a product title's words the question must contain (see titleMatchScore). */
+export const PRODUCT_TITLE_MIN = 0.75;
+/** Product documents the title leg adds at most. */
+const PRODUCT_TITLE_LEG = 3;
+/** How long a tenant's product titles are reused between questions. */
+const PRODUCT_TITLES_TTL_MS = 5 * 60_000;
+
+/**
+ * Product documents whose title is (nearly) in the question, best first
+ * (PLN-261126, found in the production smoke): "Is Gold Finger Holiday Limited
+ * Edition Nails in stock?" names one of 1,940 product documents, yet the
+ * keyword leg — eight candidates, scored over the whole text — surfaced other
+ * Gold Finger products, so the answer could not speak about the one asked.
+ * Equal shares go to the longer title, the more specific product.
+ */
+export function pickProductTitles(
+  rows: Array<{ id: number; title: string | null }>,
+  query: string,
+  max = PRODUCT_TITLE_LEG,
+): number[] {
+  return rows
+    .map((r) => ({ id: Number(r.id), s: titleMatchScore(r.title ?? '', query), len: (r.title ?? '').length }))
+    .filter((x) => x.s >= PRODUCT_TITLE_MIN)
+    .sort((a, b) => b.s - a.s || b.len - a.len)
+    .slice(0, max)
+    .map((x) => x.id);
+}
+
 /**
  * The handle of a product page link, `/products/{handle}` — catalogue and CSV
  * documents both carry one. Null for anything else: a usage guide is filed in
@@ -296,6 +324,8 @@ const FOOTER_RULE =
 @Injectable()
 export class RagService {
   private readonly logger = new Logger(RagService.name);
+  /** Product titles per tenant × agent scope, for the title leg (PLN-261126). */
+  private readonly productTitleCache = new Map<string, { at: number; rows: Array<{ id: number; title: string | null }> }>();
   /** Per-leg candidate depth before fusion; the merged top-`limit` is returned. */
   private static readonly LEG_LIMIT = 8;
   /** RRF constant (standard k=60). */
@@ -482,9 +512,14 @@ export class RagService {
     preferGroup?: string,
     aiAgentId?: number | null,
   ): Promise<{ chunks: RetrievedChunk[]; vectorProvider: string | null }> {
-    const [ftDocs, vec] = await Promise.all([
+    const [ftDocs, vec, titleDocs] = await Promise.all([
       this.retrieveFulltext(tenantId, query, RagService.LEG_LIMIT, aiAgentId),
       this.retrieveVector(tenantId, query, RagService.LEG_LIMIT),
+      // A product question may name the product (PLN-261126): its document
+      // joins the candidates by title, whatever the other legs ranked.
+      preferGroup === DOC_GROUP.PRODUCT
+        ? this.retrieveProductTitles(tenantId, query, aiAgentId)
+        : Promise.resolve([] as KbDocument[]),
     ]);
     // Uncalibrated (stub) vector scores may RANK docs but never ADMIT them:
     // hash-collision noise would otherwise pad off-topic queries with random
@@ -510,9 +545,17 @@ export class RagService {
       e.similarity = h.score;
       fused.set(h.id, e);
     });
+    // The title leg fuses like the other two; the title bonus below then puts
+    // the product the question names first.
+    titleDocs.forEach((d, rank) => {
+      const id = Number(d.id);
+      const e = fused.get(id) ?? { rrf: 0, similarity: null };
+      e.rrf += 1 / (RagService.RRF_K + rank + 1);
+      fused.set(id, e);
+    });
 
     // Hydrate vector-only ids from MySQL (tenant scope re-checked — defense in depth).
-    const ftById = new Map(ftDocs.map((d) => [Number(d.id), d]));
+    const ftById = new Map([...ftDocs, ...titleDocs].map((d) => [Number(d.id), d]));
     const missingIds = [...fused.keys()].filter((id) => !ftById.has(id));
     if (missingIds.length) {
       // The vector leg searches Qdrant, which knows nothing about categories or
@@ -552,6 +595,39 @@ export class RagService {
       similarity,
     }));
     return { chunks, vectorProvider: vec.provider };
+  }
+
+  /**
+   * Title leg for a product question (PLN-261126): the product documents whose
+   * title is (nearly) in the question, through the same scope as every leg.
+   */
+  private async retrieveProductTitles(
+    tenantId: number,
+    query: string,
+    aiAgentId?: number | null,
+  ): Promise<KbDocument[]> {
+    const ids = pickProductTitles(await this.productTitles(tenantId, aiAgentId), query);
+    if (!ids.length) return [];
+    const docs = await this.baseQuery(tenantId, aiAgentId).andWhere({ id: In(ids) }).getMany();
+    const byId = new Map(docs.map((d) => [Number(d.id), d]));
+    return ids.map((id) => byId.get(id)).filter((d): d is KbDocument => !!d);
+  }
+
+  /** Id and title of the tenant's active product documents — a few thousand short rows, kept 5 minutes. */
+  private async productTitles(
+    tenantId: number,
+    aiAgentId?: number | null,
+  ): Promise<Array<{ id: number; title: string | null }>> {
+    const key = `${tenantId}:${aiAgentId ?? '-'}`;
+    const hit = this.productTitleCache.get(key);
+    if (hit && Date.now() - hit.at < PRODUCT_TITLES_TTL_MS) return hit.rows;
+    const docs = await this.baseQuery(tenantId, aiAgentId)
+      .andWhere('kb.doc_group = :titleGroup', { titleGroup: DOC_GROUP.PRODUCT })
+      .select(['kb.id', 'kb.title'])
+      .getMany();
+    const rows = docs.map((d) => ({ id: Number(d.id), title: d.title ?? null }));
+    this.productTitleCache.set(key, { at: Date.now(), rows });
+    return rows;
   }
 
   /** Keyword leg — FULLTEXT MATCH (PERF-2), LIKE scan when the index is absent. */
