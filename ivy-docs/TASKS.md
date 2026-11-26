@@ -401,3 +401,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - Bản sửa BUG-045 (yêu cầu review N-05 hiện ở chip Review + badge): `0ec663fa`.
 - Hướng dẫn test cho IVY (EN + KO, 44 mục): [GUIDE-261125-IVY-Test-Guide](../docs/guide/GUIDE-261125-IVY-Test-Guide.md).
 - Moderation → Haiku: kiểm theo tiêu chí an toàn chung. Nội dung luật context #2 của IVY chưa đưa vào lời dặn cho model; giữ như vậy tới khi có Guardrail của IVY (chủ dự án quyết 2026-11-25).
+- Hướng dẫn test v1.1 (2026-11-26): giới hạn đơn Amazon (BUG-047, mục 2.1 · 2.2 số 5 · 4), mục 12 thử từ 30/11 với đơn UPS / USPS, dòng "Typed product questions" ở mục 4.
+
+### Bổ sung 2026-11-26 · Câu hỏi sản phẩm gõ tự do: tồn kho thật + thẻ sản phẩm (PRD slide 14, 17, A-04) — ⏳ PLN chờ duyệt · [REQ](../docs/analysis/REQ-261126-IVY-Chat-Typed-Product-Questions.md) · [PLN](../docs/plan/PLN-261126-IVY-Chat-Typed-Product-Questions.md)
+- Hiện tại: khách gõ tên sản phẩm → AI trả lời từ mô tả trong kho kiến thức (không có tồn kho, giá); production ẩn danh sách tham chiếu nên không sản phẩm nào hiện ra. Tồn kho chỉ có qua nút 📦 Stock inquiry (live 2026-11-25, mức sản phẩm).
+- Đề xuất: đọc Shopify cho sản phẩm tìm thấy (≤ 5, cache 2 phút) → AI trả lời bằng tồn kho, giá, biến thể thật → ≤ 3 thẻ sản phẩm dưới câu trả lời. Không SQL.

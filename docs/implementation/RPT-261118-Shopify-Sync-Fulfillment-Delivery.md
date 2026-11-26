@@ -79,7 +79,8 @@ Ngày giao đã ghi: 2026-11-25 ×1, 2026-11-23 ×2.
 3. **74 % kiện ở `shipped`.** Lúc đọc, Shopify chưa có trạng thái vận chuyển cho kiện (`displayStatus` không phải in transit / out for delivery / delivered). Widget hiện các đơn này là In Transit. Hai khả năng:
    - hãng vận chuyển không gửi trạng thái về Shopify → kiện không bao giờ thành Delivered;
    - dữ liệu cũ: kiện đi tiếp sau lần đọc cuối mà đơn không đổi `updated_at`, nên không được đọc lại.
-4. **N-05.** Mới 3 đơn có ngày giao, chưa đơn nào tới hạn. Yêu cầu review tự động đầu tiên vào khoảng 2026-11-30. Đợt IVY test từ 2026-11-27 sẽ không thấy yêu cầu tự động nào; mục 42 của hướng dẫn test chỉ kiểm cài đặt nên không lệch.
+4. **N-05.** Mới 3 đơn có ngày giao, chưa đơn nào tới hạn. Cột `delivered_at` có từ bản deploy 2026-11-25 và không được điền ngược: kiện Delivered trước đó để trống cho tới khi đồng bộ đọc lại đơn. Yêu cầu review tự động đầu tiên vào khoảng 2026-11-30, đều đặn từ khoảng 2026-12-02, và chỉ cho kiện có trạng thái giao (UPS / USPS, xem Lần 2). Đợt IVY test từ 2026-11-27 sẽ không thấy yêu cầu tự động nào trong mấy ngày đầu.
+   *Sửa 2026-11-26:* bản trước ghi "mục 42 của hướng dẫn test chỉ kiểm cài đặt nên không lệch" nhưng bỏ sót **mục 12**, mục chờ một yêu cầu review thật. Hướng dẫn test v1.1 (2026-11-26) ghi: mục 12 thử từ 30/11 với đơn UPS / USPS; đơn Amazon không có trạng thái giao (mục 2.1, 2.2, 4 của hướng dẫn).
 
 ### Lần 2 — 2026-11-25 (chủ dự án chạy truy vấn A–C, chỉ đọc)
 
