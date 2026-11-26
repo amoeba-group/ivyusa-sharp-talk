@@ -55,7 +55,8 @@ Khác PLN: không thêm khoá i18n `aria-label`. Tên của link là chữ trên
 | CI `IVY CI/CD` (verify, e2e gate, deploy-gate) | ✅ run 45772816056, xanh 07:11:59 UTC |
 | Máy chủ tự deploy | ✅ widget production đổi bundle `index-D0MyTYaF.js` → `index-Cdw2ZguA.js` lúc 07:13:23 UTC; bundle mới có `answer-product` |
 | Smoke production (lần 1) | 🟡 thẻ + tồn kho chạy, nhưng sản phẩm hỏi đích danh không được tìm ra — §5 |
-| Sửa tìm theo tên (`FIX-261126`) — push, CI, deploy, smoke lại | ⏳ |
+| Sửa tìm theo tên (`FIX-261126`) | ✅ `eb81d9ee` push 07:25 UTC; CI run 45775238658 xanh 07:31:12 UTC; chạy trên production trước 07:35 UTC (smoke lần 2 đạt) |
+| Smoke production (lần 2) | ✅ §5 |
 
 ## 5. Smoke production và bản sửa tìm theo tên
 
@@ -67,10 +68,18 @@ Khách vãng lai trên talk.ivyusa.com/widget, sau deploy `37e0d9f4`:
 | "Is Gold Finger Holiday Limited Edition Nails in stock? How much is it?" (bán chạy #1 mục Nails) | 4,1 s | Không xác nhận được, không thẻ — **sai**: sản phẩm có trong kho kiến thức |
 | "Tell me about Kiss Gel Fantasy Glue On Nails - Long Lasting False Nails. Is it in stock?" (bán chạy #2) | 6,7 s | Không tìm ra sản phẩm này; nói về "Kiss New York Gel Pro Nail Polish Core Colors - Under the Pecan Tree": **in stock**, thẻ In stock · $11.99 · link ivyusa.com — phần cửa hàng + thẻ chạy đúng |
 
+Smoke lần 2, sau `eb81d9ee` (07:35 UTC, cùng cách làm, tên lấy từ Popular products → Nails):
+
+| Câu hỏi | Thời gian | Kết quả |
+|---|---|---|
+| "Is Gold Finger Holiday Limited Edition Nails in stock? How much is it?" | 7,2 s | ✅ "Yes… in stock… The price is 1.99 USD", liệt kê mẫu còn hàng (Frosty is Cold, Santa's Ho Ho Ho, …) và hết hàng (Jingle Juice, Mistletoe Shots, …). Thẻ: ảnh, In stock, $1.99, link trang sản phẩm |
+| "Tell me about Kiss Gel Fantasy Glue On Nails - Long Lasting False Nails. Is it in stock?" | 6,2 s | ✅ Đúng sản phẩm: mô tả bộ sản phẩm, còn hàng. Thẻ In stock · $4.99 |
+| "KISS imPRESS Color Press On Nails - Cosmic 재고 있나요? 가격은 얼마예요?" (widget đặt EN) | 6,2 s | 🟡 Trả lời bằng tiếng Anh (đúng: theo ngôn ngữ widget). "Cosmic" là màu bán thành sản phẩm riêng, gộp chung tài liệu với "Bubble Kiss": AI nói không xác nhận được màu này và chỉ nút Stock inquiry (đúng quy tắc), nhưng thẻ hiện là **Bubble Kiss** (sản phẩm AI đã dùng). Đây là giới hạn D4, §6 |
+
 Nguyên nhân và cách sửa: [FIX-261126](../bug-fix/FIX-261126-Product-Name-Not-Retrieved.md). Tóm tắt: tài liệu đúng tên không lọt vào 8 ứng viên của nhánh từ khoá giữa 1.940 tài liệu sản phẩm giống nhau. Thêm **nhánh tên sản phẩm** cho lượt hỏi sản phẩm: so tên trên toàn bộ tài liệu sản phẩm (`titleMatchScore` ≥ 0,75, tối đa 3), gộp như nhánh thứ ba. Thêm 8 ca unit (`pickProductTitles` + `answer()`); 42 bộ test chat 382 / 382.
 
 ## 6. Giới hạn còn lại
 
-- **Màu / cỡ là sản phẩm riêng** (D4): nếu kho kiến thức không tìm ra đúng sản phẩm màu đó, AI không xác nhận và chỉ nút Stock inquiry. Bản sau: tìm thêm trên cửa hàng bằng chữ của khách.
+- **Màu / cỡ là sản phẩm riêng** (D4): kho kiến thức gộp các màu như "KISS imPRESS Color Press On Nails - Cosmic / Bubble Kiss / …" vào một tài liệu đại diện, nên chỉ đọc được tồn kho của sản phẩm đại diện. Hỏi một màu khác: AI không xác nhận và chỉ nút Stock inquiry, nhưng thẻ hiện sản phẩm đại diện (smoke lần 2, câu 3). Bản sau: so tên với **danh mục sản phẩm** (`products_cache`, 2.410 dòng, có mọi màu) thay vì chỉ tài liệu kho kiến thức, rồi đọc tồn kho đúng màu được hỏi.
 - Lượt hỏi sản phẩm không còn dùng lại câu trả lời đã lưu (D6), nên mỗi câu đều gọi AI.
 - Thẻ chỉ có khi AI ghi dòng `CITED`. Không có dòng này thì không thẻ (tránh hiện sản phẩm không liên quan).
