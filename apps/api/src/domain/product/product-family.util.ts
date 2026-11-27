@@ -64,6 +64,11 @@ const FILLER = new Set([
   'got', 'too', 'very', 'just', 'from', 'into', 'one', 'new', 'set', 'size', 'color', 'colour', 'shade',
 ]);
 
+/** A word that can name something by itself: three letters or more, and not filler. */
+export function isNamingWord(word: string): boolean {
+  return word.length >= 3 && !FILLER.has(word);
+}
+
 /**
  * The words that name this member within its family: its suffix, minus the
  * words the family's own name already has. "… Press On Nails - Bubble Kiss" →
@@ -76,5 +81,5 @@ export function variantWords(title: string): string[] | null {
   if (!rest.length) return null;
   const family = new Set(questionWords(head));
   const words = [...new Set(questionWords(rest.join(' ')))].filter((w) => !family.has(w));
-  return words.some((w) => w.length >= 3 && !FILLER.has(w)) ? words : null;
+  return words.some(isNamingWord) ? words : null;
 }

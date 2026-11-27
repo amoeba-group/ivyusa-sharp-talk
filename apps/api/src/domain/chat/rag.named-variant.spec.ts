@@ -41,7 +41,16 @@ const MATTE = ['Brie', 'Lovely', 'Perfect Timing', 'Rising Sun'].map((n) =>
   entry(`impress-color-press-on-nails-matte-${n.toLowerCase().replace(/\s+/g, '-')}`, `${IMPRESS} Matte - ${n}`),
 );
 const SINGLE = entry('gold-finger-holiday-limited-edition-nails', 'Gold Finger Holiday Limited Edition Nails');
-const CATALOGUE = [...FAMILY, ...MATTE, SINGLE];
+// "pink" in five titles: a common colour, which names no family by itself (E6).
+const PINKS = [
+  entry('gold-finger-glam-nails-pink', 'Gold Finger Glam Nails - Pink'),
+  entry('gold-finger-glam-nails-ruby-red', 'Gold Finger Glam Nails - Ruby Red'),
+  entry('red-by-kiss-satin-cap-pink', 'RED by KISS Satin Cap - Pink'),
+  entry('pink-glitter-nail-kit', 'Pink Glitter Nail Kit'),
+  entry('pink-gel-polish', 'Pink Gel Polish Duo'),
+  entry('lash-glue-pink', 'Lash Glue Pink Edition'),
+];
+const CATALOGUE = [...FAMILY, ...MATTE, SINGLE, ...PINKS];
 const handles = (list: CatalogueEntry[]) => list.map((e) => e.handle);
 
 describe('namedMembers (E1, E3)', () => {
@@ -68,14 +77,35 @@ describe('namedMembers (E1, E3)', () => {
   });
 });
 
-describe('namedFamilies (E5)', () => {
-  it('a member named by its whole title names its family', () => {
+describe('namedFamilies (E5, E6)', () => {
+  it('a member named by its whole title names its family (E5)', () => {
     expect(namedFamilies(CATALOGUE, `${IMPRESS} - Cosmic 재고 있나요?`)).toEqual(['kiss impress color press on nails']);
   });
 
+  it('a rare colour name with a word of its family’s name names the family (E6) — production’s miss', () => {
+    expect(namedFamilies(CATALOGUE, 'Is imPRESS Color Cosmic in stock?')).toEqual(['kiss impress color press on nails']);
+    expect(namedFamilies(CATALOGUE, 'Do you have the Cosmic press on nails?')).toEqual(['kiss impress color press on nails']);
+  });
+
   it('not from the colour alone, nor from the family name alone', () => {
-    expect(namedFamilies(CATALOGUE, 'Is imPRESS Color Cosmic in stock?')).toEqual([]);
+    expect(namedFamilies(CATALOGUE, 'Is Cosmic in stock?')).toEqual([]);
     expect(namedFamilies(CATALOGUE, `Is ${IMPRESS} in stock?`)).toEqual([]);
+  });
+
+  it('a common colour names no family, even beside words of one (E6)', () => {
+    expect(namedFamilies(CATALOGUE, 'Do you have pink nails?')).toEqual([]);
+    expect(namedFamilies(CATALOGUE, 'Do you have glam pink nails?')).toEqual([]);
+  });
+
+  it('a common colour with the whole title is named all the same (E5)', () => {
+    expect(namedFamilies(CATALOGUE, 'Is the Gold Finger Glam Nails in pink in stock?')).toEqual(['gold finger glam nails']);
+  });
+
+  it('the whole title outranks a rare colour', () => {
+    expect(namedFamilies(CATALOGUE, 'Gold Finger Glam Nails - Ruby Red, or imPRESS Cosmic?')).toEqual([
+      'gold finger glam nails',
+      'kiss impress color press on nails',
+    ]);
   });
 
   it('a product sold in one colour has no member to name', () => {
@@ -273,6 +303,19 @@ describe('RagService.answer — a named colour (PLN-261127)', () => {
     expect(system).toContain('[1] [KISS] Gold Finger Trendy Nails - Pink Lemonade Swirl:');
     expect(lookup.mock.calls[0][0][0]).toBe(TRENDY[1].handle);
     expect(res.products?.[0]?.handle).toBe(TRENDY[1].handle);
+  });
+
+  it('the short question production missed: "Is imPRESS Color Cosmic in stock?" (E6 → E1, E2)', async () => {
+    const { svc, ai, familyReads } = build();
+    const lookup = jest.fn(async () => ok(live(COSMIC.handle, COSMIC.title)));
+    const res = await ask(svc, 'Is imPRESS Color Cosmic in stock?', lookup, async () => CATALOGUE);
+
+    expect(familyReads).toEqual([handles(FAMILY)]);
+    const system = ai.complete.mock.calls[0][0].system as string;
+    expect(system).toContain('[1] [KISS] KISS imPRESS Color Press On Nails - Bubble Kiss:');
+    expect(system).toContain('[1] KISS imPRESS Color Press On Nails - Cosmic: on sale online; in stock; price 8.99 USD');
+    expect(lookup.mock.calls[0][0][0]).toBe(COSMIC.handle);
+    expect(res.products).toEqual([expect.objectContaining({ handle: COSMIC.handle })]);
   });
 
   it('no colour named: the document’s own product, and no extra rule', async () => {

@@ -37,6 +37,7 @@ Một thành viên **được gọi tên** khi **mọi** chữ gọi tên của 
 | E3 | Hai thành viên cùng khớp mà chữ của một bên nằm trọn trong bên kia ("Bubble Kiss" ⊂ "Bubble Pop" khi khách gõ "bubble pop") thì giữ bên cụ thể hơn. Hơn 3 thành viên khớp = chữ của khách không đủ cụ thể → như hôm nay | Tránh đọc nhầm màu |
 | E4 | Câu khách gõ **trước** (chỉ lời khách, không lấy lời AI) dùng khi câu hiện tại không gọi tên màu nào: "Cosmic còn không?" → "Giá bao nhiêu?" vẫn là Cosmic | Lời AI liệt kê nhiều màu, dễ khớp nhầm |
 | E5 | Câu nêu **đủ tên** một màu (≥ 75 % chữ của tiêu đề, như nhánh tên của FIX-261126): tài liệu của họ đó được đưa vào CONTEXT dù tên màu đại diện khác xa | "Gold Finger Trendy Nails - …" có tên họ ngắn, tài liệu đại diện có thể không lọt top |
+| E6 | *(Thêm sau smoke production lần 1, cùng phạm vi đã duyệt.)* Câu có **tên màu hiếm** (chữ chỉ có trong ≤ 3 tiêu đề của danh mục: cosmic 1, aphrodite 2; pink 32, black 100 không tính) **và một chữ của tên họ** ("impress", "press", "nails"…): cũng kéo tài liệu họ vào như E5 | "Is imPRESS Color Cosmic in stock?" không tìm ra tài liệu họ: nhánh từ khoá chỉ thấy "cosmic" một lần trong dòng `Variants:`, thua các tài liệu lặp nhiều "imPRESS", "color". Chỉ có tên màu ("Is Cosmic in stock?") vẫn chưa tìm ra |
 
 Không có kết nối Shopify, không phải câu hỏi sản phẩm, hoặc không đọc được danh mục → y như hôm nay.
 
@@ -44,7 +45,7 @@ Không có kết nối Shopify, không phải câu hỏi sản phẩm, hoặc kh
 
 1. `product/product-family.util.ts` (mới): `productFamilyKey`, `variantWords`, `questionWords`. `catalog-sync.service.ts` dùng `productFamilyKey` thay hàm riêng.
 2. `ProductLiveService.catalogue(tenantId)` → `CatalogueEntry { handle, title, family, variant }`, cache 5 phút.
-3. `RagService.answer`: tham số thứ 13 `catalogue`. Trước khi tìm: `namedFamilies` (E5) → nhánh tên lấy thêm tài liệu của họ (`external_key` thuộc họ), cộng điểm như tiêu đề khớp. Sau `capContext`: `storeItemsFor` (E1, E3, E4) → handle màu được gọi đọc trước. `answerProductCards` nhận danh sách mục đó (E2). Quy tắc STORE_DATA thêm một câu: một dòng có thể là một màu / cỡ của mục mang số đó — màu khách gọi.
+3. `RagService.answer`: tham số thứ 13 `catalogue`. Trước khi tìm: `namedFamilies` (E5, E6) → nhánh tên lấy thêm tài liệu của họ (`external_key` thuộc họ), cộng điểm như tiêu đề khớp. Sau `capContext`: `storeItemsFor` (E1, E3, E4) → handle màu được gọi đọc trước. `answerProductCards` nhận danh sách mục đó (E2). Quy tắc STORE_DATA thêm một câu: một dòng có thể là một màu / cỡ của mục mang số đó — màu khách gọi.
 4. `ChatService` truyền `catalogue` cùng điều kiện với `storeLookup` (D5).
 
 ## 3. Wireframe (widget 380 px) — chỉ đổi **sản phẩm trên thẻ**, component giữ nguyên

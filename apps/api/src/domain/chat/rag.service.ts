@@ -6,7 +6,7 @@ import type { ChatProductCard } from '@sharptalk/types';
 import { DOC_GROUP, KbDocument } from '../knowledge/entity/kb-document.entity';
 import type { ShopifyLiveProduct } from '../order/shopify-admin.client';
 import type { CatalogueEntry, LiveLookup } from '../product/product-live.service';
-import { productFamilyKey, questionWords } from '../product/product-family.util';
+import { isNamingWord, productFamilyKey, questionWords } from '../product/product-family.util';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { normalizeStorefrontUrl, productLinkFor } from '../../global/util/storefront-url.util';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
@@ -189,18 +189,55 @@ export interface StoreItem {
 }
 
 /**
- * Families whose member the question names by (nearly) its whole title
- * (PLN-261127 E5): "KISS imPRESS Color Press On Nails - Cosmic …". Their
- * document joins the title leg, however far its representative's title — another
- * colour's — is from the question.
+ * A colour word in at most this many catalogue titles names its product by
+ * itself (PLN-261127 E6). Measured on IVY's catalogue: cosmic 1, aphrodite 2,
+ * bubble 7, pink 32, black 100.
+ */
+const RARE_TITLE_WORD = 3;
+
+/** In how many catalogue titles each word appears — once per catalogue read (the same array for 5 minutes). */
+const titleWordCounts = new WeakMap<readonly CatalogueEntry[], Map<string, number>>();
+function titleWordCount(entries: readonly CatalogueEntry[]): Map<string, number> {
+  let counts = titleWordCounts.get(entries);
+  if (!counts) {
+    counts = new Map();
+    for (const e of entries) {
+      for (const w of new Set(questionWords(e.title))) counts.set(w, (counts.get(w) ?? 0) + 1);
+    }
+    titleWordCounts.set(entries, counts);
+  }
+  return counts;
+}
+
+/**
+ * Families whose member the question names (PLN-261127). Their document joins
+ * the title leg, however far its representative's title — another colour's —
+ * is from the question. Every word naming the member must be in the question,
+ * and then either
+ * - E5: (nearly) its whole title is — "KISS imPRESS Color Press On Nails - Cosmic …"; or
+ * - E6: one of those words is rare in the catalogue and the question has a
+ *   word of the family's own name — "Is imPRESS Color Cosmic in stock?". The
+ *   keyword leg missed that one on production: "cosmic" sits once in the
+ *   family document's variant list, outweighed by documents repeating
+ *   "imPRESS" and "color". A common colour ("pink nails") names no family.
  */
 export function namedFamilies(entries: readonly CatalogueEntry[], text: string, max = STORE_CARDS_MAX): string[] {
   const words = new Set(questionWords(text));
-  const hits = entries
-    .filter((e) => e.variant?.every((w) => words.has(w)))
-    .map((e) => ({ family: e.family, s: titleMatchScore(e.title, text) }))
-    .filter((x) => x.s >= PRODUCT_TITLE_MIN)
-    .sort((a, b) => b.s - a.s);
+  const counts = titleWordCount(entries);
+  const hits: Array<{ family: string; s: number }> = [];
+  for (const e of entries) {
+    if (!e.variant?.every((w) => words.has(w))) continue;
+    const whole = titleMatchScore(e.title, text);
+    if (whole >= PRODUCT_TITLE_MIN) {
+      hits.push({ family: e.family, s: 1 + whole }); // whole-title matches rank first
+      continue;
+    }
+    if (!e.variant.some((w) => isNamingWord(w) && (counts.get(w) ?? 0) <= RARE_TITLE_WORD)) continue;
+    const head = e.family.split(' ');
+    const shared = head.filter((w) => isNamingWord(w) && words.has(w)).length;
+    if (shared) hits.push({ family: e.family, s: shared / head.length });
+  }
+  hits.sort((a, b) => b.s - a.s);
   return [...new Set(hits.map((x) => x.family))].slice(0, max);
 }
 
