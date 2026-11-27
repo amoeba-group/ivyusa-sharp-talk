@@ -54,8 +54,11 @@ Production gộp 12 màu "KISS imPRESS Color Press On Nails - …" (12 handle) v
 | Lần 1: CI `IVY CI/CD` | ✅ run 45984187741, xanh 10:46:46 UTC |
 | Lần 1: máy chủ tự deploy | ✅ API production khởi động lại 10:49:02 UTC (`/api/v1/health` 502 trong 2 giây rồi 200) |
 | Lần 1: smoke | 🟡 §5 — câu đủ tên đạt; câu ngắn chưa đạt → E6 |
-| Lần 2 (E6): commit + push | ⏳ |
-| Lần 2: CI · deploy · smoke | ⏳ |
+| Lần 2 (E6): Re-sync đơn | Không chạy (10:55 UTC) |
+| Lần 2: commit + push | ✅ `1d113bc8`, 10:56 UTC |
+| Lần 2: CI `IVY CI/CD` | ✅ run 45986250485, xanh 11:01:59 UTC |
+| Lần 2: máy chủ tự deploy | ✅ API production khởi động lại 11:03:03 UTC |
+| Lần 2: smoke | ✅ §5 |
 
 ## 5. Smoke production
 
@@ -68,6 +71,16 @@ Khách vãng lai trên talk.ivyusa.com/widget (EN), sau deploy `b9081d28`:
 | "Is imPRESS Color Cosmic in stock?" rồi "How much is it?" | 4,1 s · 4,2 s | ❌ "can't confirm … Stock inquiry", không thẻ, không trích tài liệu nào: tài liệu `#847` không vào ngữ cảnh |
 
 Nguyên nhân câu 3: không phải tài liệu chính sách chiếm chỗ (kiểm chỉ đọc: 0 / 12 tài liệu chính sách có "stock", "impress", "color", "cosmic"). Nhánh từ khoá giữ 8 tài liệu sản phẩm; "cosmic" chỉ xuất hiện một lần trong dòng `Variants:` của `#847`, thua các tài liệu imPRESS khác lặp nhiều "imPRESS", "color". Nhánh tên không bắt được vì câu chỉ có 3 / 7 chữ của tiêu đề. → **E6** (§1 mục 5).
+
+Sau deploy `1d113bc8` (11:03 UTC):
+
+| Câu hỏi | Thời gian | Kết quả |
+|---|---|---|
+| "Is imPRESS Color Cosmic in stock?" | 8,7 s (lượt đầu sau khởi động: đọc danh mục) | ✅ "Yes, the KISS imPRESS Color Press On Nails in Cosmic is on sale online and currently in stock. It's priced at $7.99 USD." Thẻ **Cosmic** · In stock · $7.99 |
+| rồi "How much is it?" | 4,1 s | ✅ "It's $7.99 USD for the KISS imPRESS Color Press On Nails in Cosmic." Thẻ Cosmic (câu trước vẫn được dùng, E4) |
+| "KISS imPRESS Color Press On Nails - Cosmic 재고 있나요? 가격은 얼마예요?" | 5,1 s | ✅ Như lần 1: Cosmic, $7.99, thẻ Cosmic |
+
+Ảnh chụp (máy local, `docs/log` không vào git): `docs/log/2026-11-27/smoke-261127-*.png`.
 
 ## 6. Giới hạn còn lại
 
