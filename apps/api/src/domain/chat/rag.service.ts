@@ -5,7 +5,8 @@ import { AI_FUNCTION } from '@sharptalk/types';
 import type { ChatProductCard } from '@sharptalk/types';
 import { DOC_GROUP, KbDocument } from '../knowledge/entity/kb-document.entity';
 import type { ShopifyLiveProduct } from '../order/shopify-admin.client';
-import type { LiveLookup } from '../product/product-live.service';
+import type { CatalogueEntry, LiveLookup } from '../product/product-live.service';
+import { productFamilyKey, questionWords } from '../product/product-family.util';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { normalizeStorefrontUrl, productLinkFor } from '../../global/util/storefront-url.util';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
@@ -179,14 +180,94 @@ export function storeDataBlock(items: Array<{ n: number; handle: string }>, look
   return `STORE_DATA_START\n${lines.length ? lines.join('\n') : '(the store has no data for these items)'}\nSTORE_DATA_END`;
 }
 
+/** One product the store is asked about, for the numbered context item `n`. */
+export interface StoreItem {
+  n: number;
+  handle: string;
+  /** A member of the item's family the shopper named (PLN-261127) — read first. */
+  named?: boolean;
+}
+
+/**
+ * Families whose member the question names by (nearly) its whole title
+ * (PLN-261127 E5): "KISS imPRESS Color Press On Nails - Cosmic …". Their
+ * document joins the title leg, however far its representative's title — another
+ * colour's — is from the question.
+ */
+export function namedFamilies(entries: readonly CatalogueEntry[], text: string, max = STORE_CARDS_MAX): string[] {
+  const words = new Set(questionWords(text));
+  const hits = entries
+    .filter((e) => e.variant?.every((w) => words.has(w)))
+    .map((e) => ({ family: e.family, s: titleMatchScore(e.title, text) }))
+    .filter((x) => x.s >= PRODUCT_TITLE_MIN)
+    .sort((a, b) => b.s - a.s);
+  return [...new Set(hits.map((x) => x.family))].slice(0, max);
+}
+
+/**
+ * The members of one family the question names by their own words
+ * (PLN-261127 E1, E3): `cosmic` in "Is imPRESS Color Cosmic in stock?". A
+ * member whose words all sit inside another named member's is not named on its
+ * own — "bubble pop" names Bubble Pop, not Bubble Kiss. More than `max` named
+ * means the words were not specific enough to name one: none.
+ */
+export function namedMembers(members: readonly CatalogueEntry[], text: string, max = STORE_CARDS_MAX): CatalogueEntry[] {
+  const words = new Set(questionWords(text));
+  const hits = members.filter((m) => m.variant?.every((w) => words.has(w)));
+  const kept = hits.filter(
+    (m) => !hits.some((o) => o.variant!.length > m.variant!.length && m.variant!.every((w) => o.variant!.includes(w))),
+  );
+  return kept.length <= max ? kept : [];
+}
+
+/**
+ * What the store is asked about, per numbered context item (PLN-261126,
+ * PLN-261127): the product a document describes — or, when the shopper named
+ * other members of that document's family, those members instead (E1). The
+ * knowledge base folds "… - Cosmic" into a document named after "… - Bubble
+ * Kiss"; reading Bubble Kiss for a Cosmic question gave a card for the wrong
+ * colour. `texts` are tried in order — the message, then with the shopper's
+ * earlier turns (E4) — and the first that names a member wins.
+ */
+export function storeItemsFor(
+  chunks: readonly RetrievedChunk[],
+  entries: readonly CatalogueEntry[],
+  texts: readonly string[],
+): StoreItem[] {
+  const byHandle = new Map(entries.map((e) => [e.handle, e]));
+  const byFamily = new Map<string, CatalogueEntry[]>();
+  for (const e of entries) {
+    const list = byFamily.get(e.family);
+    if (list) list.push(e);
+    else byFamily.set(e.family, [e]);
+  }
+  const out: StoreItem[] = [];
+  chunks.forEach((c, i) => {
+    if (!c.handle) return;
+    const members = byFamily.get(byHandle.get(c.handle)?.family ?? productFamilyKey(c.title)) ?? [];
+    let named: CatalogueEntry[] = [];
+    if (members.length > 1) {
+      for (const text of texts) {
+        named = namedMembers(members, text);
+        if (named.length) break;
+      }
+    }
+    if (named.length) named.forEach((m) => out.push({ n: i + 1, handle: m.handle, named: true }));
+    else out.push({ n: i + 1, handle: c.handle });
+  });
+  return out;
+}
+
 /**
  * Cards for the products the answer actually used (PLN-261126): in the order
  * the model cited them (D1), only what is sold online (D3) — a sold-out product
  * the shopper asked about still gets its card (D2). No CITED line, no cards: a
  * guess at relevance is how unrelated products appeared before (FIX-260806 §7-1).
+ * A cited item's card is the product the store was asked about for it — the
+ * colour the shopper named, when they named one (PLN-261127 E2).
  */
 export function answerProductCards(
-  chunks: RetrievedChunk[],
+  items: ReadonlyArray<{ n: number; handle: string }>,
   cited: number[] | null,
   lookup: LiveLookup | null,
 ): ChatProductCard[] {
@@ -194,21 +275,22 @@ export function answerProductCards(
   const out: ChatProductCard[] = [];
   const seen = new Set<string>();
   for (const n of cited) {
-    const handle = chunks[n - 1]?.handle;
-    if (!handle || seen.has(handle)) continue;
-    const p = lookup.products.get(handle);
-    if (!p?.onSale || !p.productUrl) continue;
-    seen.add(handle);
-    out.push({
-      handle,
-      title: p.title,
-      imageUrl: p.imageUrl,
-      price: p.priceMin,
-      currency: p.currency,
-      productUrl: p.productUrl,
-      inStock: p.inStock,
-    });
-    if (out.length >= STORE_CARDS_MAX) break;
+    for (const { handle } of items.filter((x) => x.n === n)) {
+      if (seen.has(handle)) continue;
+      const p = lookup.products.get(handle);
+      if (!p?.onSale || !p.productUrl) continue;
+      seen.add(handle);
+      out.push({
+        handle,
+        title: p.title,
+        imageUrl: p.imageUrl,
+        price: p.priceMin,
+        currency: p.currency,
+        productUrl: p.productUrl,
+        inStock: p.inStock,
+      });
+      if (out.length >= STORE_CARDS_MAX) return out;
+    }
   }
   return out;
 }
@@ -224,6 +306,15 @@ const STORE_RULE =
   'STORE_DATA does not show, say you cannot confirm it here and suggest the Stock inquiry button in the chat menu. ' +
   'An item marked "not on sale online" cannot be bought on the store right now. ' +
   'Never mention STORE_DATA in the visible reply.\n';
+
+/**
+ * Added when a STORE_DATA line is for a colour the shopper named (PLN-261127):
+ * its title differs from the context item it is numbered after, which is
+ * named after another colour of the same product.
+ */
+const NAMED_VARIANT_RULE =
+  'A STORE_DATA line can be for one color or size of its numbered item that is sold as a product of its own: ' +
+  'it is the one the customer named, so answer about that one.\n';
 
 /**
  * What to do on a turn with nothing to retrieve (PLN-260813 P2). These steer
@@ -439,6 +530,13 @@ export class RagService {
     return 0;
   }
 
+  /**
+   * The document of a family whose member the question names by its whole
+   * title (PLN-261127 E5) ranks as if its own title had been named: the
+   * shopper asked for that product, under another colour's name.
+   */
+  private static readonly NAMED_FAMILY_BONUS = 0.05;
+
   /** Results kept from the current-message search when it is merged with the contextual one. */
   private static readonly OWN_QUERY_RESERVE = 3;
 
@@ -511,16 +609,19 @@ export class RagService {
     limit = 4,
     preferGroup?: string,
     aiAgentId?: number | null,
+    /** Handles of the families the question names a member of (PLN-261127 E5). */
+    familyHandles: readonly string[] = [],
   ): Promise<{ chunks: RetrievedChunk[]; vectorProvider: string | null }> {
-    const [ftDocs, vec, titleDocs] = await Promise.all([
+    const [ftDocs, vec, titleLeg] = await Promise.all([
       this.retrieveFulltext(tenantId, query, RagService.LEG_LIMIT, aiAgentId),
       this.retrieveVector(tenantId, query, RagService.LEG_LIMIT),
       // A product question may name the product (PLN-261126): its document
       // joins the candidates by title, whatever the other legs ranked.
       preferGroup === DOC_GROUP.PRODUCT
-        ? this.retrieveProductTitles(tenantId, query, aiAgentId)
-        : Promise.resolve([] as KbDocument[]),
+        ? this.retrieveProductTitles(tenantId, query, aiAgentId, familyHandles)
+        : Promise.resolve({ docs: [] as KbDocument[], family: new Set<number>() }),
     ]);
+    const titleDocs = titleLeg.docs;
     // Uncalibrated (stub) vector scores may RANK docs but never ADMIT them:
     // hash-collision noise would otherwise pad off-topic queries with random
     // documents and suppress escalation. Real embeddings (voyage) admit freely —
@@ -574,7 +675,10 @@ export class RagService {
         rrf:
           e.rrf +
           (e.doc.source === 'knowledge_store' ? RagService.SOURCE_BONUS : 0) +
-          RagService.titleBonus(e.doc.title, query),
+          Math.max(
+            RagService.titleBonus(e.doc.title, query),
+            titleLeg.family.has(Number(e.doc.id)) ? RagService.NAMED_FAMILY_BONUS : 0,
+          ),
       }));
     const ranked = RagService.rankWithPreference(scored, limit, preferGroup);
 
@@ -600,17 +704,60 @@ export class RagService {
   /**
    * Title leg for a product question (PLN-261126): the product documents whose
    * title is (nearly) in the question, through the same scope as every leg.
+   * The documents of the families the question names a member of come first
+   * (PLN-261127 E5) — found by the handles their catalogue sync filed them
+   * under, so a family named after another colour is still found.
    */
   private async retrieveProductTitles(
     tenantId: number,
     query: string,
     aiAgentId?: number | null,
-  ): Promise<KbDocument[]> {
+    familyHandles: readonly string[] = [],
+  ): Promise<{ docs: KbDocument[]; family: Set<number> }> {
     const ids = pickProductTitles(await this.productTitles(tenantId, aiAgentId), query);
-    if (!ids.length) return [];
-    const docs = await this.baseQuery(tenantId, aiAgentId).andWhere({ id: In(ids) }).getMany();
-    const byId = new Map(docs.map((d) => [Number(d.id), d]));
-    return ids.map((id) => byId.get(id)).filter((d): d is KbDocument => !!d);
+    const [titled, ofFamily] = await Promise.all([
+      ids.length
+        ? this.baseQuery(tenantId, aiAgentId).andWhere({ id: In(ids) }).getMany()
+        : Promise.resolve([] as KbDocument[]),
+      familyHandles.length
+        ? this.baseQuery(tenantId, aiAgentId)
+            .andWhere('kb.doc_group = :familyGroup', { familyGroup: DOC_GROUP.PRODUCT })
+            .andWhere({ externalKey: In([...familyHandles]) })
+            .getMany()
+        : Promise.resolve([] as KbDocument[]),
+    ]);
+    const family = new Set(ofFamily.map((d) => Number(d.id)));
+    const byId = new Map(titled.map((d) => [Number(d.id), d]));
+    const byTitle = ids
+      .map((id) => byId.get(id))
+      .filter((d): d is KbDocument => !!d && !family.has(Number(d.id)));
+    return { docs: [...ofFamily, ...byTitle], family };
+  }
+
+  /** The catalogue names, or none when they cannot be read — the answer then goes on as before. */
+  private async catalogueNames(
+    tenantId: number,
+    catalogue: () => Promise<CatalogueEntry[]>,
+  ): Promise<CatalogueEntry[]> {
+    try {
+      return await catalogue();
+    } catch (e) {
+      this.logger.warn(`tenant ${tenantId}: catalogue names unavailable, no named colours (${(e as Error).message})`);
+      return [];
+    }
+  }
+
+  /**
+   * Every handle of the families the shopper names a member of by its whole
+   * title (PLN-261127 E5) — the title leg finds their document by any of them.
+   * The first text that names one wins (the message, then with earlier turns).
+   */
+  static namedFamilyHandles(entries: readonly CatalogueEntry[], texts: readonly string[]): string[] {
+    for (const text of texts) {
+      const families = new Set(namedFamilies(entries, text));
+      if (families.size) return entries.filter((e) => families.has(e.family)).map((e) => e.handle);
+    }
+    return [];
   }
 
   /** Id and title of the tenant's active product documents — a few thousand short rows, kept 5 minutes. */
@@ -785,6 +932,13 @@ export class RagService {
      * it = no store connected, and the prompt stays exactly as before.
      */
     storeLookup?: (handles: string[]) => Promise<LiveLookup | null>,
+    /**
+     * The storefront's products as names (PLN-261127), with `storeLookup`: a
+     * colour sold as a product of its own is read — and carded — when the
+     * shopper names it, though the knowledge base files it under another
+     * colour of the same family. Absent or failing: as before.
+     */
+    catalogue?: () => Promise<CatalogueEntry[]>,
   ): Promise<RagAnswer> {
     // The caller decides the group preference; RAG only applies it. Keeping the
     // judgement out of here means the chat path can use its intent label and
@@ -805,6 +959,13 @@ export class RagService {
     // thing, and the operator view silently lost every scoped category
     // (found in the staging smoke, T9).
     const scopeAgentId = aiAgentId ?? null;
+    // Which colour the shopper named (PLN-261127) is read from their own words
+    // only — the message, then with their earlier turns (E4). The shop's last
+    // reply, which retrievalQuery includes, may list a dozen colours.
+    const entries = storeLookup && catalogue ? await this.catalogueNames(tenantId, catalogue) : [];
+    const earlier = (history ?? []).filter((m) => m.role === 'user').slice(-2).map((m) => m.content);
+    const shopperTexts = earlier.length ? [query, [...earlier, query].join('\n')] : [query];
+    const familyHandles = entries.length ? RagService.namedFamilyHandles(entries, shopperTexts) : [];
     // eslint-disable-next-line prefer-const
     let { chunks, vectorProvider } = await this.retrieveHybrid(
       tenantId,
@@ -814,6 +975,7 @@ export class RagService {
       // The agent was already being passed for its persona; it decides what may
       // be retrieved as well (REQ-260826 R2).
       scopeAgentId,
+      familyHandles,
     );
     // The current message searched on its own as well (FIX-261007-Topic-Switch).
     // Prepending the earlier turns rescues a follow-up with no topic words of
@@ -823,7 +985,7 @@ export class RagService {
     // was the top hit for the question alone — and the model said it had no
     // information, at 0.77. Both searches now contribute.
     if (retrievalQuery?.trim() && retrievalQuery.trim() !== query.trim()) {
-      const own = await this.retrieveHybrid(tenantId, query, RagService.TOP_K, preferGroup, scopeAgentId);
+      const own = await this.retrieveHybrid(tenantId, query, RagService.TOP_K, preferGroup, scopeAgentId, familyHandles);
       chunks = RagService.mergeOwnFirst(own.chunks, chunks, RagService.TOP_K);
       vectorProvider = vectorProvider ?? own.vectorProvider;
     }
@@ -844,13 +1006,14 @@ export class RagService {
     // Store data for the product documents in the context (PLN-261126): the
     // knowledge base keeps price and stock out on purpose, so a typed "is it in
     // stock?" is answered from what the store shows now. Numbered like the
-    // context, so the model ties each line to the item it describes.
-    const storeItems = storeLookup
-      ? chunks
-          .map((c, i) => ({ n: i + 1, handle: c.handle ?? null }))
-          .filter((x): x is { n: number; handle: string } => !!x.handle)
-      : [];
-    const store = storeItems.length ? await storeLookup!([...new Set(storeItems.map((x) => x.handle))]) : null;
+    // context, so the model ties each line to the item it describes. A colour
+    // the shopper named is read instead of the one its document is named
+    // after, and first, so the read's 5-product cap never drops it (PLN-261127).
+    const storeItems = storeLookup ? storeItemsFor(chunks, entries, shopperTexts) : [];
+    const storeHandles = [
+      ...new Set([...storeItems.filter((x) => x.named), ...storeItems.filter((x) => !x.named)].map((x) => x.handle)),
+    ];
+    const store = storeHandles.length ? await storeLookup!(storeHandles) : null;
     const storeBlock = store ? `\n${storeDataBlock(storeItems, store)}` : '';
     const hasOrderContext = !!orderContext?.trim();
     // Retrieval quality drives confidence, but order facts are authoritative on
@@ -876,7 +1039,9 @@ export class RagService {
       : storeBlock
         ? 'Answer ONLY from the context and STORE_DATA.'
         : 'Answer ONLY from the context.';
-    const storeRule = storeBlock ? STORE_RULE : '';
+    const storeRule = storeBlock
+      ? STORE_RULE + (store?.ok && storeItems.some((x) => x.named) ? NAMED_VARIANT_RULE : '')
+      : '';
     const hasHistory = !!history?.length;
     // Continuity, not evidence: the earlier chat explains "last time" and an
     // ongoing issue; the answer's facts still come from CONTEXT (PLN-261022 D14).
@@ -956,7 +1121,7 @@ export class RagService {
     // The marker is already split off, so a translation cannot disturb the
     // citations; the visible text alone is judged and, if need be, redone.
     const text = await this.enforceReplyLanguage(tenantId, visible, language);
-    const products = answerProductCards(chunks, cited, store);
+    const products = answerProductCards(storeItems, cited, store);
     return {
       text,
       confidence,

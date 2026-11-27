@@ -95,7 +95,7 @@ describe('ChatService — store data for a typed product question', () => {
       recordHit: jest.fn(),
       deactivate: jest.fn(),
     };
-    const productLive = { lookup: jest.fn(async () => null) };
+    const productLive = { lookup: jest.fn(async () => null), catalogue: jest.fn(async () => []) };
     const svc = new (ChatService as unknown as new (...args: unknown[]) => ChatService)(
       convRepo,
       msgRepo,
@@ -130,6 +130,8 @@ describe('ChatService — store data for a typed product question', () => {
 
   /** The 12th argument of rag.answer — the store lookup. */
   const lookupArg = (rag: { answer: jest.Mock }) => rag.answer.mock.calls[0][11] as ((h: string[]) => Promise<unknown>) | undefined;
+  /** The 13th — the catalogue names (PLN-261127). */
+  const catalogueArg = (rag: { answer: jest.Mock }) => rag.answer.mock.calls[0][12] as (() => Promise<unknown>) | undefined;
 
   it('a product question hands RAG a store lookup for this tenant', async () => {
     const b = build();
@@ -138,6 +140,15 @@ describe('ChatService — store data for a typed product question', () => {
     expect(lookup).toEqual(expect.any(Function));
     await lookup!(['kiss-gel-fantasy']);
     expect(b.productLive.lookup).toHaveBeenCalledWith(4, ['kiss-gel-fantasy']);
+  });
+
+  it('and the catalogue names of this tenant, so a colour the shopper names is read (PLN-261127)', async () => {
+    const b = build();
+    await b.svc.handleUserMessage(b.session, 'Is KISS imPRESS Color Press On Nails - Cosmic in stock?');
+    const catalogue = catalogueArg(b.rag);
+    expect(catalogue).toEqual(expect.any(Function));
+    await catalogue!();
+    expect(b.productLive.catalogue).toHaveBeenCalledWith(4);
   });
 
   it('is never answered from the reuse store, nor stored in it (D6)', async () => {
@@ -163,6 +174,7 @@ describe('ChatService — store data for a typed product question', () => {
     const b = build(opts);
     await b.svc.handleUserMessage(b.session, 'How long does a refund take?');
     expect(lookupArg(b.rag)).toBeUndefined();
+    expect(catalogueArg(b.rag)).toBeUndefined();
     expect(b.answerReuse.lookup).toHaveBeenCalled();
   });
 });

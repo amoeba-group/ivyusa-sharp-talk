@@ -7,26 +7,10 @@ import { KbRevisionService } from './kb-revision.service';
 import { KbCategoryService } from './kb-category.service';
 import { CATEGORY_ORIGIN } from './entity/kb-category.entity';
 import { REVISION_KIND } from './entity/kb-document-revision.entity';
+import { productFamilyKey } from '../product/product-family.util';
 
 /** `source` value marking a document this converter owns (PLN-260807 P1). */
 export const CATALOG_SOURCE = 'product_catalog';
-
-/**
- * A variant suffix is announced by a dash: "… Nail Polish Core Colors - Aphrodite".
- *
- * Only titles that carry one are folded. An earlier rule — the first five
- * normalized words — folded more rows but merged whole product LINES: the five
- * KISS "Pure Glow Vita Bright" products (cleanser, toner, moisturizer, eye
- * patches, serum) collapsed into one document titled after the serum, and four
- * real products became unreachable. Measured against the live catalogue, this
- * rule folds 444 rows and leaves only two suspect groups, both genuine size
- * variants of one dressing.
- *
- * `in` is deliberately not a separator, though "Press-On Nails in Amiable"
- * reads like one: it would also split "2 in 1 Curling Iron" and "All In One
- * Lamination Kit" (4 such titles in the catalogue).
- */
-const VARIANT_SEPARATOR = /\s[–—-]\s/;
 
 /** Variant names listed in the body before it collapses to "and N more". */
 const MAX_LISTED_VARIANTS = 20;
@@ -233,7 +217,9 @@ export class CatalogSyncService {
         held.push(p);
         continue;
       }
-      const key = this.familyKey(p.title);
+      // The fold (separator rule) lives in product-family.util: the chat uses
+      // the same one to tell which member a question names (PLN-261127).
+      const key = productFamilyKey(p.title);
       const bucket = groups.get(key);
       if (bucket) bucket.push(p);
       else groups.set(key, [p]);
@@ -265,27 +251,6 @@ export class CatalogSyncService {
       const diff = (b.description?.length ?? 0) - (a.description?.length ?? 0);
       return diff !== 0 ? diff : a.handle.localeCompare(b.handle);
     })[0];
-  }
-
-  /**
-   * The family a title belongs to: the part before its variant separator, or
-   * the whole title when it has none. Identical titles therefore still fold —
-   * the storefront carries 30 rows literally named "Gold Finger Solid Color
-   * Nails" — while two different products never merge just because they share
-   * an opening phrase.
-   */
-  private familyKey(title: string): string {
-    const [head, ...rest] = title.split(VARIANT_SEPARATOR);
-    return this.normalize(rest.length ? head : title);
-  }
-
-  private normalize(text: string): string {
-    return text
-      .toLowerCase()
-      .replace(/[^a-z0-9가-힣\s]/g, ' ')
-      .split(/\s+/)
-      .filter(Boolean)
-      .join(' ');
   }
 
   private hasSomethingToSay(p: ProductCache): boolean {

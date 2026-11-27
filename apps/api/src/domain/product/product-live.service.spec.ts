@@ -30,7 +30,7 @@ describe('ProductLiveService.lookup', () => {
       }),
     };
     const redis = { get: jest.fn(async () => opts.cached ?? null), set: jest.fn(async () => undefined) };
-    const svc = new ProductLiveService(tenantService as never, client as never, redis as never);
+    const svc = new ProductLiveService(tenantService as never, client as never, redis as never, {} as never);
     return { svc, tenantService, client, redis };
   }
 
@@ -91,6 +91,67 @@ describe('ProductLiveService.lookup', () => {
     const b = build();
     await expect(b.svc.lookup(4, [' '])).resolves.toEqual({ ok: true, products: new Map() });
     expect(b.client.fetchLiveProducts).not.toHaveBeenCalled();
+  });
+});
+
+/** The storefront's products as names, for the colour a question names (PLN-261127). */
+describe('ProductLiveService.catalogue', () => {
+  function build(rows: Array<{ handle: string; title: string }>, store: 'connected' | 'none' | 'throws' = 'connected') {
+    const repo = { find: jest.fn(async () => rows) };
+    const tenantService = {
+      getShopifyConnection: jest.fn(async () => {
+        if (store === 'throws') throw new Error('refresh failed');
+        return store === 'none' ? null : { shopDomain: 'ivyusa.myshopify.com', token: 'shpat_x' };
+      }),
+    };
+    const svc = new ProductLiveService(tenantService as never, {} as never, {} as never, repo as never);
+    return { svc, repo };
+  }
+
+  it('no store connected: no names, so the answer is built exactly as before (a Cafe24 mall has a catalogue too)', async () => {
+    const { svc, repo } = build([{ handle: 'a', title: 'KISS imPRESS Color Press On Nails - Cosmic' }], 'none');
+    await expect(svc.catalogue(4)).resolves.toEqual([]);
+    expect(repo.find).not.toHaveBeenCalled();
+  });
+
+  it('a store whose token cannot be refreshed right now is still a store', async () => {
+    const { svc } = build([{ handle: 'a', title: 'KISS imPRESS Color Press On Nails - Cosmic' }], 'throws');
+    await expect(svc.catalogue(4)).resolves.toHaveLength(1);
+  });
+
+  it('storefront products on sale, with the family and the words that name each colour', async () => {
+    const { svc, repo } = build([
+      { handle: 'Impress-Color-Press-On-Nails-Cosmic', title: 'KISS imPRESS Color Press On Nails - Cosmic' },
+      { handle: 'gold-finger-holiday-limited-edition-nails', title: 'Gold Finger Holiday Limited Edition Nails' },
+      { handle: '', title: 'no handle' },
+    ]);
+    await expect(svc.catalogue(4)).resolves.toEqual([
+      {
+        handle: 'impress-color-press-on-nails-cosmic',
+        title: 'KISS imPRESS Color Press On Nails - Cosmic',
+        family: 'kiss impress color press on nails',
+        variant: ['cosmic'],
+      },
+      {
+        handle: 'gold-finger-holiday-limited-edition-nails',
+        title: 'Gold Finger Holiday Limited Edition Nails',
+        family: 'gold finger holiday limited edition nails',
+        variant: null,
+      },
+    ]);
+    const where = (repo.find.mock.calls[0] as unknown as [{ where: Record<string, unknown>; select: string[] }])[0];
+    expect(where.where).toEqual(expect.objectContaining({ tenantId: 4, status: 'active' }));
+    // companyId IS NULL: a row with a company is a B2B room type, not a storefront product.
+    expect(where.where.companyId).toEqual(expect.objectContaining({ _type: 'isNull' }));
+    expect(where.select).toEqual(['handle', 'title']);
+  });
+
+  it('read once per tenant within 5 minutes', async () => {
+    const { svc, repo } = build([{ handle: 'a', title: 'A' }]);
+    await svc.catalogue(4);
+    await svc.catalogue(4);
+    await svc.catalogue(5);
+    expect(repo.find).toHaveBeenCalledTimes(2);
   });
 });
 

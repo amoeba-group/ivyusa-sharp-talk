@@ -2,8 +2,8 @@
 
 # IVY TalkTalk — Test guide · 테스트 가이드
 
-Version 1.2 · 26 November 2026 · testing from Friday 27 November 2026
-버전 1.2 · 2026년 11월 26일 · 11월 27일(금)부터 테스트
+Version 1.3 · 27 November 2026 · testing from Friday 27 November 2026
+버전 1.3 · 2026년 11월 27일 · 11월 27일(금)부터 테스트
 
 ## 1. Project information · 프로젝트 정보
 
@@ -160,7 +160,7 @@ https://talk.ivyusa.com/user/ivyusa 에서 로그인. 운영 시스템이므로 
 |---|---|---|
 | AI answers (C-02)<br>AI 답변 | On since 25 November: Claude answers typed questions from the knowledge base in the shopper's language, and words the prepared answers and the lines beside cards — steps, numbers and links stay as written.<br>11월 25일부터 켜짐: Claude가 입력한 질문에 지식베이스로 고객 언어로 답하고, 미리 작성된 답변과 카드 옆 안내를 다듬음 — 단계·숫자·링크는 그대로. | IVY's Guardrail before real customers use it; answers tuned from your test feedback.<br>실제 고객 사용 전 IVY Guardrail 적용, 테스트 의견을 반영해 답변 조정. |
 | Product suggestions (A-01–A-04, C-04)<br>상품 추천 | Popular products per category, up to 3, with an AI introduction. A typed question such as "what's popular?" offers the category buttons.<br>카테고리별 인기상품 최대 3개와 AI 소개 문장. '인기 상품 알려줘' 같은 질문에는 카테고리 버튼. | The Recommended and New types in the chat.<br>추천·신상품 유형을 채팅에서 사용. |
-| Typed product questions (C-02)<br>상품 질문 직접 입력 | Since 26 November: for the products it finds, the AI reads the store's stock and price and shows them as cards under its answer (at most 3, item 25). A color sold as a separate product that the AI does not find is not confirmed: use 📦 **Stock inquiry**.<br>11월 26일부터: AI가 찾은 상품의 재고·가격을 매장에서 읽어 답하고, 답변 아래에 상품 카드로 표시(최대 3개, 25번). 별도 상품으로 판매되는 색상을 AI가 찾지 못하면 확인해 주지 않으니 📦 **Stock inquiry**(재고 문의)를 이용하세요. | Also search the store with the shopper's own words, so such colors are found.<br>고객이 입력한 단어로도 매장을 검색해 이런 색상도 찾도록 개선. |
+| Typed product questions (C-02)<br>상품 질문 직접 입력 | Since 26 November: for the products it finds, the AI reads the store's stock and price and shows them as cards under its answer (at most 3, item 25). Since 27 November this includes a color sold as a separate product (e.g. "KISS imPRESS Color Press On Nails - Cosmic") when the question names that color. A color the AI still cannot confirm: use 📦 **Stock inquiry**.<br>11월 26일부터: AI가 찾은 상품의 재고·가격을 매장에서 읽어 답하고, 답변 아래에 상품 카드로 표시(최대 3개, 25번). 11월 27일부터는 질문에 색상 이름이 있으면 별도 상품으로 판매되는 색상(예: "KISS imPRESS Color Press On Nails - Cosmic")도 그 색상의 재고와 카드로 답합니다. 그래도 확인되지 않는 색상은 📦 **Stock inquiry**(재고 문의)를 이용하세요. | Find a color even when the shopper gives only the color, not the product's name.<br>상품명 없이 색상 이름만 말해도 찾도록 개선. |
 | Talk to an agent, outside hours (E-02)<br>상담원 연결, 업무 시간 외 | No support hours are set, so Talk to an agent always goes to IVY staff in console Live Chat.<br>상담 시간이 설정되지 않아 상담원 연결은 항상 콘솔 Live Chat(실시간 상담)의 IVY 상담원에게 연결 요청됨. | Once IVY's hours are set, outside them the chat offers **Email us**: the contact form with the order and the recent chat.<br>IVY 상담 시간 설정 후, 시간 외에는 **Email us**(이메일 문의) → 주문과 최근 대화가 첨부된 문의 양식. |
 | Klaviyo (S-02) | The marketing choice is saved in TalkTalk only.<br>마케팅 수신 선택은 TalkTalk에만 저장. | Kept in step with Klaviyo after IVY enters the key.<br>IVY가 키를 입력하면 Klaviyo와 동기화. |
 | Yotpo (N-05) | Write Review opens the product page or the widget's form.<br>리뷰 쓰기는 상품 페이지 또는 위젯 양식으로 열림. | After IVY enters the key: reviews go to Yotpo, and Yotpo ratings count in AI Auto.<br>IVY가 키를 입력하면 리뷰가 Yotpo로 전송되고, Yotpo 평점이 AI 자동 추천에 반영. |

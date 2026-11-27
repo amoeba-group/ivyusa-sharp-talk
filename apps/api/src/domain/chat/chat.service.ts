@@ -1027,6 +1027,9 @@ export class ChatService {
       preferGroup === DOC_GROUP.PRODUCT && this.productLive
         ? (handles: string[]) => this.productLive!.lookup(tenantId, handles)
         : undefined;
+    // The storefront's products as names, on the same turns (PLN-261127): a
+    // colour sold as its own product is read when the shopper names it.
+    const storeCatalogue = storeLookup ? () => this.productLive!.catalogue(tenantId) : undefined;
     // D6: such a turn is never answered from the reuse store, nor stored in it —
     // yesterday's "in stock" is not today's.
     const reused =
@@ -1067,6 +1070,7 @@ export class ChatService {
           conversation.prevConversationId != null ? await this.threads?.previousExcerpt(tenantId, conversation) : undefined,
           caller,
           storeLookup,
+          storeCatalogue,
         );
 
     // Mandatory moderation gate (FR-069).

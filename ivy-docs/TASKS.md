@@ -408,4 +408,8 @@ Trạng thái: ⬜ Todo · 🟦 In progress · 🟨 Chờ duyệt PLN · ✅ Don
 - Nay: đọc Shopify cho sản phẩm tìm thấy (≤ 5, cache 2 phút) → AI trả lời bằng tồn kho, giá, biến thể thật → ≤ 3 thẻ sản phẩm dưới câu trả lời; hết hàng vẫn có thẻ (Out of stock); lượt hỏi sản phẩm không dùng lại câu cũ. Không SQL. TC-10-08, TC-10-09.
 - Hướng dẫn test v1.2: mục 25 thêm câu hỏi tồn kho; dòng "Typed product questions" ở mục 4 viết lại.
 - Smoke production phát hiện sản phẩm hỏi đích danh không được tìm ra → nhánh tên sản phẩm ([FIX-261126](../docs/bug-fix/FIX-261126-Product-Name-Not-Retrieved.md)). Sau sửa: Gold Finger Holiday Limited Edition Nails, Kiss Gel Fantasy Glue On Nails trả lời đúng tồn kho, giá, có thẻ.
-- Còn lại (D4): màu bán thành sản phẩm riêng (ví dụ imPRESS "Cosmic") chưa đọc được tồn kho đúng màu; đề xuất so tên với `products_cache` (RPT §6).
+- Còn lại (D4): màu bán thành sản phẩm riêng (ví dụ imPRESS "Cosmic") chưa đọc được tồn kho đúng màu; đề xuất so tên với `products_cache` (RPT §6) → làm ở mục 2026-11-27 dưới đây.
+
+### Bổ sung 2026-11-27 · Màu bán thành sản phẩm riêng: đọc đúng tồn kho, đúng thẻ (D4 của PLN-261126) — 🚀 đang deploy (chủ dự án duyệt "ok làm tiếp phần màu Cosmic, deploy ngay") · [PLN](../docs/plan/PLN-261127-IVY-Chat-Named-Variant-Stock.md) · [TCR](../docs/test/TCR-261127-IVY-Chat-Named-Variant-Stock.md) · [RPT](../docs/implementation/RPT-261127-IVY-Chat-Named-Variant-Stock.md)
+- Trước: hỏi "KISS imPRESS Color Press On Nails - Cosmic" → kho kiến thức gộp 12 màu vào tài liệu đứng tên Bubble Kiss → đọc tồn kho Bubble Kiss, AI nói không xác nhận được Cosmic, thẻ hiện Bubble Kiss.
+- Nay: so chữ của khách với danh mục `products_cache` (cache 5 phút): màu khách gọi tên được đọc thay màu đại diện, dòng STORE_DATA mang số của tài liệu họ đó, thẻ là màu khách hỏi. Câu nêu đủ tên một màu kéo tài liệu của họ vào ngữ cảnh. Câu sau ("giá bao nhiêu?") vẫn giữ màu đã hỏi. Không SQL, không đổi widget.

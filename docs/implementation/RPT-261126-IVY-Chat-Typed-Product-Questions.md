@@ -80,6 +80,6 @@ Nguyên nhân và cách sửa: [FIX-261126](../bug-fix/FIX-261126-Product-Name-N
 
 ## 6. Giới hạn còn lại
 
-- **Màu / cỡ là sản phẩm riêng** (D4): kho kiến thức gộp các màu như "KISS imPRESS Color Press On Nails - Cosmic / Bubble Kiss / …" vào một tài liệu đại diện, nên chỉ đọc được tồn kho của sản phẩm đại diện. Hỏi một màu khác: AI không xác nhận và chỉ nút Stock inquiry, nhưng thẻ hiện sản phẩm đại diện (smoke lần 2, câu 3). Bản sau: so tên với **danh mục sản phẩm** (`products_cache`, 2.410 dòng, có mọi màu) thay vì chỉ tài liệu kho kiến thức, rồi đọc tồn kho đúng màu được hỏi.
+- **Màu / cỡ là sản phẩm riêng** (D4): kho kiến thức gộp các màu như "KISS imPRESS Color Press On Nails - Cosmic / Bubble Kiss / …" vào một tài liệu đại diện, nên chỉ đọc được tồn kho của sản phẩm đại diện. Hỏi một màu khác: AI không xác nhận và chỉ nút Stock inquiry, nhưng thẻ hiện sản phẩm đại diện (smoke lần 2, câu 3). Bản sau: so tên với **danh mục sản phẩm** (`products_cache`, 2.410 dòng, có mọi màu) thay vì chỉ tài liệu kho kiến thức, rồi đọc tồn kho đúng màu được hỏi. → Làm ngày 2026-11-27: [PLN-261127](../plan/PLN-261127-IVY-Chat-Named-Variant-Stock.md), [RPT-261127](RPT-261127-IVY-Chat-Named-Variant-Stock.md).
 - Lượt hỏi sản phẩm không còn dùng lại câu trả lời đã lưu (D6), nên mỗi câu đều gọi AI.
 - Thẻ chỉ có khi AI ghi dòng `CITED`. Không có dòng này thì không thẻ (tránh hiện sản phẩm không liên quan).

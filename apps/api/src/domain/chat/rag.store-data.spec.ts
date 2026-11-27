@@ -6,6 +6,7 @@ import {
   pickProductTitles,
   productHandleFrom,
   storeDataBlock,
+  storeItemsFor,
 } from './rag.service';
 import type { ShopifyLiveProduct } from '../order/shopify-admin.client';
 import type { LiveLookup } from '../product/product-live.service';
@@ -112,7 +113,12 @@ describe('answerProductCards', () => {
     snippet: '',
     similarity: null,
   });
-  const chunks = [chunk(1, 'a'), chunk(2, null), chunk(3, 'b'), chunk(4, 'c'), chunk(5, 'd'), chunk(6, 'a')];
+  // What the store was asked about per numbered item: each product document's own handle.
+  const chunks = storeItemsFor(
+    [chunk(1, 'a'), chunk(2, null), chunk(3, 'b'), chunk(4, 'c'), chunk(5, 'd'), chunk(6, 'a')],
+    [],
+    ['q'],
+  );
   const store = ok(live({ handle: 'a' }), live({ handle: 'b' }), live({ handle: 'c' }), live({ handle: 'd' }));
 
   it('in the order the model cited them, each product once, at most three (D1)', () => {
